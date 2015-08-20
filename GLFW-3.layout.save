@@ -1,0 +1,261 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_layout_file>
+	<ActiveTarget name="Debug" />
+	<File name="src\GBuffer.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="632" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Texture.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="511" topLine="5" />
+		</Cursor>
+	</File>
+	<File name="src\Light.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2993" topLine="84" />
+		</Cursor>
+	</File>
+	<File name="src\Texture.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="56" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Light.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1524" topLine="37" />
+		</Cursor>
+	</File>
+	<File name="src\cubemap_texture.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3642" topLine="65" />
+		</Cursor>
+		<Folding>
+			<Collapse line="19" />
+		</Folding>
+	</File>
+	<File name="src\cubemap_texture.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="508" topLine="7" />
+		</Cursor>
+	</File>
+	<File name="src\Logger.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="782" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\main.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="873" topLine="14" />
+		</Cursor>
+	</File>
+	<File name="src\math_3d.cpp" open="0" top="0" tabpos="10" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5591" topLine="145" />
+		</Cursor>
+	</File>
+	<File name="src\math_3d.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3676" topLine="164" />
+		</Cursor>
+	</File>
+	<File name="src\Mesh.cpp" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9863" topLine="99" />
+		</Cursor>
+		<Folding>
+			<Collapse line="1" />
+		</Folding>
+	</File>
+	<File name="src\skybox.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="881" topLine="14" />
+		</Cursor>
+	</File>
+	<File name="src\Mesh.h" open="1" top="1" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1217" topLine="41" />
+		</Cursor>
+	</File>
+	<File name="src\tga_loader.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="388" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ParticleSystem.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="109" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\tga_loader.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="167" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ParticleSystem.h" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1322" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\util.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="170" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ParticleUpdateAssistant.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="783" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="include\BillboardAssistant.h" open="0" top="0" tabpos="6" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="375" topLine="2" />
+		</Cursor>
+	</File>
+	<File name="include\EngineCommon.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="68" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\RandomTexture.cpp" open="0" top="0" tabpos="9" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="13" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Shader.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2262" topLine="77" />
+		</Cursor>
+	</File>
+	<File name="include\ParticleUpdateAssistant.h" open="0" top="0" tabpos="8" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="429" topLine="9" />
+		</Cursor>
+	</File>
+	<File name="src\ShaderFunctions.cpp" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="767" topLine="24" />
+		</Cursor>
+	</File>
+	<File name="include\RandomTexture.h" open="0" top="0" tabpos="11" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="162" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ShaderFunctions.h" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="178" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="include\Shader.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="356" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\ShadowMapFBO.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1630" topLine="27" />
+		</Cursor>
+	</File>
+	<File name="include\ShadowMapFBO.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="254" topLine="0" />
+		</Cursor>
+	</File>
+	<File name="src\Simple OpenGL Image Library\src\SOIL.c" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="41457" topLine="1408" />
+		</Cursor>
+	</File>
+	<File name="main.cpp" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3321" topLine="64" />
+		</Cursor>
+		<Folding>
+			<Collapse line="44" />
+			<Collapse line="67" />
+			<Collapse line="78" />
+			<Collapse line="84" />
+			<Collapse line="90" />
+		</Folding>
+	</File>
+	<File name="src\Simple OpenGL Image Library\src\SOIL.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3423" topLine="59" />
+		</Cursor>
+	</File>
+	<File name="src\Assistant.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6074" topLine="110" />
+		</Cursor>
+	</File>
+	<File name="src\Simple OpenGL Image Library\src\stb_image_aug.c" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="6045" topLine="162" />
+		</Cursor>
+	</File>
+	<File name="src\Assistant.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1970" topLine="64" />
+		</Cursor>
+	</File>
+	<File name="src\Billboard.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="3385" topLine="79" />
+		</Cursor>
+	</File>
+	<File name="src\Billboard.h" open="0" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="608" topLine="8" />
+		</Cursor>
+	</File>
+	<File name="src\BillboardAssistant.cpp" open="0" top="0" tabpos="7" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1697" topLine="45" />
+		</Cursor>
+	</File>
+	<File name="src\Skybox.cpp" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4747" topLine="129" />
+		</Cursor>
+	</File>
+	<File name="src\Camera.cpp" open="0" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2618" topLine="18" />
+		</Cursor>
+		<Folding>
+			<Collapse line="8" />
+			<Collapse line="21" />
+			<Collapse line="37" />
+		</Folding>
+	</File>
+	<File name="src\Text_2D.cpp" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9374" topLine="55" />
+		</Cursor>
+		<Folding>
+			<Collapse line="7" />
+			<Collapse line="11" />
+			<Collapse line="14" />
+			<Collapse line="19" />
+			<Collapse line="25" />
+			<Collapse line="65" />
+			<Collapse line="71" />
+			<Collapse line="76" />
+		</Folding>
+	</File>
+	<File name="src\Camera.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="947" topLine="34" />
+		</Cursor>
+	</File>
+	<File name="src\Text_2D.h" open="0" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="-1" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1820" topLine="0" />
+		</Cursor>
+		<Folding>
+			<Collapse line="14" />
+			<Collapse line="26" />
+		</Folding>
+	</File>
+</CodeBlocks_layout_file>

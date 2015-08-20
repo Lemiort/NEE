@@ -1,0 +1,22 @@
+#ifndef SHADOWMAPFBO_H
+#define SHADOWMAPFBO_H
+
+#
+
+class ShadowMapFBO
+{
+public:
+    ShadowMapFBO();
+    virtual ~ShadowMapFBO();
+    bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
+
+    void BindForWriting();
+
+    void BindForReading(GLenum TextureUnit);
+
+private:
+    GLuint m_fbo;
+    GLuint m_shadowMap;
+};
+
+#endif // SHADOWMAPFBO_H

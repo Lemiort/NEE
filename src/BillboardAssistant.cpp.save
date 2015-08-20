@@ -1,0 +1,13 @@
+#include "BillboardAssistant.h"
+
+BillboardAssistant::BillboardAssistant()
+{
+    //ctor
+}
+
+BillboardAssistant::~BillboardAssistant()
+{
+    //dtor
+}
+
+virtual bool BillboardAssistant::Init()

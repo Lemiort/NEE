@@ -1,0 +1,776 @@
+# depslib dependency file v1.0
+1420976530 source:c:\users\mvideo\documents\projects\glfw-3\main.cpp
+	<GL/glew.h>
+	<GL/glfw3.h>
+	<ctime>
+	<stdio.h>
+	<stdlib.h>
+	<main.h>
+
+1374470000 c:\libs\glew-1.10.0\include\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1388506474 c:\libs\glfw-3.04.bin.win32-lib\glfw-2.7.bin.win32\include\gl\glfw3.h
+	<stddef.h>
+	<OpenGL/gl3.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/glcorearb.h>
+	<GLES/gl.h>
+	<GLES2/gl2.h>
+	<GLES3/gl3.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
+1281274624 c:\libs\glfw-3.04.bin.win32-lib\glfw-2.7.bin.win32\include\gl\glfw.h
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/gl.h>
+	<GL/glu.h>
+
+1392905339 source:c:\users\mvideo\documents\projects\glfw-3\src\shaderfunctions.cpp
+	"ShaderFunctions.h"
+
+1394216574 c:\users\mvideo\documents\projects\glfw-3\src\shaderfunctions.h
+	<GL/glew.h>
+	<GL/glfw3.h>
+	<iostream>
+	<fstream>
+	<conio.h>
+	<stdio.h>
+	<stdlib.h>
+	<EngineCommon.h>
+
+1422793947 source:c:\users\mvideo\documents\projects\glfw-3\src\text_2d.cpp
+	"Text_2D.h"
+	<fstream>
+	<sstream>
+	<stdexcept>
+
+1406567254 c:\users\mvideo\documents\projects\glfw-3\src\text_2d.h
+	<SOIL.h>
+	<math_3d.h>
+	"Shader.h"
+	"ShaderFunctions.h"
+	<GL\glew.h>
+	<queue>
+	<cstring>
+	<map>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\soil.h
+
+1374469882 c:\libs\glew-1.10-src\glew-1.10.0\include\gl\glew.h
+	<stddef.h>
+	<inttypes.h>
+	<stdint.h>
+	<inttypes.h>
+	<OpenGL/glu.h>
+	<GL/glu.h>
+
+1215440008 source:c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\image_dxt.c
+	"image_DXT.h"
+	<math.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\image_dxt.h
+
+1215440008 source:c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\image_helper.c
+	"image_helper.h"
+	<stdlib.h>
+	<math.h>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\image_helper.h
+
+1392741354 source:c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\soil.c
+	<windows.h>
+	<wingdi.h>
+	<GL/gl.h>
+	<OpenGL/gl.h>
+	<Carbon/Carbon.h>
+	<GL/glx.h>
+	<GL\glew.h>
+	<GL\glfw3.h>
+	"SOIL.h"
+	"stb_image_aug.h"
+	"image_helper.h"
+	"image_DXT.h"
+	<stdlib.h>
+	<string.h>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\stb_image_aug.h
+	<stdio.h>
+
+1215440008 source:c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\stb_image_aug.c
+	"stb_image_aug.h"
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<assert.h>
+	<stdarg.h>
+	"stbi_DDS_aug.h"
+	"stbi_DDS_aug_c.h"
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\stbi_dds_aug.h
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\src\simple opengl image library\src\stbi_dds_aug_c.h
+
+1410204349 c:\users\mvideo\documents\projects\glfw-3\src\main.h
+	<GL\glew.h>
+	<iostream>
+	<fstream>
+	<conio.h>
+	<string.h>
+	"Logger.h"
+	"Light.h"
+	"Mesh.h"
+	"tga_loader.h"
+	"skybox.h"
+	"Text_2D.h"
+	"PerlinNoise.h"
+	"Billboard.h"
+	<Material.h>
+	"ShadowMapFBO.h"
+	<sstream>
+	<version.h>
+	<GBuffer.h>
+	<util.h>
+
+1392740929 c:\users\mvideo\documents\projects\glfw-3\src\logger.h
+	<cstdio>
+	<cstring>
+	<cstdarg>
+
+1410029563 c:\users\mvideo\documents\projects\glfw-3\src\light.h
+	"Assistant.h"
+	"Camera.h"
+	"Shader.h"
+	"ShaderFunctions.h"
+	"Mesh.h"
+
+1392741453 c:\users\mvideo\documents\projects\glfw-3\src\assistant.h
+	"math_3d.h"
+
+1410028688 c:\users\mvideo\documents\projects\glfw-3\src\math_3d.h
+	<cmath>
+	<cstdio>
+	<iostream>
+
+1392740861 c:\users\mvideo\documents\projects\glfw-3\src\camera.h
+	"math_3d.h"
+
+1408801311 c:\users\mvideo\documents\projects\glfw-3\src\mesh.h
+	"Assistant.h"
+	"Camera.h"
+	"Shader.h"
+	"math_3d.h"
+	"Texture.h"
+	"Material.h"
+	<fstream>
+	<iostream>
+
+1439717098 source:c:\users\mvideo\documents\projects\glfw-3\src\assistant.cpp
+	"Assistant.h"
+	<fstream>
+
+1439565276 source:c:\users\mvideo\documents\projects\glfw-3\src\camera.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	"camera.h"
+
+1392741509 c:\users\mvideo\documents\projects\glfw-3\src\tga_loader.h
+	"Logger.h"
+	<cassert>
+	<GL\glew.h>
+	<GL\glfw3.h>
+
+1399742129 c:\users\mvideo\documents\projects\glfw-3\src\skybox.h
+	"cubemap_texture.h"
+	"Shader.h"
+	"Camera.h"
+	"Assistant.h"
+	"tga_loader.h"
+
+1439565314 c:\users\mvideo\documents\projects\glfw-3\src\cubemap_texture.h
+	<string>
+	<GL\glew.h>
+	<GLFW\glfw3.h>
+
+1392740603 source:c:\users\mvideo\documents\projects\glfw-3\src\cubemap_texture.cpp
+	<iostream>
+	<cstring>
+	"cubemap_texture.h"
+	"tga_loader.h"
+	"util.h"
+
+1410027644 c:\users\mvideo\documents\projects\glfw-3\src\util.h
+	<stdlib.h>
+	<stdio.h>
+	<cstring>
+	<string>
+	<sstream>
+
+1439720219 source:c:\users\mvideo\documents\projects\glfw-3\src\light.cpp
+	"Light.h"
+	<iomanip>
+
+1390922887 source:c:\users\mvideo\documents\projects\glfw-3\src\line.cpp
+	"Light.h"
+
+1389281429 source:c:\users\mvideo\documents\projects\glfw-3\src\logger.cpp
+	"Logger.h"
+
+1410029296 source:c:\users\mvideo\documents\projects\glfw-3\src\math_3d.cpp
+	"math_3d.h"
+	<cmath>
+	<cstdlib>
+
+1439716357 source:c:\users\mvideo\documents\projects\glfw-3\src\mesh.cpp
+	"Mesh.h"
+
+1404428258 source:c:\users\mvideo\documents\projects\glfw-3\src\skybox.cpp
+	"skybox.h"
+
+1390988315 source:c:\users\mvideo\documents\projects\glfw-3\src\tga_loader.cpp
+	"tga_loader.h"
+
+1392892862 source:c:\users\mvideo\documents\projects\glfw-3\src\perlinnoise.cpp
+	"PerlinNoise.h"
+
+1392892666 c:\users\mvideo\documents\projects\glfw-3\src\perlinnoise.h
+
+1399744149 source:c:\users\mvideo\documents\projects\glfw-3\src\billboard.cpp
+	"Billboard.h"
+
+1408458548 c:\users\mvideo\documents\projects\glfw-3\src\billboard.h
+	<Texture.h>
+	<math_3d.h>
+	<ShaderFunctions.h>
+	"Shader.h"
+	"Camera.h"
+	"Assistant.h"
+
+1410035145 c:\users\mvideo\documents\projects\glfw-3\src\texture.h
+	"SOIL.h"
+	<GL/glew.h>
+	<string>
+	<sstream>
+
+1410035139 source:c:\users\mvideo\documents\projects\glfw-3\src\texture.cpp
+	"Texture.h"
+
+1394216610 c:\users\mvideo\documents\projects\glfw-3\include\enginecommon.h
+
+1394218188 source:c:\users\mvideo\documents\projects\glfw-3\src\billboardassistant.cpp
+	"BillboardAssistant.h"
+
+1394218214 c:\users\mvideo\documents\projects\glfw-3\include\billboardassistant.h
+	"math_3d.h"
+	<GL/glew.h>
+	"ShaderFunctions.h"
+	<util.h>
+
+1394218331 source:c:\users\mvideo\documents\projects\glfw-3\src\particlesystem.cpp
+	"ParticleSystem.h"
+
+1408460368 c:\users\mvideo\documents\projects\glfw-3\src\particlesystem.h
+	"RandomTexture.h"
+	"ParticleUpdateAssistant.h"
+	"ShaderFunctions.h"
+	<BillboardAssistant.h>
+	<Camera.h>
+	<Texture.h>
+	<util.h>
+	"Assistant.h"
+
+1394285148 c:\users\mvideo\documents\projects\glfw-3\include\randomtexture.h
+	"math_3d.h"
+	<EngineCommon.h>
+	<util.h>
+	"GL/glew.h"
+
+1394218417 c:\users\mvideo\documents\projects\glfw-3\include\particleupdateassistant.h
+	"GL/glew.h"
+	<EngineCommon.h>
+
+1394285814 source:c:\users\mvideo\documents\projects\glfw-3\src\particleupdateassistant.cpp
+	"ParticleUpdateAssistant.h"
+
+1394218909 source:c:\users\mvideo\documents\projects\glfw-3\src\randomtexture.cpp
+	"RandomTexture.h"
+
+1439566628 source:c:\users\mvideo\documents\projects\glfw-3\src\shader.cpp
+	"Shader.h"
+	"ShaderFunctions.h"
+
+1439503256 c:\users\mvideo\documents\projects\glfw-3\include\shader.h
+	<GL/glew.h>
+	<string>
+
+1422201864 source:c:\users\mvideo\documents\projects\glfw-3\src\gbuffer.cpp
+	"GBuffer.h"
+	"util.h"
+	<iostream>
+	<Texture.h>
+
+1420895333 c:\users\mvideo\documents\projects\glfw-3\include\gbuffer.h
+	<GL\glew.h>
+
+1413823011 source:c:\users\mvideo\documents\projects\glfw-3\src\shadowmapfbo.cpp
+	"ShadowMapFBO.h"
+	<stdio.h>
+	<iostream>
+	<util.h>
+	<Texture.h>
+
+1413820763 c:\users\mvideo\documents\projects\glfw-3\include\shadowmapfbo.h
+	<GL\glew.h>
+	<string>
+
+1392740816 c:\users\mvideo\documents\projects\glfw-3\src\material.h
+
+1410033653 source:c:\users\mvideo\documents\projects\glfw-3\include\material.h
+	<GL\glew.h>
+	"Texture.h"
+	"Shader.h"
+
+1410033653 c:\users\mvideo\documents\projects\glfw-3\include\material.h
+	<GL\glew.h>
+	"Texture.h"
+	"Shader.h"
+
+1439720805 source:c:\users\mvideo\documents\projects\glfw-3\version.h
+
+1420911345 source:c:\users\mvideo\documents\projects\glfw-3\src\material.cpp
+	"Material.h"
+	<cstdlib>
+	<util.h>
+	<iostream>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\glm.hpp
+	"core/_fixes.hpp"
+	<cmath>
+	<climits>
+	<cfloat>
+	<limits>
+	<cstdio>
+	"core/setup.hpp"
+	"./core/_detail.hpp"
+	"./core/_vectorize.hpp"
+	"./core/type.hpp"
+	"./core/func_trigonometric.hpp"
+	"./core/func_exponential.hpp"
+	"./core/func_common.hpp"
+	"./core/func_packing.hpp"
+	"./core/func_geometric.hpp"
+	"./core/func_matrix.hpp"
+	"./core/func_vector_relational.hpp"
+	"./core/func_integer.hpp"
+	"./core/func_noise.hpp"
+	"./core/_swizzle.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\_fixes.hpp
+	<cmath>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\setup.hpp
+	<immintrin.h>
+	<immintrin.h>
+	<smmintrin.h>
+	<pmmintrin.h>
+	<emmintrin.h>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\_detail.hpp
+	"setup.hpp"
+	<cassert>
+	<cstdint>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\_vectorize.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type.hpp
+	"type_half.hpp"
+	"type_float.hpp"
+	"type_int.hpp"
+	"type_gentype.hpp"
+	"type_vec1.hpp"
+	"type_vec2.hpp"
+	"type_vec3.hpp"
+	"type_vec4.hpp"
+	"type_mat2x2.hpp"
+	"type_mat2x3.hpp"
+	"type_mat2x4.hpp"
+	"type_mat3x2.hpp"
+	"type_mat3x3.hpp"
+	"type_mat3x4.hpp"
+	"type_mat4x2.hpp"
+	"type_mat4x3.hpp"
+	"type_mat4x4.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_half.hpp
+	<cstdlib>
+	"type_half.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_half.inl
+	"_detail.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_float.hpp
+	"type_half.hpp"
+	"setup.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_int.hpp
+	"setup.hpp"
+	"_detail.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_gentype.hpp
+	"type_size.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_size.hpp
+	<cstdlib>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec1.hpp
+	"type_vec.hpp"
+	"type_float.hpp"
+	"type_int.hpp"
+	"type_size.hpp"
+	"_swizzle.hpp"
+	"type_vec1.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec.hpp
+	"type_gentype.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\_swizzle.hpp
+	"_swizzle_func.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\_swizzle_func.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec1.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec2.hpp
+	"type_vec.hpp"
+	"type_float.hpp"
+	"type_int.hpp"
+	"type_size.hpp"
+	"_swizzle.hpp"
+	"type_vec2.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec2.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec3.hpp
+	"type_vec.hpp"
+	"type_float.hpp"
+	"type_int.hpp"
+	"type_size.hpp"
+	"_swizzle.hpp"
+	"type_vec3.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec3.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec4.hpp
+	"type_vec.hpp"
+	"type_float.hpp"
+	"type_int.hpp"
+	"type_size.hpp"
+	"_swizzle.hpp"
+	"type_vec4.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_vec4.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x2.hpp
+	"type_mat.hpp"
+	"type_mat2x2.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat.hpp
+	"type_gentype.hpp"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x2.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x3.hpp
+	"type_mat.hpp"
+	"type_mat2x3.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x3.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x4.hpp
+	"type_mat.hpp"
+	"type_mat2x4.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat2x4.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x2.hpp
+	"type_mat.hpp"
+	"type_mat3x2.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x2.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x3.hpp
+	"type_mat.hpp"
+	"type_mat3x3.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x3.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x4.hpp
+	"type_mat.hpp"
+	"type_mat3x4.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat3x4.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x2.hpp
+	"type_mat.hpp"
+	"type_mat4x2.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x2.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x3.hpp
+	"type_mat.hpp"
+	"type_mat4x3.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x3.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x4.hpp
+	"type_mat.hpp"
+	"type_mat4x4.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\type_mat4x4.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_trigonometric.hpp
+	"func_trigonometric.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_trigonometric.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_exponential.hpp
+	"func_exponential.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_exponential.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_common.hpp
+	"_fixes.hpp"
+	"func_common.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_common.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_packing.hpp
+	"func_packing.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_packing.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_geometric.hpp
+	"func_geometric.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_geometric.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_matrix.hpp
+	"func_matrix.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_matrix.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_vector_relational.hpp
+	"_detail.hpp"
+	"func_vector_relational.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_vector_relational.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_integer.hpp
+	"func_integer.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_integer.inl
+	<intrin.h>
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_noise.hpp
+	"func_noise.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\core\func_noise.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\gtc\matrix_transform.hpp
+	"../glm.hpp"
+	"matrix_transform.inl"
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\glm\gtc\matrix_transform.inl
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\common\shader.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\common\texture.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\common\controls.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\common\objloader.hpp
+
+1369420956 c:\users\mvideo\documents\projects\glfw-3\src\common\vboindexer.hpp
+
+1439720805 c:\users\mvideo\documents\projects\glfw-3\version.h
+
+1410107877 source:c:\users\mvideo\documents\projects\glfw-3\src\util.cpp
+	<util.h>
+
+1410035145 c:\users\mvideo\documents\projects\glfw-3\include\texture.h
+	"SOIL.h"
+	<GL/glew.h>
+	<string>
+	<sstream>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\soil.h
+
+1439715631 c:\users\mvideo\documents\projects\glfw-3\include\assistant.h
+	"math_3d.h"
+
+1439715587 c:\users\mvideo\documents\projects\glfw-3\include\math_3d.h
+	<cmath>
+	<cstdio>
+	<iostream>
+
+1408458548 c:\users\mvideo\documents\projects\glfw-3\include\billboard.h
+	<Texture.h>
+	<math_3d.h>
+	<ShaderFunctions.h>
+	"Shader.h"
+	"Camera.h"
+	"Assistant.h"
+
+1439565269 c:\users\mvideo\documents\projects\glfw-3\include\shaderfunctions.h
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<iostream>
+	<fstream>
+	<conio.h>
+	<stdio.h>
+	<stdlib.h>
+	<EngineCommon.h>
+
+1392740861 c:\users\mvideo\documents\projects\glfw-3\include\camera.h
+	"math_3d.h"
+
+1410027644 c:\users\mvideo\documents\projects\glfw-3\include\util.h
+	<stdlib.h>
+	<stdio.h>
+	<cstring>
+	<string>
+	<sstream>
+
+1439565318 c:\users\mvideo\documents\projects\glfw-3\include\tga_loader.h
+	"Logger.h"
+	<cassert>
+	<GL\glew.h>
+	<GLFW\glfw3.h>
+
+1392740929 c:\users\mvideo\documents\projects\glfw-3\include\logger.h
+	<cstdio>
+	<cstring>
+	<cstdarg>
+
+1423257108 c:\users\mvideo\documents\projects\glfw-3\include\light.h
+	"Assistant.h"
+	"Camera.h"
+	"Shader.h"
+	"ShaderFunctions.h"
+	"Mesh.h"
+
+1439716267 c:\users\mvideo\documents\projects\glfw-3\include\mesh.h
+	"Assistant.h"
+	"Camera.h"
+	"Shader.h"
+	"math_3d.h"
+	"Texture.h"
+	"Material.h"
+	<fstream>
+	<iostream>
+
+1408460368 c:\users\mvideo\documents\projects\glfw-3\include\particlesystem.h
+	"RandomTexture.h"
+	"ParticleUpdateAssistant.h"
+	"ShaderFunctions.h"
+	<BillboardAssistant.h>
+	<Camera.h>
+	<Texture.h>
+	<util.h>
+	"Assistant.h"
+
+1392892666 c:\users\mvideo\documents\projects\glfw-3\include\perlinnoise.h
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\image_dxt.h
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\image_helper.h
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\stb_image_aug.h
+	<stdio.h>
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\stbi_dds_aug.h
+
+1215440008 c:\users\mvideo\documents\projects\glfw-3\include\soil\stbi_dds_aug_c.h
+
+1399742129 c:\users\mvideo\documents\projects\glfw-3\include\skybox.h
+	"cubemap_texture.h"
+	"Shader.h"
+	"Camera.h"
+	"Assistant.h"
+	"tga_loader.h"
+
+1406567254 c:\users\mvideo\documents\projects\glfw-3\include\text_2d.h
+	<SOIL.h>
+	<math_3d.h>
+	"Shader.h"
+	"ShaderFunctions.h"
+	<GL\glew.h>
+	<queue>
+	<cstring>
+	<map>
+
+1439735188 source:c:\users\mvideo\documents\projects\glfw-3\src\main.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<ctime>
+	<stdio.h>
+	<stdlib.h>
+	<main.h>
+
+1422807368 c:\users\mvideo\documents\projects\glfw-3\include\main.h
+	<GL\glew.h>
+	<iostream>
+	<fstream>
+	<conio.h>
+	<string.h>
+	"Logger.h"
+	"Light.h"
+	"Mesh.h"
+	"tga_loader.h"
+	"skybox.h"
+	"Text_2D.h"
+	"PerlinNoise.h"
+	"Billboard.h"
+	<Material.h>
+	"ShadowMapFBO.h"
+	<sstream>
+	<version.h>
+	<GBuffer.h>
+	<util.h>
+
+1426797648 c:\libs\glfw-3.1.1.bin.win32\glfw-3.1.1.bin.win32\include\glfw\glfw3.h
+	<stddef.h>
+	<OpenGL/gl3.h>
+	<OpenGL/gl3ext.h>
+	<OpenGL/gl.h>
+	<OpenGL/glu.h>
+	<GL/glcorearb.h>
+	<GLES/gl.h>
+	<GLES/glext.h>
+	<GLES2/gl2.h>
+	<GLES2/gl2ext.h>
+	<GLES3/gl3.h>
+	<GLES3/gl2ext.h>
+	<GLES3/gl31.h>
+	<GLES3/gl2ext.h>
+	<GL/gl.h>
+	<GL/glext.h>
+	<GL/glu.h>
+
+1439723364 source:c:\users\mvideo\documents\projects\glfw-3\src\gameconsole.cpp
+	"GameConsole.h"
+
+1439723360 c:\users\mvideo\documents\projects\glfw-3\include\gameconsole.h
+	<string>
+

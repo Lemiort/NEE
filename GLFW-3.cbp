@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="GLFW-3" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/GLFW-3" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/Libs/glfw-3.04.bin.WIN32-lib/glfw-2.7.bin.WIN32/bin" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+					<Add directory="src" />
+					<Add directory="include" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/GLFW-3" prefix_auto="1" extension_auto="1" />
+				<Option working_dir="C:/Libs/glfw-3.04.bin.WIN32-lib/glfw-2.7.bin.WIN32/bin" />
+				<Option object_output="obj/Release/" />
+				<Option type="0" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+					<Add directory="src" />
+					<Add directory="include" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+			<Add directory="C:/Libs/glfw-3.1.1.bin.WIN32/glfw-3.1.1.bin.WIN32/include" />
+			<Add directory="C:/Libs/glew-1.10-src/glew-1.10.0/include" />
+			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/src/Simple OpenGL Image Library/src" />
+			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/src" />
+			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/include" />
+			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3" />
+			<Add directory="include" />
+			<Add directory="src" />
+			<Add directory="include/SOIL" />
+			<Add directory="src/SOIL" />
+		</Compiler>
+		<Linker>
+			<Add library="glew32" />
+			<Add library="glfw3" />
+			<Add library="opengl32" />
+			<Add library="glu32" />
+			<Add library="gdi32" />
+			<Add directory="C:/Libs/glfw-3.1.1.bin.WIN32/glfw-3.1.1.bin.WIN32/lib-mingw" />
+			<Add directory="C:/Libs/glew-1.10-src/glew-1.10.0/lib" />
+		</Linker>
+		<Unit filename="include/Assistant.h" />
+		<Unit filename="include/Billboard.h" />
+		<Unit filename="include/BillboardAssistant.h" />
+		<Unit filename="include/Camera.h" />
+		<Unit filename="include/EngineCommon.h" />
+		<Unit filename="include/GBuffer.h" />
+		<Unit filename="include/GameConsole.h" />
+		<Unit filename="include/Light.h" />
+		<Unit filename="include/Line.h" />
+		<Unit filename="include/Logger.h" />
+		<Unit filename="include/Material.h">
+			<Option compile="1" />
+		</Unit>
+		<Unit filename="include/Mesh.h" />
+		<Unit filename="include/ParticleSystem.h" />
+		<Unit filename="include/ParticleUpdateAssistant.h" />
+		<Unit filename="include/PerlinNoise.h" />
+		<Unit filename="include/RandomTexture.h" />
+		<Unit filename="include/SOIL/SOIL.h" />
+		<Unit filename="include/SOIL/image_DXT.h" />
+		<Unit filename="include/SOIL/image_helper.h" />
+		<Unit filename="include/SOIL/stb_image_aug.h" />
+		<Unit filename="include/SOIL/stbi_DDS_aug.h" />
+		<Unit filename="include/SOIL/stbi_DDS_aug_c.h" />
+		<Unit filename="include/Shader.h" />
+		<Unit filename="include/ShaderFunctions.h" />
+		<Unit filename="include/ShadowMapFBO.h" />
+		<Unit filename="include/Text_2D.h" />
+		<Unit filename="include/Texture.h" />
+		<Unit filename="include/UiBase.h" />
+		<Unit filename="include/main.h" />
+		<Unit filename="include/math_3d.h" />
+		<Unit filename="include/skybox.h" />
+		<Unit filename="include/tga_loader.h" />
+		<Unit filename="include/util.h" />
+		<Unit filename="src/Assistant.cpp" />
+		<Unit filename="src/Billboard.cpp" />
+		<Unit filename="src/BillboardAssistant.cpp" />
+		<Unit filename="src/Camera.cpp" />
+		<Unit filename="src/GBuffer.cpp" />
+		<Unit filename="src/GameConsole.cpp" />
+		<Unit filename="src/Light.cpp" />
+		<Unit filename="src/Logger.cpp" />
+		<Unit filename="src/Material.cpp" />
+		<Unit filename="src/Mesh.cpp" />
+		<Unit filename="src/ParticleSystem.cpp" />
+		<Unit filename="src/ParticleUpdateAssistant.cpp" />
+		<Unit filename="src/PerlinNoise.cpp" />
+		<Unit filename="src/RandomTexture.cpp" />
+		<Unit filename="src/Shader.cpp" />
+		<Unit filename="src/ShaderFunctions.cpp" />
+		<Unit filename="src/ShadowMapFBO.cpp" />
+		<Unit filename="src/Simple OpenGL Image Library/src/SOIL.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Simple OpenGL Image Library/src/image_DXT.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Simple OpenGL Image Library/src/image_helper.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Simple OpenGL Image Library/src/stb_image_aug.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="src/Skybox.cpp" />
+		<Unit filename="src/Text_2D.cpp" />
+		<Unit filename="src/Texture.cpp" />
+		<Unit filename="src/cubemap_texture.cpp" />
+		<Unit filename="src/main.cpp" />
+		<Unit filename="src/math_3d.cpp" />
+		<Unit filename="src/tga_loader.cpp" />
+		<Unit filename="src/util.cpp" />
+		<Unit filename="version.h">
+			<Option compile="1" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+			<AutoVersioning>
+				<Scheme minor_max="10" build_max="0" rev_max="0" rev_rand_max="300" build_times_to_increment_minor="100" />
+				<Settings autoincrement="1" date_declarations="1" use_define="0" update_manifest="1" do_auto_increment="0" ask_to_increment="1" language="C++" svn="0" svn_directory="" header_path="version.h" />
+				<Changes_Log show_changes_editor="0" app_title="released version %M.%m.%b of %p" changeslog_path="ChangesLog.txt" />
+				<Code header_guard="VERSION_H" namespace="AutoVersion" prefix="" />
+			</AutoVersioning>
+			<envvars />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
