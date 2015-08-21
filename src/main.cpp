@@ -444,36 +444,46 @@ static void DSPointLightPass()
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
+    //включаем шейдер
     DSPointLightShader->Use();
-    //камера
-    gCamViewID =	DSPointLightShader->GetUniformLocation("gVC");
-    camPosID =    shadowShader->GetUniformLocation("s_vCamPos");
-    pointLightPosID = DSPointLightShader->GetUniformLocation("s_vPointLightPos");
-    pointLightIntID = DSPointLightShader->GetUniformLocation("pointLightIntensity");
-    pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
 
+    //определяем адрес переменных камеры
+    gCamViewID =	DSPointLightShader->GetUniformLocation("gVC");
+    rotateID =	    DSPointLightShader->GetUniformLocation("mRotate");
+    camPosID =    DSPointLightShader->GetUniformLocation("s_vCamPos");
+
+    //загружаем матрицу камеры
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    //взагружаем вращение камеры для спекуляра
+    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);
+
+
+    //загружаем текстуры в шейдер
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0),4);//world pos
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
 
-    //матрица камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //вращение камеры для спекуляра
-    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);
+    //включаем данные из буффера
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
 
-    //точечный
+
+    //определяем адрес параметров света
+    pointLightPosID = DSPointLightShader->GetUniformLocation("s_vPointLightPos");
+    pointLightIntID = DSPointLightShader->GetUniformLocation("pointLightIntensity");
+    pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
+
+    //загружаем параметры света для источника 1
     Assistant LA2;
     LA2.Scale(pointLight1->color[0],pointLight1->color[1],pointLight1->color[2]);
     glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
     glUniform3f(pointLightPosID,pointLight1->position[0],pointLight1->position[1],pointLight1->position[2]);
     glUniform1f(pointLightIntID,pointLight1->power);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
-
     pointLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
 
+    //загружаем параметры для источника 2
     LA2.Scale(pointLight2->color[0],pointLight2->color[1],pointLight2->color[2]);
     glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
     glUniform3f(pointLightPosID,pointLight2->position[0],pointLight2->position[1],pointLight2->position[2]);
@@ -485,46 +495,53 @@ static void DSPointLightPass()
 static int DSDirectionalLightPass()
 {
     gBuffer1->BindForReading();
-
+    glDisable(GL_DEPTH_TEST);
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     DSDirectionalLightShader->Use();
-    //камера
-    gCamViewID =	DSPointLightShader->GetUniformLocation("gVC");
-    //pointLightPosID = DSPointLightShader->GetUniformLocation("s_vPointLightPos");
-    //pointLightIntID = DSPointLightShader->GetUniformLocation("pointLightIntensity");
-    dirLightColID = DSPointLightShader->GetUniformLocation("dirLightColor");
-    dirLightDirID = DSPointLightShader->GetUniformLocation("dirLightDirection");
-
-    //gCamViewID =	shadowShader->GetUniformLocation("gVC");
-    //rotateID =	    shadowShader->GetUniformLocation("mRotate");
-
-
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),4);//world pos
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
-
+    //получаем адрес параметров камеры
+    gCamViewID =	DSDirectionalLightShader->GetUniformLocation("gVC");
+    rotateID =	    DSDirectionalLightShader->GetUniformLocation("mRotate");
+    camPosID =    DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
+    //загружаем вращение камеры для спекуляра
+    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);
+    //загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //Направленный
+
+    //получаем адрес переменных света
+    dirLightColID = DSDirectionalLightShader->GetUniformLocation("dirLightColor");
+    dirLightDirID = DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
+
+    //загрузка параметров света
     Assistant LA2;
     LA2.Scale(directionalLight1->color[0],directionalLight1->color[1],directionalLight1->color[2]);
     glUniformMatrix4fv(dirLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
     glUniform3f(dirLightDirID,directionalLight1->direction[0],
                             directionalLight1->direction[1],
                             directionalLight1->direction[2]);
+
+    //загружаем текстуры в шейдер
+    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),4);//world pos
+    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
+    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
+    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
+
+
+
     /*printf("\n %f %f %f",directionalLight1->direction[0],
                             directionalLight1->direction[1],
                             directionalLight1->direction[2]);*/
     //glUniform1f(pointLightIntID,pointLight1->power);
 
+    //включаем данные из буффера
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
     directionalLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    glEnable(GL_DEPTH_TEST);
     return 0;
 }
 
@@ -540,6 +557,11 @@ static void InterfacePass()
     //gBuffer1->CheckTextures();
     CalcFPS();
     fLine1->Render(ConvertToString(fps),-1.0f,-0.1f,24.0f);
+
+    if(renderType==0)
+    {
+        fLine1->Render("Deferred shading",-1.0f,-0.2f,24.0f);
+    }
 
     pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera,width,height);
@@ -591,9 +613,9 @@ static void RenderScene(GLFWwindow* window)
 {
     //ShadowPass();
     //RenderPass();
-    DSGeometryPass();
+    //DSGeometryPass();
    // DSBeginLightPasses();//вообще пока не нужно
-    DSPointLightPass();
+    //DSPointLightPass();
     //DSLightingPass();
     //обычный deffered shading
     if(renderType==0)

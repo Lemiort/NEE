@@ -67,10 +67,10 @@ vec4 CalcBaseLight(mat4 color)
 void main()
 {
 	//vec2 screenPosUV = CalcTexCoord();
-	//vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	//vec4 screenPos= texture(gSampler8, screenPosUV);//позиция точки на экране
 	fColor0 = CalcBaseLight(dirLightColor);
 	//fColor0 = screenPos;
-	fColor0 = vec4(fN, 1.0);
+	//fColor0 = vec4(normalize(fN), 1.0);
 	fColor0.a = 1.0;
 
 }

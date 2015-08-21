@@ -33,7 +33,7 @@ DirectionalLight::DirectionalLight(GLfloat d1,GLfloat d2,GLfloat d3,GLfloat r,GL
 void DirectionalLight::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
 			{
 				//mesh->SetScale(1.0,1.0,1.0);
-				//mesh->SetPosition(0,0,0);
+				mesh->SetPosition(0,0,0);
 				mesh->Render(FOV,Width,Height,zNear,zFar,cam);
 			}
 

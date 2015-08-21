@@ -2,7 +2,7 @@
 
 uniform mat4 gWorld;
 uniform mat4 gVC;
-uniform mat4 mRotate;//артефакт предыдущих версий
+uniform mat4 mRotate;//вращение объекта, нужно ли оно?
 
                                                                              
 in vec3 s_vPosition;
@@ -27,7 +27,7 @@ void main()
 	once[2][2] = 1.0;
 	once[3][3] = 1.0;*/
 	
-	gl_Position = vec4(s_vPosition.x,s_vPosition.y,s_vPosition.z, 1.0);
+	gl_Position = vec4(s_vPosition.x,s_vPosition.y, 0.0, 1.0);
 	screenSpacePos = vec4(s_vPosition, 1.0);
 	//gl_Position.z = 0.0;
 	
