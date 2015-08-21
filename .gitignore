@@ -24,14 +24,16 @@ $RECYCLE.BIN/
 *.depend
 *.layout
 *.save
-# не обрабатывать файлы, имя которых заканчивается на .a
-*.a
 
 #Images
 *.tga
 
 #Other
 *.gch
+*.cscope_file_list
+
+#C++
+*.o
 
 # =========================
 # Operating System Files
