@@ -774,3 +774,182 @@
 1439723360 c:\users\mvideo\documents\projects\glfw-3\include\gameconsole.h
 	<string>
 
+1410033653 source:c:\users\mvideo\documents\git\nee\include\material.h
+	<GL\glew.h>
+	"Texture.h"
+	"Shader.h"
+
+1410035145 c:\users\mvideo\documents\git\nee\include\texture.h
+	"SOIL.h"
+	<GL/glew.h>
+	<string>
+	<sstream>
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\soil.h
+
+1439503256 c:\users\mvideo\documents\git\nee\include\shader.h
+	<GL/glew.h>
+	<string>
+
+1439717098 source:c:\users\mvideo\documents\git\nee\src\assistant.cpp
+	"Assistant.h"
+	<fstream>
+
+1399744149 source:c:\users\mvideo\documents\git\nee\src\billboard.cpp
+	"Billboard.h"
+
+1394218188 source:c:\users\mvideo\documents\git\nee\src\billboardassistant.cpp
+	"BillboardAssistant.h"
+
+1439565276 source:c:\users\mvideo\documents\git\nee\src\camera.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	"camera.h"
+
+1392740603 source:c:\users\mvideo\documents\git\nee\src\cubemap_texture.cpp
+	<iostream>
+	<cstring>
+	"cubemap_texture.h"
+	"tga_loader.h"
+	"util.h"
+
+1439565314 c:\users\mvideo\documents\git\nee\src\cubemap_texture.h
+	<string>
+	<GL\glew.h>
+	<GLFW\glfw3.h>
+
+1439723364 source:c:\users\mvideo\documents\git\nee\src\gameconsole.cpp
+	"GameConsole.h"
+
+1422201864 source:c:\users\mvideo\documents\git\nee\src\gbuffer.cpp
+	"GBuffer.h"
+	"util.h"
+	<iostream>
+	<Texture.h>
+
+1439720219 source:c:\users\mvideo\documents\git\nee\src\light.cpp
+	"Light.h"
+	<iomanip>
+
+1389281429 source:c:\users\mvideo\documents\git\nee\src\logger.cpp
+	"Logger.h"
+
+1439761635 source:c:\users\mvideo\documents\git\nee\src\main.cpp
+	<GL/glew.h>
+	<GLFW/glfw3.h>
+	<ctime>
+	<stdio.h>
+	<stdlib.h>
+	<main.h>
+
+1420911345 source:c:\users\mvideo\documents\git\nee\src\material.cpp
+	"Material.h"
+	<cstdlib>
+	<util.h>
+	<iostream>
+
+1410029296 source:c:\users\mvideo\documents\git\nee\src\math_3d.cpp
+	"math_3d.h"
+	<cmath>
+	<cstdlib>
+
+1439716357 source:c:\users\mvideo\documents\git\nee\src\mesh.cpp
+	"Mesh.h"
+
+1394218331 source:c:\users\mvideo\documents\git\nee\src\particlesystem.cpp
+	"ParticleSystem.h"
+
+1394285814 source:c:\users\mvideo\documents\git\nee\src\particleupdateassistant.cpp
+	"ParticleUpdateAssistant.h"
+
+1392892862 source:c:\users\mvideo\documents\git\nee\src\perlinnoise.cpp
+	"PerlinNoise.h"
+
+1394218909 source:c:\users\mvideo\documents\git\nee\src\randomtexture.cpp
+	"RandomTexture.h"
+
+1439566628 source:c:\users\mvideo\documents\git\nee\src\shader.cpp
+	"Shader.h"
+	"ShaderFunctions.h"
+
+1392905339 source:c:\users\mvideo\documents\git\nee\src\shaderfunctions.cpp
+	"ShaderFunctions.h"
+
+1413823011 source:c:\users\mvideo\documents\git\nee\src\shadowmapfbo.cpp
+	"ShadowMapFBO.h"
+	<stdio.h>
+	<iostream>
+	<util.h>
+	<Texture.h>
+
+1215440008 source:c:\users\mvideo\documents\git\nee\src\simple opengl image library\src\image_dxt.c
+	"image_DXT.h"
+	<math.h>
+	<stdlib.h>
+	<string.h>
+	<stdio.h>
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\image_dxt.h
+
+1215440008 source:c:\users\mvideo\documents\git\nee\src\simple opengl image library\src\image_helper.c
+	"image_helper.h"
+	<stdlib.h>
+	<math.h>
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\image_helper.h
+
+1392741354 source:c:\users\mvideo\documents\git\nee\src\simple opengl image library\src\soil.c
+	<windows.h>
+	<wingdi.h>
+	<GL/gl.h>
+	<OpenGL/gl.h>
+	<Carbon/Carbon.h>
+	<GL/glx.h>
+	<GL\glew.h>
+	<GL\glfw3.h>
+	"SOIL.h"
+	"stb_image_aug.h"
+	"image_helper.h"
+	"image_DXT.h"
+	<stdlib.h>
+	<string.h>
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\stb_image_aug.h
+	<stdio.h>
+
+1215440008 source:c:\users\mvideo\documents\git\nee\src\simple opengl image library\src\stb_image_aug.c
+	"stb_image_aug.h"
+	<math.h>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<memory.h>
+	<assert.h>
+	<stdarg.h>
+	"stbi_DDS_aug.h"
+	"stbi_DDS_aug_c.h"
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\stbi_dds_aug.h
+
+1215440008 c:\users\mvideo\documents\git\nee\include\soil\stbi_dds_aug_c.h
+
+1404428258 source:c:\users\mvideo\documents\git\nee\src\skybox.cpp
+	"skybox.h"
+
+1422793947 source:c:\users\mvideo\documents\git\nee\src\text_2d.cpp
+	"Text_2D.h"
+	<fstream>
+	<sstream>
+	<stdexcept>
+
+1410035139 source:c:\users\mvideo\documents\git\nee\src\texture.cpp
+	"Texture.h"
+
+1390988315 source:c:\users\mvideo\documents\git\nee\src\tga_loader.cpp
+	"tga_loader.h"
+
+1410107877 source:c:\users\mvideo\documents\git\nee\src\util.cpp
+	<util.h>
+
+1439720805 source:c:\users\mvideo\documents\git\nee\version.h
+
