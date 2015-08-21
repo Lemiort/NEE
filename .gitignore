@@ -17,6 +17,17 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
+# Windows executable files
+*.exe
+
+# Codeblocks files
+*.depend
+*.layout
+*.save
+
+#Other
+*.gch
+
 # =========================
 # Operating System Files
 # =========================
