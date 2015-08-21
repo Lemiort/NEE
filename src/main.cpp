@@ -387,6 +387,11 @@ static void DSBeginLightPasses()
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 }
 
+static void DSEndLigtPasses()
+{
+    glDisable(GL_BLEND);
+}
+
 static void DSLightingPass()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -624,6 +629,7 @@ static void RenderScene(GLFWwindow* window)
         DSBeginLightPasses();//вообще пока не нужно
         DSPointLightPass();
         DSDirectionalLightPass();
+        //DSEndLigtPasses();
     }
     //дебагинговый вид
     else if(renderType <=4)

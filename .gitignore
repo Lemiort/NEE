@@ -25,6 +25,9 @@ $RECYCLE.BIN/
 *.layout
 *.save
 
+#Images
+*.tga
+
 #Other
 *.gch
 
