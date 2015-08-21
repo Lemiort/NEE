@@ -24,6 +24,8 @@ $RECYCLE.BIN/
 *.depend
 *.layout
 *.save
+# не обрабатывать файлы, имя которых заканчивается на .a
+*.a
 
 #Images
 *.tga
