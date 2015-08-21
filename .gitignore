@@ -63,3 +63,4 @@ Temporary Items
 *.o
 *.gch
 *.gch
+include/Material.h.gch
