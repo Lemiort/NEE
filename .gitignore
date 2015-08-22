@@ -35,6 +35,8 @@ $RECYCLE.BIN/
 
 #C++
 *.o
+/obj
+/Obj
 
 # =========================
 # Operating System Files
