@@ -38,14 +38,12 @@
 			<Add option="-Wall" />
 			<Add directory="C:/Libs/glfw-3.1.1.bin.WIN32/glfw-3.1.1.bin.WIN32/include" />
 			<Add directory="C:/Libs/glew-1.10-src/glew-1.10.0/include" />
-			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/src/Simple OpenGL Image Library/src" />
-			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/src" />
-			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3/include" />
-			<Add directory="C:/Users/mvideo/Documents/Projects/GLFW-3" />
-			<Add directory="include" />
+			<Add directory="src/Simple OpenGL Image Library/src" />
 			<Add directory="src" />
+			<Add directory="include" />
 			<Add directory="include/SOIL" />
 			<Add directory="src/SOIL" />
+			<Add directory="../NEE" />
 		</Compiler>
 		<Linker>
 			<Add library="glew32" />
