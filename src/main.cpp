@@ -94,12 +94,12 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
         glfwSetWindowShouldClose(window, GL_TRUE);
     if( action == GLFW_PRESS || action==GLFW_REPEAT)
         {
-            if(key==GLFW_KEY_I) pointLight1->position[0]+=0.1;
-            if(key==GLFW_KEY_K) pointLight1->position[0]-=0.1;
-            if(key==GLFW_KEY_L) pointLight1->position[1]-=0.1;
-            if(key==GLFW_KEY_J) pointLight1->position[1]+=0.1;
-            if(key==GLFW_KEY_U) pointLight1->position[2]+=0.1;
-            if(key==GLFW_KEY_O) pointLight1->position[2]-=0.1;
+            if(key==GLFW_KEY_I) spotLight1->target[0]+=0.1;
+            if(key==GLFW_KEY_K) spotLight1->target[0]-=0.1;
+            if(key==GLFW_KEY_O) spotLight1->target[1]+=0.1;
+            if(key==GLFW_KEY_L) spotLight1->target[1]-=0.1;
+            if(key==GLFW_KEY_U) spotLight1->target[2]+=0.1;
+            if(key==GLFW_KEY_J) spotLight1->target[2]-=0.1;
             if(key==GLFW_KEY_F5)
             {
                 renderType+=1;
@@ -468,6 +468,7 @@ static void DSPointLightPass()
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
+    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
 
     //включаем данные из буффера
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -497,10 +498,68 @@ static void DSPointLightPass()
     pointLight2->Render(30,width,height,1.0,1000.0,pGameCamera);
 }
 
-static int DSDirectionalLightPass()
+static void DSSpotLightPass()
 {
     gBuffer1->BindForReading();
-    glDisable(GL_DEPTH_TEST);
+
+
+    Assistant TM;//TM - ƒл€ объекта, 2- дл€ нормали объекта, 3 - дл€ позиции камера дл€ спекул€ра
+    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+
+    //включаем шейдер
+    DSSpotLightShader->Use();
+
+    //определ€ем адрес переменных камеры
+    gCamViewID =	DSSpotLightShader->GetUniformLocation("gVC");
+    rotateID =	    DSSpotLightShader->GetUniformLocation("mRotate");
+    camPosID =    DSSpotLightShader->GetUniformLocation("s_vCamPos");
+
+    //загружаем матрицу камеры
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    //взагружаем вращение камеры дл€ спекул€ра
+    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);
+
+
+    //загружаем текстуры в шейдер
+    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0),4);//world pos
+    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
+    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
+    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
+    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
+    //включаем данные из буффера
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
+
+
+    //определ€ем адрес параметров света
+    spotLightPosID = DSSpotLightShader->GetUniformLocation("sLightPos");
+    spotLightColID = DSSpotLightShader->GetUniformLocation("sLightCol");
+    spotLightDirID = DSSpotLightShader->GetUniformLocation("sLightDir");
+    spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
+
+    //загружаем параметры света дл€ источника 1
+    Assistant LA2;
+    LA2.Scale(spotLight1->color[0],spotLight1->color[1],spotLight1->color[2]);
+    glUniform3f(spotLightPosID,spotLight1->position[0],
+                                spotLight1->position[1],
+                                spotLight1->position[2]);
+    glUniformMatrix4fv(spotLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
+    glUniform3f(spotLightDirID,spotLight1->direction[0],
+                                spotLight1->direction[1],
+                                spotLight1->direction[2]);
+    glUniform1f(spotLightCutoffID,cosf(ToRadian(spotLight1->Cutoff)));
+
+    //включаем данные из буффера
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    spotLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
+}
+
+static void DSDirectionalLightPass()
+{
+    gBuffer1->BindForReading();
+    //glDisable(GL_DEPTH_TEST);
 
     Assistant TM;//TM - ƒл€ объекта, 2- дл€ нормали объекта, 3 - дл€ позиции камера дл€ спекул€ра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
@@ -533,6 +592,8 @@ static int DSDirectionalLightPass()
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),5);//diffuse
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
+    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
+
 
 
 
@@ -546,13 +607,12 @@ static int DSDirectionalLightPass()
     //glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
     directionalLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
-    glEnable(GL_DEPTH_TEST);
-    return 0;
+    //glEnable(GL_DEPTH_TEST);
 }
 
 static void InterfacePass()
 {
-    glDisable(GL_DEPTH_TEST);
+    //glDisable(GL_DEPTH_TEST);
     xline->Render(pGameCamera,width, height);
     yline->Render(pGameCamera, width, height);
     zline->Render(pGameCamera,width, height);
@@ -568,9 +628,9 @@ static void InterfacePass()
         fLine1->Render("Deferred shading",-1.0f,-0.2f,24.0f);
     }
 
-    pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
+    //pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera,width,height);
-    glEnable(GL_DEPTH_TEST);
+    //glEnable(GL_DEPTH_TEST);
 }
 
 static void DSGeometryPass()
@@ -578,13 +638,13 @@ static void DSGeometryPass()
 
     gBuffer1->BindForWriting();
     //запись в глубину
-    //glDepthMask(GL_TRUE);
+    glDepthMask(GL_TRUE);
 
     //этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    //glEnable(GL_DEPTH_TEST);
-    //glDisable(GL_BLEND);
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 
     CalcFPS();
 
@@ -609,8 +669,8 @@ static void DSGeometryPass()
 
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 
-    //glDepthMask(GL_FALSE);
-    //glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_DEPTH_TEST);
 
 }
 
@@ -629,7 +689,8 @@ static void RenderScene(GLFWwindow* window)
         DSBeginLightPasses();//вообще пока не нужно
         DSPointLightPass();
         DSDirectionalLightPass();
-        //DSEndLigtPasses();
+        DSSpotLightPass();
+        DSEndLigtPasses();
     }
     //дебагинговый вид
     else if(renderType <=4)
@@ -873,10 +934,10 @@ static int InitScene()
                                    0.2, 1.0,6.0,
                                    0.1,
                                     DSPointLightMaterial);
-        spotLight1=new SpotLight(-1.0f,-1.0f,-1.0f,//direction
-                     1.0f,1.0f,0.0f,//color
-                     2.0f,2.0f,2.0f,//position
-                     35.0f,
+        spotLight1=new SpotLight(1.5f,0.0f,0.5f,//target
+                     1.0f,0.0f,0.0f,//color
+                     0.0f,1.0f,0.0f,//position
+                     35.0f,  //cutoff in degrees
                      DSSpotLightMaterial);
         Vector3f PX(1,0,0);
         Vector3f PY(0,1,0);

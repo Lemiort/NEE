@@ -6,14 +6,21 @@
 #include "ShaderFunctions.h"
 #include "Mesh.h"
 #define BUFFER_OFFSET(i) ((char*)NULL +(i))
-class DirectionalLight
+
+class Light
+{
+public:
+    GLfloat	color[3];
+};
+
+class DirectionalLight: public Light
 	{
     protected:
 	    Shader* shaderProgram;
         Mesh* mesh;
 	public:
 		GLfloat direction[4];
-		GLfloat	color[3];
+		//GLfloat	color[3];
 		DirectionalLight();
         Vector3f GetDir();
 		Vector3f GetCol();
@@ -23,11 +30,11 @@ class DirectionalLight
 		virtual void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
 		~DirectionalLight();
 	};
-class PointLight
+class PointLight: public Light
 	{
 	public:
 		float position[3];
-		float	color[3];
+		//float	color[3];
 		float power;
 		PointLight(float d1,float d2,float d3,float r,float g,float b, float p, Material* _mat);
 		~PointLight();
@@ -50,7 +57,7 @@ class PointLight
 class SpotLight:public DirectionalLight
 	{
 	public:
-		float Cutoff;
+		float Cutoff; //угол отсечения в радианах
 		float position[3];
         float target[3];
 		SpotLight();

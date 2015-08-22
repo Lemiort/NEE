@@ -145,19 +145,19 @@ void SpotLight::Render(float FOV, float Width, float Height, float zNear, float 
                 direction[3]=1;
 
 
-                Vector3f dir(-direction[0],
-                                     -direction[1],
-                                     -direction[2]);
+                Vector3f dir(direction[0],
+                                     direction[1],
+                                     direction[2]);
                 Vector3f proj(0,1,0);
-                Vector3f directionXY(-direction[0],
-                                     -direction[1],
+                Vector3f directionXY(direction[0],
+                                     direction[1],
                                      0);
                 Vector3f directionYZ(0,
-                                     -direction[1],
-                                     -direction[2]);
-                Vector3f directionXZ(-direction[0],
+                                     direction[1],
+                                     direction[2]);
+                Vector3f directionXZ(direction[0],
                                      0,
-                                     -direction[2]);
+                                     direction[2]);
 
                 float xrot = 0, yrot = 0, zrot = 0;
 
@@ -243,9 +243,9 @@ void SpotLight::Render(float FOV, float Width, float Height, float zNear, float 
 
                 //TODO идея: использовать скалярное произведение векторов
 
-                mesh->SetScale(dir.Lenght()*cos(Cutoff),
+                mesh->SetScale(dir.Lenght()*cos(ToRadian(Cutoff)),
                                dir.Lenght(),
-                               dir.Lenght()*cos(Cutoff));
+                               dir.Lenght()*cos(ToRadian(Cutoff)));
 
 				mesh->SetPosition(position[0],position[1],position[2]);
 				mesh->Render(FOV,Width,Height,zNear,zFar,cam);

@@ -59,7 +59,7 @@ vec4 CalcBaseLight(mat4 color)
 	vec3 H=normalize(E+L);
 	
 	float diffuse_intensity=max(dot(N,L),0.0);
-	float spec_intensity=pow(max(dot(N,H),0.0),3000);
+	float spec_intensity=pow(max(dot(N,H),0.0),300);
 	vec4 result=color*(diffuse_intensity*texture2D(gSampler5, screenPosUV)+spec_intensity*texture2D(gSampler8, screenPosUV));
 	return result;
 }

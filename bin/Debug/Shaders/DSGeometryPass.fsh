@@ -60,8 +60,8 @@ void main()
 	else*/
 	fColor0 = Position;
 		
-	fColor1 = texture(colTexSampler, UV);
+	fColor1 = vec4(texture(colTexSampler, UV).xyz, 1.0);
 	fColor2 = vec4(Normal,1.0);
 	fColor3 = vec4(UV,0.0,1.0);
-	fColor4 = texture(specTexSampler, UV);
+	fColor4 = vec4(texture(specTexSampler, UV).xyz, 1.0);
 }

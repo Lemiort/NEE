@@ -95,11 +95,19 @@ vec4 CalcSpotLight(mat4 color)
 		vec3 E=normalize(-fE);
 		vec3 H=normalize(E+L);
 		float diffuse_intensity=max(dot(N,L),0.0);
-		float spec_intensity=pow(max(dot(N,H),0.0),3000);
+		float spec_intensity=pow(max(dot(N,H),0.0),300);
 		float d=1.0/(1.0-sLightCutoff);
 		float SpotFactor=dot(R,-L);
-		vec4 result=color*(diffuse_intensity*texture2D(colTexSampler, UV)+spec_intensity*texture2D(specTexSampler, UV));
-		return result*(1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - sLightCutoff));
+		
+		if(SpotFactor > sLightCutoff)
+		{
+			vec4 result=color*(diffuse_intensity*texture2D(gSampler5, screenPosUV)+spec_intensity*texture2D(gSampler8, screenPosUV));
+			return result*(1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - sLightCutoff));
+		}
+		else
+		{
+			return vec4(0.0,0.0,0.0,0.0);
+		}
 	}
 }
 
@@ -108,7 +116,11 @@ void main()
 	
 	//fColor0= CalcBaseLight(normalize(pointLightPos-gl_FragCoord).xyz, fN, pointLightColor);
 	fColor0 = CalcSpotLight(sLightCol);
-	//fColor0.xyz += vec3(1.0,0.0,0.2);
+	//fColor0.xyz += vec3(0.0,0.1,0.0);
+	
+	/*vec2 screenPosUV = CalcTexCoord();
+	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	fColor0 = vec4(normalize(screenPos.xyz - sLightPos),1.0);*/
 	fColor0.a = 1.0;
 
 }

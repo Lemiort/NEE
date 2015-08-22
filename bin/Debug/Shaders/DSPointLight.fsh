@@ -66,7 +66,7 @@ vec4 CalcPointLight(mat4 lightColor)
 		vec3 H = normalize(E+L);
 		
 		float diffuse_intensity=max(dot(N,L),0.0);
-		float spec_intensity=pow(max(dot(N,H),0.0),1);
+		float spec_intensity=pow(max(dot(N,H),0.0),300);
 		
 		float attenuation = distance * distance;
 		//attenuation = max(1.0, attenuation);
