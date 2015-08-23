@@ -11,10 +11,8 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    // Создаем текстуры gbuffer
+    //создаём и инициализируем карты цвета и пр.
     glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
-    glGenTextures(1, &m_depthTexture);
-
     for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures) ; i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
@@ -26,8 +24,9 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
     }
 
 
-
-    // глубина
+    // создаём текстуру глубины
+    glGenTextures(1, &m_depthTexture);
+    //инициализируем карту глубины
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
     //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
                                            //NULL);
@@ -40,12 +39,14 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
     //glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
 
-    // final
+
+    // создаём и инциализируем финальную карту цвета
+    glGenTextures(1, &m_finalTexture);
     glBindTexture(GL_TEXTURE_2D, m_finalTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
                            GL_COLOR_ATTACHMENT0+ARRAY_SIZE_IN_ELEMENTS(m_textures),
-                        GL_TEXTURE_2D, m_finalTexture, 0);
+                            GL_TEXTURE_2D, m_finalTexture, 0);
 
 
     GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,

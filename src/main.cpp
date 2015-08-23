@@ -435,10 +435,58 @@ static void DSLightingPass()
     fLine1->Render((ConvertToString(spfaces)+" faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
+static void DSStencilPass(Light& light)
+{
+    //m_nullTech.Enable();
+
+    // Отключаем запись цвета / глубины и включаем трафарет
+    gBuffer1->BindForStencilPass();
+    glEnable(GL_DEPTH_TEST);
+
+        glDisable(GL_CULL_FACE);
+
+    glClear(GL_STENCIL_BUFFER_BIT);
+
+    // Нам нужен тест трафарета, но мы хотим, что бы он всегда
+    // успешно проходил. Важен только тест глубины.
+    glStencilFunc(GL_ALWAYS, 0, 0);
+
+    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
+    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
+
+    Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
+    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+
+    //включаем шейдер
+    DSStencilPassShader->Use();
+
+    //определяем адрес переменных камеры
+    gCamViewID =	DSStencilPassShader->GetUniformLocation("gVC");
+    rotateID =	    DSStencilPassShader->GetUniformLocation("mRotate");
+    camPosID =    DSStencilPassShader->GetUniformLocation("s_vCamPos");
+
+    //загружаем матрицу камеры
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+
+    light.SetMaterial(DSStencilPassMaterial);
+    light.Render(30,width,height,1.0,1000.0,pGameCamera);
+}
+
 static void DSPointLightPass(PointLight& pointLight)
 {
-    gBuffer1->BindForReading();
+    //gBuffer1->BindForReading();
+    gBuffer1->BindForLightPass();
 
+    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_FRONT);
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
@@ -466,7 +514,7 @@ static void DSPointLightPass(PointLight& pointLight)
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
 
     //включаем данные из буффера
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
 
 
@@ -485,13 +533,8 @@ static void DSPointLightPass(PointLight& pointLight)
     pointLight.SetMaterial(DSPointLightMaterial);
     pointLight.Render(30,width,height,1.0,1000.0,pGameCamera);
 
-    /*//загружаем параметры для источника 2
-    LA2.Scale(pointLight2->color[0],pointLight2->color[1],pointLight2->color[2]);
-    glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
-    glUniform3f(pointLightPosID,pointLight2->position[0],pointLight2->position[1],pointLight2->position[2]);
-    glUniform1f(pointLightIntID,pointLight2->power);
-
-    pointLight2->Render(30,width,height,1.0,1000.0,pGameCamera);*/
+    glCullFace(GL_BACK);
+    glDisable(GL_BLEND);
 }
 
 static void DSSpotLightPass(SpotLight& spotLight)
@@ -607,8 +650,17 @@ static void DSDirectionalLightPass(DirectionalLight& directionalLight)
     //glEnable(GL_DEPTH_TEST);
 }
 
+static void DSFinalPass()
+{
+    gBuffer1->BindForFinalPass();
+    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
+                      0, 0, WINDOW_WIDTH,
+                      WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+}
+
 static void InterfacePass()
 {
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
     //glDisable(GL_DEPTH_TEST);
     xline->Render(30,width,height,1.0,1000.0,pGameCamera);
     yline->Render(30,width,height,1.0,1000.0,pGameCamera);
@@ -632,12 +684,11 @@ static void InterfacePass()
 
 static void DSGeometryPass()
 {
-
-    gBuffer1->BindForWriting();
-    //запись в глубину
+    gBuffer1->BindForGeomPass();
+    //gBuffer1->BindForWriting();
+    //Только геометрический проход обновляет тест глубины
     glDepthMask(GL_TRUE);
 
-    //этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glEnable(GL_DEPTH_TEST);
@@ -664,7 +715,7 @@ static void DSGeometryPass()
         Cube.Render(30,width, height, 1, 1000,pGameCamera);
     }
 
-    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    //glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
@@ -682,13 +733,27 @@ static void RenderScene(GLFWwindow* window)
     //обычный deffered shading
     if(renderType==0)
     {
+        gBuffer1->StartFrame();
         DSGeometryPass();
-        DSBeginLightPasses();//вообще пока не нужно
-        DSPointLightPass(*pointLight1);
-        DSPointLightPass(*pointLight2);
-        DSDirectionalLightPass(*directionalLight1);
-        DSSpotLightPass(*spotLight1);
-        DSEndLigtPasses();
+        // Для того, что бы обновился буфер трафарета нужно его активировать,
+        // так же он потребуется и в проходе света, так как свет рендерится
+        // только при успешном проходе трафарета.
+        glEnable(GL_STENCIL_TEST);
+        //DSBeginLightPasses();//вообще пока не нужно
+        {
+            DSStencilPass(*pointLight1);
+            DSPointLightPass(*pointLight1);
+            DSStencilPass(*pointLight1);
+            DSPointLightPass(*pointLight2);
+        }
+        // Направленному свету не требуется трафарет
+        // так как его действие не ограничено расстоянием.
+        glDisable(GL_STENCIL_TEST);
+
+        //DSDirectionalLightPass(*directionalLight1);
+        //DSSpotLightPass(*spotLight1);
+        DSFinalPass();
+        //DSEndLigtPasses();
     }
     //дебагинговый вид
     else if(renderType <=4)
@@ -700,7 +765,7 @@ static void RenderScene(GLFWwindow* window)
     {
         RenderPass();
     }
-    InterfacePass();
+    //InterfacePass();
 }
 static int InitScene()
 {
