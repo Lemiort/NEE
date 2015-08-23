@@ -38,11 +38,6 @@ Billboard* bb1;
 ShadowMapFBO* smfbo1;
 
 Material* mainMaterial,* secondMaterial,*shadowMaterial;
-Material* shadowMeshMaterial;
-Material* DSGeometryPassMaterial;
-Material* DSPointLightMaterial;
-Material* DSDirectionalLightMaterial;
-Material* DSSpotLightMaterial;
 Texture2D* colorMap1, *colorMap2, *whiteTexture;
 float fps;
 int frameCount;
@@ -788,6 +783,25 @@ static int InitScene()
         Plane.Init(shadowMeshMaterial, "Models/normal_plane.ho3d");
     }
 
+    //шейдер StencilPass материал
+    {
+        //грузим шейдер
+        {
+            vertexShaderSorceCode=ReadFile("Shaders/DSStencilPass.vsh");
+            DSStencilPassShader=new Shader();
+            DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
+            DSStencilPassShader->Init();
+
+            delete[] vertexShaderSorceCode;
+        }
+        //грузим материал
+        {
+            DSStencilPassMaterial = new Material;
+            DSStencilPassMaterial->Init(DSStencilPassShader);
+        }
+
+    }
+
     //шейдер GBufferа и сам буффер, материал
     {
         gBuffer1 = new GBuffer;
@@ -968,8 +982,8 @@ static int InitScene()
     fLine1->SetAspectRatio(width,height);
 
     //*************Shadow MAP FBO**********/
-    smfbo1 = new ShadowMapFBO();
-    smfbo1->Init(width,height);
+    //smfbo1 = new ShadowMapFBO();
+    //smfbo1->Init(width,height);
     //************************************/
     //pGameCamera = new Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
     return 0;
