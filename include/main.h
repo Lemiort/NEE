@@ -45,6 +45,14 @@ Shader* DSGeometryPassShader;
 Shader* DSPointLightShader;
 Shader* DSDirectionalLightShader;
 Shader* DSSpotLightShader;
+Shader* DSStencilPassShader;
+
+Material* shadowMeshMaterial;
+Material* DSGeometryPassMaterial;
+Material* DSPointLightMaterial;
+Material* DSDirectionalLightMaterial;
+Material* DSSpotLightMaterial;
+Material* DSStencilPassMaterial;
 
 GBuffer* gBuffer1;
 

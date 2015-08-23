@@ -29,11 +29,16 @@ public:
 
     bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 
+    void StartFrame();
+    void BindForGeomPass();
+    void BindForStencilPass();
+    void BindForLightPass();
+    void BindForFinalPass();
+
     void BindForWriting();
-
     void BindForReading();
-
      void SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType);
+
 
      void CheckTextures();
 
@@ -47,5 +52,6 @@ private:
     GLuint m_textures[GBUFFER_NUM_TEXTURES];
     GLuint m_depthTexture;
     GLuint m_testTexture;
+    GLuint m_finalTexture;
 };
 #endif // GBUFFER_H

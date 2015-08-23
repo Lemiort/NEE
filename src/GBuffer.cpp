@@ -29,17 +29,30 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight)
 
     // глубина
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
-                                            NULL);
+    //glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT,
+                                           //NULL);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, WindowWidth, WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     //TODO расставить правильно эти параметры
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
+    //glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_TEXTURE_2D, m_depthTexture, 0);
+
+    // final
+    glBindTexture(GL_TEXTURE_2D, m_finalTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0, GL_RGB, GL_FLOAT, NULL);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0+ARRAY_SIZE_IN_ELEMENTS(m_textures),
+                        GL_TEXTURE_2D, m_finalTexture, 0);
 
 
-    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,GL_COLOR_ATTACHMENT4 };
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,
+                             GL_COLOR_ATTACHMENT1,
+                             GL_COLOR_ATTACHMENT2,
+                             GL_COLOR_ATTACHMENT3,
+                             GL_COLOR_ATTACHMENT4 };
 
     glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
     std::cout<<"\n draw buffers:"<<ARRAY_SIZE_IN_ELEMENTS(DrawBuffers);
@@ -122,4 +135,47 @@ GLuint GBuffer::GetTexture(unsigned num)
 GLuint GBuffer::GetDepthTexture()
 {
     return m_depthTexture;
+}
+
+void GBuffer::StartFrame()
+{
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+    glDrawBuffer( GL_COLOR_ATTACHMENT0+ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void GBuffer::BindForGeomPass()
+{
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+
+    GLenum DrawBuffers[] = { GL_COLOR_ATTACHMENT0,
+                             GL_COLOR_ATTACHMENT1,
+                             GL_COLOR_ATTACHMENT2,
+                             GL_COLOR_ATTACHMENT3,
+                             GL_COLOR_ATTACHMENT4 };
+
+    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
+}
+
+void GBuffer::BindForStencilPass()
+{
+    // должны отключить буфер цвета
+    glDrawBuffer(GL_NONE);
+}
+
+void GBuffer::BindForLightPass()
+{
+    glDrawBuffer(GL_COLOR_ATTACHMENT0+ARRAY_SIZE_IN_ELEMENTS(m_textures));
+
+    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION + i]);
+    }*/
+}
+
+void GBuffer::BindForFinalPass()
+{
+    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
+    glReadBuffer(GL_COLOR_ATTACHMENT0+ARRAY_SIZE_IN_ELEMENTS(m_textures));
 }

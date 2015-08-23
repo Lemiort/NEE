@@ -371,7 +371,7 @@ void PointLight::SetCol(Vector3f col)
 }
 float PointLight::CalcSphereSize()
 {
-    return 8.0f*sqrtf(Vector3f(color[0],color[1],color[2]).Lenght()*power)+1.0f;
+    return 4.0f*sqrtf(Vector3f(color[0],color[1],color[2]).Lenght()*power)+1.0f;
 }
 
 Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color)

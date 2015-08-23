@@ -67,11 +67,15 @@
 		<Unit filename="include/Material.h">
 			<Option compile="1" />
 		</Unit>
+		<Unit filename="include/MaterialObject.h" />
 		<Unit filename="include/Mesh.h" />
+		<Unit filename="include/Object.h" />
 		<Unit filename="include/ParticleSystem.h" />
 		<Unit filename="include/ParticleUpdateAssistant.h" />
 		<Unit filename="include/PerlinNoise.h" />
+		<Unit filename="include/PlaceableObject.h" />
 		<Unit filename="include/RandomTexture.h" />
+		<Unit filename="include/RenderableObject.h" />
 		<Unit filename="include/SOIL/SOIL.h" />
 		<Unit filename="include/SOIL/image_DXT.h" />
 		<Unit filename="include/SOIL/image_helper.h" />
@@ -98,11 +102,15 @@
 		<Unit filename="src/Light.cpp" />
 		<Unit filename="src/Logger.cpp" />
 		<Unit filename="src/Material.cpp" />
+		<Unit filename="src/MaterialObject.cpp" />
 		<Unit filename="src/Mesh.cpp" />
+		<Unit filename="src/Object.cpp" />
 		<Unit filename="src/ParticleSystem.cpp" />
 		<Unit filename="src/ParticleUpdateAssistant.cpp" />
 		<Unit filename="src/PerlinNoise.cpp" />
+		<Unit filename="src/PlaceableObject.cpp" />
 		<Unit filename="src/RandomTexture.cpp" />
+		<Unit filename="src/RenderableObject.cpp" />
 		<Unit filename="src/Shader.cpp" />
 		<Unit filename="src/ShaderFunctions.cpp" />
 		<Unit filename="src/ShadowMapFBO.cpp" />
