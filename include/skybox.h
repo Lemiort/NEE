@@ -6,8 +6,10 @@
 #include "Camera.h"
 #include "Assistant.h"
 #include "tga_loader.h"
+#include <RenderableObject.h>
+#include <PlaceableObject.h>
 #define BUFFER_OFFSET(i) ((char*)NULL +(i))
-class SkyBox
+class SkyBox: public RenderableObject, public PlaceableObject
 {
 public:
     SkyBox(Shader* shader);
@@ -35,14 +37,14 @@ private:
     CubemapTexture* pCubemapTex;
 	GLuint WVPID;
     GLuint textureID;
-    Shader* shaderProgram;
+    //Shader* shaderProgram;
 public:
 		GLuint uvID,normalID;
 		GLuint rotateID;
 		GLuint camtransID,camPosID;
 		GLuint colTexID,texBufferID;
 
-		float position[3];
+		//float position[3];
 		float rotation[3];
 		float scale[3];
 };

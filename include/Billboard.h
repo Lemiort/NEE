@@ -6,7 +6,8 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Assistant.h"
-class Billboard
+#include <RenderableObject.h>
+class Billboard: public RenderableObject
 {
     public:
         Billboard();
@@ -19,7 +20,7 @@ class Billboard
        // GLuint shaderProgramID;
     protected:
     private:
-        Shader* shaderProgram;
+        //Shader* shaderProgram;
         bool shader;
         GLuint VBO;
         Vector3f Pos;

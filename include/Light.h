@@ -5,9 +5,11 @@
 #include "Shader.h"
 #include "ShaderFunctions.h"
 #include "Mesh.h"
+#include <PlaceableObject.h>
+#include <MaterialObject.h>
 #define BUFFER_OFFSET(i) ((char*)NULL +(i))
 
-class Light
+class Light: public MaterialObject
 {
 public:
     GLfloat	color[3];
@@ -16,7 +18,7 @@ public:
 class DirectionalLight: public Light
 	{
     protected:
-	    Shader* shaderProgram;
+	    //Shader* shaderProgram;
         Mesh* mesh;
 	public:
 		GLfloat direction[4];
@@ -30,10 +32,10 @@ class DirectionalLight: public Light
 		virtual void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
 		~DirectionalLight();
 	};
-class PointLight: public Light
+class PointLight: public Light, public PlaceableObject
 	{
 	public:
-		float position[3];
+		//float position[3];
 		//float	color[3];
 		float power;
 		PointLight(float d1,float d2,float d3,float r,float g,float b, float p, Material* _mat);
@@ -44,7 +46,7 @@ class PointLight: public Light
 	protected:
 		//GLuint shaderProgramID;
 		float CalcSphereSize();
-		Shader* shaderProgram;
+		//Shader* shaderProgram;
 		GLuint VBO;
 		GLuint positionID;
 		GLuint gWorldID;
@@ -54,11 +56,11 @@ class PointLight: public Light
 		float radius;
 		Mesh* sphere;
 	};
-class SpotLight:public DirectionalLight
+class SpotLight:public DirectionalLight, public PlaceableObject
 	{
 	public:
 		float Cutoff; //угол отсечения в радианах
-		float position[3];
+		//float position[3];
         float target[3];
 		SpotLight();
 		SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloat b,float p1, float p2,float p3, float cutoff, Material*  _mat);
@@ -71,7 +73,7 @@ class SpotLight:public DirectionalLight
 		void Init(GLfloat d1,GLfloat d2,GLfloat d3,GLfloat r,GLfloat g,GLfloat b,float p1, float p2,float p3, float cutoff);
 	};
 
-class Line
+class Line: public RenderableObject
 	{
 	public:
 		/*Vector3f p1;
@@ -87,12 +89,13 @@ class Line
 		Line(Vector3f pos1, Vector3f pos2, Vector3f color);
 		Line(Vector3f pos1, Vector3f pos2, Vector3f color,Shader* shader);
 		~Line();
-		void Render(Camera* pGameCamera, int width, int height);
+		//void Render(Camera* pGameCamera, int width, int height);
+		virtual void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
 		Shader* GetShader();
     private:
 
 // TODO (mvideo#1#): Сделать определение светового шейдера извне
-        Shader* shaderProgram;
+        //Shader* shaderProgram;
 	};
 
 

@@ -440,7 +440,7 @@ static void DSLightingPass()
     fLine1->Render((ConvertToString(spfaces)+" faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
-static void DSPointLightPass()
+static void DSPointLightPass(PointLight& pointLight)
 {
     gBuffer1->BindForReading();
 
@@ -482,23 +482,24 @@ static void DSPointLightPass()
 
     //загружаем параметры света для источника 1
     Assistant LA2;
-    LA2.Scale(pointLight1->color[0],pointLight1->color[1],pointLight1->color[2]);
+    LA2.Scale(pointLight.color[0],pointLight.color[1],pointLight.color[2]);
     glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
-    glUniform3f(pointLightPosID,pointLight1->position[0],pointLight1->position[1],pointLight1->position[2]);
-    glUniform1f(pointLightIntID,pointLight1->power);
+    glUniform3f(pointLightPosID,pointLight.position[0],pointLight.position[1],pointLight.position[2]);
+    glUniform1f(pointLightIntID,pointLight.power);
 
-    pointLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    pointLight.SetMaterial(DSPointLightMaterial);
+    pointLight.Render(30,width,height,1.0,1000.0,pGameCamera);
 
-    //загружаем параметры для источника 2
+    /*//загружаем параметры для источника 2
     LA2.Scale(pointLight2->color[0],pointLight2->color[1],pointLight2->color[2]);
     glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
     glUniform3f(pointLightPosID,pointLight2->position[0],pointLight2->position[1],pointLight2->position[2]);
     glUniform1f(pointLightIntID,pointLight2->power);
 
-    pointLight2->Render(30,width,height,1.0,1000.0,pGameCamera);
+    pointLight2->Render(30,width,height,1.0,1000.0,pGameCamera);*/
 }
 
-static void DSSpotLightPass()
+static void DSSpotLightPass(SpotLight& spotLight)
 {
     gBuffer1->BindForReading();
 
@@ -540,23 +541,24 @@ static void DSSpotLightPass()
 
     //загружаем параметры света для источника 1
     Assistant LA2;
-    LA2.Scale(spotLight1->color[0],spotLight1->color[1],spotLight1->color[2]);
-    glUniform3f(spotLightPosID,spotLight1->position[0],
-                                spotLight1->position[1],
-                                spotLight1->position[2]);
+    LA2.Scale(spotLight.color[0],spotLight.color[1],spotLight.color[2]);
+    glUniform3f(spotLightPosID,spotLight.position[0],
+                                spotLight.position[1],
+                                spotLight.position[2]);
     glUniformMatrix4fv(spotLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
-    glUniform3f(spotLightDirID,spotLight1->direction[0],
-                                spotLight1->direction[1],
-                                spotLight1->direction[2]);
-    glUniform1f(spotLightCutoffID,cosf(ToRadian(spotLight1->Cutoff)));
+    glUniform3f(spotLightDirID,spotLight.direction[0],
+                                spotLight.direction[1],
+                                spotLight.direction[2]);
+    glUniform1f(spotLightCutoffID,cosf(ToRadian(spotLight.Cutoff)));
 
     //включаем данные из буффера
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    spotLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    spotLight.SetMaterial(DSSpotLightMaterial);
+    spotLight.Render(30,width,height,1.0,1000.0,pGameCamera);
 }
 
-static void DSDirectionalLightPass()
+static void DSDirectionalLightPass(DirectionalLight& directionalLight)
 {
     gBuffer1->BindForReading();
     //glDisable(GL_DEPTH_TEST);
@@ -581,11 +583,11 @@ static void DSDirectionalLightPass()
 
     //загрузка параметров света
     Assistant LA2;
-    LA2.Scale(directionalLight1->color[0],directionalLight1->color[1],directionalLight1->color[2]);
+    LA2.Scale(directionalLight.color[0],directionalLight.color[1],directionalLight.color[2]);
     glUniformMatrix4fv(dirLightColID,1, GL_TRUE, (const GLfloat*)LA2.GetScaleTrans());
-    glUniform3f(dirLightDirID,directionalLight1->direction[0],
-                            directionalLight1->direction[1],
-                            directionalLight1->direction[2]);
+    glUniform3f(dirLightDirID,directionalLight.direction[0],
+                            directionalLight.direction[1],
+                            directionalLight.direction[2]);
 
     //загружаем текстуры в шейдер
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),4);//world pos
@@ -594,7 +596,7 @@ static void DSDirectionalLightPass()
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
 
-
+    directionalLight.SetMaterial(DSDirectionalLightMaterial);
 
 
     /*printf("\n %f %f %f",directionalLight1->direction[0],
@@ -606,16 +608,16 @@ static void DSDirectionalLightPass()
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
-    directionalLight1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    directionalLight.Render(30,width,height,1.0,1000.0,pGameCamera);
     //glEnable(GL_DEPTH_TEST);
 }
 
 static void InterfacePass()
 {
     //glDisable(GL_DEPTH_TEST);
-    xline->Render(pGameCamera,width, height);
-    yline->Render(pGameCamera, width, height);
-    zline->Render(pGameCamera,width, height);
+    xline->Render(30,width,height,1.0,1000.0,pGameCamera);
+    yline->Render(30,width,height,1.0,1000.0,pGameCamera);
+    zline->Render(30,width,height,1.0,1000.0,pGameCamera);
     std::string strCampos = ConvertToString(pGameCamera->GetPos().x)+"; "+ConvertToString(pGameCamera->GetPos().y)
     +"; "+ConvertToString(pGameCamera->GetPos().z);
     fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
@@ -629,7 +631,7 @@ static void InterfacePass()
     }
 
     //pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
-    dirLightLine->Render(pGameCamera,width,height);
+    dirLightLine->Render(30,width,height,1.0,1000.0,pGameCamera);
     //glEnable(GL_DEPTH_TEST);
 }
 
@@ -687,9 +689,10 @@ static void RenderScene(GLFWwindow* window)
     {
         DSGeometryPass();
         DSBeginLightPasses();//вообще пока не нужно
-        DSPointLightPass();
-        DSDirectionalLightPass();
-        DSSpotLightPass();
+        DSPointLightPass(*pointLight1);
+        DSPointLightPass(*pointLight2);
+        DSDirectionalLightPass(*directionalLight1);
+        DSSpotLightPass(*spotLight1);
         DSEndLigtPasses();
     }
     //дебагинговый вид

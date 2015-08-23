@@ -9,6 +9,8 @@
 #include "Material.h"
 #include <fstream>
 #include <iostream>
+#include <PlaceableObject.h>
+#include <MaterialObject.h>
 //#include "Light.h"
 #define BUFFER_OFFSET(i) ((char*)NULL +(i))
 using namespace std;
@@ -29,12 +31,12 @@ struct Vertex
     }
 };
 
-class Mesh
+class Mesh:public PlaceableObject, public MaterialObject
 {
 public:
     //	GLuint shaderProgramID;
 protected:
-    Shader* shaderProgram;
+    //Shader* shaderProgram;
     GLuint VBO; //vertex buffer, хранит вершины для отрисовки
     GLuint positionID,uvID,normalID,tangentID;
     GLuint IBO; //index buffer
@@ -48,32 +50,26 @@ protected:
     GLuint specBufferID, specSamplerID;
     GLuint colSamplerUI, normSamplerUI;
     GLuint shadowMap;
-    Material* mat;
+    //Material* mat;
     int spfaces, spverts;
     int Scale;
     //	DirectionalLight* light1;
     //	PointLight* light2;
-    float position[3];
+    //float position[3];
     float rotation[3];
     float scale[3];
-    void SetShader(Shader* shader);
 
     //угол вращения вокруг вектора
     float rPhi;
     //вектор вращения
     Vector3f rv;
+
+    virtual Shader* GetShader();
+    virtual void SetShader(Shader* shader);
+
 public:
-    Mesh()
-    {
-        mat=NULL;
-        shadowMap=0;
-        rPhi = 0;
-    }
-    ~Mesh()
-    {
-        glDeleteBuffers(1,&VBO);
-        glDeleteBuffers(1,&IBO);
-    }
+    Mesh();
+    virtual ~Mesh();
     int GetNumFaces();
     int GetNumVerts();
     void Init(GLuint shader,const char* model);
@@ -86,7 +82,9 @@ public:
     void SetRotate(float x, float y, float z);
     void SetScale(float x, float y, float z);
     void SetPosition(float x, float y, float z);
-    void SetMaterial(Material* _mat);
+    virtual void SetMaterial(Material* _mat);
     void Rotate(float x, float y, float z);
+private:
+
 };
 #endif // MESH_H_INCLUDED

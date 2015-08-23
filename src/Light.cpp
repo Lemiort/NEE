@@ -302,15 +302,12 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 				color[2]=b;
 				power=p;
 				temp[0]=0; temp[1]=0; temp[2]=0;
-				char* vertexShaderSorceCode=ReadFile("Shaders/lightVS.vsh");
+				/*char* vertexShaderSorceCode=ReadFile("Shaders/lightVS.vsh");
 				char* fragmentShaderSourceCode=ReadFile("Shaders/lightFS.fsh");
 				shaderProgram=new Shader();
 				shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
 				shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
 				shaderProgram->Init();
-				/*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-				GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-				shaderProgramID=MakeShaderProgram(vertexShaderID, fragmentShaderID);*/
 
 				glGenBuffers(1, &VBO);
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -319,7 +316,7 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 				positionID=	    shaderProgram->GetAttribLocation("position");
 				gWorldID=	    shaderProgram->GetUniformLocation("gWVCP");
 				PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
-				PointSizeID=    shaderProgram->GetUniformLocation("size");
+				PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
 				sphere =  new Mesh();
 				sphere->Init(_mat,"Models/normal_sphere.ho3d");
@@ -328,7 +325,7 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 			}
 PointLight::~PointLight()
 			{
-			    delete shaderProgram;
+			    //delete shaderProgram;
 			    delete sphere;
 			}
 void PointLight::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
@@ -339,7 +336,7 @@ void PointLight::Render(float FOV, float Width, float Height, float zNear, float
 				TM.SetPerspectiveProj(FOV, Width, Height, zNear, zFar);
 
 
-                shaderProgram->Use();
+                /*shaderProgram->Use();
 				//glUseProgram(shaderProgramID);
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
 				glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
@@ -350,7 +347,7 @@ void PointLight::Render(float FOV, float Width, float Height, float zNear, float
 				glUniform1f(PointSizeID, 5.0);
 				glEnableVertexAttribArray(positionID);
 				glDrawArrays(GL_POINTS,0,1);
-				glDisableVertexAttribArray(positionID);
+				glDisableVertexAttribArray(positionID);*/
 
 				sphere->SetScale(radius,radius,radius);
 				sphere->SetPosition(position[0],position[1],position[2]);
@@ -439,12 +436,13 @@ Line::~Line()
 			    if(shaderProgram!=0)
                     delete shaderProgram;
 			}
-void Line::Render(Camera* pGameCamera, int width, int height)
+//void Line::Render(Camera* pGameCamera, int width, int height)
+void Line::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
 			{
 				Assistant TM;
 				TM.WorldPos(0,0,0);
-				TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
-				TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+				TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+				TM.SetPerspectiveProj(FOV, Width, Height, zNear, zFar);
 
 
                 shaderProgram->Use();

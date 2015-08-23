@@ -124,10 +124,24 @@ void Mesh::Init(GLuint shader,const char* model)
         }
 }*/
 
+Mesh::Mesh()
+{
+    //mat=NULL;
+    shadowMap=0;
+    rPhi = 0;
+}
+
+Mesh::~Mesh()
+{
+    glDeleteBuffers(1,&VBO);
+    glDeleteBuffers(1,&IBO);
+}
+
 void Mesh::SetMaterial( Material* _mat )
 {
     mat = _mat;
-    shaderProgram = mat->GetShader();
+    //shaderProgram = mat->GetShader();
+    this->SetShader(mat->GetShader());
 
     //mat->Use();
     positionID=	shaderProgram->GetAttribLocation("s_vPosition");
@@ -353,7 +367,11 @@ void Mesh::SetTexture(GLuint textureUnit)
     shadowMap=textureUnit;
 }
 
+Shader* Mesh::GetShader()
+{
+    return shaderProgram;
+}
 void Mesh::SetShader(Shader* shader)
 {
-    shaderProgram=shader;
+    shaderProgram = shader;
 }
