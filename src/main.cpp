@@ -438,12 +438,15 @@ static void DSLightingPass()
 static void DSStencilPass(Light& light)
 {
     //m_nullTech.Enable();
+    //включаем шейдер
+    DSStencilPassShader->Use();
 
     // Отключаем запись цвета / глубины и включаем трафарет
     gBuffer1->BindForStencilPass();
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);//??
 
-        glDisable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
     glClear(GL_STENCIL_BUFFER_BIT);
 
@@ -451,15 +454,15 @@ static void DSStencilPass(Light& light)
     // успешно проходил. Важен только тест глубины.
     glStencilFunc(GL_ALWAYS, 0, 0);
 
-    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
-    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
+    //glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
+    //glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
+    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_DECR, GL_KEEP);//TODO сделать наоборот
+    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_INCR, GL_KEEP);//TODO сделать наоборот
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    //включаем шейдер
-    DSStencilPassShader->Use();
 
     //определяем адрес переменных камеры
     gCamViewID =	DSStencilPassShader->GetUniformLocation("gVC");
@@ -485,8 +488,10 @@ static void DSPointLightPass(PointLight& pointLight)
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
 
+
+
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
@@ -533,14 +538,23 @@ static void DSPointLightPass(PointLight& pointLight)
     pointLight.SetMaterial(DSPointLightMaterial);
     pointLight.Render(30,width,height,1.0,1000.0,pGameCamera);
 
-    glCullFace(GL_BACK);
+    glCullFace(GL_FRONT);
     glDisable(GL_BLEND);
 }
 
 static void DSSpotLightPass(SpotLight& spotLight)
 {
-    gBuffer1->BindForReading();
+    //gBuffer1->BindForReading();
+    gBuffer1->BindForLightPass();
+    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
 
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
@@ -566,9 +580,7 @@ static void DSSpotLightPass(SpotLight& spotLight)
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2),6);//normal
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3),7);//UV
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4),8);//specular
-    //включаем данные из буффера
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
+
 
 
     //определяем адрес параметров света
@@ -590,16 +602,24 @@ static void DSSpotLightPass(SpotLight& spotLight)
     glUniform1f(spotLightCutoffID,cosf(ToRadian(spotLight.Cutoff)));
 
     //включаем данные из буффера
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     spotLight.SetMaterial(DSSpotLightMaterial);
     spotLight.Render(30,width,height,1.0,1000.0,pGameCamera);
+
+
+    glCullFace(GL_FRONT);
+    glDisable(GL_BLEND);
 }
 
 static void DSDirectionalLightPass(DirectionalLight& directionalLight)
 {
-    gBuffer1->BindForReading();
+    //gBuffer1->BindForReading();
+    gBuffer1->BindForLightPass();
     //glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
 
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
@@ -643,11 +663,12 @@ static void DSDirectionalLightPass(DirectionalLight& directionalLight)
     //glUniform1f(pointLightIntID,pointLight1->power);
 
     //включаем данные из буффера
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
     directionalLight.Render(30,width,height,1.0,1000.0,pGameCamera);
     //glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 }
 
 static void DSFinalPass()
@@ -739,19 +760,23 @@ static void RenderScene(GLFWwindow* window)
         // так же он потребуется и в проходе света, так как свет рендерится
         // только при успешном проходе трафарета.
         glEnable(GL_STENCIL_TEST);
-        //DSBeginLightPasses();//вообще пока не нужно
+        //DSBeginLightPasses();//уже устарело
         {
             DSStencilPass(*pointLight1);
             DSPointLightPass(*pointLight1);
-            DSStencilPass(*pointLight1);
+
+            DSStencilPass(*pointLight2);
             DSPointLightPass(*pointLight2);
+
+            //DSStencilPass(*spotLight1);
+            //DSSpotLightPass(*spotLight1);
         }
         // Направленному свету не требуется трафарет
         // так как его действие не ограничено расстоянием.
         glDisable(GL_STENCIL_TEST);
 
-        //DSDirectionalLightPass(*directionalLight1);
-        //DSSpotLightPass(*spotLight1);
+        DSDirectionalLightPass(*directionalLight1);
+
         DSFinalPass();
         //DSEndLigtPasses();
     }
@@ -765,7 +790,7 @@ static void RenderScene(GLFWwindow* window)
     {
         RenderPass();
     }
-    //InterfacePass();
+    InterfacePass();
 }
 static int InitScene()
 {
@@ -1011,13 +1036,16 @@ static int InitScene()
         directionalLight1=new DirectionalLight(-1.5f,-1.0f,-1.5f,//direction
                                      0.5f,0.5f,0.5f,//color
                                      DSDirectionalLightMaterial);
-        pointLight1=new PointLight(0,1,-0.2, 1.0,1.0,1.0,0.1, DSPointLightMaterial);
-        pointLight2=new PointLight(1.5,0.4,0.0,
-                                   0.2, 1.0,6.0,
-                                   0.1,
+        pointLight1=new PointLight(0,1,-0.2,//position
+                                    1.0, 1.0,1.0,//color
+                                    1.0,
+                                   DSPointLightMaterial);
+        pointLight2=new PointLight(1.5,0.4,0.0, //position
+                                   0.3, 0.3,1.0, //color
+                                   1.1, //power
                                     DSPointLightMaterial);
         spotLight1=new SpotLight(1.5f,0.0f,0.5f,//target
-                     1.0f,0.0f,0.0f,//color
+                     1.0f,0.4f,0.4f,//color
                      0.0f,1.0f,0.0f,//position
                      35.0f,  //cutoff in degrees
                      DSSpotLightMaterial);

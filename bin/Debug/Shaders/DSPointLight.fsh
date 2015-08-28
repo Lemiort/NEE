@@ -84,10 +84,10 @@ void main()
 	
 	//fColor0= CalcBaseLight(normalize(pointLightPos-gl_FragCoord).xyz, fN, pointLightColor);
 	fColor0 = CalcPointLight(pointLightColor);
-	vec2 screenPosUV = CalcTexCoord();
-	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	//vec2 screenPosUV = CalcTexCoord();
+	//vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
 	//fColor0 = screenPos;
-	fColor0.xyz += vec3(0.3,0.3,0.3);
+	//fColor0.xyz += vec3(0.3,0.3,0.3);
 	
 	fColor0.a = 1.0;
 

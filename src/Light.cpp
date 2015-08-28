@@ -85,7 +85,7 @@ SpotLight::SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloa
 				Cutoff=cut;
 
 		mesh =  new Mesh();
-        mesh->Init(_mat,"Models/cone.ho3d");
+        mesh->Init(_mat,"Models/cone2.ho3d");
         mesh->SetRotate(90,0,0);
 
 	}
@@ -320,7 +320,7 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 
 				sphere =  new Mesh();
 				sphere->Init(_mat,"Models/normal_sphere.ho3d");
-				radius = CalcSphereSize();
+				radius = CalcSphereSize()/2;
 				std::cout<<"\nLight radius is "<<radius;
 			}
 PointLight::~PointLight()
@@ -371,7 +371,7 @@ void PointLight::SetCol(Vector3f col)
 }
 float PointLight::CalcSphereSize()
 {
-    return 4.0f*sqrtf(Vector3f(color[0],color[1],color[2]).Lenght()*power)+1.0f;
+    return 8.0f*sqrtf(Vector3f(color[0],color[1],color[2]).Lenght()*power)+1.0f;
 }
 
 Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color)

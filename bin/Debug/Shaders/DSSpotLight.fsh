@@ -116,7 +116,7 @@ void main()
 	
 	//fColor0= CalcBaseLight(normalize(pointLightPos-gl_FragCoord).xyz, fN, pointLightColor);
 	fColor0 = CalcSpotLight(sLightCol);
-	//fColor0.xyz += vec3(0.0,0.1,0.0);
+	fColor0.xyz += vec3(0.0,0.1,0.0);
 	
 	/*vec2 screenPosUV = CalcTexCoord();
 	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
