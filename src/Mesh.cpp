@@ -124,6 +124,15 @@ void Mesh::Init(GLuint shader,const char* model)
         }
 }*/
 
+/*__declspec(dllimport) int LoadObj(char* filename,
+            unsigned int& verticesNum,
+            unsigned int& facesNum,
+            float*& _vertices,
+            float*& _uvs,
+            float*& _normals,
+            float*& _bitangents,
+            unsigned int*& _faces);*/
+
 Mesh::Mesh()
 {
     //mat=NULL;

@@ -319,7 +319,7 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 				PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
 				sphere =  new Mesh();
-				sphere->Init(_mat,"Models/normal_sphere.ho3d");
+				sphere->Init(_mat,"Models/normal_geosphere.ho3d");
 				radius = CalcSphereSize()/2;
 				std::cout<<"\nLight radius is "<<radius;
 			}

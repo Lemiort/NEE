@@ -768,8 +768,8 @@ static void RenderScene(GLFWwindow* window)
             DSStencilPass(*pointLight2);
             DSPointLightPass(*pointLight2);
 
-            //DSStencilPass(*spotLight1);
-            //DSSpotLightPass(*spotLight1);
+            DSStencilPass(*spotLight1);
+            DSSpotLightPass(*spotLight1);
         }
         // Ќаправленному свету не требуетс€ трафарет
         // так как его действие не ограничено рассто€нием.
@@ -869,7 +869,7 @@ static int InitScene()
         whiteTexture=new Texture2D;
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
-        Cube.Init(shadowMeshMaterial,"Models/normal_sphere.ho3d");
+        Cube.Init(shadowMeshMaterial,"Models/normal_geosphere.ho3d");
         Plane.Init(shadowMeshMaterial, "Models/normal_plane.ho3d");
     }
 
