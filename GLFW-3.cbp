@@ -35,6 +35,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add directory="C:/Libs/glfw-3.1.1.bin.WIN32/glfw-3.1.1.bin.WIN32/include" />
 			<Add directory="C:/Libs/glew-1.10-src/glew-1.10.0/include" />
