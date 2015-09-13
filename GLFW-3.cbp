@@ -74,6 +74,7 @@
 			</Target>
 		</Build>
 		<Compiler>
+			<Add option="-pedantic" />
 			<Add option="-std=c++11" />
 			<Add option="-Wall" />
 			<Add directory="src" />
@@ -84,6 +85,7 @@
 		</Compiler>
 		<Linker>
 			<Add library="glew32" />
+			<Add library="glew32mx" />
 			<Add library="glfw3" />
 			<Add library="opengl32" />
 			<Add library="glu32" />

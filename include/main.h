@@ -22,7 +22,7 @@
 #include <thread>
 
 #define BUFFER_OFFSET(i) ((char*)NULL +(i))
-#define WINDOW_WIDTH 1024
+#define WINDOW_WIDTH 1366
 #define WINDOW_HEIGHT 768
 
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
@@ -56,7 +56,7 @@ Material* DSSpotLightMaterial;
 Material* DSStencilPassMaterial;
 
 GBuffer* gBuffer1;
-
+GLFWwindow* hiddenWindow;
 
     struct Mouse
     {

@@ -94,7 +94,7 @@ bool SkyBox::Init(const string& Directory,
 	glGenBuffers(1,&VBO);
 	glBindBuffer(GL_ARRAY_BUFFER,VBO);
 	//создаём буффер
-	glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(spverts),NULL,GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER,sizeof(float)*3*(spverts),nullptr,GL_STATIC_DRAW);
 	//загружаем вершины в буффер
 	glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(float)*3*spverts,spvertices);
 
@@ -163,7 +163,7 @@ void SkyBox::Render(float FOV, float Width, float Height, float zNear, float zFa
 	//glUseProgram(shaderProgramID);
 	shaderProgram->Use();
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
+	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,NULL);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 
 
@@ -175,7 +175,7 @@ void SkyBox::Render(float FOV, float Width, float Height, float zNear, float zFa
 
 
 	glEnableVertexAttribArray(positionID);
-	glDrawElements(GL_TRIANGLES,spfaces*3,GL_UNSIGNED_INT,NULL);
+	glDrawElements(GL_TRIANGLES,spfaces*3,GL_UNSIGNED_INT,nullptr);
 	glDisableVertexAttribArray(positionID);
 
 	glCullFace(OldCullFaceMode);

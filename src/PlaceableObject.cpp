@@ -12,3 +12,17 @@ PlaceableObject::~PlaceableObject()
 {
     //dtor
 }
+
+
+void PlaceableObject::SetPosition(float x, float y, float z)
+{
+    position[0] = x;
+    position[1] = y;
+    position[2] = z;
+}
+void PlaceableObject::SetPosition(Vector3f _pos)
+{
+    position[0] = _pos.x;
+    position[1] = _pos.y;
+    position[2] = _pos.z;
+}

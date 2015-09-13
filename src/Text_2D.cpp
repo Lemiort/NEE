@@ -6,15 +6,18 @@
 
 FontLine2d::FontLine2d()
 {
-    shaderProgram=NULL;
+    shaderProgram=nullptr;
 }
+
 FontLine2d::~FontLine2d()
 {
 }
+
 bool FontLine2d::Init(string filename,Shader* _sh)
 {
     return character.Init(filename,_sh);
 }
+
 
 void FontLine2d::SetAspectRatio(int w, int h)
 {
@@ -22,7 +25,13 @@ void FontLine2d::SetAspectRatio(int w, int h)
     aratio= (float)h/(float)w;
 }
 
-void FontLine2d::Render(string text, float startX, float startY,float size )
+void FontLine2d::SetText(string _text)
+{
+    text = _text;
+}
+
+//void FontLine2d::Render(string text, float startX, float startY,float size )
+void FontLine2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
 {
     float dx=0.0f;
     prevChar=0;
@@ -47,15 +56,21 @@ void FontLine2d::Render(string text, float startX, float startY,float size )
         //если нашли символ пробела риусуем его
         if((unsigned int)text.at(i)==(unsigned int)' ')
         {
-            dx+=size*spaceWidth;
+            dx+=position[2]*spaceWidth;
         }
 
         //собсно рисовка
-        temp=character.Render((unsigned int)text.at(i),startX+dx,startY,size);
+       // temp=character.Render((unsigned int)text.at(i),startX+dx,startY,size);
+        character.SetPosition(position[0] + dx, position[1], position[2]);
+        character.SetCharacter(text.at(i));
+        temp = character.GetLastCharacterLength();
+        //character.Render(30,1366,768,1.0,1000.0,nullptr);
+        character.Render(FOV, Width, Height, zNear, zFar,nullptr);
+
         //если символ есть, рисуем его
         if(temp.x>0.0f)
             //отсутп и разделитель между знаками
-            dx+=temp.x+size*spaceWidth/4.0f;
+            dx+=temp.x+position[2]*spaceWidth/4.0f;
         else
             continue;//нет символа - ничего не пишем
         //запоминаем предыдущий символ
@@ -89,6 +104,7 @@ float Font2d::GetWidth(unsigned int c)
     float dx=1.0f;
     return (2*dx)*realWidth*kx;
 }
+
 float Font2d::GetSpaceWidth()
 {
     FontCharacter temp=fontInfo.at(34);
@@ -96,6 +112,7 @@ float Font2d::GetSpaceWidth()
     float dx=1.0f;
     return (2*dx)*realWidth*kx;
 }
+
 int Font2d::GetFontHeight()
 {
     return fontHeight;
@@ -273,25 +290,58 @@ void Font2d::SetAspectRatio(float f)
     aratio=f;
 }
 
-Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
+void Font2d::SetCharacter(unsigned int c)
 {
-    shaderProgram->Use();
-    size=size/(float)fontHeight;
-    FontCharacter temp(0,0,0,0,0,0,0,0);
+    character = c;
+
+    position[2]=position[2]/(float)fontHeight;
+    temp = FontCharacter(0,0,0,0,0,0,0,0);
     try
     {
-        temp=fontInfo.at(c);
+        temp=fontInfo.at(character);
     }
     catch(const std::out_of_range& oor)
     {
         //printf("\n char is out of range");
-        return Vector2f(-1.0f,-1.0f);
+        characterLength = Vector2f(-1.0f,-1.0f);
+        return;
+    }
+    realWidth=(float)temp.width/(float)imageWidth;
+    realHeight=(float)temp.height/(float)imageHeight;
+    dx=1.0f;
+    xOffset=position[2]*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
+    yOffset=position[2]*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;
+
+    characterLength = Vector2f((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
+}
+
+Vector2f Font2d::GetLastCharacterLength()
+{
+    //return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
+    return characterLength;
+}
+
+//Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
+void Font2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+{
+    SetAspectRatio(Width,Height);
+    shaderProgram->Use();
+    /*position[2]=position[2]/(float)fontHeight;
+    FontCharacter temp(0,0,0,0,0,0,0,0);
+    try
+    {
+        temp=fontInfo.at(character);
+    }
+    catch(const std::out_of_range& oor)
+    {
+        //printf("\n char is out of range");
+        return;// Vector2f(-1.0f,-1.0f);
     }
     float realWidth=(float)temp.width/(float)imageWidth;
     float realHeight=(float)temp.height/(float)imageHeight;
     float dx=1.0f;
-    float xOffset=size*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
-    float yOffset=size*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;
+    float xOffset=position[2]*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
+    float yOffset=position[2]*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;*/
 
 
     float vertices[]={0.0f,(-2*dx)*realHeight*ky,
@@ -312,7 +362,7 @@ Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
                       0.0f,0.0f,
 					  0.0f,0.0f};*/
     glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)+sizeof(uvs),NULL,GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)+sizeof(uvs),nullptr,GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
     glBufferSubData(GL_ARRAY_BUFFER,sizeof(vertices),sizeof(vertices),&uvs);
 
@@ -331,14 +381,14 @@ Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
 
 
     //вектор положения в пространстве
-		glUniform2f(spositionID,px+xOffset,py+yOffset);
+		glUniform2f(spositionID,position[0]+xOffset,position[1]+yOffset);
 		//вектор смещения UV
 		glUniform2f(suvID,u,v);
 		//размер
-		glUniform1f(sizeID,size);
+		glUniform1f(sizeID,position[2]);
 
 
-    glVertexAttribPointer(sverticesID,2,GL_FLOAT,GL_FALSE,0,0);
+    glVertexAttribPointer(sverticesID,2,GL_FLOAT,GL_FALSE,0,nullptr);
 	glVertexAttribPointer(uvID,2,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(float)*8));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 
@@ -349,10 +399,10 @@ Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
 	glUniform4f(colorID,color.r,color.g,color.b,color.a);
 	glEnableVertexAttribArray(sverticesID);
 	glEnableVertexAttribArray(uvID);
-	glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,NULL);
+	glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,nullptr);
 	glDisableVertexAttribArray(sverticesID);
 	glDisableVertexAttribArray(uvID);
-	 return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
+	 //return Vector2f((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
 }
 
 Text2d::Text2d()
@@ -360,6 +410,7 @@ Text2d::Text2d()
 	    color=Vector4f(1.0f,1.0f,1.0f,1.0f);
 	aratio=1;
 	}
+
 Text2d::~Text2d()
 	{
 	    if(yourselfShader)
@@ -399,7 +450,7 @@ void Text2d::Init(int width,int height, Shader* _sh)
 
 		glGenBuffers(1,&VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)*2,NULL,GL_DYNAMIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)*2,nullptr,GL_DYNAMIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
 		glBufferSubData(GL_ARRAY_BUFFER,sizeof(vertices),sizeof(vertices),&uvs);
 		positionID=	shaderProgram->GetAttribLocation("Position");
@@ -427,6 +478,7 @@ void Text2d::Init(int width,int height, Shader* _sh)
 		glBindTexture(GL_TEXTURE_2D, texBufferID);
 		texSamplerID=	shaderProgram->GetUniformLocation("texSampler");
 	}
+
 void Text2d::SetAspectRatio(int width,int height)
 	{
 	aratio= (float)height/(float)width;
@@ -437,6 +489,7 @@ void Text2d::SetAspectRatio(int width,int height)
 					(0+dx*aratio),0};
     glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
 	}
+
 void Text2d::SetAspectRatio(float f)
 	{
 	aratio= f;
@@ -447,6 +500,7 @@ void Text2d::SetAspectRatio(float f)
 					(0+dx*aratio),0};
     glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
 	}
+
 void Text2d::Init(Shader* shader, GLuint textureID,GLuint texBuf)
 	{
 		//shaderProgramID=shader;
@@ -467,7 +521,7 @@ void Text2d::Init(Shader* shader, GLuint textureID,GLuint texBuf)
 
 		glGenBuffers(1,&VBO);
 		glBindBuffer(GL_ARRAY_BUFFER,VBO);
-		glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)*2,NULL,GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER,sizeof(vertices)*2,nullptr,GL_STATIC_DRAW);
 		glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
 		glBufferSubData(GL_ARRAY_BUFFER,sizeof(vertices),sizeof(vertices),&uvs);
 		positionID=	shaderProgram->GetAttribLocation("Position");
@@ -481,15 +535,22 @@ void Text2d::Init(Shader* shader, GLuint textureID,GLuint texBuf)
 		texBufferID = texBuf;
 		texSamplerID=	textureID;
 	}
-void Text2d::Render(unsigned int c, float px, float py, float size)
-	{
+
+void Text2d::SetCharacter(unsigned int c)
+{
+    character = c;
+}
+
+//void Text2d::Render(unsigned int c, float px, float py, float size)
+void Text2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+{
 	//glUseProgram(shaderProgramID);
 	shaderProgram->Use();
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	float dx=size*2;
+	float dx=position[2]*2;
 		//float dy=0.0625; //1/16, высота одного квадрата
-		unsigned int num=c-32;//32 символа пропущено при генерировании текстуры
-		if(c>(unsigned char)'А') num=c+224;
+		unsigned int num=character-32;//32 символа пропущено при генерировании текстуры
+		if(character>(unsigned char)'А') num=character+224;
 		//16 строк и 16 столбцов
 		float x=((double)(num%32))/32;
 		float y=1-((float)((unsigned)num/32)/8);
@@ -500,13 +561,13 @@ void Text2d::Render(unsigned int c, float px, float py, float size)
 		sizeID=		shaderProgram->GetUniformLocation("size");
 		colorID=     shaderProgram->GetUniformLocation("textColor");
 		//вектор положения в пространстве
-		glUniform2f(spositionID,px,py);
+		glUniform2f(spositionID,position[0],position[1]);
 		//вектор смещения UV
 		glUniform2f(suvID,x,y);
 		glUniform1f(sizeID,dx);
 
 
-	glVertexAttribPointer(positionID,2,GL_FLOAT,GL_FALSE,0,0);
+	glVertexAttribPointer(positionID,2,GL_FLOAT,GL_FALSE,0,nullptr);
 	glVertexAttribPointer(uvID,2,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(float)*8));
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
 
@@ -517,24 +578,27 @@ void Text2d::Render(unsigned int c, float px, float py, float size)
 	glUniform4f(colorID,color.r,color.g,color.b,color.a);
 	glEnableVertexAttribArray(positionID);
 	glEnableVertexAttribArray(uvID);
-	glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,NULL);
+	glDrawElements(GL_TRIANGLE_STRIP,4,GL_UNSIGNED_INT,nullptr);
 	glDisableVertexAttribArray(positionID);
 	glDisableVertexAttribArray(uvID);
-	}
+}
 
 TextLine2d::TextLine2d()
 	{
 	aratio=1;
 	}
+
 TextLine2d::~TextLine2d()
 	{
 	}
+
 void TextLine2d::SetAspectRatio(int width, int height)
 	{
 	aratio= (float)height/(float)width;
 	if(symbol!=NULL)
         symbol->SetAspectRatio(aratio);
 	}
+
 void TextLine2d::Init(int width, int height, Shader* _sh)
 	{
 		symbol=new Text2d;
@@ -542,10 +606,29 @@ void TextLine2d::Init(int width, int height, Shader* _sh)
 		//symbol->SetAspectRatio(aratio);
 		symbol->Init(width,height, _sh);
 	}
-void TextLine2d::Render(float x, float y,float size, char* input)
-	{
+/*void TextLine2d::Render(float x, float y,float size, char* input)
+{
 	float delta=0;
-	 for(unsigned int i=0; i<strlen(input);i++, delta+=size*pixelSize*aratio*2.0/32.0)//1.9 подобрано экспериментально
-		symbol->Render((unsigned char)input[i],x+delta,y,size*pixelSize/32.0);
+    for(unsigned int i=0; i<strlen(input);i++, delta+=size*pixelSize*aratio*2.0/32.0)//1.9 подобрано экспериментально
+    {
+		//symbol->Render((unsigned char)input[i],x+delta,y,size*pixelSize/32.0);
+    }
+*
+}*/
 
-	}
+void TextLine2d::SetText(string _text)
+{
+    text = _text;
+}
+
+void TextLine2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+{
+    float delta=0;
+    for(unsigned int i=0; i<strlen(text.c_str());i++, delta+=position[2]*pixelSize*aratio*2.0/32.0)//1.9 подобрано экспериментально
+    {
+		//symbol->Render((unsigned char)input[i],x+delta,y,size*pixelSize/32.0);
+		symbol->SetCharacter((unsigned char)text[i]);
+		symbol->SetPosition(position[0]+delta, position[1], position[2]*pixelSize/32.0);
+		symbol->Render(FOV,Width,Height,zNear,zFar,cam);
+    }
+}

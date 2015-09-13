@@ -90,13 +90,13 @@ void Billboard::Render(float FOV, float Width, float Height, float zNear, float 
     glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
+	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,nullptr);
 
 	colorMap.Bind(GL_TEXTURE0);
 	glUniform1i(colSamplerID,0);//говорим шейдеру, чтобы использовал в качестве текстуры 0
 
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
+	glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,nullptr);
 	glEnableVertexAttribArray(positionID);
 	glDrawArrays(GL_POINTS, 0, 1);
 	glDisableVertexAttribArray(positionID);

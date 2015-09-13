@@ -2,7 +2,7 @@
 #define PLACEABLEOBJECT_H
 
 #include <Object.h>
-
+#include <math_3d.h>
 
 class PlaceableObject : public Object
 {
@@ -10,6 +10,9 @@ class PlaceableObject : public Object
         PlaceableObject();
         virtual ~PlaceableObject();
         float position[3];
+
+        virtual void SetPosition(float x, float y, float z);
+        virtual void SetPosition(Vector3f _pos);
     protected:
     private:
 };

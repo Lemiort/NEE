@@ -60,7 +60,7 @@ Material::~Material()
 
 bool Material::Init(Shader* _sh)
 {
-    if(_sh==0)
+    if(_sh==nullptr)
         return false;
     shaderProgram=_sh;
     shaderProgram->Use();

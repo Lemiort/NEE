@@ -388,7 +388,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color)
 
 				glGenBuffers(1, &VBO);
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float),NULL, GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float),nullptr, GL_STATIC_DRAW);
 
 				pos[0]=pos1.x;
 				pos[1]=pos1.y;
@@ -413,7 +413,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,Shader* shader)
 				shaderProgram=shader;
 				glGenBuffers(1, &VBO);
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float),NULL, GL_STATIC_DRAW);
+				glBufferData(GL_ARRAY_BUFFER, 6*sizeof(float),nullptr, GL_STATIC_DRAW);
 
 				pos[0]=pos1.x;
 				pos[1]=pos1.y;
@@ -433,7 +433,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,Shader* shader)
 			}
 Line::~Line()
 			{
-			    if(shaderProgram!=0)
+			    if(shaderProgram!=nullptr)
                     delete shaderProgram;
 			}
 //void Line::Render(Camera* pGameCamera, int width, int height)
@@ -448,7 +448,7 @@ void Line::Render(float FOV, float Width, float Height, float zNear, float zFar,
                 shaderProgram->Use();
 				//glUseProgram(shaderProgramID);
 				glBindBuffer(GL_ARRAY_BUFFER, VBO);
-				glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
+				glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,nullptr);
 
 
 				glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSRVC());

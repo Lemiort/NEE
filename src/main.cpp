@@ -623,25 +623,37 @@ void DSFinalPass()
 void InterfacePass()
 {
     glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glDisable(GL_DEPTH_TEST);
     xline->Render(30,width,height,1.0,1000.0,pGameCamera);
     yline->Render(30,width,height,1.0,1000.0,pGameCamera);
     zline->Render(30,width,height,1.0,1000.0,pGameCamera);
     std::string strCampos = ConvertToString(pGameCamera->GetPos().x)+"; "+ConvertToString(pGameCamera->GetPos().y)
     +"; "+ConvertToString(pGameCamera->GetPos().z);
-    fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
+    //fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
+    fLine1->SetText((strCampos).c_str());
+    fLine1->SetPosition(-1.0f,0.0f,24.0f);
+    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
     //gBuffer1->CheckTextures();
     CalcFPS();
-    fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+    //fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+    fLine1->SetText(ConvertToString(fps));
+    fLine1->SetPosition(-1.0f,0.9f,24.0f);
+    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
 
     if(renderType==0)
     {
-        fLine1->Render("Deferred shading",-1.0f,-0.2f,24.0f);
+        //fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
+        fLine1->SetText("Deferred shading");
+        fLine1->SetPosition(-1.0f,-0.2f,36.0f);
+        fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
     }
 
     //pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(30,width,height,1.0,1000.0,pGameCamera);
     //glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
 }
 
 void DSGeometryPass()
@@ -759,25 +771,40 @@ void PreInitScene(GLFWwindow* window)
     fLine1->SetAspectRatio(width,height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
+    //fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
+    fLine1->SetText("Loading...");
+    fLine1->SetPosition(-1.0f,-0.1f,72.0f);
+    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
     glfwSwapBuffers(window);
     initialized  = false;
 }
 
 void InitRender(GLFWwindow* window, string message)
 {
-    //PreInitScene(window);
-    glfwMakeContextCurrent(window);
+    //thread thr(InitScene,hiddenWindow);
+
+    //thr.detach();
+    //InitScene(window);
+
     //while(!glfwWindowShouldClose(window) && initialized == false)
     if(initialized == false)
     {
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             CalcFPS();
-            fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-            fLine1->Render(message,-1.0f,-0.1f,36.0f);
+            //fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+            fLine1->SetText(ConvertToString(fps));
+            fLine1->SetPosition(-1.0f,0.9f,24.0f);
+            fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+
+            //fLine1->Render(message,-1.0f,-0.1f,36.0f);
+            fLine1->SetText(message);
+            fLine1->SetPosition(-1.0f,-0.1f,36.0f);
+            fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+
             glfwSwapBuffers(window);
             glfwPollEvents();
     }
+    //thr.join();
 }
 
 int InitScene(GLFWwindow* window)
@@ -788,6 +815,17 @@ int InitScene(GLFWwindow* window)
 
 
     initialized = false;
+    glfwMakeContextCurrent(window);
+    GLenum res = glewInit();
+    if (res != GLEW_OK)
+    {
+        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+        return 1;
+    }
+    else
+    {
+        printf("\nGLEW status is %d \n", res);
+    }
     /*Scale=0;
     lastTime = glfwGetTime();
     frameCount=0;
@@ -1085,12 +1123,13 @@ int InitScene(GLFWwindow* window)
         //************************************/
         //pGameCamera = new Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
     }
+    glFlush();
     initialized = true;
     return 0;
 }
 
 
-int main()
+int main( int argc, char** argv )
 {
     renderType = 0;
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
@@ -1102,6 +1141,7 @@ int main()
     //glewExperimental = true; // Needed for core profile
     if (!glfwInit())
         exit(EXIT_FAILURE);
+
     //заголовок
     string title("HOGL ");
     title+= AutoVersion::STATUS;
@@ -1110,12 +1150,18 @@ int main()
     title+=" build ";
     title+=ConvertToString(AutoVersion::BUILDS_COUNT);
 
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(), NULL, NULL);
+
+    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),/*glfwGetPrimaryMonitor()*/nullptr, nullptr);
     if (!window)
     {
         glfwTerminate();
         exit(EXIT_FAILURE);
     }
+
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    hiddenWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),nullptr, window);
+
     glfwSetFramebufferSizeCallback(window, reinterpret_cast<GLFWframebuffersizefun>(&FrameBufferSizeCallback));
     width=WINDOW_WIDTH;
     height=WINDOW_HEIGHT;
@@ -1125,10 +1171,10 @@ int main()
     glfwSetMouseButtonCallback(window,reinterpret_cast<GLFWmousebuttonfun>(& MouseButtonCallback));
     GLenum res = glewInit();
     if (res != GLEW_OK)
-        {
-            fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
-            return 1;
-        }
+    {
+        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+        return 1;
+    }
     else
     {
         printf("\nGLEW status is %d \n", res);
@@ -1147,9 +1193,10 @@ int main()
     glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
 
     PreInitScene(window);
-
+    //InitRender(window,"test");
     if(InitScene(window)!=0)
         return -1;
+
 
     while (!glfwWindowShouldClose(window))
         {
@@ -1159,6 +1206,7 @@ int main()
             glfwPollEvents();
         }
     glfwDestroyWindow(window);
+    glfwDestroyWindow(hiddenWindow);
     glfwTerminate();
     exit(EXIT_SUCCESS);
 }
