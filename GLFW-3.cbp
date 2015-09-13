@@ -99,9 +99,7 @@
 		<Unit filename="include/Light.h" />
 		<Unit filename="include/Line.h" />
 		<Unit filename="include/Logger.h" />
-		<Unit filename="include/Material.h">
-			<Option compile="1" />
-		</Unit>
+		<Unit filename="include/Material.h" />
 		<Unit filename="include/MaterialObject.h" />
 		<Unit filename="include/Mesh.h" />
 		<Unit filename="include/Object.h" />

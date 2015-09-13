@@ -6,68 +6,9 @@
 #include <main.h>
 
 using namespace std;
-int width;
-int height;
 
 
-GLuint gWorldID, gCamViewID;
-GLuint rotateID;
-GLuint dirLightDirID, dirLightColID;
-GLuint pointLightColID, pointLightIntID, pointLightPosID;
-GLuint spotLightColID, spotLightDirID, spotLightCutoffID,spotLightPosID;
-GLuint camtransID,camPosID;
-
-DirectionalLight* directionalLight1;
-PointLight* pointLight1,* pointLight2;
-SpotLight* spotLight1;
-Camera* pGameCamera = NULL;
-float Scale;
-GLfloat light[]= {0.0,1.0,-1.0,1.0};
-int spfaces;
-int spverts;
-Line* xline;
-Line* yline;
-Line* zline;
-Line* dirLightLine;
-Mesh TestMesh,Plane,Cube;
-SkyBox* skybox1;
-TextLine2d* tline1,*tline2;
-FontLine2d* fLine1;
-PerlinNoise* noise1;
-Billboard* bb1;
-ShadowMapFBO* smfbo1;
-
-Material* mainMaterial,* secondMaterial,*shadowMaterial;
-Texture2D* colorMap1, *colorMap2, *whiteTexture;
-float fps;
-int frameCount;
-double lastTime;
-int renderType;
-
-struct Mouse
-{
-    bool rightButtonPressed;
-    bool leftButtonPressed;
-    double posX;
-    double posY;
-    double dx, dy;
-    Mouse()
-    {
-        rightButtonPressed=false;
-        leftButtonPressed=false;
-        posX=0.0f; posY=0.0f;
-        dx=0.0f; dy=0.0f;
-    }
-    void Update(double x, double y)
-    {
-        dx=x-posX;
-        dy=y-posY;
-        posX=x;
-        posY=y;
-    }
-}mouse;
-
-static void CalcFPS()
+void CalcFPS()
 {
     double currentTime = glfwGetTime();
     ++frameCount;
@@ -79,11 +20,11 @@ static void CalcFPS()
         }
 }
 
-static void ErrorCallback(int error, const char* description)
+void ErrorCallback(int error, const char* description)
 {
     fputs(description, stderr);
 }
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
@@ -121,14 +62,14 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
             else pGameCamera->OnKeyboard(key);
         }
 }
-static void MousePosCallBack(GLFWwindow* window, double x, double y)
+void MousePosCallBack(GLFWwindow* window, double x, double y)
 {
     mouse.Update(x,y);
     if(mouse.rightButtonPressed || true)
         pGameCamera->OnMouse(mouse.posX, mouse.posY);
 }
 
-static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
     if(button==GLFW_MOUSE_BUTTON_2)//right button
     {
@@ -143,7 +84,7 @@ static void MouseButtonCallback(GLFWwindow* window, int button, int action, int 
     }
 }
 
-static void FrameBufferSizeCallback(GLFWwindow* window, int w, int h)
+void FrameBufferSizeCallback(GLFWwindow* window, int w, int h)
 {
     width=w;
     height=h;
@@ -158,7 +99,7 @@ static void FrameBufferSizeCallback(GLFWwindow* window, int w, int h)
     glViewport(0, 0, width, height);
 }
 
-static void ShadowPass()
+void ShadowPass()
 {
     smfbo1->BindForWriting();
     //gBuffer1->BindForWriting();
@@ -228,7 +169,7 @@ static void ShadowPass()
     glBindFramebuffer(GL_FRAMEBUFFER,0);
 }
 
-static void RenderPass()
+void RenderPass()
 {
     //этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -372,7 +313,7 @@ static void RenderPass()
     delete lightCam;
 }
 
-static void DSBeginLightPasses()
+void DSBeginLightPasses()
 {
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
@@ -382,12 +323,12 @@ static void DSBeginLightPasses()
     glClear(GL_COLOR_BUFFER_BIT| GL_DEPTH_BUFFER_BIT);
 }
 
-static void DSEndLigtPasses()
+void DSEndLigtPasses()
 {
     glDisable(GL_BLEND);
 }
 
-static void DSLightingPass()
+void DSLightingPass()
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -435,7 +376,7 @@ static void DSLightingPass()
     fLine1->Render((ConvertToString(spfaces)+" faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
-static void DSStencilPass(Light& light)
+void DSStencilPass(Light& light)
 {
     //m_nullTech.Enable();
     //включаем шейдер
@@ -476,7 +417,7 @@ static void DSStencilPass(Light& light)
     light.Render(30,width,height,1.0,1000.0,pGameCamera);
 }
 
-static void DSPointLightPass(PointLight& pointLight)
+void DSPointLightPass(PointLight& pointLight)
 {
     //gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
@@ -542,7 +483,7 @@ static void DSPointLightPass(PointLight& pointLight)
     glDisable(GL_BLEND);
 }
 
-static void DSSpotLightPass(SpotLight& spotLight)
+void DSSpotLightPass(SpotLight& spotLight)
 {
     //gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
@@ -612,7 +553,7 @@ static void DSSpotLightPass(SpotLight& spotLight)
     glDisable(GL_BLEND);
 }
 
-static void DSDirectionalLightPass(DirectionalLight& directionalLight)
+void DSDirectionalLightPass(DirectionalLight& directionalLight)
 {
     //gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
@@ -671,7 +612,7 @@ static void DSDirectionalLightPass(DirectionalLight& directionalLight)
     glDisable(GL_BLEND);
 }
 
-static void DSFinalPass()
+void DSFinalPass()
 {
     gBuffer1->BindForFinalPass();
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT,
@@ -679,7 +620,7 @@ static void DSFinalPass()
                       WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
-static void InterfacePass()
+void InterfacePass()
 {
     glBindFramebuffer(GL_FRAMEBUFFER,0);
     //glDisable(GL_DEPTH_TEST);
@@ -691,7 +632,7 @@ static void InterfacePass()
     fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     //gBuffer1->CheckTextures();
     CalcFPS();
-    fLine1->Render(ConvertToString(fps),-1.0f,-0.1f,24.0f);
+    fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
 
     if(renderType==0)
     {
@@ -703,7 +644,7 @@ static void InterfacePass()
     //glEnable(GL_DEPTH_TEST);
 }
 
-static void DSGeometryPass()
+void DSGeometryPass()
 {
     gBuffer1->BindForGeomPass();
     //gBuffer1->BindForWriting();
@@ -743,7 +684,7 @@ static void DSGeometryPass()
 
 }
 
-static void RenderScene(GLFWwindow* window)
+void RenderScene(GLFWwindow* window)
 {
     //ShadowPass();
     //RenderPass();
@@ -792,7 +733,7 @@ static void RenderScene(GLFWwindow* window)
     }
     InterfacePass();
 }
-static int InitScene()
+void PreInitScene(GLFWwindow* window)
 {
     Scale=0;
     lastTime = glfwGetTime();
@@ -800,7 +741,62 @@ static int InitScene()
 
     pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);
 
+    //шейдер текста
+    {
+        char* vertexShaderSorceCode=ReadFile("Shaders/text2d.vsh");
+        char* fragmentShaderSourceCode=ReadFile("Shaders/text2d.fsh");
+
+
+        textShader=new Shader();
+        textShader->AddShader(vertexShaderSorceCode,VertexShader);
+        textShader->AddShader(fragmentShaderSourceCode,FragmnetShader);
+        textShader->Init();
+        delete[] vertexShaderSorceCode;
+        delete[] fragmentShaderSourceCode;
+    }
+    fLine1=new FontLine2d();
+    fLine1->Init(string("Fonts/MagistralIC_UTF-8.fnt"),textShader);
+    fLine1->SetAspectRatio(width,height);
+
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
+    glfwSwapBuffers(window);
+    initialized  = false;
+}
+
+void InitRender(GLFWwindow* window, string message)
+{
+    //PreInitScene(window);
+    glfwMakeContextCurrent(window);
+    //while(!glfwWindowShouldClose(window) && initialized == false)
+    if(initialized == false)
+    {
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            CalcFPS();
+            fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+            fLine1->Render(message,-1.0f,-0.1f,36.0f);
+            glfwSwapBuffers(window);
+            glfwPollEvents();
+    }
+}
+
+int InitScene(GLFWwindow* window)
+{
+    /*std::thread thr(InitRender, window, string("test"));
+
+    thr.detach();*/
+
+
+    initialized = false;
+    /*Scale=0;
+    lastTime = glfwGetTime();
+    frameCount=0;
+
+    pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
+
+
     //нормальный шейдер
+    //InitRender(window, "Normal shader loading...");
     char* vertexShaderSorceCode=ReadFile("Shaders/vertexShader.vsh");
     char* fragmentShaderSourceCode=ReadFile("Shaders/fragmentShader.fsh");
     {
@@ -818,6 +814,7 @@ static int InitScene()
 
     //основной материал
     {
+        InitRender(window, "Main material loading...");
         mainMaterial = new Material;
         mainMaterial->Init(meshShader);
     }
@@ -830,6 +827,7 @@ static int InitScene()
 
     //шейдер тени
     {
+        InitRender(window, "Shade shader loading...");
         vertexShaderSorceCode=ReadFile("Shaders/fbo.vsh");
         fragmentShaderSourceCode=ReadFile("Shaders/fbo.fsh");
         shadowShader=new Shader();
@@ -843,13 +841,14 @@ static int InitScene()
 
     //материал тени
     {
+        InitRender(window, "Shade Material loading...");
         shadowMaterial = new Material;
         shadowMaterial->Init(shadowShader);
     }
 
-
     //затенённый шейдер
     {
+        InitRender(window, "Shaded shader loading...");
         vertexShaderSorceCode=ReadFile("Shaders/shadowed.vsh");
         //fragmentShaderSourceCode=ReadFile("Shaders/fragmentShader.fsh");
         fragmentShaderSourceCode=ReadFile("Shaders/shadowed.fsh");
@@ -864,6 +863,7 @@ static int InitScene()
 
     //затенённый материал
     {
+        InitRender(window, "Shaded material loading...");
         shadowMeshMaterial = new Material;
         shadowMeshMaterial->Init(shadowMeshShader);
         whiteTexture=new Texture2D;
@@ -875,6 +875,7 @@ static int InitScene()
 
     //шейдер StencilPass материал
     {
+        InitRender(window, "StencilPass shader loading...");
         //грузим шейдер
         {
             vertexShaderSorceCode=ReadFile("Shaders/DSStencilPass.vsh");
@@ -894,6 +895,7 @@ static int InitScene()
 
     //шейдер GBufferа и сам буффер, материал
     {
+        InitRender(window, "Gbuffer shader loading...");
         gBuffer1 = new GBuffer;
         gBuffer1->Init(width,height);
         //грузим шейдер
@@ -918,6 +920,7 @@ static int InitScene()
 
     //шейдера света
     {
+        InitRender(window, "Light shader loading...");
         //шейдер точечного света
         {
             //грузим шейдер
@@ -984,21 +987,20 @@ static int InitScene()
 
     //шейдер скайбокса
     {
+        InitRender(window, "Skybox shader loading...");
+        vertexShaderSorceCode=ReadFile("Shaders/skybox.vsh");
+        fragmentShaderSourceCode=ReadFile("Shaders/skybox.fsh");
 
+        skyboxShader=new Shader();
 
-    vertexShaderSorceCode=ReadFile("Shaders/skybox.vsh");
-    fragmentShaderSourceCode=ReadFile("Shaders/skybox.fsh");
-
-    skyboxShader=new Shader();
-
-    skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
-    skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
-    skyboxShader->Init();
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
+        skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
+        skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        skyboxShader->Init();
+        delete[] vertexShaderSorceCode;
+        delete[] fragmentShaderSourceCode;
     }
 
-    //шейдер текста
+    /*//шейдер текста
     {
     vertexShaderSorceCode=ReadFile("Shaders/text2d.vsh");
     fragmentShaderSourceCode=ReadFile("Shaders/text2d.fsh");
@@ -1010,7 +1012,7 @@ static int InitScene()
     textShader->Init();
     delete[] vertexShaderSorceCode;
     delete[] fragmentShaderSourceCode;
-    }
+    }*/
 
     skybox1= new SkyBox(skyboxShader);
     skybox1->Init("Textures",
@@ -1022,6 +1024,7 @@ static int InitScene()
                   "sp3back.tga");
     //настройка света и единичных векторов
     {
+        InitRender(window, "Init lights...");
         dirLightDirID=		meshShader->GetUniformLocation("dLightDir");
         dirLightColID=		meshShader->GetUniformLocation("dLightCol");
         spotLightDirID=		meshShader->GetUniformLocation("sLightDir");
@@ -1060,36 +1063,42 @@ static int InitScene()
         dirLightLine=new Line(P0,directionalLight1->GetDir(),directionalLight1->GetCol());
     }
 
-    bb1=new Billboard();
-    bb1->Init("Textures/monster_hellknight.png");
-    bb1->SetPos(Vector3f(0,0,0));
+    //прочее
+    {
+        InitRender(window, "Final steps...");
+        bb1=new Billboard();
+        bb1->Init("Textures/monster_hellknight.png");
+        bb1->SetPos(Vector3f(0,0,0));
 
-    noise1=new PerlinNoise(1,10.3,0.5,2,42);
+        noise1=new PerlinNoise(1,10.3,0.5,2,42);
 
-    tline1=new TextLine2d();
-    tline2=new TextLine2d();
-    fLine1=new FontLine2d();
-    tline1->Init(width,height,textShader);
-    tline2->Init(width,height,textShader);
-    fLine1->Init(string("Fonts/MagistralIC_UTF-8.fnt"),textShader);
-    fLine1->SetAspectRatio(width,height);
+        tline1=new TextLine2d();
+        tline2=new TextLine2d();
+        tline1->Init(width,height,textShader);
+        tline2->Init(width,height,textShader);
+        //fLine1->Init(string("Fonts/MagistralIC_UTF-8.fnt"),textShader);
+        //fLine1->SetAspectRatio(width,height);
 
-    //*************Shadow MAP FBO**********/
-    //smfbo1 = new ShadowMapFBO();
-    //smfbo1->Init(width,height);
-    //************************************/
-    //pGameCamera = new Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+        //*************Shadow MAP FBO**********/
+        //smfbo1 = new ShadowMapFBO();
+        //smfbo1->Init(width,height);
+        //************************************/
+        //pGameCamera = new Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+    }
+    initialized = true;
     return 0;
 }
-int main(void)
+
+
+int main()
 {
     renderType = 0;
     glfwWindowHint(GLFW_SAMPLES, 4); // 4x antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4); // We want OpenGL 3.3
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); //We don't want the old OpenGL
     GLFWwindow* window;
-    glfwSetErrorCallback(ErrorCallback);
+    glfwSetErrorCallback( reinterpret_cast<GLFWerrorfun>(&ErrorCallback));
     //glewExperimental = true; // Needed for core profile
     if (!glfwInit())
         exit(EXIT_FAILURE);
@@ -1100,19 +1109,20 @@ int main(void)
     title+=AutoVersion::FULLVERSION_STRING;
     title+=" build ";
     title+=ConvertToString(AutoVersion::BUILDS_COUNT);
+
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(), NULL, NULL);
     if (!window)
-        {
-            glfwTerminate();
-            exit(EXIT_FAILURE);
-        }
-    glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
+    {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+    glfwSetFramebufferSizeCallback(window, reinterpret_cast<GLFWframebuffersizefun>(&FrameBufferSizeCallback));
     width=WINDOW_WIDTH;
     height=WINDOW_HEIGHT;
     glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, KeyCallback);
-    glfwSetCursorPosCallback(window,MousePosCallBack);
-    glfwSetMouseButtonCallback(window, MouseButtonCallback);
+    glfwSetKeyCallback(window, reinterpret_cast<GLFWkeyfun>(&KeyCallback));
+    glfwSetCursorPosCallback(window,reinterpret_cast<GLFWcursorposfun>(&MousePosCallBack));
+    glfwSetMouseButtonCallback(window,reinterpret_cast<GLFWmousebuttonfun>(& MouseButtonCallback));
     GLenum res = glewInit();
     if (res != GLEW_OK)
         {
@@ -1134,10 +1144,12 @@ int main(void)
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    if(InitScene()!=0)
-        return -1;
     glViewport(0,0,WINDOW_WIDTH,WINDOW_HEIGHT);
 
+    PreInitScene(window);
+
+    if(InitScene(window)!=0)
+        return -1;
 
     while (!glfwWindowShouldClose(window))
         {

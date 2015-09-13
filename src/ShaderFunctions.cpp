@@ -32,7 +32,7 @@ GLuint MakeVertexShader(const char* source)
 	{
 		GLuint vertexShaderID=glCreateShader(GL_VERTEX_SHADER);
 		if (vertexShaderID == 0) {
-			fprintf(stderr, "Error creating vertex shader\n");
+			fprintf(stderr, "\nError creating vertex shader\n");
 			exit(1);
 		}
 		glShaderSource(vertexShaderID,1,(const GLchar**)&source,NULL);

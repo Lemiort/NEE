@@ -49,6 +49,7 @@ void FontLine2d::Render(string text, float startX, float startY,float size )
         {
             dx+=size*spaceWidth;
         }
+
         //собсно рисовка
         temp=character.Render((unsigned int)text.at(i),startX+dx,startY,size);
         //если символ есть, рисуем его
@@ -291,10 +292,8 @@ Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
     float dx=1.0f;
     float xOffset=size*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
     float yOffset=size*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;
-    //xOffset=0;
-    //yOffset=0;
-    //printf("\nChar num is %d, height is %f,widht is %f, x=%d,y=%d ",c,realHeight,realWidth,temp.xpos,temp.ypos);
-    //printf("\nkx=%f,  ky=%f  ",kx,ky);
+
+
     float vertices[]={0.0f,(-2*dx)*realHeight*ky,
 					0.0f,0.0f,
 					(2*dx)*realWidth*kx,(-2*dx)*realHeight*ky,
