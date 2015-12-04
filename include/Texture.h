@@ -23,7 +23,10 @@ class Texture2D: public Texture
 {
 protected:
 public:
+    //конструктор абстрактной текстуры
     Texture2D(GLuint texBufferID, bool _del=true);
+
+    //конструктор по умолчанию, удаляет текстуру после использования
     Texture2D()
     {
 

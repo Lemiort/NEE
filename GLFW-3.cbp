@@ -16,6 +16,7 @@
 					<Add option="-g" />
 					<Add directory="$(#glew.include)" />
 					<Add directory="$(#glfw.include)" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add directory="$(#glew.lib)" />
@@ -32,6 +33,7 @@
 					<Add option="-O2" />
 					<Add directory="$(#glew.include)" />
 					<Add directory="$(#glfw.include)" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -49,6 +51,7 @@
 					<Add option="-g" />
 					<Add directory="$(#glew64.include)" />
 					<Add directory="$(#glfw64.include)" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add directory="$(#glew64.lib)" />
@@ -65,6 +68,7 @@
 					<Add option="-O2" />
 					<Add directory="$(#glew64.include)" />
 					<Add directory="$(#glfw64.include)" />
+					<Add directory="include" />
 				</Compiler>
 				<Linker>
 					<Add option="-s" />
@@ -110,13 +114,16 @@
 		<Unit filename="include/PerlinNoise.h" />
 		<Unit filename="include/PlaceableObject.h" />
 		<Unit filename="include/RandomTexture.h" />
+		<Unit filename="include/Rectangle2D.h" />
 		<Unit filename="include/RenderableObject.h" />
+		<Unit filename="include/RotatableObject.h" />
 		<Unit filename="include/SOIL/SOIL.h" />
 		<Unit filename="include/SOIL/image_DXT.h" />
 		<Unit filename="include/SOIL/image_helper.h" />
 		<Unit filename="include/SOIL/stb_image_aug.h" />
 		<Unit filename="include/SOIL/stbi_DDS_aug.h" />
 		<Unit filename="include/SOIL/stbi_DDS_aug_c.h" />
+		<Unit filename="include/ScaleableObject.h" />
 		<Unit filename="include/Shader.h" />
 		<Unit filename="include/ShaderFunctions.h" />
 		<Unit filename="include/ShadowMapFBO.h" />
@@ -145,7 +152,10 @@
 		<Unit filename="src/PerlinNoise.cpp" />
 		<Unit filename="src/PlaceableObject.cpp" />
 		<Unit filename="src/RandomTexture.cpp" />
+		<Unit filename="src/Rectangle2D.cpp" />
 		<Unit filename="src/RenderableObject.cpp" />
+		<Unit filename="src/RotatableObject.cpp" />
+		<Unit filename="src/ScaleableObject.cpp" />
 		<Unit filename="src/Shader.cpp" />
 		<Unit filename="src/ShaderFunctions.cpp" />
 		<Unit filename="src/ShadowMapFBO.cpp" />

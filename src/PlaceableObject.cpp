@@ -26,3 +26,10 @@ void PlaceableObject::SetPosition(Vector3f _pos)
     position[1] = _pos.y;
     position[2] = _pos.z;
 }
+
+Vector3f PlaceableObject::GetPosition()
+{
+    return Vector3f(position[0],
+                    position[1],
+                    position[2]);
+}

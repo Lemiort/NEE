@@ -11,7 +11,9 @@
 
 class Light: public MaterialObject
 {
+
 public:
+    //TODO сделать его protected
     GLfloat	color[3];
 };
 
@@ -47,7 +49,6 @@ class PointLight: public Light, public PlaceableObject
 		//GLuint shaderProgramID;
 		float CalcSphereSize();
 		//Shader* shaderProgram;
-		GLuint VBO;
 		GLuint positionID;
 		GLuint gWorldID;
 		GLuint PixelColorID;
@@ -83,7 +84,6 @@ class Line: public RenderableObject
 		GLuint PixelColorID, PointSizeID;
 		GLuint gWorldID;
 		GLuint positionID;
-		GLuint VBO;
 		float col[3];
 		float pos[6];
 		Line(Vector3f pos1, Vector3f pos2, Vector3f color);
@@ -94,8 +94,6 @@ class Line: public RenderableObject
 		Shader* GetShader();
     private:
 
-// TODO (mvideo#1#): Сделать определение светового шейдера извне
-        //Shader* shaderProgram;
 	};
 
 

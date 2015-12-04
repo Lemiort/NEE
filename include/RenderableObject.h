@@ -5,6 +5,7 @@
 #include <Camera.h>
 #include <Shader.h>
 
+//Renderable Objects can be rendered, needs Shader to render
 class RenderableObject : public Object
 {
     public:
@@ -15,7 +16,9 @@ class RenderableObject : public Object
         virtual void SetShader(Shader* shader);
     protected:
         Shader* shaderProgram;
+        GLuint VBO,IBO;
     private:
+
 };
 
 #endif // RENDERABLEOBJECT_H

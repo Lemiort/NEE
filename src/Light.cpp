@@ -86,7 +86,7 @@ SpotLight::SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloa
 
 		mesh =  new Mesh();
         mesh->Init(_mat,"Models/cone2.ho3d");
-        mesh->SetRotate(90,0,0);
+        mesh->SetRotation(90,0,0);
 
 	}
 
@@ -218,7 +218,7 @@ void SpotLight::Render(float FOV, float Width, float Height, float zNear, float 
                 cout<< setprecision(1)<<(int)xrot<<" "<<(int)yrot<<" "<<(int)zrot<<", dir:("<<
                         direction[0]<<", "<<direction[1]<<","<<direction[2]<<")";
 
-               mesh->SetRotate(xrot,
+               mesh->SetRotation(xrot,
                                 yrot,
                                 zrot);
                 //=======================================================

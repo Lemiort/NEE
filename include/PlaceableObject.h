@@ -11,8 +11,9 @@ class PlaceableObject : public Object
         virtual ~PlaceableObject();
         float position[3];
 
-        virtual void SetPosition(float x, float y, float z);
-        virtual void SetPosition(Vector3f _pos);
+        void SetPosition(float x, float y, float z);
+        void SetPosition(Vector3f _pos);
+        Vector3f GetPosition();
     protected:
     private:
 };

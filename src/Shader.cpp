@@ -67,7 +67,7 @@ void Shader::Init()
 				fprintf(flog, "Error linking shader program: at files '%s', '%s', '%s', '%s'\n",
                         vShaderFileName.c_str(),
                         gShaderFileName.c_str(),
-                        vShaderFileName.c_str(),
+                        fShaderFileName.c_str(),
                         ErrorLog);
 				fclose(flog);
 				exit(1);
@@ -82,7 +82,7 @@ void Shader::Init()
 			fprintf(flog, "Invalid shader program: at files '%s', '%s', '%s', '%s'\n",
                         vShaderFileName.c_str(),
                         gShaderFileName.c_str(),
-                        vShaderFileName.c_str(),
+                        fShaderFileName.c_str(),
                         ErrorLog);
 			fclose(flog);
 			exit(1);

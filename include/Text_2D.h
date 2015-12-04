@@ -49,7 +49,6 @@ class Font2d: public RenderableObject, public PlaceableObject
 	{
 private:
     //Shader* shaderProgram;
-    GLuint VBO,IBO;
     GLuint sverticesID,spositionID;
     GLuint uvID,suvID;
     GLuint sizeID;
@@ -118,13 +117,13 @@ class FontLine2d: public RenderableObject, public PlaceableObject
         void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
 };
 
+//класс отрисовки побуквенно
 class Text2d: public RenderableObject, public PlaceableObject
 	{
 	private:
 	    bool yourselfShader;
     //GLuint shaderProgramID;
     //Shader* shaderProgram;
-    GLuint VBO,IBO;
     GLuint positionID,spositionID;
     GLuint uvID,suvID;
     GLuint sizeID;
@@ -148,6 +147,7 @@ public:
 	void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
 	};
 
+//класс линии из отрисовки букв
 class TextLine2d: public RenderableObject, public PlaceableObject
 	{
 	private:

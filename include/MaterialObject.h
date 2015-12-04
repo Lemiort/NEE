@@ -4,6 +4,7 @@
 #include <RenderableObject.h>
 #include <Material.h>
 
+//renderable object, using materials
 class MaterialObject : public RenderableObject
 {
     public:

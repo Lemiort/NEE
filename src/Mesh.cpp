@@ -329,36 +329,11 @@ void Mesh::Render(float FOV, float Width, float Height, float zNear, float zFar,
     glDisableVertexAttribArray(tangentID);
 }
 
-void Mesh::SetRotate(float x, float y, float z)
-{
-    rotation[0]=x;
-    rotation[1]=y;
-    rotation[2]=z;
-}
 
 void Mesh::SetVectorRotate(Vector3f v, float phi)
 {
     rPhi = phi;
     rv = v;
-}
-
-void Mesh::Rotate(float x, float y, float z)
-{
-    rotation[0]+=x;
-    rotation[1]+=y;
-    rotation[2]+=z;
-}
-void Mesh::SetScale(float x, float y, float z)
-{
-    scale[0]=x;
-    scale[1]=y;
-    scale[2]=z;
-}
-void Mesh::SetPosition(float x, float y, float z)
-{
-    position[0]=x;
-    position[1]=y;
-    position[2]=z;
 }
 
 int Mesh::GetNumFaces()

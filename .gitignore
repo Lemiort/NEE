@@ -69,3 +69,4 @@ include/Material.h.gch
 *.o
 *.gch
 *.dll
+*.lib
