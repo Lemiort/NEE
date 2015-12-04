@@ -107,7 +107,7 @@ void ShadowPass()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //CalcFPS();
     Scale += 0.021f;
-    TestMesh.SetRotate(0,30*sinf(Scale),0);
+    TestMesh.SetRotation(0,30*sinf(Scale),0);
     TestMesh.SetScale(0.02,0.02,0.02);
     TestMesh.SetPosition(0,-0.2,0);
     //light3->SetPos(pGameCamera->GetPos());
@@ -116,7 +116,7 @@ void ShadowPass()
 
     Plane.SetScale(30.0f,30.0f,30.0f);
     Plane.SetPosition(0.0f,-3.0f,0.0f);
-    Plane.SetRotate(0.0,0.0,0.0);
+    Plane.SetRotation(0.0,0.0,0.0);
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
@@ -158,7 +158,7 @@ void ShadowPass()
         for(float j=-5.0f;j<5.0f;j+=0.1f)
     {
         Cube.SetScale(0.05f,0.05f,0.05f);
-        Cube.SetRotate(0,30*sinf(Scale),0);
+        Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
         Cube.Render(30,width, height, 1, 1000,lightCam);
     }
@@ -175,14 +175,14 @@ void RenderPass()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     //CalcFPS();
     Scale += 0.021f;
-    TestMesh.SetRotate(0,30*sinf(Scale),0);
+    TestMesh.SetRotation(0,30*sinf(Scale),0);
     TestMesh.SetScale(0.02,0.02,0.02);
     TestMesh.SetPosition(0,-0.2,0);
 
 
     Plane.SetScale(30.0f,30.0f,30.0f);
     Plane.SetPosition(0.0f,-3.0f,0.0f);
-    Plane.SetRotate(0.0,0.0,0.0);
+    Plane.SetRotation(0.0,0.0,0.0);
     Assistant TM,TM2;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
@@ -292,7 +292,7 @@ void RenderPass()
         for(float j=-5.0f;j<5.0f;j+=0.1f)
     {
         Cube.SetScale(0.05f,0.05f,0.05f);
-        Cube.SetRotate(0,30*sinf(Scale),0);
+        Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
         Cube.Render(30,width, height, 1, 1000,pGameCamera);
     }
@@ -684,7 +684,7 @@ void DSGeometryPass()
         for(float j=-5.0f;j<5.0f;j+=0.1f)
     {
         Cube.SetScale(0.05f,0.05f,0.05f);
-        Cube.SetRotate(0,30*sinf(Scale),0);
+        Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
         Cube.Render(30,width, height, 1, 1000,pGameCamera);
     }
