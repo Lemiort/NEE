@@ -1,137 +1,4 @@
 #include "Mesh.h"
-/*
-void Mesh::Init(GLuint shader,const char* model)
-{
-    shaderProgramID=shader;
-    Scale=0;
-    int* spindices=NULL;
-    float* spvertices=NULL;
-    float* spnormals=NULL;
-    float* spuvs=NULL;
-    float* sptangent=NULL;
-    spfaces=0;
-    spverts=0;
-//#pragma region IMPORTOBJ
-    FILE* fp;
-    fstream fout("ImporObj.log",ios::out);
-    //fopen_s(&fp,model,"r+b");
-    fp=fopen(model,"r+b");
-    if(!fp) return ;
-    fread(&spverts,sizeof(int),1,fp);
-    fout<<spverts<<endl;
-    spvertices=new float[spverts*3];
-    spuvs=new float[spverts*2];
-    spnormals=new float[spverts*3];
-    sptangent =new float[spverts*3];
-    for(int i=0; i<spverts; i++)
-        {
-            fread(&spvertices[3*i],sizeof(float),1,fp);
-            fread(&spvertices[3*i+1],sizeof(float),1,fp);
-            fread(&spvertices[3*i+2],sizeof(float),1,fp);
-            fread(&spuvs[2*i],sizeof(float),1,fp);
-            fread(&spuvs[2*i+1],sizeof(float),1,fp);
-            fread(&spnormals[3*i],sizeof(float),1,fp);
-            fread(&spnormals[3*i+1],sizeof(float),1,fp);
-            fread(&spnormals[3*i+2],sizeof(float),1,fp);
-        }
-    for(int i=0; i<spverts*3; i++)
-        {
-            fread(&sptangent[i],sizeof(float),1,fp);
-        }
-    for(int i=0; i<spverts; i++)
-        {
-            fout<<i<<" ";
-            fout<<spvertices[3*i]<<",";
-            fout<<spvertices[3*i+1]<<",";
-            fout<<spvertices[3*i+2]<<",";
-            fout<<spuvs[3*i+0]<<",";
-            fout<<spuvs[3*i+1]<<",";
-            fout<<spnormals[3*i+0]<<",";
-            fout<<spnormals[3*i+1]<<",";
-            fout<<spnormals[3*i+2]<<",\n";
-        }
-    //vertices[0]=f;
-    fread(&spfaces,sizeof(int),1,fp);
-    fout<<"\n"<<spfaces<<endl;
-    spindices=new int[spfaces*3];
-    for(int i=0; i<spfaces; i++)
-        {
-            fread(&spindices[3*i],sizeof(int),1,fp);
-            fread(&spindices[3*i+1],sizeof(int),1,fp);
-            fread(&spindices[3*i+2],sizeof(int),1,fp);
-        }
-    fclose(fp);
-    for(int i=0; i<spfaces; i++)
-        {
-            fout<<spindices[3*i]<<",";
-            fout<<spindices[3*i+1]<<","<<spindices[3*i+2]<<endl;
-        }
-    fout.close();
-//#pragma endregion IMPORTOBJ
-    //ImportObj("pyramid.ho3d",spvertices,spuvs,spnormals,spindices,spverts,spfaces);
-    //создаём буффер, в котором будем хранить всё
-    glGenBuffers(1,&VBO);
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    //создаём буффер
-    glBufferData(GL_ARRAY_BUFFER,sizeof(float)*(3+3+2+3)*(spverts),NULL,GL_STATIC_DRAW);
-    //загружаем вершины в буффер
-    glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(float)*3*spverts,spvertices);
-    //нормали
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*3*spverts,sizeof(float)*3*spverts,spnormals);
-    //текстурные координаты
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*6*spverts,sizeof(float)*2*spverts,spuvs);
-    //тангент
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*8*spverts,sizeof(float)*3*spverts,sptangent);
-
-    //привязываем индексы к буфферу
-    glGenBuffers(1,&IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(int)*3*spfaces,spindices,GL_STATIC_DRAW);
-
-    positionID=	glGetAttribLocation(shaderProgramID,"s_vPosition");
-    normalID=	glGetAttribLocation(shaderProgramID,"s_vNormal");
-    uvID=		glGetAttribLocation(shaderProgramID,"s_vUV");
-    tangentID=	glGetAttribLocation(shaderProgramID, "s_vTangent");
-    //находим позиции uniform-переменных
-    gWorldID=	glGetUniformLocation(shaderProgramID, "gWorld");
-    rotateID=	glGetUniformLocation(shaderProgramID, "mRotate");//вращение объекта
-
-    //создаём текстуру
-    colorMap.Load("Textures/checker.tga");
-    //normBufferID=TextureCreateFromTGA("Textures/normal_up.jpg");
-    normalMap.Load("Textures/normal_up.jpg");
-    specularMap.Load("Textures/white.png");
-    // делаем активным текстурный юнит 0
-    colorMap.Bind(GL_TEXTURE0);
-    colTexID=	glGetUniformLocation(shaderProgramID, "colTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №0
-    glUniform1i(colTexID, 0);
-
-    normalMap.Bind(GL_TEXTURE1);
-    normSamplerID=	glGetUniformLocation(shaderProgramID, "normTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №0
-    glUniform1i(normSamplerID, 1);
-
-    specularMap.Bind(GL_TEXTURE2);
-    specSamplerID=	glGetUniformLocation(shaderProgramID, "specTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №0
-    glUniform1i(specSamplerID, 2);
-    for(int i=0; i<3; i++)
-        {
-            position[i]=0;
-            rotation[i]=0;
-            scale[i]=1;
-        }
-}*/
-
-/*__declspec(dllimport) int LoadObj(char* filename,
-            unsigned int& verticesNum,
-            unsigned int& facesNum,
-            float*& _vertices,
-            float*& _uvs,
-            float*& _normals,
-            float*& _bitangents,
-            unsigned int*& _faces);*/
 
 Mesh::Mesh()
 {
@@ -149,7 +16,6 @@ Mesh::~Mesh()
 void Mesh::SetMaterial( Material* _mat )
 {
     mat = _mat;
-    //shaderProgram = mat->GetShader();
     this->SetShader(mat->GetShader());
 
     //mat->Use();
@@ -243,9 +109,6 @@ bool Mesh::Init(Material* _mat,const char* model)
         printf("\nError creating new Mesh");
         return false;
     }
-//#pragma endregion IMPORTOBJ
-    //ImportObj("pyramid.ho3d",spvertices,spuvs,spnormals,spindices,spverts,spfaces);
-
 
     //создаём буффер, в котором будем хранить всё
     glGenBuffers(1,&VBO);

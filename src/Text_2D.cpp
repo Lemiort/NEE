@@ -541,7 +541,6 @@ void Text2d::SetCharacter(unsigned int c)
     character = c;
 }
 
-//void Text2d::Render(unsigned int c, float px, float py, float size)
 void Text2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
 {
 	//glUseProgram(shaderProgramID);
@@ -606,15 +605,7 @@ void TextLine2d::Init(int width, int height, Shader* _sh)
 		//symbol->SetAspectRatio(aratio);
 		symbol->Init(width,height, _sh);
 	}
-/*void TextLine2d::Render(float x, float y,float size, char* input)
-{
-	float delta=0;
-    for(unsigned int i=0; i<strlen(input);i++, delta+=size*pixelSize*aratio*2.0/32.0)//1.9 подобрано экспериментально
-    {
-		//symbol->Render((unsigned char)input[i],x+delta,y,size*pixelSize/32.0);
-    }
-*
-}*/
+
 
 void TextLine2d::SetText(string _text)
 {

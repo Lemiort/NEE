@@ -39,26 +39,18 @@ class Mesh: public PlaceableObject,
             public ScaleableObject
 {
 public:
-    //	GLuint shaderProgramID;
 protected:
-    //Shader* shaderProgram;
     GLuint positionID,uvID,normalID,tangentID;
     GLuint gWorldID, gCamViewID;
     GLuint rotateID;
     GLuint dirLightDirID, dirLightColID;
     GLuint pointLightColID, pointLightIntID, pointLightPosID;
     GLuint camtransID,camPosID;
-    //Texture colorMap, normalMap, specularMap;
-    //GLuint colTexID, texBufferID,normBufferID,normSamplerID;
     GLuint specBufferID, specSamplerID;
     GLuint colSamplerUI, normSamplerUI;
     GLuint shadowMap;
-    //Material* mat;
     int spfaces, spverts;
     int Scale;
-    //	DirectionalLight* light1;
-    //	PointLight* light2;
-    //float position[3];
 
     //угол вращения вокруг вектора
     float rPhi;
@@ -73,11 +65,8 @@ public:
     virtual ~Mesh();
     int GetNumFaces();
     int GetNumVerts();
-    void Init(GLuint shader,const char* model);
     bool Init(Material* _mat,const char* model);
     void SetTexture(GLuint textureUnit);
-
-    //void Init();
     void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
     void SetVectorRotate(Vector3f v, float phi);
     virtual void SetMaterial(Material* _mat);

@@ -48,7 +48,6 @@ struct KerningPairs
 class Font2d: public RenderableObject, public PlaceableObject
 	{
 private:
-    //Shader* shaderProgram;
     GLuint sverticesID,spositionID;
     GLuint uvID,suvID;
     GLuint sizeID;
@@ -58,8 +57,10 @@ private:
     string filename;
     unsigned int* indicies;
     float aratio;
+
     //отношение размеров картинки к экрану
     float kx,ky;
+
     //размер пикселя в uv
     float pkx,pky;
     int fontHeight;
@@ -92,7 +93,6 @@ public:
 
 	Vector2f GetLastCharacterLength();//возвращает длину текущего символа
 	void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
-	//Vector2f Render(unsigned int c, float x, float y, float size);//возвращает длину символа
 	friend class FontLine2d;
 	};
 
