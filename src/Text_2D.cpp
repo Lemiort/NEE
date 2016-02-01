@@ -53,18 +53,16 @@ void FontLine2d::Render(float FOV, float Width, float Height, float zNear, float
         }
         dx+=kerning;
 
-        //если нашли символ пробела риусуем его
+        //если нашли символ пробела рисуем его
         if((unsigned int)text.at(i)==(unsigned int)' ')
         {
             dx+=position[2]*spaceWidth;
         }
 
         //собсно рисовка
-       // temp=character.Render((unsigned int)text.at(i),startX+dx,startY,size);
         character.SetPosition(position[0] + dx, position[1], position[2]);
         character.SetCharacter(text.at(i));
         temp = character.GetLastCharacterLength();
-        //character.Render(30,1366,768,1.0,1000.0,nullptr);
         character.Render(FOV, Width, Height, zNear, zFar,nullptr);
 
         //если символ есть, рисуем его
@@ -131,18 +129,18 @@ bool Font2d::Init(string _filename,Shader* _sh)
     glGenBuffers(1,&IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
     //получаем значения шейдерных переменных
-    sverticesID=	shaderProgram->GetAttribLocation("Position");
-    uvID=		shaderProgram->GetAttribLocation("UV");
-    spositionID=shaderProgram->GetUniformLocation("s_Position");
-    suvID=		shaderProgram->GetUniformLocation("s_UV");
-    colorID=     shaderProgram->GetUniformLocation("textColor");
+    sverticesID =	shaderProgram->GetAttribLocation("Position");
+    uvID =		    shaderProgram->GetAttribLocation("UV");
+    spositionID =   shaderProgram->GetUniformLocation("s_Position");
+    suvID =		    shaderProgram->GetUniformLocation("s_UV");
+    colorID =       shaderProgram->GetUniformLocation("textColor");
 
      //ну и заполнение индексов
-       indicies=new unsigned int[4];
-			indicies[0]=0; indicies[1]=1;indicies[2]=2;
-			indicies[3]=3;
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(int)*4,indicies,GL_STATIC_DRAW);
+    indicies=new unsigned int[4];
+    indicies[0]=0; indicies[1]=1;indicies[2]=2;
+    indicies[3]=3;
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(int)*4,indicies,GL_STATIC_DRAW);
 
     /*===========заполение информации о шрифте============*/
     fstream fin;
@@ -294,6 +292,7 @@ void Font2d::SetCharacter(unsigned int c)
 {
     character = c;
 
+    //ээ пиздец, установка координаты Y
     position[2]=position[2]/(float)fontHeight;
     temp = FontCharacter(0,0,0,0,0,0,0,0);
     try

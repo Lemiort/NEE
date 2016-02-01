@@ -100,6 +100,7 @@
 		<Unit filename="include/BillboardAssistant.h" />
 		<Unit filename="include/Camera.h" />
 		<Unit filename="include/EngineCommon.h" />
+		<Unit filename="include/Font2d.h" />
 		<Unit filename="include/GBuffer.h" />
 		<Unit filename="include/GameConsole.h" />
 		<Unit filename="include/Light.h" />
@@ -139,6 +140,7 @@
 		<Unit filename="src/Billboard.cpp" />
 		<Unit filename="src/BillboardAssistant.cpp" />
 		<Unit filename="src/Camera.cpp" />
+		<Unit filename="src/Font2d.cpp" />
 		<Unit filename="src/GBuffer.cpp" />
 		<Unit filename="src/GameConsole.cpp" />
 		<Unit filename="src/Light.cpp" />
