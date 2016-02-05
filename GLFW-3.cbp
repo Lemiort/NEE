@@ -104,7 +104,6 @@
 		<Unit filename="include/GBuffer.h" />
 		<Unit filename="include/GameConsole.h" />
 		<Unit filename="include/Light.h" />
-		<Unit filename="include/Line.h" />
 		<Unit filename="include/Logger.h" />
 		<Unit filename="include/Material.h" />
 		<Unit filename="include/MaterialObject.h" />
