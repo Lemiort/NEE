@@ -13,7 +13,7 @@ Mesh::~Mesh()
     glDeleteBuffers(1,&IBO);
 }
 
-void Mesh::SetMaterial( Material* _mat )
+void Mesh::SetMaterial( shared_ptr<Material> _mat )
 {
     mat = _mat;
     this->SetShader(mat->GetShader());
@@ -28,7 +28,7 @@ void Mesh::SetMaterial( Material* _mat )
     rotateID=	shaderProgram->GetUniformLocation("mRotate");//вращение объекта
 }
 
-bool Mesh::Init(Material* _mat,const char* model)
+bool Mesh::Init(shared_ptr<Material> _mat,const char* model)
 {
     mat=_mat;
     shaderProgram = mat->GetShader();
@@ -106,7 +106,7 @@ bool Mesh::Init(Material* _mat,const char* model)
     }
     catch(const std::bad_alloc&)
     {
-        printf("\nError creating new Mesh");
+        printf("\nError creating make_shared<Mesh>");
         return false;
     }
 
@@ -153,7 +153,7 @@ bool Mesh::Init(Material* _mat,const char* model)
 
     return true;
 }
-void Mesh::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Mesh::Render(Camera* cam)
 {
 
     Assistant TM,TM2;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
@@ -165,7 +165,7 @@ void Mesh::Render(float FOV, float Width, float Height, float zNear, float zFar,
     TM2.RotateOverVector( rv,rPhi);
 
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(FOV, Width,Height, zNear, zFar);
+    TM.SetPerspectiveProj(cam->GetFov(),cam->GetWidth(),cam->GetHeight(), cam->GetZNear(), cam->GetZFar());
 
     mat->Use();
 
@@ -214,11 +214,11 @@ void Mesh::SetTexture(GLuint textureUnit)
     shadowMap=textureUnit;
 }
 
-Shader* Mesh::GetShader()
+/*shared_ptr<Shader> Mesh::GetShader()
 {
     return shaderProgram;
 }
-void Mesh::SetShader(Shader* shader)
+void Mesh::SetShader(shared_ptr<Shader> shader)
 {
     shaderProgram = shader;
-}
+}*/

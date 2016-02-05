@@ -5,7 +5,7 @@
 const static float STEP_SCALE = 0.1f;
 const static int MARGIN = 100;
 
-Camera::Camera(int WindowWidth, int WindowHeight)
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar)
 {
     m_windowWidth  = WindowWidth;
     m_windowHeight = WindowHeight;
@@ -13,12 +13,15 @@ Camera::Camera(int WindowWidth, int WindowHeight)
     m_target       = Vector3f(0.0f, 0.0f, -1.0f);
     m_target.Normalize();
     m_up           = Vector3f(0.0f, 1.0f, 0.0f);
+    FOV = fov;
+    zNear = znear;
+    zFar = zfar;
 
     Init();
 }
 
 
-Camera::Camera(int WindowWidth, int WindowHeight, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up)
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up)
 {
     m_windowWidth  = WindowWidth;
     m_windowHeight = WindowHeight;
@@ -29,6 +32,10 @@ Camera::Camera(int WindowWidth, int WindowHeight, const Vector3f& Pos, const Vec
 
     m_up = Up;
     m_up.Normalize();
+
+    FOV = fov;
+    zNear = znear;
+    zFar = zfar;
 
     Init();
 }
@@ -215,4 +222,68 @@ void Camera::Update()
 
     m_up = m_target.Cross(Haxis);
     m_up.Normalize();
+}
+
+float Camera::GetFov()
+{
+    return FOV;
+}
+
+void Camera::SetFOV(float fov)
+{
+    FOV = fov;
+}
+
+const Vector3f& Camera::GetPos() const
+{
+    return m_pos;
+}
+
+const Vector3f& Camera::GetTarget() const
+{
+    return m_target;
+}
+
+const Vector3f& Camera::GetUp() const
+{
+    return m_up;
+}
+
+
+float Camera::GetZNear()
+{
+    return zNear;
+}
+
+float Camera::GetZFar()
+{
+    return zFar;
+}
+
+void Camera::SetZNear(float znear)
+{
+    zNear = znear;
+}
+
+void Camera::SetZFar(float zfar)
+{
+    zFar = zfar;
+}
+
+
+void Camera::OnViewportResize(int width, int height)
+{
+    m_windowHeight = height;
+    m_windowWidth = width;
+    Init();
+}
+
+int Camera::GetWidth()
+{
+    return m_windowWidth;
+}
+
+int Camera::GetHeight()
+{
+    return m_windowHeight;
 }

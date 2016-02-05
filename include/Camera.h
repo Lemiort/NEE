@@ -7,9 +7,9 @@ class Camera
 {
 public:
 
-    Camera(int WindowWidth, int WindowHeight);
+    Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar);
 
-    Camera(int WindowWidth, int WindowHeight, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up);
+    Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up);
 
     bool OnKeyboard(char Key);
 
@@ -17,22 +17,33 @@ public:
 
     void OnRender();
 
-    const Vector3f& GetPos() const
-    {
-        return m_pos;
-    }
+    const Vector3f& GetPos() const;
 
-    const Vector3f& GetTarget() const
-    {
-        return m_target;
-    }
+    const Vector3f& GetTarget() const;
 
-    const Vector3f& GetUp() const
-    {
-        return m_up;
-    }
+    const Vector3f& GetUp() const;
 
+    float GetFov();
+
+    void SetFOV(float fov);
+
+    float GetZNear();
+
+    float GetZFar();
+
+    void SetZNear(float znear);
+
+    void SetZFar(float zfar);
+
+    void OnViewportResize(int width, int height);
+
+    int GetWidth();
+
+    int GetHeight();
 private:
+    float FOV;
+    float zNear;
+    float zFar;
 
     void Init();
     void Update();

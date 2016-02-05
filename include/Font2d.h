@@ -83,9 +83,9 @@ public:
 
     //инициализируем материалом и моделью quad2x2front.ho3d
     //и шрифтом
-    bool Init(Material* _mat, string _fileName);
+    bool Init(shared_ptr<Material> _mat, string _fileName);
     ~Character2d();
-    void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+    void Render(Camera* cam);
 
     //TODO возвращает длину текущего символа в экрнных координатах??
     Vector2f GetLastCharacterLength();

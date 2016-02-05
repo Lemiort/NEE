@@ -10,10 +10,10 @@ class MaterialObject : public RenderableObject
     public:
         MaterialObject();
         virtual ~MaterialObject();
-        virtual void SetMaterial(Material* _mat);
-        virtual Material* GetMaterial();
+        virtual void SetMaterial(shared_ptr<Material> _mat);
+        virtual shared_ptr<Material> GetMaterial();
     protected:
-        Material* mat;
+        shared_ptr<Material> mat;
     private:
 };
 

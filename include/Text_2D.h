@@ -82,7 +82,7 @@ protected:
 public:
     Font2d();
     ~Font2d();
-	bool Init(string filename,Shader* _sh);
+	bool Init(string filename,shared_ptr<Shader> _sh);
 	int GetFontHeight();
 	float GetWidth(unsigned int c);
 	float GetHeight(unsigned int c);
@@ -92,7 +92,7 @@ public:
 	void SetCharacter(unsigned int c);
 
 	Vector2f GetLastCharacterLength();//возвращает длину текущего символа
-	void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+	void Render(Camera* cam);
 	friend class FontLine2d;
 	};
 
@@ -101,7 +101,7 @@ class FontLine2d: public RenderableObject, public PlaceableObject
 {
     private:
         Font2d character;
-        Shader* shaderProgram;
+        shared_ptr<Shader> shaderProgram;
         float prevX,prevY;
         float aratio;
         float spaceWidth;
@@ -110,11 +110,11 @@ class FontLine2d: public RenderableObject, public PlaceableObject
     public:
         FontLine2d();
         ~FontLine2d();
-        bool Init(string filename,Shader* _sh);
+        bool Init(string filename,shared_ptr<Shader> _sh);
         void SetAspectRatio(int w, int h);
         void SetText(string _text);
         //void Render(string text,float x, float y, float size);
-        void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+        void Render(Camera* cam);
 };
 
 //класс отрисовки побуквенно
@@ -123,7 +123,7 @@ class Text2d: public RenderableObject, public PlaceableObject
 	private:
 	    bool yourselfShader;
     //GLuint shaderProgramID;
-    //Shader* shaderProgram;
+    //shared_ptr<Shader> shaderProgram;
     GLuint positionID,spositionID;
     GLuint uvID,suvID;
     GLuint sizeID;
@@ -138,13 +138,13 @@ class Text2d: public RenderableObject, public PlaceableObject
 public:
 	Text2d();
 	~Text2d();
-	void Init(int width,int height, Shader* _sh=NULL);
-	void Init(Shader* shader, GLuint texture,GLuint texbuf);
+	void Init(int width,int height, shared_ptr<Shader> _sh=NULL);
+	void Init(shared_ptr<Shader> shader, GLuint texture,GLuint texbuf);
 	void SetAspectRatio(int width,int height);
 	void SetAspectRatio(float);
 	void SetCharacter(unsigned int c);
 	//void Render(unsigned int c, float x, float y, float size);
-	void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+	void Render(Camera* cam);
 	};
 
 //класс линии из отрисовки букв
@@ -154,15 +154,15 @@ class TextLine2d: public RenderableObject, public PlaceableObject
 		Text2d* symbol;
 		float aratio;
 		float pixelSize;
-		//Shader* shaderProgram;
+		//shared_ptr<Shader> shaderProgram;
 		string text;
 	public:
 		TextLine2d();
 		~TextLine2d();
-		void Init(int width, int height, Shader* _sh=NULL);
+		void Init(int width, int height, shared_ptr<Shader> _sh=NULL);
 		void SetAspectRatio(int width, int height);
 		void SetText(string _text);
 		//void Render(float x, float y,float size, char* input);
-		void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+		void Render(Camera* cam);
 	};
 #endif //TEXT_2D_H_INCLUDED

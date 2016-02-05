@@ -23,7 +23,7 @@ public:
     ParticleSystem();
     ~ParticleSystem();
     bool Init(Vector3f Pos);
-    void Render(int DeltaTimeMillis,float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+    void Render(int DeltaTimeMillis, Camera* cam);
 private:
     bool m_isFirst;
     unsigned int m_currVB;
@@ -37,7 +37,7 @@ private:
     GLuint shaderProgramID;
     BillboardAssistant m_billboardAssistant;
     int m_time;
-    void RenderParticles(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+    void RenderParticles(Camera* cam);
     void UpdateParticles(int DeltaTimeMillis);
     struct Particle
     {

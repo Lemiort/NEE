@@ -1,6 +1,6 @@
 #include "skybox.h"
 
-SkyBox::SkyBox(Shader* shader)
+SkyBox::SkyBox(shared_ptr<Shader> shader)
 {
     shaderProgram=shader;
     shaderProgramID=shader->shaderProgramID;
@@ -87,7 +87,7 @@ bool SkyBox::Init(const string& Directory,
 	 }
     catch(const std::bad_alloc&)
     {
-        printf("\nError creating new Mesh in Skybox");
+        printf("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
 	//создаём буффер, в котором будем хранить всё
@@ -143,7 +143,7 @@ bool SkyBox::Init(const string& Directory,
     delete sptangent;
 	return true;
 	}
-void SkyBox::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void SkyBox::Render(Camera* cam)
 	{
 	 GLint OldCullFaceMode;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
@@ -158,7 +158,7 @@ void SkyBox::Render(float FOV, float Width, float Height, float zNear, float zFa
     TM.WorldPos(cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 	TM.Rotate(180,180,0);
 	TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-	TM.SetPerspectiveProj(FOV, Width,Height, zNear, zFar);
+	TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(), cam->GetZNear(), cam->GetZFar());
 
 	//glUseProgram(shaderProgramID);
 	shaderProgram->Use();

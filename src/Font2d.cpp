@@ -9,7 +9,7 @@ Character2d::~Character2d()
 
 }
 
-bool Character2d::Init(Material* _mat, string _fileName)
+bool Character2d::Init(shared_ptr<Material> _mat, string _fileName)
 {
     mesh.Init(_mat,"Models/quad2x2front.ho3d");
     this->mat = _mat;
@@ -122,7 +122,8 @@ bool Character2d::Init(Material* _mat, string _fileName)
                     SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
                 );
     //загружаем в материал
-    _mat->SetColorTexture( new Texture2D(texBufferID));
+    shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
+    _mat->SetColorTexture( temp);
 
     //получаем размеры изображения
     FILE* imageFile=fopen(imgFilename.c_str(), "rb");
@@ -174,9 +175,9 @@ void Character2d::SetAspectRatio(int _width, int _height)
     ky=(float)imageHeight/(float)_height;
 }
 
-void Character2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Character2d::Render(Camera* cam)
 {
-    SetAspectRatio(Width,Height);
+    SetAspectRatio(cam->GetWidth(), cam->GetHeight());
     this->mat->Use();
 
     //TODO идея: редактировать текстурные координаты в шейдере

@@ -1,33 +1,32 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 #include <GL\glew.h>
-#include "Texture.h"
-#include "Shader.h"
+#include <Texture.h>
+#include <Shader.h>
+#include <memory>
 
 class Material
 {
     public:
         Material();
         virtual ~Material();
-        bool Init(Shader* _sh);
+        bool Init(shared_ptr<Shader> _sh);
         void Use();
-        void SetColorTexture(Texture2D* _colorMap);
-        void SetNormalTexture(Texture2D* _normalMap);
-        void SetSpecularTexture(Texture2D* _specularMap);
-        void SetShadowTexture(Texture2D* _shadowMap);
-        void SetTexture(Texture2D*_map, GLuint num);
+        void SetColorTexture(shared_ptr<Texture2D> _colorMap);
+        void SetNormalTexture(shared_ptr<Texture2D> _normalMap);
+        void SetSpecularTexture(shared_ptr<Texture2D> _specularMap);
+        void SetShadowTexture(shared_ptr<Texture2D> _shadowMap);
+        void SetTexture(shared_ptr<Texture2D> _map, GLuint num);
         void SetTexture(GLuint _map, GLuint num);
-        Shader* GetShader()
+        shared_ptr<Shader> GetShader()
         {
             return shaderProgram;
         }
     protected:
-        bool ownColorMap, ownNormapMap, ownSpecularMap;
-        bool ownShadowMap;
-        Shader* shaderProgram;
-        Texture2D *colorMap, *normalMap, *specularMap;
-        Texture2D *shadowMap;
-        AbstractTexture *abstractMap;
+        shared_ptr<Shader> shaderProgram;
+        shared_ptr<Texture2D> colorMap, normalMap, specularMap;
+        shared_ptr<Texture2D> shadowMap;
+        shared_ptr<AbstractTexture> abstractMap;
         GLuint colTexID, texBufferID,normBufferID,normSamplerID;
 		GLuint specBufferID, specSamplerID;
 		GLuint *abstractSamplersID;

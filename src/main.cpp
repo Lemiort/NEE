@@ -96,6 +96,7 @@ void FrameBufferSizeCallback(GLFWwindow* window, int w, int h)
         smfbo1->Init(w,h);
     if(gBuffer1!=NULL)
         gBuffer1->Init(w,h);
+    pGameCamera->OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
 
@@ -112,7 +113,7 @@ void ShadowPass()
     TestMesh.SetPosition(0,-0.2,0);
     //light3->SetPos(pGameCamera->GetPos());
     //light3->SetDir(pGameCamera->GetTarget()-pGameCamera->GetPos());
-    Camera* lightCam=new Camera(width,height,spotLight1->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+    Camera* lightCam=new Camera(width,height,45, 1, 1000.0f,spotLight1->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
 
     Plane.SetScale(30.0f,30.0f,30.0f);
     Plane.SetPosition(0.0f,-3.0f,0.0f);
@@ -160,10 +161,10 @@ void ShadowPass()
         Cube.SetScale(0.05f,0.05f,0.05f);
         Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
-        Cube.Render(30,width, height, 1, 1000,lightCam);
+        Cube.Render(lightCam);
     }
     Plane.SetMaterial(shadowMaterial);
-    Plane.Render(30,width, height, 1, 1000,lightCam);
+    Plane.Render(lightCam);
 
     delete lightCam;
     glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -187,7 +188,8 @@ void RenderPass()
     TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    Camera* lightCam=new Camera(width,height,spotLight1->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+    Camera* lightCam=new Camera(width,height,pGameCamera->GetFov(), pGameCamera->GetZNear(),
+                                pGameCamera->GetZFar(),spotLight1->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
 
     TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
     TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
@@ -239,7 +241,7 @@ void RenderPass()
    /* TestMesh.Render(30,width, height, 1, 1000,pGameCamera);
      TestMesh.SetPosition(-3,-0.2,0);
      TestMesh.Render(30,width, height, 1, 1000,pGameCamera);*/
-    skybox1->Render(30,width,height, 1, 1000,pGameCamera);
+    skybox1->Render(pGameCamera);
 
 
 
@@ -286,7 +288,7 @@ void RenderPass()
         glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);
     }
     //Plane.SetMaterial(mainMaterial);
-    Plane.Render(30,width, height, 1, 1000,pGameCamera);
+    Plane.Render(pGameCamera);
     Cube.SetMaterial(mainMaterial);
     for(float i=-5.0f;i<5.0f;i+=0.1f)
         for(float j=-5.0f;j<5.0f;j+=0.1f)
@@ -294,11 +296,11 @@ void RenderPass()
         Cube.SetScale(0.05f,0.05f,0.05f);
         Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
-        Cube.Render(30,width, height, 1, 1000,pGameCamera);
+        Cube.Render(pGameCamera);
     }
     //delete tempTexture;
 
-    bb1->Render(30,width, height, 1, 1000,pGameCamera);
+    bb1->Render(pGameCamera);
 
 
    /* xline->Render(pGameCamera,width, height);
@@ -414,7 +416,7 @@ void DSStencilPass(Light& light)
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
 
     light.SetMaterial(DSStencilPassMaterial);
-    light.Render(30,width,height,1.0,1000.0,pGameCamera);
+    light.Render(pGameCamera);
 }
 
 void DSPointLightPass(PointLight& pointLight)
@@ -477,7 +479,7 @@ void DSPointLightPass(PointLight& pointLight)
     glUniform1f(pointLightIntID,pointLight.power);
 
     pointLight.SetMaterial(DSPointLightMaterial);
-    pointLight.Render(30,width,height,1.0,1000.0,pGameCamera);
+    pointLight.Render(pGameCamera);
 
     glCullFace(GL_FRONT);
     glDisable(GL_BLEND);
@@ -546,7 +548,7 @@ void DSSpotLightPass(SpotLight& spotLight)
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     spotLight.SetMaterial(DSSpotLightMaterial);
-    spotLight.Render(30,width,height,1.0,1000.0,pGameCamera);
+    spotLight.Render(pGameCamera);
 
 
     glCullFace(GL_FRONT);
@@ -607,7 +609,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight)
     //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     //glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
-    directionalLight.Render(30,width,height,1.0,1000.0,pGameCamera);
+    directionalLight.Render(pGameCamera);
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
@@ -626,32 +628,32 @@ void InterfacePass()
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     //glDisable(GL_DEPTH_TEST);
-    xline->Render(30,width,height,1.0,1000.0,pGameCamera);
-    yline->Render(30,width,height,1.0,1000.0,pGameCamera);
-    zline->Render(30,width,height,1.0,1000.0,pGameCamera);
+    xline->Render(pGameCamera);
+    yline->Render(pGameCamera);
+    zline->Render(pGameCamera);
     std::string strCampos = ConvertToString(pGameCamera->GetPos().x)+"; "+ConvertToString(pGameCamera->GetPos().y)
     +"; "+ConvertToString(pGameCamera->GetPos().z);
     //fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText((strCampos).c_str());
     fLine1->SetPosition(-1.0f,0.0f,24.0f);
-    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    fLine1->Render(pGameCamera);
     //gBuffer1->CheckTextures();
     CalcFPS();
     //fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(ConvertToString(fps));
     fLine1->SetPosition(-1.0f,0.9f,24.0f);
-    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    fLine1->Render(pGameCamera);
 
     if(renderType==0)
     {
         //fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
         fLine1->SetPosition(-1.0f,-0.2f,36.0f);
-        fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+        fLine1->Render(pGameCamera);
     }
 
     //pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
-    dirLightLine->Render(30,width,height,1.0,1000.0,pGameCamera);
+    dirLightLine->Render(pGameCamera);
     //glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
@@ -686,7 +688,7 @@ void DSGeometryPass()
         Cube.SetScale(0.05f,0.05f,0.05f);
         Cube.SetRotation(0,30*sinf(Scale),0);
         Cube.SetPosition(i,noise1->GetHeight(i,j),j);
-        Cube.Render(30,width, height, 1, 1000,pGameCamera);
+        Cube.Render(pGameCamera);
     }
 
     //glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -751,15 +753,13 @@ void PreInitScene(GLFWwindow* window)
     lastTime = glfwGetTime();
     frameCount=0;
 
-    pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);
-
     //шейдер текста
     {
         char* vertexShaderSorceCode=ReadFile("Shaders/text2d.vsh");
         char* fragmentShaderSourceCode=ReadFile("Shaders/text2d.fsh");
 
 
-        textShader=new Shader();
+        textShader=make_shared<Shader>();
         textShader->AddShader(vertexShaderSorceCode,VertexShader);
         textShader->AddShader(fragmentShaderSourceCode,FragmnetShader);
         textShader->Init();
@@ -774,7 +774,7 @@ void PreInitScene(GLFWwindow* window)
     //fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1->SetText("Loading...");
     fLine1->SetPosition(-1.0f,-0.1f,72.0f);
-    fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+    fLine1->Render(pGameCamera);
     glfwSwapBuffers(window);
     initialized  = false;
 }
@@ -794,12 +794,12 @@ void InitRender(GLFWwindow* window, string message)
             //fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
             fLine1->SetText(ConvertToString(fps));
             fLine1->SetPosition(-1.0f,0.9f,24.0f);
-            fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+            fLine1->Render(pGameCamera);
 
             //fLine1->Render(message,-1.0f,-0.1f,36.0f);
             fLine1->SetText(message);
             fLine1->SetPosition(-1.0f,-0.1f,36.0f);
-            fLine1->Render(30,width,height,1.0,1000.0,pGameCamera);
+            fLine1->Render(pGameCamera);
 
             glfwSwapBuffers(window);
             glfwPollEvents();
@@ -838,7 +838,7 @@ int InitScene(GLFWwindow* window)
     char* vertexShaderSorceCode=ReadFile("Shaders/vertexShader.vsh");
     char* fragmentShaderSourceCode=ReadFile("Shaders/fragmentShader.fsh");
     {
-        meshShader=new Shader();
+        meshShader=make_shared<Shader>();
         meshShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
         meshShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
         meshShader->Init();
@@ -853,7 +853,7 @@ int InitScene(GLFWwindow* window)
     //основной материал
     {
         InitRender(window, "Main material loading...");
-        mainMaterial = new Material;
+        mainMaterial =make_shared<Material>();
         mainMaterial->Init(meshShader);
     }
 
@@ -868,7 +868,7 @@ int InitScene(GLFWwindow* window)
         InitRender(window, "Shade shader loading...");
         vertexShaderSorceCode=ReadFile("Shaders/fbo.vsh");
         fragmentShaderSourceCode=ReadFile("Shaders/fbo.fsh");
-        shadowShader=new Shader();
+        shadowShader=make_shared<Shader>();
         shadowShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
         shadowShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
         shadowShader->Init();
@@ -880,7 +880,7 @@ int InitScene(GLFWwindow* window)
     //материал тени
     {
         InitRender(window, "Shade Material loading...");
-        shadowMaterial = new Material;
+        shadowMaterial = make_shared<Material>();
         shadowMaterial->Init(shadowShader);
     }
 
@@ -890,7 +890,7 @@ int InitScene(GLFWwindow* window)
         vertexShaderSorceCode=ReadFile("Shaders/shadowed.vsh");
         //fragmentShaderSourceCode=ReadFile("Shaders/fragmentShader.fsh");
         fragmentShaderSourceCode=ReadFile("Shaders/shadowed.fsh");
-        shadowMeshShader=new Shader();
+        shadowMeshShader=make_shared<Shader>();
         shadowMeshShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
         shadowMeshShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
         shadowMeshShader->Init();
@@ -902,9 +902,9 @@ int InitScene(GLFWwindow* window)
     //затенённый материал
     {
         InitRender(window, "Shaded material loading...");
-        shadowMeshMaterial = new Material;
+        shadowMeshMaterial = make_shared<Material>();
         shadowMeshMaterial->Init(shadowMeshShader);
-        whiteTexture=new Texture2D;
+        whiteTexture=make_shared<Texture2D>();
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
         Cube.Init(shadowMeshMaterial,"Models/normal_geosphere.ho3d");
@@ -917,7 +917,7 @@ int InitScene(GLFWwindow* window)
         //грузим шейдер
         {
             vertexShaderSorceCode=ReadFile("Shaders/DSStencilPass.vsh");
-            DSStencilPassShader=new Shader();
+            DSStencilPassShader=make_shared<Shader>();
             DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
             DSStencilPassShader->Init();
 
@@ -925,7 +925,7 @@ int InitScene(GLFWwindow* window)
         }
         //грузим материал
         {
-            DSStencilPassMaterial = new Material;
+            DSStencilPassMaterial = make_shared<Material>();
             DSStencilPassMaterial->Init(DSStencilPassShader);
         }
 
@@ -940,7 +940,7 @@ int InitScene(GLFWwindow* window)
         {
             vertexShaderSorceCode=ReadFile("Shaders/DSGeometryPass.vsh");
             fragmentShaderSourceCode=ReadFile("Shaders/DSGeometryPass.fsh");
-            DSGeometryPassShader=new Shader();
+            DSGeometryPassShader=make_shared<Shader>();
             DSGeometryPassShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
             DSGeometryPassShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
             DSGeometryPassShader->Init();
@@ -950,7 +950,7 @@ int InitScene(GLFWwindow* window)
         }
         //грузим материал
         {
-            DSGeometryPassMaterial = new Material;
+            DSGeometryPassMaterial = make_shared<Material>();
             DSGeometryPassMaterial->Init(DSGeometryPassShader);
         }
 
@@ -965,7 +965,7 @@ int InitScene(GLFWwindow* window)
             {
                 vertexShaderSorceCode=ReadFile("Shaders/DSPointLight.vsh");
                 fragmentShaderSourceCode=ReadFile("Shaders/DSPointLight.fsh");
-                DSPointLightShader=new Shader();
+                DSPointLightShader=make_shared<Shader>();
                 DSPointLightShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
                 DSPointLightShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
                 DSPointLightShader->Init();
@@ -975,7 +975,7 @@ int InitScene(GLFWwindow* window)
             }
             //грузим материал
             {
-                DSPointLightMaterial = new Material;
+                DSPointLightMaterial = make_shared<Material>();
                 DSPointLightMaterial->Init(DSPointLightShader);
             }
         }
@@ -986,7 +986,7 @@ int InitScene(GLFWwindow* window)
             {
                 vertexShaderSorceCode=ReadFile("Shaders/DSDirectionalLight.vsh");
                 fragmentShaderSourceCode=ReadFile("Shaders/DSDirectionalLight.fsh");
-                DSDirectionalLightShader=new Shader();
+                DSDirectionalLightShader= make_shared<Shader>();
                 DSDirectionalLightShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
                 DSDirectionalLightShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
                 DSDirectionalLightShader->Init();
@@ -996,7 +996,7 @@ int InitScene(GLFWwindow* window)
             }
             //грузим материал
             {
-                DSDirectionalLightMaterial = new Material;
+                DSDirectionalLightMaterial = make_shared<Material>();
                 DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
             }
         }
@@ -1007,7 +1007,7 @@ int InitScene(GLFWwindow* window)
             {
                 vertexShaderSorceCode=ReadFile("Shaders/DSSpotLight.vsh");
                 fragmentShaderSourceCode=ReadFile("Shaders/DSSpotLight.fsh");
-                DSSpotLightShader=new Shader();
+                DSSpotLightShader= make_shared<Shader>();
                 DSSpotLightShader->AddShader((const char*)vertexShaderSorceCode,VertexShader);
                 DSSpotLightShader->AddShader((const char*)fragmentShaderSourceCode,FragmnetShader);
                 DSSpotLightShader->Init();
@@ -1017,7 +1017,7 @@ int InitScene(GLFWwindow* window)
             }
             //грузим материал
             {
-                DSSpotLightMaterial = new Material;
+                DSSpotLightMaterial = make_shared<Material>();
                 DSSpotLightMaterial->Init(DSSpotLightShader);
             }
         }
@@ -1029,7 +1029,7 @@ int InitScene(GLFWwindow* window)
         vertexShaderSorceCode=ReadFile("Shaders/skybox.vsh");
         fragmentShaderSourceCode=ReadFile("Shaders/skybox.fsh");
 
-        skyboxShader=new Shader();
+        skyboxShader= make_shared<Shader>();
 
         skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
         skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);

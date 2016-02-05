@@ -13,7 +13,7 @@ FontLine2d::~FontLine2d()
 {
 }
 
-bool FontLine2d::Init(string filename,Shader* _sh)
+bool FontLine2d::Init(string filename,shared_ptr<Shader> _sh)
 {
     return character.Init(filename,_sh);
 }
@@ -31,7 +31,7 @@ void FontLine2d::SetText(string _text)
 }
 
 //void FontLine2d::Render(string text, float startX, float startY,float size )
-void FontLine2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void FontLine2d::Render(Camera* cam)
 {
     float dx=0.0f;
     prevChar=0;
@@ -63,7 +63,7 @@ void FontLine2d::Render(float FOV, float Width, float Height, float zNear, float
         character.SetPosition(position[0] + dx, position[1], position[2]);
         character.SetCharacter(text.at(i));
         temp = character.GetLastCharacterLength();
-        character.Render(FOV, Width, Height, zNear, zFar,nullptr);
+        character.Render(cam);
 
         //если символ есть, рисуем его
         if(temp.x>0.0f)
@@ -116,7 +116,7 @@ int Font2d::GetFontHeight()
     return fontHeight;
 }
 
-bool Font2d::Init(string _filename,Shader* _sh)
+bool Font2d::Init(string _filename,shared_ptr<Shader> _sh)
 {
     shaderProgram=_sh;
     filename=_filename;
@@ -321,9 +321,9 @@ Vector2f Font2d::GetLastCharacterLength()
 }
 
 //Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
-void Font2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Font2d::Render(Camera* cam)
 {
-    SetAspectRatio(Width,Height);
+    SetAspectRatio(cam->GetWidth(),cam->GetHeight());
     shaderProgram->Use();
     /*position[2]=position[2]/(float)fontHeight;
     FontCharacter temp(0,0,0,0,0,0,0,0);
@@ -412,18 +412,16 @@ Text2d::Text2d()
 
 Text2d::~Text2d()
 	{
-	    if(yourselfShader)
-            delete shaderProgram;
 	}
-void Text2d::Init(int width,int height, Shader* _sh)
+void Text2d::Init(int width,int height, shared_ptr<Shader> _sh)
 	{
-	    if(_sh==NULL)
+	    if(_sh==false )
         {
             yourselfShader=true;
             aratio= (float)height/(float)width;
             char* vertexShaderSorceCode=ReadFile("Shaders/text2d.vsh");
             char* fragmentShaderSourceCode=ReadFile("Shaders/text2d.fsh");
-            shaderProgram=new Shader();
+            shaderProgram=make_shared<Shader>();
             shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
             shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
             shaderProgram->Init();
@@ -500,7 +498,7 @@ void Text2d::SetAspectRatio(float f)
     glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(vertices),&vertices);
 	}
 
-void Text2d::Init(Shader* shader, GLuint textureID,GLuint texBuf)
+void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID,GLuint texBuf)
 	{
 		//shaderProgramID=shader;
 		shaderProgram=shader;
@@ -540,7 +538,7 @@ void Text2d::SetCharacter(unsigned int c)
     character = c;
 }
 
-void Text2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Text2d::Render(Camera* cam)
 {
 	//glUseProgram(shaderProgramID);
 	shaderProgram->Use();
@@ -597,7 +595,7 @@ void TextLine2d::SetAspectRatio(int width, int height)
         symbol->SetAspectRatio(aratio);
 	}
 
-void TextLine2d::Init(int width, int height, Shader* _sh)
+void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh)
 	{
 		symbol=new Text2d;
 		pixelSize=(float)(512)/((float)width*(float)16);//512 размер текстуры, 16 квадратов в ней
@@ -611,7 +609,7 @@ void TextLine2d::SetText(string _text)
     text = _text;
 }
 
-void TextLine2d::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void TextLine2d::Render(Camera* cam)
 {
     float delta=0;
     for(unsigned int i=0; i<strlen(text.c_str());i++, delta+=position[2]*pixelSize*aratio*2.0/32.0)//1.9 подобрано экспериментально
@@ -619,6 +617,6 @@ void TextLine2d::Render(float FOV, float Width, float Height, float zNear, float
 		//symbol->Render((unsigned char)input[i],x+delta,y,size*pixelSize/32.0);
 		symbol->SetCharacter((unsigned char)text[i]);
 		symbol->SetPosition(position[0]+delta, position[1], position[2]*pixelSize/32.0);
-		symbol->Render(FOV,Width,Height,zNear,zFar,cam);
+		symbol->Render(cam);
     }
 }

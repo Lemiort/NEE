@@ -70,3 +70,4 @@ include/Material.h.gch
 *.gch
 *.dll
 *.lib
+*.save-failed

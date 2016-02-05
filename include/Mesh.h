@@ -57,19 +57,17 @@ protected:
     //вектор вращения
     Vector3f rv;
 
-    virtual Shader* GetShader();
-    virtual void SetShader(Shader* shader);
 
 public:
     Mesh();
     virtual ~Mesh();
     int GetNumFaces();
     int GetNumVerts();
-    bool Init(Material* _mat,const char* model);
+    void SetMaterial( shared_ptr<Material> _mat );
+    bool Init(shared_ptr<Material> _mat,const char* model);
     void SetTexture(GLuint textureUnit);
-    void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+    void Render(Camera* cam);
     void SetVectorRotate(Vector3f v, float phi);
-    virtual void SetMaterial(Material* _mat);
     void Rotate(float x, float y, float z);
 private:
 

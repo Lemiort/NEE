@@ -6,24 +6,18 @@
 Material::Material()
 {
     //ctor
-    ownColorMap = true;
-    ownNormapMap = true;
-    ownSpecularMap = true;
-    ownShadowMap = true;
 
-    Texture2D* tempMap;
-
-    colorMap = new Texture2D;
-    tempMap=colorMap;
+    colorMap = make_shared<Texture2D>();
+    auto tempMap=colorMap;
     tempMap->Load( "Textures/checker.tga" );
 
-    normalMap = new Texture2D;
+    normalMap = make_shared<Texture2D>();
     normalMap->Load( "Textures/normal_map.tga" );
 
-    specularMap = new Texture2D;
+    specularMap = make_shared<Texture2D>();
     specularMap->Load( "Textures/specular.tga" );
 
-    shadowMap = new Texture2D;
+    shadowMap = make_shared<Texture2D>();
     shadowMap->Load("Textures/white.png");
 
     //абстрактная текстура
@@ -31,7 +25,7 @@ Material::Material()
     texturesID =  new GLuint[max_texture_units];
     abstractSamplersID = new GLuint[max_texture_units];
 
-    abstractMap = new AbstractTexture;
+    abstractMap = make_shared<AbstractTexture>();
 
     for(int i = 0; i < max_texture_units; i++)
     {
@@ -44,23 +38,13 @@ Material::Material()
 Material::~Material()
 {
     //dtor
-    if( ownColorMap )
-        delete colorMap;
-    if( ownNormapMap )
-        delete normalMap;
-    if( ownSpecularMap )
-        delete specularMap;
-    if( ownShadowMap   )
-        delete shadowMap;
-
-    delete abstractMap;
     delete[] texturesID;
     delete[] abstractSamplersID;
 }
 
-bool Material::Init(Shader* _sh)
+bool Material::Init(shared_ptr<Shader> _sh)
 {
-    if(_sh==nullptr)
+    if(_sh==false)
         return false;
     shaderProgram=_sh;
     shaderProgram->Use();
@@ -141,52 +125,28 @@ void Material::Use()
     }
 }
 
-void Material::SetColorTexture( Texture2D* _colorMap )
+void Material::SetColorTexture( shared_ptr<Texture2D> _colorMap )
 {
-    if(_colorMap != NULL)
-    {
-        if(ownColorMap)
-            delete colorMap;
-        colorMap = _colorMap;
-        ownColorMap = false;
-    }
+    colorMap = _colorMap;
 }
 
 
-void Material::SetNormalTexture( Texture2D* _normalMap )
+void Material::SetNormalTexture( shared_ptr<Texture2D> _normalMap )
 {
-    if(_normalMap != NULL)
-    {
-        if(ownNormapMap)
-            delete normalMap;
-        normalMap = _normalMap;
-        ownNormapMap = false;
-    }
+    normalMap = _normalMap;
 }
 
-void Material::SetSpecularTexture( Texture2D* _specularMap )
+void Material::SetSpecularTexture( shared_ptr<Texture2D> _specularMap )
 {
-    if(_specularMap != NULL )
-    {
-        if(ownSpecularMap)
-            delete specularMap;
-        specularMap = _specularMap;
-        ownSpecularMap = false;
-    }
+    specularMap = _specularMap;
 }
 
-void Material::SetShadowTexture( Texture2D* _shadowMap )
+void Material::SetShadowTexture( shared_ptr<Texture2D> _shadowMap )
 {
-    if(_shadowMap != NULL )
-    {
-        if(ownShadowMap)
-            delete shadowMap;
-        shadowMap = _shadowMap;
-        ownShadowMap = false;
-    }
+    shadowMap = _shadowMap;
 }
 
-void Material::SetTexture(Texture2D* _map, GLuint num)
+void Material::SetTexture(shared_ptr<Texture2D> _map, GLuint num)
 {
     if(num <=3)
         return;

@@ -12,15 +12,15 @@ class Billboard: public RenderableObject
     public:
         Billboard();
       //  Billboard(GLuint shader);
-        Billboard(Shader* shader);
+        Billboard(shared_ptr<Shader> shader);
         ~Billboard();
         void Init(const char* TexFilename);
-        void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+        void Render(Camera* cam);
         void SetPos(Vector3f _Pos);
        // GLuint shaderProgramID;
     protected:
     private:
-        //Shader* shaderProgram;
+        //shared_ptr<Shader> shaderProgram;
         bool shader;
         GLuint VBO;
         Vector3f Pos;

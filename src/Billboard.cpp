@@ -13,7 +13,7 @@ Billboard::Billboard()
     shader=true;
 }*/
 
-Billboard::Billboard(Shader* _shader)
+Billboard::Billboard(shared_ptr<Shader> _shader)
 {
     Pos=Vector3f(0,0,0);
     shaderProgram=_shader;
@@ -34,7 +34,7 @@ void Billboard::Init(const char* TexFilename)
         char* vertexShaderSorceCode=ReadFile("Shaders/billboard.vsh");
         char* fragmentShaderSourceCode=ReadFile("Shaders/billboard.fsh");
         char* geometryShaderSourceCode=ReadFile("Shaders/billboard.gsh");
-        shaderProgram=new Shader;
+        shaderProgram= make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
         shaderProgram->AddShader(geometryShaderSourceCode,GeometryShader);
@@ -76,13 +76,13 @@ void Billboard::SetPos(Vector3f _Pos)
     positionID=shaderProgram->GetAttribLocation("s_vPosition");
 }
 
-void Billboard::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Billboard::Render(Camera* cam)
 {
     //glUseProgram(shaderProgramID);
     shaderProgram->Use();
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(30.0f, Width, Height, 1.0f, 1000.0f);
+    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),cam->GetZNear(), cam->GetZFar());
 
     //матрица проекции камеры
     glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());

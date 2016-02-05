@@ -11,17 +11,16 @@ RenderableObject::~RenderableObject()
 }
 
 
-void RenderableObject::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void RenderableObject::Render(Camera* cam)
 {
 
 }
 
-
-Shader* RenderableObject::GetShader()
+shared_ptr<Shader> RenderableObject::GetShader()
 {
     return shaderProgram;
 }
-void RenderableObject::SetShader(Shader* shader)
+void RenderableObject::SetShader(shared_ptr<Shader> shader)
 {
     shaderProgram = shader;
 }

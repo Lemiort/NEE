@@ -64,13 +64,13 @@ bool ParticleSystem::Init(Vector3f Pos)
     return GLCheckError();
 }
 
-void ParticleSystem::Render(int DeltaTimeMillis,float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam)
 {
     m_time += DeltaTimeMillis;
 
 	UpdateParticles(DeltaTimeMillis);
 
-	RenderParticles(FOV,Width,Height,zNear,zFar, cam);
+	RenderParticles(cam);
 
 	m_currVB = m_currTFB;
 	m_currTFB = (m_currTFB + 1) & 0x1;
@@ -119,13 +119,13 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
 }
 
 
-void ParticleSystem::RenderParticles(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void ParticleSystem::RenderParticles(Camera* cam)
 {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
     Assistant TM;//TM - Для объекта, 2- для нормали объекта, 3 - для позиции камера для спекуляра
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(30.0f, Width, Height, 1.0f, 1000.0f);
+    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(), cam->GetZNear(), cam->GetZFar());
     //матрица проекции камеры
     //glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
     //позиция камеры

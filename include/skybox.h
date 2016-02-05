@@ -12,7 +12,7 @@
 class SkyBox: public RenderableObject, public PlaceableObject
 {
 public:
-    SkyBox(Shader* shader);
+    SkyBox(shared_ptr<Shader> shader);
     ~SkyBox();
 
     bool Init(const string& Directory,
@@ -23,7 +23,7 @@ public:
               const string& PosZFilename,
               const string& NegZFilename);
 
-    void Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam);
+    void Render(Camera* cam);
 	GLuint shaderProgramID;
 	GLuint VBO; //vertex buffer, хранит вершины для отрисовки
 		GLuint positionID;
@@ -37,7 +37,7 @@ private:
     CubemapTexture* pCubemapTex;
 	GLuint WVPID;
     GLuint textureID;
-    //Shader* shaderProgram;
+    //shared_ptr<Shader> shaderProgram;
 public:
 		GLuint uvID,normalID;
 		GLuint rotateID;

@@ -15,7 +15,7 @@ void DirectionalLight::SetDir(Vector3f dir)
     direction[2] = dir.z;
 }
 
-DirectionalLight::DirectionalLight(GLfloat d1,GLfloat d2,GLfloat d3,GLfloat r,GLfloat g,GLfloat b, Material* _mat)
+DirectionalLight::DirectionalLight(GLfloat d1,GLfloat d2,GLfloat d3,GLfloat r,GLfloat g,GLfloat b, shared_ptr<Material> _mat)
 			{
 				direction[0]=d1;
 				direction[1]=d2;
@@ -25,16 +25,16 @@ DirectionalLight::DirectionalLight(GLfloat d1,GLfloat d2,GLfloat d3,GLfloat r,GL
 				color[1]=g;
 				color[2]=b;
 
-				mesh =  new Mesh();
+				mesh =  make_shared<Mesh>();
 				//mesh->Init(_mat,"Models/quad2x2front.ho3d");
 				mesh->Init(_mat,"Models/cube2x2x2.ho3d");
 			}
 
-void DirectionalLight::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void DirectionalLight::Render(Camera* cam)
 			{
 				//mesh->SetScale(1.0,1.0,1.0);
 				mesh->SetPosition(0,0,0);
-				mesh->Render(FOV,Width,Height,zNear,zFar,cam);
+				mesh->Render(cam);
 			}
 
 Vector3f DirectionalLight::GetDir()
@@ -67,7 +67,7 @@ SpotLight::SpotLight()
 	{
 	}
 
-SpotLight::SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloat b,float p1, float p2, float p3, float cut, Material* _mat)
+SpotLight::SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloat b,float p1, float p2, float p3, float cut, shared_ptr<Material> _mat)
 	{
 				color[0]=r;
 				color[1]=g;
@@ -84,13 +84,13 @@ SpotLight::SpotLight(GLfloat t1,GLfloat t2,GLfloat t3,GLfloat r,GLfloat g,GLfloa
 				direction[3]=1;
 				Cutoff=cut;
 
-		mesh =  new Mesh();
+		mesh =  make_shared<Mesh>();
         mesh->Init(_mat,"Models/cone2.ho3d");
         mesh->SetRotation(90,0,0);
 
 	}
 
-void SpotLight::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void SpotLight::Render(Camera* cam)
 			{
 			   /* Vector3f HTarget(direction[0], 0.0, direction[2]);
                 HTarget.Normalize();
@@ -248,7 +248,7 @@ void SpotLight::Render(float FOV, float Width, float Height, float zNear, float 
                                dir.Lenght()*cos(ToRadian(Cutoff)));
 
 				mesh->SetPosition(position[0],position[1],position[2]);
-				mesh->Render(FOV,Width,Height,zNear,zFar,cam);
+				mesh->Render(cam);
 			}
 
 void SpotLight::SetTarget(Vector3f _target)
@@ -292,7 +292,7 @@ void  SpotLight::SetPos(Vector3f pos)
     direction[3]=1;
 }
 
-PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float p, Material* _mat)
+PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float p, shared_ptr<Material> _mat)
 			{
 				position[0]=d1;
 				position[1]=d2;
@@ -318,22 +318,20 @@ PointLight::PointLight(float d1,float d2,float d3,float r,float g,float b, float
 				PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
 				PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
-				sphere =  new Mesh();
+				sphere =  make_shared<Mesh>();
 				sphere->Init(_mat,"Models/normal_geosphere.ho3d");
 				radius = CalcSphereSize()/2;
 				std::cout<<"\nLight radius is "<<radius;
 			}
 PointLight::~PointLight()
 			{
-			    //delete shaderProgram;
-			    delete sphere;
 			}
-void PointLight::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void PointLight::Render(Camera* cam)
 			{
-				Assistant TM;
+				/*Assistant TM;
 				TM.WorldPos(position[0],position[1],position[2]);
 				TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-				TM.SetPerspectiveProj(FOV, Width, Height, zNear, zFar);
+				TM.SetPerspectiveProj(cam, Width, Height, zNear, zFar);*/
 
 
                 /*shaderProgram->Use();
@@ -351,7 +349,7 @@ void PointLight::Render(float FOV, float Width, float Height, float zNear, float
 
 				sphere->SetScale(radius,radius,radius);
 				sphere->SetPosition(position[0],position[1],position[2]);
-				sphere->Render(FOV,Width,Height,zNear,zFar,cam);
+				sphere->Render(cam);
 			}
 
 void PointLight::SetPos(Vector3f pos)
@@ -378,7 +376,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color)
 			{
 				char* vertexShaderSorceCode=ReadFile("Shaders/lightVS.vsh");
 				char* fragmentShaderSourceCode=ReadFile("Shaders/lightFS.fsh");
-				shaderProgram=new Shader();
+				shaderProgram=make_shared<Shader>();
 				shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
 				shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
 				shaderProgram->Init();
@@ -407,7 +405,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color)
 				PointSizeID= shaderProgram->GetUniformLocation( "size");
 
 			}
-Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,Shader* shader)
+Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,shared_ptr<Shader> shader)
 			{
 				//shaderProgramID=shader;
 				shaderProgram=shader;
@@ -433,16 +431,14 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,Shader* shader)
 			}
 Line::~Line()
 			{
-			    if(shaderProgram!=nullptr)
-                    delete shaderProgram;
 			}
 //void Line::Render(Camera* pGameCamera, int width, int height)
-void Line::Render(float FOV, float Width, float Height, float zNear, float zFar, Camera* cam)
+void Line::Render(Camera* cam)
 			{
 				Assistant TM;
 				TM.WorldPos(0,0,0);
 				TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-				TM.SetPerspectiveProj(FOV, Width, Height, zNear, zFar);
+				TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(),cam->GetHeight(), cam->GetZNear(),cam->GetZFar());
 
 
                 shaderProgram->Use();
@@ -458,7 +454,7 @@ void Line::Render(float FOV, float Width, float Height, float zNear, float zFar,
 				glDrawArrays(GL_LINES,0,2);
 				glDisableVertexAttribArray(positionID);
 			}
-Shader* Line::GetShader()
+shared_ptr<Shader> Line::GetShader()
 {
     return shaderProgram;
 }
