@@ -41,10 +41,15 @@ else()
     message(FATAL_ERROR "GLEW not found")
 endif()
 
+find_package(nlohmann_json 3.2.0 REQUIRED)
+
+if(nlohmann_json_FOUND)
+    message("nlohmann_json was found")
+else()
+    message(FATAL_ERROR "nlohmann_json not found")
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
-
-# # Make sure the compiler can find include files for our Hello library
-# # when other libraries or executables link to Hello
-# target_include_directories (${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
-
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config/settings.json
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/config)

@@ -1,6 +1,7 @@
  [requires]
  glfw/3.2.1.20180327@bincrafters/stable
  glew/2.1.0@bincrafters/stable
+ jsonformoderncpp/3.5.0@vthiery/stable
 
  [generators]
  cmake
