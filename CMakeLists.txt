@@ -2,7 +2,11 @@ cmake_minimum_required (VERSION 3.2.1 FATAL_ERROR)
 set(PROJECT_NAME "NEE")
 project (${PROJECT_NAME})
 
+include(build/conanbuildinfo.cmake)
+conan_basic_setup()
+
 message("Building ${PROJECT_NAME}")
+
 
 # enable_testing()
 
@@ -19,6 +23,18 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
+
+message("Trying to find glfw")
+
+find_package("GLFW")
+
+if(GLFW_FOUND)
+    message("GLFW was found")
+else()
+    message(FATAL_ERROR "GLFW not found")
+endif()
+target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+
 
 # # Make sure the compiler can find include files for our Hello library
 # # when other libraries or executables link to Hello
