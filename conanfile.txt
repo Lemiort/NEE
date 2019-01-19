@@ -1,5 +1,6 @@
  [requires]
  glfw/3.2.1.20180327@bincrafters/stable
+ glew/2.1.0@bincrafters/stable
 
  [generators]
  cmake

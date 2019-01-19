@@ -33,6 +33,14 @@ if(GLFW_FOUND)
 else()
     message(FATAL_ERROR "GLFW not found")
 endif()
+
+find_package("GLEW")
+if(GLEW_FOUND)
+    message("GLEW was found")
+else()
+    message(FATAL_ERROR "GLEW not found")
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 
