@@ -14,15 +14,17 @@ if(BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-file(GLOB SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp")
+include_directories(src)
+file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
 
-add_executable(${PROJECT_NAME} ${SOURCES})
+add_executable(${PROJECT_NAME} ${SOURCES_LIST})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 17
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
+
 
 message("Trying to find glfw")
 
@@ -47,6 +49,14 @@ if(nlohmann_json_FOUND)
     message("nlohmann_json was found")
 else()
     message(FATAL_ERROR "nlohmann_json not found")
+endif()
+
+find_package("GLM")
+
+if(GLM_FOUND)
+    message("GLM was found")
+else()
+    message(FATAL_ERROR "GLM not found")
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
