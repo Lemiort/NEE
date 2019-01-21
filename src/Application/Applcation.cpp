@@ -7,7 +7,9 @@ Application::Application() : kCaption_{"NEE"} {
     glfwWindowHint(GLFW_OPENGL_PROFILE,
                    GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
 
-    // glfwSetErrorCallback(ErrorCallback);
+    error_callback_ = std::bind(&Application::ErrorCallback, this,
+                                std::placeholders::_1, std::placeholders::_2);
+    glfwSetErrorCallback(*error_callback_.target<GLFWerrorfun>());
     if (!glfwInit()) {
         throw std::runtime_error("Can not init glfw");
     }
@@ -64,3 +66,7 @@ int Application::Run() {
 }
 
 Application::~Application() { glfwTerminate(); }
+
+void Application::ErrorCallback(int error, const char* description) {
+    throw std::runtime_error(description);
+}
