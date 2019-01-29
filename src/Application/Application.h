@@ -1,7 +1,7 @@
 #ifndef APPLICATION_APPLICATION_H
 #define APPLICATION_APPLICATION_H
 
-#include <GL/glew.h>
+#define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <fstream>

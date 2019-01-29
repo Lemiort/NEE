@@ -1,19 +1,6 @@
 #include "Application.h"
 
 Application::Application() : kCaption_{"NEE"} {
-    glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE,
-                   GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
-
-    error_callback_ = std::bind(&Application::ErrorCallback, this,
-                                std::placeholders::_1, std::placeholders::_2);
-    glfwSetErrorCallback(*error_callback_.target<GLFWerrorfun>());
-    if (!glfwInit()) {
-        throw std::runtime_error("Can not init glfw");
-    }
-
     // read a JSON file
     std::ifstream ifstream("../config/settings.json");
     if (!ifstream)  // operator! is used here
@@ -27,34 +14,57 @@ Application::Application() : kCaption_{"NEE"} {
     width_ = j["window"]["width"];
     height_ = j["window"]["height"];
 
+    if (glfwInit() != GLFW_TRUE) {
+        throw std::runtime_error("Cannot init glfw");
+    }
+
+    if (!glfwVulkanSupported()) {
+        // Vulkan is available, at least for compute
+        throw std::runtime_error("Vulkan is not supported");
+    }
+
+    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     window_ = std::unique_ptr<GLFWwindow, DestroyglfwWin>(
         glfwCreateWindow(width_, height_, kCaption_.c_str(), NULL, NULL));
 
     if (!window_) {
         throw std::runtime_error("Can not init glfw window");
     }
-    // glfwSetFramebufferSizeCallback(window, FrameBufferSizeCallback);
-    glfwMakeContextCurrent(window_.get());
-    // glfwSetKeyCallback(window, KeyCallback);
-    // glfwSetCursorPosCallback(window,MousePosCallBack);
-    // glfwSetMouseButtonCallback(window, MouseButtonCallback);
-    GLenum res = glewInit();
-    if (res != GLEW_OK) {
-        throw std::runtime_error(
-            reinterpret_cast<const char*>(glewGetErrorString(res)));
+
+    uint32_t count;
+    const char** extensions = glfwGetRequiredInstanceExtensions(&count);
+
+    // error_callback_ = std::bind(&Application::ErrorCallback, this,
+    //                             std::placeholders::_1,
+    //                             std::placeholders::_2);
+    // glfwSetErrorCallback(*error_callback_.target<GLFWerrorfun>());
+    // if (!glfwInit()) {
+    //     throw std::runtime_error("Can not init glfw");
+    // }
+
+    PFN_vkCreateInstance pfnCreateInstance =
+        (PFN_vkCreateInstance)glfwGetInstanceProcAddress(NULL,
+                                                         "vkCreateInstance");
+    VkInstanceCreateInfo ici;
+    memset(&ici, 0, sizeof(ici));
+    ici.enabledExtensionCount = count;
+    ici.ppEnabledExtensionNames = extensions;
+
+    VkInstance vk_instance;
+
+    auto resullt = pfnCreateInstance(&ici, nullptr, &vk_instance);
+    if (resullt > 0) {
+        throw std::runtime_error("Cannot create vk instance");
     }
 
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glCullFace(GL_FRONT);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    // //�������� ������������
-    // glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glViewport(0, 0, width_, height_);
+    VkSurfaceKHR surface;
+    VkResult err =
+        glfwCreateWindowSurface(vk_instance, window_.get(), nullptr, &surface);
+    if (err) {
+        // Window surface creation failed
+        throw std::runtime_error("Window surface creation failed");
+    }
 }
 
 int Application::Run() {

@@ -28,19 +28,12 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 message("Trying to find glfw")
 
-find_package("GLFW")
+find_package(GLFW)
 
 if(GLFW_FOUND)
     message("GLFW was found")
 else()
     message(FATAL_ERROR "GLFW not found")
-endif()
-
-find_package("GLEW")
-if(GLEW_FOUND)
-    message("GLEW was found")
-else()
-    message(FATAL_ERROR "GLEW not found")
 endif()
 
 find_package(nlohmann_json 3.2.0 REQUIRED)
@@ -51,12 +44,20 @@ else()
     message(FATAL_ERROR "nlohmann_json not found")
 endif()
 
-find_package("GLM")
+find_package(GLM)
 
 if(GLM_FOUND)
     message("GLM was found")
 else()
     message(FATAL_ERROR "GLM not found")
+endif()
+
+find_package(Vulkan)
+if(Vulkan_FOUND)
+    message("Vulkan was found")
+    include_directories(${Vulkan_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Vulkan not found")
 endif()
 
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
