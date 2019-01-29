@@ -1,4 +1,5 @@
 #include "Application.h"
+#include "VulkanAdapter/VulkanAdapter.h"
 
 Application::Application() : kCaption_{"NEE"} {
     // read a JSON file
@@ -13,6 +14,8 @@ Application::Application() : kCaption_{"NEE"} {
 
     width_ = j["window"]["width"];
     height_ = j["window"]["height"];
+
+    glfwSetErrorCallback(ErrorCallback);
 
     if (glfwInit() != GLFW_TRUE) {
         throw std::runtime_error("Cannot init glfw");
@@ -32,35 +35,11 @@ Application::Application() : kCaption_{"NEE"} {
         throw std::runtime_error("Can not init glfw window");
     }
 
-    uint32_t count;
-    const char** extensions = glfwGetRequiredInstanceExtensions(&count);
-
-    // error_callback_ = std::bind(&Application::ErrorCallback, this,
-    //                             std::placeholders::_1,
-    //                             std::placeholders::_2);
-    // glfwSetErrorCallback(*error_callback_.target<GLFWerrorfun>());
-    // if (!glfwInit()) {
-    //     throw std::runtime_error("Can not init glfw");
-    // }
-
-    PFN_vkCreateInstance pfnCreateInstance =
-        (PFN_vkCreateInstance)glfwGetInstanceProcAddress(NULL,
-                                                         "vkCreateInstance");
-    VkInstanceCreateInfo ici;
-    memset(&ici, 0, sizeof(ici));
-    ici.enabledExtensionCount = count;
-    ici.ppEnabledExtensionNames = extensions;
-
-    VkInstance vk_instance;
-
-    auto resullt = pfnCreateInstance(&ici, nullptr, &vk_instance);
-    if (resullt > 0) {
-        throw std::runtime_error("Cannot create vk instance");
-    }
+    VulkanAdapter vulkan;
 
     VkSurfaceKHR surface;
-    VkResult err =
-        glfwCreateWindowSurface(vk_instance, window_.get(), nullptr, &surface);
+    VkResult err = glfwCreateWindowSurface(vulkan.GetVkInstance(),
+                                           window_.get(), nullptr, &surface);
     if (err) {
         // Window surface creation failed
         throw std::runtime_error("Window surface creation failed");
@@ -69,13 +48,17 @@ Application::Application() : kCaption_{"NEE"} {
 
 int Application::Run() {
     while (!glfwWindowShouldClose(window_.get())) {
-        glfwSwapBuffers(window_.get());
+        // glfwSwapBuffers(window_.get());
         glfwPollEvents();
     }
     return EXIT_SUCCESS;
 }
 
-Application::~Application() { glfwTerminate(); }
+Application::~Application() {
+    // SHUT UP
+    glfwSetErrorCallback(nullptr);
+    glfwTerminate();
+}
 
 void Application::ErrorCallback(int error, const char* description) {
     throw std::runtime_error(description);

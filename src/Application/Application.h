@@ -29,8 +29,7 @@ private:
         }
     };
 
-    std::function<void(int, const char*)> error_callback_;
-    void ErrorCallback(int error, const char* description);
+    static void ErrorCallback(int error, const char* description);
 
     const std::string kCaption_;
     int width_;
