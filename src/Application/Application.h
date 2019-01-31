@@ -35,6 +35,10 @@ private:
     int width_;
     int height_;
     std::unique_ptr<GLFWwindow, DestroyglfwWin> window_;
+
+    void LoadSettings();
+    void InitGlfw();
+    void InitVulkan();
 };
 
 #endif /* APPLICATION_APPLICATION_H */

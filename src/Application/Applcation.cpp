@@ -2,6 +2,14 @@
 #include "VulkanAdapter/VulkanAdapter.h"
 
 Application::Application() : kCaption_{"NEE"} {
+    LoadSettings();
+
+    InitGlfw();
+
+    InitVulkan();
+}
+
+void Application::LoadSettings() {
     // read a JSON file
     std::ifstream ifstream("../config/settings.json");
     if (!ifstream)  // operator! is used here
@@ -14,7 +22,9 @@ Application::Application() : kCaption_{"NEE"} {
 
     width_ = j["window"]["width"];
     height_ = j["window"]["height"];
+}
 
+void Application::InitGlfw() {
     glfwSetErrorCallback(ErrorCallback);
 
     if (glfwInit() != GLFW_TRUE) {
@@ -34,7 +44,9 @@ Application::Application() : kCaption_{"NEE"} {
     if (!window_) {
         throw std::runtime_error("Can not init glfw window");
     }
+}
 
+void Application::InitVulkan() {
     VulkanAdapter vulkan;
 
     VkSurfaceKHR surface;
