@@ -2,6 +2,7 @@
 #define APPLICATION_APPLICATION_H
 
 #define GLFW_INCLUDE_VULKAN
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
 #include <fstream>
@@ -20,6 +21,8 @@ public:
     ~Application();
     int Run();
 
+    enum class GraphicsApi { kOpengl, kVulkan };
+
 private:
     struct DestroyglfwWin {
         void operator()(GLFWwindow* ptr) {
@@ -35,10 +38,12 @@ private:
     int width_;
     int height_;
     std::unique_ptr<GLFWwindow, DestroyglfwWin> window_;
+    GraphicsApi api_;
 
     void LoadSettings();
     void InitGlfw();
     void InitVulkan();
+    void InitOpengl();
 };
 
 #endif /* APPLICATION_APPLICATION_H */

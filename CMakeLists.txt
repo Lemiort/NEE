@@ -36,6 +36,13 @@ else()
     message(FATAL_ERROR "GLFW not found")
 endif()
 
+find_package("GLEW")
+if(GLEW_FOUND)
+    message("GLEW was found")
+else()
+    message(FATAL_ERROR "GLEW not found")
+endif()
+
 find_package(nlohmann_json 3.2.0 REQUIRED)
 
 if(nlohmann_json_FOUND)

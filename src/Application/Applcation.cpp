@@ -1,4 +1,5 @@
 #include "Application.h"
+
 #include "VulkanAdapter/VulkanAdapter.h"
 
 Application::Application() : kCaption_{"NEE"} {
@@ -6,7 +7,17 @@ Application::Application() : kCaption_{"NEE"} {
 
     InitGlfw();
 
-    InitVulkan();
+    switch (api_) {
+        case GraphicsApi::kVulkan:
+            InitVulkan();
+            break;
+        case GraphicsApi::kOpengl:
+            InitOpengl();
+            break;
+        default:
+            throw std::runtime_error("Unknow API");
+            break;
+    }
 }
 
 void Application::LoadSettings() {
@@ -22,6 +33,11 @@ void Application::LoadSettings() {
 
     width_ = j["window"]["width"];
     height_ = j["window"]["height"];
+    if (j["GraphicsAPI"] == "OpenGL") {
+        api_ = GraphicsApi::kOpengl;
+    } else {
+        api_ == GraphicsApi::kVulkan;
+    }
 }
 
 void Application::InitGlfw() {
@@ -30,7 +46,32 @@ void Application::InitGlfw() {
     if (glfwInit() != GLFW_TRUE) {
         throw std::runtime_error("Cannot init glfw");
     }
+}
 
+void Application::InitOpengl() {
+    glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 5);
+    glfwWindowHint(GLFW_OPENGL_PROFILE,
+                   GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
+
+    window_ = std::unique_ptr<GLFWwindow, DestroyglfwWin>(
+        glfwCreateWindow(width_, height_, kCaption_.c_str(), NULL, NULL));
+
+    if (!window_) {
+        throw std::runtime_error("Can not init glfw window");
+    }
+
+    glfwMakeContextCurrent(window_.get());
+
+    GLenum res = glewInit();
+    if (res != GLEW_OK) {
+        auto str = glewGetErrorString(res);
+        throw std::runtime_error(reinterpret_cast<const char*>(str));
+    }
+}
+
+void Application::InitVulkan() {
     if (!glfwVulkanSupported()) {
         // Vulkan is available, at least for compute
         throw std::runtime_error("Vulkan is not supported");
@@ -44,9 +85,7 @@ void Application::InitGlfw() {
     if (!window_) {
         throw std::runtime_error("Can not init glfw window");
     }
-}
 
-void Application::InitVulkan() {
     VulkanAdapter vulkan;
 
     VkSurfaceKHR surface;
