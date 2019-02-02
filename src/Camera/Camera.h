@@ -15,8 +15,8 @@ public:
     virtual ~Camera() = default;
 
 private:
-    glm_f32vec4 position_;
-    glm_f32vec4 target_;
+    glm::vec3 position_;
+    glm::vec3 target_;
 };
 
 #endif /* CANERA_CAMERA_H */

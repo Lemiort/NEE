@@ -1,7 +1,7 @@
 #ifndef APPLICATION_APPLICATION_H
 #define APPLICATION_APPLICATION_H
 
-#define GLFW_INCLUDE_VULKAN
+// #define GLFW_INCLUDE_VULKAN
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <chrono>
@@ -12,8 +12,12 @@
 #include <nlohmann/json.hpp>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include "Camera/Camera.h"
+#include "Line/Line.h"
+#include "Mesh/WiredMesh.h"
+#include "Shader/Shader.h"
 
 class Application final {
 public:
@@ -39,11 +43,19 @@ private:
     int height_;
     std::unique_ptr<GLFWwindow, DestroyglfwWin> window_;
     GraphicsApi api_;
+    Camera camera_;
+    std::vector<WiredMesh> meshes_;
+    GLuint VBO, IBO;
+    Shader shader_;
+    Line* line_;
 
     void LoadSettings();
     void InitGlfw();
     void InitVulkan();
     void InitOpengl();
+
+    void OpenglRenderPass();
+    void OpenglRenderLinesPass();
 };
 
 #endif /* APPLICATION_APPLICATION_H */
