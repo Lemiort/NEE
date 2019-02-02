@@ -47,7 +47,6 @@ Application::Application() : kCaption_{"NEE"} {
 
     shader_.Add(Shader::Type::kVertex, vertesx_shader);
     shader_.Add(Shader::Type::kFragmnet, fragment_shader);
-    line_ = new Line();
 }
 
 Application::~Application() {
@@ -205,5 +204,4 @@ void Application::OpenglRenderLinesPass() {
     //     glDisableVertexAttribArray(0);
     // }
     shader_.Use();
-    line_->Render();
 }

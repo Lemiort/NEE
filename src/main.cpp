@@ -94,8 +94,10 @@ void ShadowPass() {
     // light3->SetPos(pGameCamera->GetPos());
     // light3->SetDir(pGameCamera->GetTarget()-pGameCamera->GetPos());
     Camera* lightCam =
-        new Camera(width, height, 45, 1, 1000.0f, spotLight1->GetPos(),
-                   Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+        new Camera(width, height, 45, 1, 1000.0f,
+                   {spotLight1->GetPos().x, spotLight1->GetPos().y,
+                    spotLight1->GetPos().z},
+                   glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
@@ -182,10 +184,12 @@ void RenderPass() {
                  pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    Camera* lightCam = new Camera(
-        width, height, pGameCamera->GetFov(), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar(), spotLight1->GetPos(),
-        Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+    Camera* lightCam =
+        new Camera(width, height, pGameCamera->GetFov(),
+                   pGameCamera->GetZNear(), pGameCamera->GetZFar(),
+                   {spotLight1->GetPos().x, spotLight1->GetPos().y,
+                    spotLight1->GetPos().z},
+                   glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
     TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
     TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);

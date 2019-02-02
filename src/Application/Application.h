@@ -14,8 +14,6 @@
 #include <thread>
 #include <vector>
 
-#include "Camera/Camera.h"
-#include "Line/Line.h"
 #include "Mesh/WiredMesh.h"
 #include "Shader/Shader.h"
 
@@ -43,11 +41,9 @@ private:
     int height_;
     std::unique_ptr<GLFWwindow, DestroyglfwWin> window_;
     GraphicsApi api_;
-    Camera camera_;
     std::vector<WiredMesh> meshes_;
     GLuint VBO, IBO;
     Shader shader_;
-    Line* line_;
 
     void LoadSettings();
     void InitGlfw();
