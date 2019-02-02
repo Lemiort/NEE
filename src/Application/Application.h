@@ -14,6 +14,7 @@
 #include <thread>
 #include <vector>
 
+#include "Font/Font.h"
 #include "Mesh/WiredMesh.h"
 #include "Shader/Shader.h"
 
@@ -44,6 +45,7 @@ private:
     std::vector<WiredMesh> meshes_;
     GLuint VBO, IBO;
     Shader shader_;
+    Font font_;
 
     void LoadSettings();
     void InitGlfw();

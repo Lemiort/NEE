@@ -47,6 +47,8 @@ Application::Application() : kCaption_{"NEE"} {
 
     shader_.Add(Shader::Type::kVertex, vertesx_shader);
     shader_.Add(Shader::Type::kFragmnet, fragment_shader);
+
+    font_.Init("Fonts/MagistralIC_UTF-8.fnt");
 }
 
 Application::~Application() {
@@ -203,5 +205,4 @@ void Application::OpenglRenderLinesPass() {
     //     glDrawArrays(GL_LINES, 0, indicies.size());
     //     glDisableVertexAttribArray(0);
     // }
-    shader_.Use();
 }
