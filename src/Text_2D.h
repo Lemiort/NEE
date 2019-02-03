@@ -3,13 +3,14 @@
 #include <GL\glew.h>
 #include <PlaceableObject.h>
 #include <RenderableObject.h>
+#include <SOIL/SOIL.h>
 #include <math_3d.h>
 #include <cstring>
 #include <map>
 #include <queue>
-#include "SOIL/SOIL.h"
 #include "Shader/Shader.h"
 #include "ShaderFunctions.h"
+
 #ifndef BUFFER_OFFSET
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 #endif
@@ -93,7 +94,6 @@ public:
     friend class FontLine2d;
 };
 
-//������� ������
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;

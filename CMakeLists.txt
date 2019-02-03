@@ -67,6 +67,14 @@ else()
     message(FATAL_ERROR "Vulkan not found")
 endif()
 
+find_package(SOIL)
+if(SOIL_FOUND)
+    message("SOIL was found")
+    include_directories(${SOIL_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "SOIL not found")
+endif()
+
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
