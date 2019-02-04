@@ -4,7 +4,7 @@ glew/2.1.0@bincrafters/stable
 jsonformoderncpp/3.5.0@vthiery/stable
 glm/0.9.9.1@g-truc/stable
 vulkan/1.1.97.0@lemiort/stable
-soil/1.1.0@lemiort/stable
+soil/1.1.0@lemiort/development
 
 [generators]
 cmake
@@ -13,3 +13,4 @@ cmake
 glfw:shared=False
 glew:shared=False
 vulkan:shared=False
+soil:shared=False

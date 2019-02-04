@@ -59,22 +59,25 @@ else()
     message(FATAL_ERROR "GLM not found")
 endif()
 
-find_package(Vulkan)
-if(Vulkan_FOUND)
-    message("Vulkan was found")
-    include_directories(${Vulkan_INCLUDE_DIRS})
-else()
-    message(FATAL_ERROR "Vulkan not found")
-endif()
-
 find_package(SOIL)
 if(SOIL_FOUND)
     message("SOIL was found")
-    include_directories(${SOIL_INCLUDE_DIRS})
+    # include_directories(${SOIL_INCLUDE_DIRS})
 else()
     message(FATAL_ERROR "SOIL not found")
 endif()
 
+find_package(Vulkan)
+if(Vulkan_FOUND)
+    message("Vulkan was found")
+    # include_directories(${Vulkan_INCLUDE_DIRS})
+else()
+    message(FATAL_ERROR "Vulkan not found")
+endif()
+
+
+# link soil first to dismiss soil linking errors
+target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})
 target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
