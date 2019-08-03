@@ -19,7 +19,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     spverts = 0;
     try {
         /*FILE* fp;
-                fp=fopen("Models/sphere.ho3d","r+b");
+                fp=fopen("models/sphere.ho3d","r+b");
                 if(!fp) return false;
                 fread(&spverts,sizeof(int),1,fp);
                 spvertices=new float[spverts*3];
@@ -46,7 +46,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
                         }
                 fclose(fp);*/
         FILE* fp;
-        fp = fopen("Models/sphere.ho3d", "r+b");
+        fp = fopen("models/sphere.ho3d", "r+b");
         if (!fp) return false;
         fread(&spverts, sizeof(int), 1, fp);
         spvertices = new float[spverts * 3];

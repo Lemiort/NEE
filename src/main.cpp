@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctime>
+#include <iostream>
 
 using namespace std;
 
@@ -18,7 +19,7 @@ void CalcFPS() {
 }
 
 void ErrorCallback(int error, const char* description) {
-    fputs(description, stderr);
+    std::cerr << "Error " << error << ":" << description;
 }
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                  int mods) {
@@ -43,8 +44,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
             time(&rawtime);
             timeinfo = localtime(&rawtime);
 
-            strftime(buffer, 80,
-                     "Screenshots/Screenshot %d-%m-%Y %I.%M.%S.tga\0",
+            strftime(buffer, 80, "screenshots/Screenshot %d-%m-%Y %I.%M.%S.tga",
                      timeinfo);
             int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_TGA, 0, 0,
                                               width, height);
@@ -767,8 +767,8 @@ void PreInitScene(GLFWwindow* window) {
 
     //шейдер текста
     {
-        char* vertexShaderSorceCode = ReadFile("Shaders/text2d.vsh");
-        char* fragmentShaderSourceCode = ReadFile("Shaders/text2d.fsh");
+        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
+        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
 
         textShader = make_shared<Shader>();
         textShader->AddShader(vertexShaderSorceCode, VertexShader);
@@ -778,7 +778,7 @@ void PreInitScene(GLFWwindow* window) {
         delete[] fragmentShaderSourceCode;
     }
     fLine1 = new FontLine2d();
-    fLine1->Init(string("Fonts/MagistralIC_UTF-8.fnt"), textShader);
+    fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"), textShader);
     fLine1->SetAspectRatio(width, height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -838,8 +838,8 @@ int InitScene(GLFWwindow* window) {
 
     //нормальный шейдер
     // InitRender(window, "Normal shader loading...");
-    char* vertexShaderSorceCode = ReadFile("Shaders/vertexShader.vsh");
-    char* fragmentShaderSourceCode = ReadFile("Shaders/fragmentShader.fsh");
+    char* vertexShaderSorceCode = ReadFile("shaders/vertexShader.vsh");
+    char* fragmentShaderSourceCode = ReadFile("shaders/fragmentShader.fsh");
     {
         meshShader = make_shared<Shader>();
         meshShader->AddShader((const char*)vertexShaderSorceCode, VertexShader);
@@ -861,15 +861,15 @@ int InitScene(GLFWwindow* window) {
         mainMaterial->Init(meshShader);
     }
 
-    // Cube.Init(mainMaterial,"Models/sphere2.ho3d");
-    TestMesh.Init(mainMaterial, "Models/torus1.ho3d");
-    // Plane.Init(mainMaterial, "Models/plane.ho3d");
+    // Cube.Init(mainMaterial,"models/sphere2.ho3d");
+    TestMesh.Init(mainMaterial, "models/torus1.ho3d");
+    // Plane.Init(mainMaterial, "models/plane.ho3d");
 
     //шейдер тени
     {
         InitRender(window, "Shade shader loading...");
-        vertexShaderSorceCode = ReadFile("Shaders/fbo.vsh");
-        fragmentShaderSourceCode = ReadFile("Shaders/fbo.fsh");
+        vertexShaderSorceCode = ReadFile("shaders/fbo.vsh");
+        fragmentShaderSourceCode = ReadFile("shaders/fbo.fsh");
         shadowShader = make_shared<Shader>();
         shadowShader->AddShader((const char*)vertexShaderSorceCode,
                                 VertexShader);
@@ -891,9 +891,9 @@ int InitScene(GLFWwindow* window) {
     //затенённый шейдер
     {
         InitRender(window, "Shaded shader loading...");
-        vertexShaderSorceCode = ReadFile("Shaders/shadowed.vsh");
-        // fragmentShaderSourceCode=ReadFile("Shaders/fragmentShader.fsh");
-        fragmentShaderSourceCode = ReadFile("Shaders/shadowed.fsh");
+        vertexShaderSorceCode = ReadFile("shaders/shadowed.vsh");
+        // fragmentShaderSourceCode=ReadFile("shaders/fragmentShader.fsh");
+        fragmentShaderSourceCode = ReadFile("shaders/shadowed.fsh");
         shadowMeshShader = make_shared<Shader>();
         shadowMeshShader->AddShader((const char*)vertexShaderSorceCode,
                                     VertexShader);
@@ -913,8 +913,8 @@ int InitScene(GLFWwindow* window) {
         whiteTexture = make_shared<Texture2D>();
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
-        Cube.Init(shadowMeshMaterial, "Models/normal_geosphere.ho3d");
-        Plane.Init(shadowMeshMaterial, "Models/normal_plane.ho3d");
+        Cube.Init(shadowMeshMaterial, "models/normal_geosphere.ho3d");
+        Plane.Init(shadowMeshMaterial, "models/normal_plane.ho3d");
     }
 
     //шейдер StencilPass материал
@@ -922,7 +922,7 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "StencilPass shader loading...");
         //грузим шейдер
         {
-            vertexShaderSorceCode = ReadFile("Shaders/DSStencilPass.vsh");
+            vertexShaderSorceCode = ReadFile("shaders/DSStencilPass.vsh");
             DSStencilPassShader = make_shared<Shader>();
             DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,
                                            VertexShader);
@@ -944,8 +944,8 @@ int InitScene(GLFWwindow* window) {
         gBuffer1->Init(width, height);
         //грузим шейдер
         {
-            vertexShaderSorceCode = ReadFile("Shaders/DSGeometryPass.vsh");
-            fragmentShaderSourceCode = ReadFile("Shaders/DSGeometryPass.fsh");
+            vertexShaderSorceCode = ReadFile("shaders/DSGeometryPass.vsh");
+            fragmentShaderSourceCode = ReadFile("shaders/DSGeometryPass.fsh");
             DSGeometryPassShader = make_shared<Shader>();
             DSGeometryPassShader->AddShader((const char*)vertexShaderSorceCode,
                                             VertexShader);
@@ -968,8 +968,8 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "Light shader loading...");
         //шейдер точечного света
         {//грузим шейдер
-         {vertexShaderSorceCode = ReadFile("Shaders/DSPointLight.vsh");
-        fragmentShaderSourceCode = ReadFile("Shaders/DSPointLight.fsh");
+         {vertexShaderSorceCode = ReadFile("shaders/DSPointLight.vsh");
+        fragmentShaderSourceCode = ReadFile("shaders/DSPointLight.fsh");
         DSPointLightShader = make_shared<Shader>();
         DSPointLightShader->AddShader((const char*)vertexShaderSorceCode,
                                       VertexShader);
@@ -989,8 +989,8 @@ int InitScene(GLFWwindow* window) {
 
 //шейдер направленного света
 {//грузим шейдер
- {vertexShaderSorceCode = ReadFile("Shaders/DSDirectionalLight.vsh");
-fragmentShaderSourceCode = ReadFile("Shaders/DSDirectionalLight.fsh");
+ {vertexShaderSorceCode = ReadFile("shaders/DSDirectionalLight.vsh");
+fragmentShaderSourceCode = ReadFile("shaders/DSDirectionalLight.fsh");
 DSDirectionalLightShader = make_shared<Shader>();
 DSDirectionalLightShader->AddShader((const char*)vertexShaderSorceCode,
                                     VertexShader);
@@ -1012,8 +1012,8 @@ delete[] fragmentShaderSourceCode;
 {
     //грузим шейдер
     {
-        vertexShaderSorceCode = ReadFile("Shaders/DSSpotLight.vsh");
-        fragmentShaderSourceCode = ReadFile("Shaders/DSSpotLight.fsh");
+        vertexShaderSorceCode = ReadFile("shaders/DSSpotLight.vsh");
+        fragmentShaderSourceCode = ReadFile("shaders/DSSpotLight.fsh");
         DSSpotLightShader = make_shared<Shader>();
         DSSpotLightShader->AddShader((const char*)vertexShaderSorceCode,
                                      VertexShader);
@@ -1035,8 +1035,8 @@ delete[] fragmentShaderSourceCode;
 //шейдер скайбокса
 {
     InitRender(window, "Skybox shader loading...");
-    vertexShaderSorceCode = ReadFile("Shaders/skybox.vsh");
-    fragmentShaderSourceCode = ReadFile("Shaders/skybox.fsh");
+    vertexShaderSorceCode = ReadFile("shaders/skybox.vsh");
+    fragmentShaderSourceCode = ReadFile("shaders/skybox.fsh");
 
     skyboxShader = make_shared<Shader>();
 
@@ -1049,8 +1049,8 @@ delete[] fragmentShaderSourceCode;
 
 /*//шейдер текста
 {
-vertexShaderSorceCode=ReadFile("Shaders/text2d.vsh");
-fragmentShaderSourceCode=ReadFile("Shaders/text2d.fsh");
+vertexShaderSorceCode=ReadFile("shaders/text2d.vsh");
+fragmentShaderSourceCode=ReadFile("shaders/text2d.fsh");
 
 
 textShader=new Shader();
@@ -1118,7 +1118,7 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
     tline2 = new TextLine2d();
     tline1->Init(width, height, textShader);
     tline2->Init(width, height, textShader);
-    // fLine1->Init(string("Fonts/MagistralIC_UTF-8.fnt"),textShader);
+    // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
     // fLine1->SetAspectRatio(width,height);
 
     //*************Shadow MAP FBO**********/

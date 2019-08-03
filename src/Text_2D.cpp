@@ -156,7 +156,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
             string temp("textures: ");
             //нашли название текстуры
             if (t == 0) {
-                imgFilename = string("Fonts/") + string(in_s, temp.length());
+                imgFilename = string("fonts/") + string(in_s, temp.length());
                 printf("\nFont image is %s", imgFilename.c_str());
             }
 
@@ -377,11 +377,11 @@ Text2d::Text2d() {
 
 Text2d::~Text2d() {}
 void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
-    if (_sh == false) {
+    if (_sh == nullptr) {
         yourselfShader = true;
         aratio = (float)height / (float)width;
-        char* vertexShaderSorceCode = ReadFile("Shaders/text2d.vsh");
-        char* fragmentShaderSourceCode = ReadFile("Shaders/text2d.fsh");
+        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
+        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
         shaderProgram = make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);

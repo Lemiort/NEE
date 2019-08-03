@@ -5,7 +5,7 @@ Character2d::Character2d() {}
 Character2d::~Character2d() {}
 
 bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
-    mesh.Init(_mat, "Models/quad2x2front.ho3d");
+    mesh.Init(_mat, "models/quad2x2front.ho3d");
     this->mat = _mat;
 
     // TODO сделать загрузку шрифта
@@ -66,7 +66,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
             string temp("textures: ");
             //нашли название текстуры
             if (t == 0) {
-                imgFilename = string("Fonts/") + string(inStr, temp.length());
+                imgFilename = string("fonts/") + string(inStr, temp.length());
                 printf("\nFont image is %s", imgFilename.c_str());
             }
 

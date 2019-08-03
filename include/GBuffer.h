@@ -1,7 +1,7 @@
 #ifndef GBUFFER_H
 #define GBUFFER_H
 
-#include <GL\glew.h>
+#include <GL/glew.h>
 
 class GBuffer {
 public:

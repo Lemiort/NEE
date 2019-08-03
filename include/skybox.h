@@ -21,7 +21,7 @@ public:
 
     void Render(Camera* cam);
     GLuint shaderProgramID;
-    GLuint VBO;  // vertex buffer, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+    GLuint VBO;  // vertex buffer, ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜
     GLuint positionID;
     GLuint IBO;  // index buffer
     GLuint gWorldID, gCamViewID;

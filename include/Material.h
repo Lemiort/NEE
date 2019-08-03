@@ -1,8 +1,8 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
+#include <GL/glew.h>
 #include <Shader.h>
 #include <Texture.h>
-#include <gl\glew.h>
 #include <memory>
 
 class Material {

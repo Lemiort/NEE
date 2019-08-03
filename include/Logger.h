@@ -12,7 +12,7 @@
 #define LOG_ERROR(str, ...)                                              \
     LoggerWrite("%s:%s:%d ERROR " str, __FILE__, __FUNCTION__, __LINE__, \
                 ##__VA_ARGS__)
-#elif defined(__MINGW32__)
+#else
 #define LOG_DEBUG(str, ...)                                          \
     LoggerWrite("%s:%s:%d DEBUG " str, __FILE__, __func__, __LINE__, \
                 ##__VA_ARGS__)

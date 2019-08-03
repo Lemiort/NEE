@@ -1,8 +1,8 @@
 #ifndef TGA_LOADER_H_INCLUDED
 #define TGA_LOADER_H_INCLUDED
 //#include "main.h"
-#include <GLFW\glfw3.h>
-#include <GL\glew.h>
+#include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <cassert>
 #include "Logger.h"
 

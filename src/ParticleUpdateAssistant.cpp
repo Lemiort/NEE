@@ -8,9 +8,9 @@ ParticleUpdateAssistant::~ParticleUpdateAssistant() {
     // dtor
 }
 bool ParticleUpdateAssistant::Init(GLuint shader) {
-    /*        char* vertexShaderSorceCode=ReadFile("Shaders/particle.vsh");
-            char* fragmentShaderSourceCode=ReadFile("Shaders/particle.fsh");
-            char* geometryShaderSourceCode=ReadFile("Shaders/particle.gsh");
+    /*        char* vertexShaderSorceCode=ReadFile("shaders/particle.vsh");
+            char* fragmentShaderSourceCode=ReadFile("shaders/particle.fsh");
+            char* geometryShaderSourceCode=ReadFile("shaders/particle.gsh");
             GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
             GLuint
        fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode); GLuint

@@ -40,7 +40,7 @@ Material::~Material() {
 }
 
 bool Material::Init(shared_ptr<Shader> _sh) {
-    if (_sh == false) return false;
+    if (_sh == nullptr) return false;
     shaderProgram = _sh;
     shaderProgram->Use();
 

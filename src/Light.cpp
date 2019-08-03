@@ -25,8 +25,8 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     color[2] = b;
 
     mesh = make_shared<Mesh>();
-    // mesh->Init(_mat,"Models/quad2x2front.ho3d");
-    mesh->Init(_mat, "Models/cube2x2x2.ho3d");
+    // mesh->Init(_mat,"models/quad2x2front.ho3d");
+    mesh->Init(_mat, "models/cube2x2x2.ho3d");
 }
 
 void DirectionalLight::Render(Camera* cam) {
@@ -70,7 +70,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     Cutoff = cut;
 
     mesh = make_shared<Mesh>();
-    mesh->Init(_mat, "Models/cone2.ho3d");
+    mesh->Init(_mat, "models/cone2.ho3d");
     mesh->SetRotation(90, 0, 0);
 }
 
@@ -266,8 +266,8 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     temp[0] = 0;
     temp[1] = 0;
     temp[2] = 0;
-    /*char* vertexShaderSorceCode=ReadFile("Shaders/lightVS.vsh");
-    char* fragmentShaderSourceCode=ReadFile("Shaders/lightFS.fsh");
+    /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vsh");
+    char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fsh");
     shaderProgram=new Shader();
     shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
@@ -283,7 +283,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
     sphere = make_shared<Mesh>();
-    sphere->Init(_mat, "Models/normal_geosphere.ho3d");
+    sphere->Init(_mat, "models/normal_geosphere.ho3d");
     radius = CalcSphereSize() / 2;
     std::cout << "\nLight radius is " << radius;
 }
@@ -333,8 +333,8 @@ float PointLight::CalcSphereSize() {
 }
 
 Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
-    char* vertexShaderSorceCode = ReadFile("Shaders/lightVS.vsh");
-    char* fragmentShaderSourceCode = ReadFile("Shaders/lightFS.fsh");
+    char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vsh");
+    char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fsh");
     shaderProgram = make_shared<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
