@@ -2,14 +2,14 @@
 #define PARTICLESYSTEM_H_INCLUDED
 #define MAX_PARTICLES 1000
 //#include "Billboard.h"
-#include "RandomTexture.h"
-#include "ParticleUpdateAssistant.h"
-#include "ShaderFunctions.h"
 #include <BillboardAssistant.h>
 #include <Camera.h>
 #include <Texture.h>
 #include <util.h>
 #include "Assistant.h"
+#include "ParticleUpdateAssistant.h"
+#include "RandomTexture.h"
+#include "ShaderFunctions.h"
 
 #define PARTICLE_LIFETIME 10.0f
 
@@ -17,13 +17,13 @@
 #define PARTICLE_TYPE_SHELL 1.0f
 #define PARTICLE_TYPE_SECONDARY_SHELL 2.0f
 
-class ParticleSystem
-{
+class ParticleSystem {
 public:
     ParticleSystem();
     ~ParticleSystem();
     bool Init(Vector3f Pos);
     void Render(int DeltaTimeMillis, Camera* cam);
+
 private:
     bool m_isFirst;
     unsigned int m_currVB;
@@ -39,8 +39,7 @@ private:
     int m_time;
     void RenderParticles(Camera* cam);
     void UpdateParticles(int DeltaTimeMillis);
-    struct Particle
-    {
+    struct Particle {
         float Type;
         Vector3f Pos;
         Vector3f Vel;
@@ -48,4 +47,4 @@ private:
     };
 };
 
-#endif // PARTICLESYSTEM_H_INCLUDED
+#endif  // PARTICLESYSTEM_H_INCLUDED

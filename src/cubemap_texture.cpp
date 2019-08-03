@@ -1,23 +1,20 @@
-#include <iostream>
-#include <cstring>
 #include "cubemap_texture.h"
+#include <cstring>
+#include <iostream>
 #include "tga_loader.h"
 #include "util.h"
 
-static const GLenum types[6] = {  GL_TEXTURE_CUBE_MAP_POSITIVE_X,
-                                  GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-                                  GL_TEXTURE_CUBE_MAP_POSITIVE_Y,
-                                  GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-                                  GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
-                                  GL_TEXTURE_CUBE_MAP_NEGATIVE_Z };
+static const GLenum types[6] = {
+    GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
+    GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z};
 CubemapTexture::CubemapTexture(const string& Directory,
                                const string& PosXFilename,
                                const string& NegXFilename,
                                const string& PosYFilename,
                                const string& NegYFilename,
                                const string& PosZFilename,
-                               const string& NegZFilename)
-{
+                               const string& NegZFilename) {
     string::const_iterator it = Directory.end();
     it--;
     string BaseDir = (*it == '/') ? Directory : Directory + "/";
@@ -32,56 +29,55 @@ CubemapTexture::CubemapTexture(const string& Directory,
     m_textureObj = 0;
 }
 
-CubemapTexture::~CubemapTexture()
-{
+CubemapTexture::~CubemapTexture() {
     if (m_textureObj != 0) {
         glDeleteTextures(1, &m_textureObj);
     }
 }
 
-bool CubemapTexture::Load()
-{
+bool CubemapTexture::Load() {
     glGenTextures(1, &m_textureObj);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
 
-   // Magick::Image* pImage = NULL;
-    //Magick::Blob blob;
+    // Magick::Image* pImage = NULL;
+    // Magick::Blob blob;
 
-    for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(types) ; i++) {
-		ASSERT(m_fileNames[i].c_str());
+    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(types); i++) {
+        ASSERT(m_fileNames[i].c_str());
 
-		  TGAHeader *header;
-		  uint8_t   *buffer;
-		  uint32_t  size;
-		  GLint     format, internalFormat;
-		//  GLuint    texture;
-        // ïîïûòàåìñÿ çàãðóçèòü èçîáðàæåíèå èç ôàéëà
-		  if (!LoadFile( m_fileNames[i].c_str(), true, &buffer, &size))
-			return 0;
+        TGAHeader* header;
+        uint8_t* buffer;
+        uint32_t size;
+        GLint format, internalFormat;
+        //  GLuint    texture;
+        // Ð¿Ð¾Ð¿Ñ‹Ñ‚Ð°ÐµÐ¼ÑÑ Ð·Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ð¸Ð·Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ðµ Ð¸Ð· Ñ„Ð°Ð¹Ð»Ð°
+        if (!LoadFile(m_fileNames[i].c_str(), true, &buffer, &size)) return 0;
 
-		  // åñëè ðàçìåð ôàéëà çàâåäîìî ìåíüøå çàãîëîâêà TGA
-		  if (size <= sizeof(TGAHeader))
-		  {
-			//LOG_ERROR("Too small file \n", m_fileNames[i]);
-			delete[] buffer;
-			return 0;
-		  }
+        // ÐµÑÐ»Ð¸ Ñ€Ð°Ð·Ð¼ÐµÑ€ Ñ„Ð°Ð¹Ð»Ð° Ð·Ð°Ð²ÐµÐ´Ð¾Ð¼Ð¾ Ð¼ÐµÐ½ÑŒÑˆÐµ Ð·Ð°Ð³Ð¾Ð»Ð¾Ð²ÐºÐ° TGA
+        if (size <= sizeof(TGAHeader)) {
+            // LOG_ERROR("Too small file \n", m_fileNames[i]);
+            delete[] buffer;
+            return 0;
+        }
 
-		  header = (TGAHeader*)buffer;
+        header = (TGAHeader*)buffer;
 
-		  // ïðîâåðèì ôîðìàò TGA-ôàéëà - íåñæàòîå RGB èëè RGBA èçîáðàæåíèå
-		  if (header->datatype != 2 || (header->bitperpel != 24 && header->bitperpel != 32))
-		  {
-			//LOG_ERROR("Wrong TGA format '%s'\n", m_fileNames[i]);
-			delete[] buffer;
-			return 0;
-		  }
+        // Ð¿Ñ€Ð¾Ð²ÐµÑ€Ð¸Ð¼ Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚ TGA-Ñ„Ð°Ð¹Ð»Ð° - Ð½ÐµÑÐ¶Ð°Ñ‚Ð¾Ðµ RGB Ð¸Ð»Ð¸ RGBA Ð¸Ð·Ð¾Ð±Ñ€Ð°Ð¶ÐµÐ½Ð¸Ðµ
+        if (header->datatype != 2 ||
+            (header->bitperpel != 24 && header->bitperpel != 32)) {
+            // LOG_ERROR("Wrong TGA format '%s'\n", m_fileNames[i]);
+            delete[] buffer;
+            return 0;
+        }
 
-		  // ïîëó÷èì ôîðìàò òåêñòóðû
-		  format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
-		  internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
+        // Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ð¼ Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚ Ñ‚ÐµÐºÑÑ‚ÑƒÑ€Ñ‹
+        format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
+        internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
 
-        glTexImage2D(types[i], 0, internalFormat, header->width,  header->height, 0, format, GL_UNSIGNED_BYTE, (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
+        glTexImage2D(
+            types[i], 0, internalFormat, header->width, header->height, 0,
+            format, GL_UNSIGNED_BYTE,
+            (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
 
         delete[] buffer;
     }
@@ -95,8 +91,7 @@ bool CubemapTexture::Load()
     return true;
 }
 
-void CubemapTexture::Bind(GLenum TextureUnit)
-{
+void CubemapTexture::Bind(GLenum TextureUnit) {
     glActiveTexture(TextureUnit);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
 }

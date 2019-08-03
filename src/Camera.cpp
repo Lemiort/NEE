@@ -1,18 +1,18 @@
+#include "camera.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include "camera.h"
 
 const static float STEP_SCALE = 0.1f;
 const static int MARGIN = 100;
 
-Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar)
-{
-    m_windowWidth  = WindowWidth;
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
+               float zfar) {
+    m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
-    m_pos          = Vector3f(0.0f, 0.0f, 0.0f);
-    m_target       = Vector3f(0.0f, 0.0f, -1.0f);
+    m_pos = Vector3f(0.0f, 0.0f, 0.0f);
+    m_target = Vector3f(0.0f, 0.0f, -1.0f);
     m_target.Normalize();
-    m_up           = Vector3f(0.0f, 1.0f, 0.0f);
+    m_up = Vector3f(0.0f, 1.0f, 0.0f);
     FOV = fov;
     zNear = znear;
     zFar = zfar;
@@ -20,10 +20,10 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float 
     Init();
 }
 
-
-Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up)
-{
-    m_windowWidth  = WindowWidth;
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
+               float zfar, const Vector3f& Pos, const Vector3f& Target,
+               const Vector3f& Up) {
+    m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
     m_pos = Pos;
 
@@ -40,31 +40,20 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear, float 
     Init();
 }
 
-
-void Camera::Init()
-{
+void Camera::Init() {
     Vector3f HTarget(m_target.x, 0.0, m_target.z);
     HTarget.Normalize();
 
-    if (HTarget.z >= 0.0f)
-    {
-        if (HTarget.x >= 0.0f)
-        {
+    if (HTarget.z >= 0.0f) {
+        if (HTarget.x >= 0.0f) {
             m_AngleH = 360.0f - ToDegree(asin(HTarget.z));
-        }
-        else
-        {
+        } else {
             m_AngleH = 180.0f + ToDegree(asin(HTarget.z));
         }
-    }
-    else
-    {
-        if (HTarget.x >= 0.0f)
-        {
+    } else {
+        if (HTarget.x >= 0.0f) {
             m_AngleH = ToDegree(asin(-HTarget.z));
-        }
-        else
-        {
+        } else {
             m_AngleH = 90.0f + ToDegree(asin(-HTarget.z));
         }
     }
@@ -73,66 +62,53 @@ void Camera::Init()
 
     m_OnUpperEdge = false;
     m_OnLowerEdge = false;
-    m_OnLeftEdge  = false;
+    m_OnLeftEdge = false;
     m_OnRightEdge = false;
-    m_mousePos.x  = m_windowWidth / 2;
-    m_mousePos.y  = m_windowHeight / 2;
-   // glfwGetCursorPos(&m_mousePos.x, &m_mousePos.y);
-   // glutWarpPointer(m_mousePos.x, m_mousePos.y);
+    m_mousePos.x = m_windowWidth / 2;
+    m_mousePos.y = m_windowHeight / 2;
+    // glfwGetCursorPos(&m_mousePos.x, &m_mousePos.y);
+    // glutWarpPointer(m_mousePos.x, m_mousePos.y);
 }
 
-
-bool Camera::OnKeyboard(char Key)
-{
+bool Camera::OnKeyboard(char Key) {
     bool Ret = false;
 
     switch (Key) {
-
-    case GLFW_KEY_W:
-        {
+        case GLFW_KEY_W: {
             m_pos += (m_target * STEP_SCALE);
             Ret = true;
-        }
-        break;
+        } break;
 
-    case GLFW_KEY_S:
-        {
+        case GLFW_KEY_S: {
             m_pos -= (m_target * STEP_SCALE);
             Ret = true;
-        }
-        break;
+        } break;
 
-    case GLFW_KEY_A:
-        {
+        case GLFW_KEY_A: {
             Vector3f Left = m_target.Cross(m_up);
             Left.Normalize();
             Left *= STEP_SCALE;
             m_pos += Left;
             Ret = true;
-        }
-        break;
+        } break;
 
-    case GLFW_KEY_D:
-        {
+        case GLFW_KEY_D: {
             Vector3f Right = m_up.Cross(m_target);
             Right.Normalize();
             Right *= STEP_SCALE;
             m_pos += Right;
             Ret = true;
-        }
-        break;
+        } break;
     }
 
     return Ret;
 }
 
-
-void Camera::OnMouse(int x, int y)
-{
+void Camera::OnMouse(int x, int y) {
     const int DeltaX = x - m_mousePos.x;
     const int DeltaY = y - m_mousePos.y;
-   // int DeltaX=x;
-    //int DeltaY=y;
+    // int DeltaX=x;
+    // int DeltaY=y;
 
     m_mousePos.x = x;
     m_mousePos.y = y;
@@ -142,15 +118,13 @@ void Camera::OnMouse(int x, int y)
 
     if (DeltaX == 0) {
         if (x <= MARGIN) {
-           // m_AngleH -= 1.0f;
+            // m_AngleH -= 1.0f;
             m_OnLeftEdge = true;
-        }
-        else if (x >= (m_windowWidth - MARGIN)) {
-            //m_AngleH += 1.0f;
+        } else if (x >= (m_windowWidth - MARGIN)) {
+            // m_AngleH += 1.0f;
             m_OnRightEdge = true;
         }
-    }
-    else {
+    } else {
         m_OnLeftEdge = false;
         m_OnRightEdge = false;
     }
@@ -158,12 +132,10 @@ void Camera::OnMouse(int x, int y)
     if (DeltaY == 0) {
         if (y <= MARGIN) {
             m_OnUpperEdge = true;
-        }
-        else if (y >= (m_windowHeight - MARGIN)) {
+        } else if (y >= (m_windowHeight - MARGIN)) {
             m_OnLowerEdge = true;
         }
-    }
-    else {
+    } else {
         m_OnUpperEdge = false;
         m_OnLowerEdge = false;
     }
@@ -171,16 +143,13 @@ void Camera::OnMouse(int x, int y)
     Update();
 }
 
-
-void Camera::OnRender()
-{
+void Camera::OnRender() {
     bool ShouldUpdate = false;
 
     if (m_OnLeftEdge) {
         m_AngleH -= 0.1f;
         ShouldUpdate = true;
-    }
-    else if (m_OnRightEdge) {
+    } else if (m_OnRightEdge) {
         m_AngleH += 0.1f;
         ShouldUpdate = true;
     }
@@ -190,11 +159,10 @@ void Camera::OnRender()
             m_AngleV -= 0.1f;
             ShouldUpdate = true;
         }
-    }
-    else if (m_OnLowerEdge) {
+    } else if (m_OnLowerEdge) {
         if (m_AngleV < 90.0f) {
-           m_AngleV += 0.1f;
-           ShouldUpdate = true;
+            m_AngleV += 0.1f;
+            ShouldUpdate = true;
         }
     }
 
@@ -203,8 +171,7 @@ void Camera::OnRender()
     }
 }
 
-void Camera::Update()
-{
+void Camera::Update() {
     const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
 
     // Rotate the view vector by the horizontal angle around the vertical axis
@@ -224,66 +191,30 @@ void Camera::Update()
     m_up.Normalize();
 }
 
-float Camera::GetFov()
-{
-    return FOV;
-}
+float Camera::GetFov() { return FOV; }
 
-void Camera::SetFOV(float fov)
-{
-    FOV = fov;
-}
+void Camera::SetFOV(float fov) { FOV = fov; }
 
-const Vector3f& Camera::GetPos() const
-{
-    return m_pos;
-}
+const Vector3f& Camera::GetPos() const { return m_pos; }
 
-const Vector3f& Camera::GetTarget() const
-{
-    return m_target;
-}
+const Vector3f& Camera::GetTarget() const { return m_target; }
 
-const Vector3f& Camera::GetUp() const
-{
-    return m_up;
-}
+const Vector3f& Camera::GetUp() const { return m_up; }
 
+float Camera::GetZNear() { return zNear; }
 
-float Camera::GetZNear()
-{
-    return zNear;
-}
+float Camera::GetZFar() { return zFar; }
 
-float Camera::GetZFar()
-{
-    return zFar;
-}
+void Camera::SetZNear(float znear) { zNear = znear; }
 
-void Camera::SetZNear(float znear)
-{
-    zNear = znear;
-}
+void Camera::SetZFar(float zfar) { zFar = zfar; }
 
-void Camera::SetZFar(float zfar)
-{
-    zFar = zfar;
-}
-
-
-void Camera::OnViewportResize(int width, int height)
-{
+void Camera::OnViewportResize(int width, int height) {
     m_windowHeight = height;
     m_windowWidth = width;
     Init();
 }
 
-int Camera::GetWidth()
-{
-    return m_windowWidth;
-}
+int Camera::GetWidth() { return m_windowWidth; }
 
-int Camera::GetHeight()
-{
-    return m_windowHeight;
-}
+int Camera::GetHeight() { return m_windowHeight; }

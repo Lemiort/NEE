@@ -1,49 +1,42 @@
 #include "ParticleSystem.h"
-ParticleSystem::ParticleSystem()
-{
+ParticleSystem::ParticleSystem() {}
 
-}
+ParticleSystem::~ParticleSystem() {}
 
-ParticleSystem::~ParticleSystem()
-{
-
-}
-
-
-bool ParticleSystem::Init(Vector3f Pos)
-{
+bool ParticleSystem::Init(Vector3f Pos) {
     Particle Particles[MAX_PARTICLES];
-	ZERO_MEM(Particles);
+    ZERO_MEM(Particles);
 
-	Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
-	Particles[0].Pos = Pos;
-	Particles[0].Vel = Vector3f(0.0f, 0.0001f, 0.0f);
-	Particles[0].LifetimeMillis = 0.0f;
+    Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
+    Particles[0].Pos = Pos;
+    Particles[0].Vel = Vector3f(0.0f, 0.0001f, 0.0f);
+    Particles[0].LifetimeMillis = 0.0f;
 
-	glGenTransformFeedbacks(2, m_transformFeedback);
-	glGenBuffers(2, m_particleBuffer);
+    glGenTransformFeedbacks(2, m_transformFeedback);
+    glGenBuffers(2, m_particleBuffer);
 
-	for (unsigned int i = 0; i < 2 ; i++) {
-		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[i]);
-		glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_particleBuffer[i]);
-		glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[i]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(Particles), Particles, GL_DYNAMIC_DRAW);
-	}
+    for (unsigned int i = 0; i < 2; i++) {
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[i]);
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_particleBuffer[i]);
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[i]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(Particles), Particles,
+                     GL_DYNAMIC_DRAW);
+    }
 
-	char* vertexShaderSorceCode=ReadFile("Shaders/particle.vsh");
-        char* fragmentShaderSourceCode=ReadFile("Shaders/particle.fsh");
-        char* geometryShaderSourceCode=ReadFile("Shaders/particle.gsh");
-        GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-        GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-        GLuint geometryShaderID=MakeGeometryShader(geometryShaderSourceCode);
-        shaderProgramID=MakeShaderProgram(vertexShaderID,geometryShaderID, fragmentShaderID);
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
-        delete[] geometryShaderSourceCode;
+    char* vertexShaderSorceCode = ReadFile("Shaders/particle.vsh");
+    char* fragmentShaderSourceCode = ReadFile("Shaders/particle.fsh");
+    char* geometryShaderSourceCode = ReadFile("Shaders/particle.gsh");
+    GLuint vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
+    GLuint fragmentShaderID = MakeFragmentShader(fragmentShaderSourceCode);
+    GLuint geometryShaderID = MakeGeometryShader(geometryShaderSourceCode);
+    shaderProgramID =
+        MakeShaderProgram(vertexShaderID, geometryShaderID, fragmentShaderID);
+    delete[] vertexShaderSorceCode;
+    delete[] fragmentShaderSourceCode;
+    delete[] geometryShaderSourceCode;
 
-
-	if (!m_updateAssistant.Init(shaderProgramID)) {
+    if (!m_updateAssistant.Init(shaderProgramID)) {
         return false;
     }
 
@@ -64,20 +57,18 @@ bool ParticleSystem::Init(Vector3f Pos)
     return GLCheckError();
 }
 
-void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam)
-{
+void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam) {
     m_time += DeltaTimeMillis;
 
-	UpdateParticles(DeltaTimeMillis);
+    UpdateParticles(DeltaTimeMillis);
 
-	RenderParticles(cam);
+    RenderParticles(cam);
 
-	m_currVB = m_currTFB;
-	m_currTFB = (m_currTFB + 1) & 0x1;
+    m_currVB = m_currTFB;
+    m_currTFB = (m_currTFB + 1) & 0x1;
 }
 
-void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
-{
+void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     m_updateAssistant.Enable();
     m_updateAssistant.SetTime(m_time);
     m_updateAssistant.SetDeltaTimeMillis(DeltaTimeMillis);
@@ -87,17 +78,22 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
     glEnable(GL_RASTERIZER_DISCARD);
 
     glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currVB]);
-    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[m_currTFB]);
+    glBindTransformFeedback(GL_TRANSFORM_FEEDBACK,
+                            m_transformFeedback[m_currTFB]);
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
     glEnableVertexAttribArray(3);
 
-    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), 0); // type
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)4); // position
-    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)16); // velocity
-    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)28); // lifetime
+    glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                          0);  // type
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                          (const GLvoid*)4);  // position
+    glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                          (const GLvoid*)16);  // velocity
+    glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                          (const GLvoid*)28);  // lifetime
 
     glBeginTransformFeedback(GL_POINTS);
 
@@ -105,8 +101,7 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
         glDrawArrays(GL_POINTS, 0, 1);
 
         m_isFirst = false;
-    }
-    else {
+    } else {
         glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currVB]);
     }
 
@@ -118,18 +113,18 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis)
     glDisableVertexAttribArray(3);
 }
 
-
-void ParticleSystem::RenderParticles(Camera* cam)
-{
+void ParticleSystem::RenderParticles(Camera* cam) {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
-    Assistant TM;//TM - Äëÿ îáúåêòà, 2- äëÿ íîðìàëè îáúåêòà, 3 - äëÿ ïîçèöèè êàìåðà äëÿ ñïåêóëÿðà
+    Assistant TM;  // TM - Ð”Ð»Ñ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°, 2- Ð´Ð»Ñ Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°, 3 - Ð´Ð»Ñ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸
+                   // ÐºÐ°Ð¼ÐµÑ€Ð° Ð´Ð»Ñ ÑÐ¿ÐµÐºÑƒÐ»ÑÑ€Ð°
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(), cam->GetZNear(), cam->GetZFar());
-    //ìàòðèöà ïðîåêöèè êàìåðû
-    //glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //ïîçèöèÿ êàìåðû
-   // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
+    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
+                          cam->GetZNear(), cam->GetZFar());
+    //Ð¼Ð°Ñ‚Ñ€Ð¸Ñ†Ð° Ð¿Ñ€Ð¾ÐµÐºÑ†Ð¸Ð¸ ÐºÐ°Ð¼ÐµÑ€Ñ‹
+    // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    //Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ñ ÐºÐ°Ð¼ÐµÑ€Ñ‹
+    // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 
     glUseProgram(shaderProgramID);
     m_billboardAssistant.SetCameraPosition(cam->GetPos());
@@ -142,7 +137,8 @@ void ParticleSystem::RenderParticles(Camera* cam)
 
     glEnableVertexAttribArray(0);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (const GLvoid*)4); // position
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
+                          (const GLvoid*)4);  // position
 
     glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currTFB]);
 

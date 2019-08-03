@@ -1,26 +1,16 @@
 #include "RenderableObject.h"
 
-RenderableObject::RenderableObject()
-{
-    //ctor
+RenderableObject::RenderableObject() {
+    // ctor
 }
 
-RenderableObject::~RenderableObject()
-{
-    //dtor
+RenderableObject::~RenderableObject() {
+    // dtor
 }
 
+void RenderableObject::Render(Camera* cam) {}
 
-void RenderableObject::Render(Camera* cam)
-{
-
-}
-
-shared_ptr<Shader> RenderableObject::GetShader()
-{
-    return shaderProgram;
-}
-void RenderableObject::SetShader(shared_ptr<Shader> shader)
-{
+shared_ptr<Shader> RenderableObject::GetShader() { return shaderProgram; }
+void RenderableObject::SetShader(shared_ptr<Shader> shader) {
     shaderProgram = shader;
 }

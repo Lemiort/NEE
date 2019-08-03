@@ -3,12 +3,9 @@
 
 #include <GL\glew.h>
 
-class GBuffer
-{
+class GBuffer {
 public:
-
-    enum GBUFFER_TEXTURE_TYPE
-    {
+    enum GBUFFER_TEXTURE_TYPE {
         GBUFFER_TEXTURE_TYPE_POSITION,
         GBUFFER_TEXTURE_TYPE_DIFFUSE,
         GBUFFER_TEXTURE_TYPE_NORMAL,
@@ -17,15 +14,9 @@ public:
         GBUFFER_NUM_TEXTURES
     };
 
-    GBuffer()
-    {
+    GBuffer() {}
 
-    }
-
-    ~GBuffer()
-    {
-
-    }
+    ~GBuffer() {}
 
     bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 
@@ -37,21 +28,19 @@ public:
 
     void BindForWriting();
     void BindForReading();
-     void SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType);
+    void SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType);
 
+    void CheckTextures();
 
-     void CheckTextures();
+    GLuint GetTexture(unsigned num);
 
-     GLuint GetTexture(unsigned num);
-
-     GLuint GetDepthTexture();
+    GLuint GetDepthTexture();
 
 private:
-
     GLuint m_fbo;
     GLuint m_textures[GBUFFER_NUM_TEXTURES];
     GLuint m_depthTexture;
     GLuint m_testTexture;
     GLuint m_finalTexture;
 };
-#endif // GBUFFER_H
+#endif  // GBUFFER_H

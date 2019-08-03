@@ -1,15 +1,16 @@
 #ifndef CAMERA_H_INCLUDED
-#define        CAMERA_H_INCLUDED
+#define CAMERA_H_INCLUDED
 
 #include "math_3d.h"
 
-class Camera
-{
+class Camera {
 public:
+    Camera(int WindowWidth, int WindowHeight, float fov, float znear,
+           float zfar);
 
-    Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar);
-
-    Camera(int WindowWidth, int WindowHeight, float fov, float znear, float zfar, const Vector3f& Pos, const Vector3f& Target, const Vector3f& Up);
+    Camera(int WindowWidth, int WindowHeight, float fov, float znear,
+           float zfar, const Vector3f& Pos, const Vector3f& Target,
+           const Vector3f& Up);
 
     bool OnKeyboard(char Key);
 
@@ -40,6 +41,7 @@ public:
     int GetWidth();
 
     int GetHeight();
+
 private:
     float FOV;
     float zNear;
@@ -66,4 +68,4 @@ private:
     Vector2i m_mousePos;
 };
 
-#endif        // CAMERA_H_INCLUDED
+#endif  // CAMERA_H_INCLUDED

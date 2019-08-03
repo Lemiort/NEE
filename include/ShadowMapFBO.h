@@ -4,8 +4,7 @@
 #include <GL\glew.h>
 #include <string>
 
-class ShadowMapFBO
-{
+class ShadowMapFBO {
 public:
     ShadowMapFBO();
     virtual ~ShadowMapFBO();
@@ -17,8 +16,7 @@ public:
 
     void BindForReading(GLenum TextureUnit);
 
-    enum GBUFFER_TEXTURE_TYPE
-    {
+    enum GBUFFER_TEXTURE_TYPE {
         GBUFFER_TEXTURE_TYPE_POSITION,
         GBUFFER_TEXTURE_TYPE_DIFFUSE,
         GBUFFER_TEXTURE_TYPE_NORMAL,
@@ -38,4 +36,4 @@ private:
     GLuint m_textures[GBUFFER_NUM_TEXTURES];
 };
 
-#endif // SHADOWMAPFBO_H
+#endif  // SHADOWMAPFBO_H

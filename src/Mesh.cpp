@@ -1,151 +1,141 @@
 #include "Mesh.h"
 
-Mesh::Mesh()
-{
-    //mat=NULL;
-    shadowMap=0;
+Mesh::Mesh() {
+    // mat=NULL;
+    shadowMap = 0;
     rPhi = 0;
 }
 
-Mesh::~Mesh()
-{
-    glDeleteBuffers(1,&VBO);
-    glDeleteBuffers(1,&IBO);
+Mesh::~Mesh() {
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &IBO);
 }
 
-void Mesh::SetMaterial( shared_ptr<Material> _mat )
-{
+void Mesh::SetMaterial(shared_ptr<Material> _mat) {
     mat = _mat;
     this->SetShader(mat->GetShader());
 
-    //mat->Use();
-    positionID=	shaderProgram->GetAttribLocation("s_vPosition");
-    normalID=	shaderProgram->GetAttribLocation("s_vNormal");
-    uvID=		shaderProgram->GetAttribLocation("s_vUV");
-    tangentID=	shaderProgram->GetAttribLocation("s_vTangent");
-    //íàõîäèì ïîçèöèè uniform-ïåðåìåííûõ
-    gWorldID=	shaderProgram->GetUniformLocation("gWorld");
-    rotateID=	shaderProgram->GetUniformLocation("mRotate");//âðàùåíèå îáúåêòà
+    // mat->Use();
+    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    normalID = shaderProgram->GetAttribLocation("s_vNormal");
+    uvID = shaderProgram->GetAttribLocation("s_vUV");
+    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
+    //Ð½Ð°Ñ…Ð¾Ð´Ð¸Ð¼ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ uniform-Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ñ‹Ñ…
+    gWorldID = shaderProgram->GetUniformLocation("gWorld");
+    rotateID = shaderProgram->GetUniformLocation("mRotate");  //Ð²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ðµ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°
 }
 
-bool Mesh::Init(shared_ptr<Material> _mat,const char* model)
-{
-    mat=_mat;
+bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
+    mat = _mat;
     shaderProgram = mat->GetShader();
-    //mat->Use();
+    // mat->Use();
 
-    if(shaderProgram==NULL)
-        return false;
+    if (shaderProgram == NULL) return false;
 
-    Scale=0;
-    int* spindices=NULL;
-    float* spvertices=NULL;
-    float* spnormals=NULL;
-    float* spuvs=NULL;
-    float* sptangent=NULL;
-    spfaces=0;
-    spverts=0;
-    try
-    {
+    Scale = 0;
+    int* spindices = NULL;
+    float* spvertices = NULL;
+    float* spnormals = NULL;
+    float* spuvs = NULL;
+    float* sptangent = NULL;
+    spfaces = 0;
+    spverts = 0;
+    try {
         FILE* fp;
-        fstream fout("ImporObj.log",ios::out);
-        //fopen_s(&fp,model,"r+b");
-        fp=fopen(model,"r+b");
-        if(!fp)
-            return false;
-        fread(&spverts,sizeof(int),1,fp);
-        fout<<spverts<<endl;
-        spvertices=new float[spverts*3];
-        spuvs=new float[spverts*2];
-        spnormals=new float[spverts*3];
-        sptangent =new float[spverts*3];
-        for(int i=0; i<spverts; i++)
-        {
-            fread(&spvertices[3*i],sizeof(float),1,fp);
-            fread(&spvertices[3*i+1],sizeof(float),1,fp);
-            fread(&spvertices[3*i+2],sizeof(float),1,fp);
-            fread(&spuvs[2*i],sizeof(float),1,fp);
-            fread(&spuvs[2*i+1],sizeof(float),1,fp);
-            fread(&spnormals[3*i],sizeof(float),1,fp);
-            fread(&spnormals[3*i+1],sizeof(float),1,fp);
-            fread(&spnormals[3*i+2],sizeof(float),1,fp);
+        fstream fout("ImporObj.log", ios::out);
+        // fopen_s(&fp,model,"r+b");
+        fp = fopen(model, "r+b");
+        if (!fp) return false;
+        fread(&spverts, sizeof(int), 1, fp);
+        fout << spverts << endl;
+        spvertices = new float[spverts * 3];
+        spuvs = new float[spverts * 2];
+        spnormals = new float[spverts * 3];
+        sptangent = new float[spverts * 3];
+        for (int i = 0; i < spverts; i++) {
+            fread(&spvertices[3 * i], sizeof(float), 1, fp);
+            fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
+            fread(&spvertices[3 * i + 2], sizeof(float), 1, fp);
+            fread(&spuvs[2 * i], sizeof(float), 1, fp);
+            fread(&spuvs[2 * i + 1], sizeof(float), 1, fp);
+            fread(&spnormals[3 * i], sizeof(float), 1, fp);
+            fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
+            fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
         }
-        for(int i=0; i<spverts*3; i++)
-        {
-            fread(&sptangent[i],sizeof(float),1,fp);
+        for (int i = 0; i < spverts * 3; i++) {
+            fread(&sptangent[i], sizeof(float), 1, fp);
         }
-        for(int i=0; i<spverts; i++)
-        {
-            fout<<i<<" ";
-            fout<<spvertices[3*i]<<",";
-            fout<<spvertices[3*i+1]<<",";
-            fout<<spvertices[3*i+2]<<",";
-            fout<<spuvs[2*i+0]<<",";
-            fout<<spuvs[2*i+1]<<",";
-            fout<<spnormals[3*i+0]<<",";
-            fout<<spnormals[3*i+1]<<",";
-            fout<<spnormals[3*i+2]<<",\n";
+        for (int i = 0; i < spverts; i++) {
+            fout << i << " ";
+            fout << spvertices[3 * i] << ",";
+            fout << spvertices[3 * i + 1] << ",";
+            fout << spvertices[3 * i + 2] << ",";
+            fout << spuvs[2 * i + 0] << ",";
+            fout << spuvs[2 * i + 1] << ",";
+            fout << spnormals[3 * i + 0] << ",";
+            fout << spnormals[3 * i + 1] << ",";
+            fout << spnormals[3 * i + 2] << ",\n";
         }
-        //vertices[0]=f;
-        fread(&spfaces,sizeof(int),1,fp);
-        fout<<"\n"<<spfaces<<endl;
-        spindices=new int[spfaces*3];
-        for(int i=0; i<spfaces; i++)
-        {
-            fread(&spindices[3*i],sizeof(int),1,fp);
-            fread(&spindices[3*i+1],sizeof(int),1,fp);
-            fread(&spindices[3*i+2],sizeof(int),1,fp);
+        // vertices[0]=f;
+        fread(&spfaces, sizeof(int), 1, fp);
+        fout << "\n" << spfaces << endl;
+        spindices = new int[spfaces * 3];
+        for (int i = 0; i < spfaces; i++) {
+            fread(&spindices[3 * i], sizeof(int), 1, fp);
+            fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
+            fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
         }
         fclose(fp);
-        for(int i=0; i<spfaces; i++)
-        {
-            fout<<spindices[3*i]<<",";
-            fout<<spindices[3*i+1]<<","<<spindices[3*i+2]<<endl;
+        for (int i = 0; i < spfaces; i++) {
+            fout << spindices[3 * i] << ",";
+            fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2] << endl;
         }
         fout.close();
-    }
-    catch(const std::bad_alloc&)
-    {
+    } catch (const std::bad_alloc&) {
         printf("\nError creating make_shared<Mesh>");
         return false;
     }
 
-    //ñîçäà¸ì áóôôåð, â êîòîðîì áóäåì õðàíèòü âñ¸
-    glGenBuffers(1,&VBO);
-    glBindBuffer(GL_ARRAY_BUFFER,VBO);
-    //ñîçäà¸ì áóôôåð
-    glBufferData(GL_ARRAY_BUFFER,sizeof(float)*(3+3+2+3)*(spverts),nullptr,GL_STATIC_DRAW);
-    //çàãðóæàåì âåðøèíû â áóôôåð
-    glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(float)*3*spverts,spvertices);
-    //íîðìàëè
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*3*spverts,sizeof(float)*3*spverts,spnormals);
-    //òåêñòóðíûå êîîðäèíàòû
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*6*spverts,sizeof(float)*2*spverts,spuvs);
-    //òàíãåíò
-    glBufferSubData(GL_ARRAY_BUFFER,sizeof(float)*8*spverts,sizeof(float)*3*spverts,sptangent);
+    //ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼ Ð±ÑƒÑ„Ñ„ÐµÑ€, Ð² ÐºÐ¾Ñ‚Ð¾Ñ€Ð¾Ð¼ Ð±ÑƒÐ´ÐµÐ¼ Ñ…Ñ€Ð°Ð½Ð¸Ñ‚ÑŒ Ð²ÑÑ‘
+    glGenBuffers(1, &VBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    //ÑÐ¾Ð·Ð´Ð°Ñ‘Ð¼ Ð±ÑƒÑ„Ñ„ÐµÑ€
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3 + 3 + 2 + 3) * (spverts),
+                 nullptr, GL_STATIC_DRAW);
+    //Ð·Ð°Ð³Ñ€ÑƒÐ¶Ð°ÐµÐ¼ Ð²ÐµÑ€ÑˆÐ¸Ð½Ñ‹ Ð² Ð±ÑƒÑ„Ñ„ÐµÑ€
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
+                    spvertices);
+    //Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * spverts,
+                    sizeof(float) * 3 * spverts, spnormals);
+    //Ñ‚ÐµÐºÑÑ‚ÑƒÑ€Ð½Ñ‹Ðµ ÐºÐ¾Ð¾Ñ€Ð´Ð¸Ð½Ð°Ñ‚Ñ‹
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * spverts,
+                    sizeof(float) * 2 * spverts, spuvs);
+    //Ñ‚Ð°Ð½Ð³ÐµÐ½Ñ‚
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * spverts,
+                    sizeof(float) * 3 * spverts, sptangent);
 
-    //ïðèâÿçûâàåì èíäåêñû ê áóôôåðó
-    glGenBuffers(1,&IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,sizeof(int)*3*spfaces,spindices,GL_STATIC_DRAW);
+    //Ð¿Ñ€Ð¸Ð²ÑÐ·Ñ‹Ð²Ð°ÐµÐ¼ Ð¸Ð½Ð´ÐµÐºÑÑ‹ Ðº Ð±ÑƒÑ„Ñ„ÐµÑ€Ñƒ
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
+                 GL_STATIC_DRAW);
 
-    positionID=	shaderProgram->GetAttribLocation("s_vPosition");
-    normalID=	shaderProgram->GetAttribLocation("s_vNormal");
-    uvID=		shaderProgram->GetAttribLocation("s_vUV");
-    tangentID=	shaderProgram->GetAttribLocation("s_vTangent");
-    //íàõîäèì ïîçèöèè uniform-ïåðåìåííûõ
-    gWorldID=	shaderProgram->GetUniformLocation("gWorld");
-    rotateID=	shaderProgram->GetUniformLocation("mRotate");//âðàùåíèå îáúåêòà
+    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    normalID = shaderProgram->GetAttribLocation("s_vNormal");
+    uvID = shaderProgram->GetAttribLocation("s_vUV");
+    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
+    //Ð½Ð°Ñ…Ð¾Ð´Ð¸Ð¼ Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ uniform-Ð¿ÐµÑ€ÐµÐ¼ÐµÐ½Ð½Ñ‹Ñ…
+    gWorldID = shaderProgram->GetUniformLocation("gWorld");
+    rotateID = shaderProgram->GetUniformLocation("mRotate");  //Ð²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ðµ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°
 
-
-    for(int i=0; i<3; i++)
-    {
-        position[i]=0;
-        rotation[i]=0;
-        scale[i]=1;
+    for (int i = 0; i < 3; i++) {
+        position[i] = 0;
+        rotation[i] = 0;
+        scale[i] = 1;
     }
 
-    //óáèðàåì çà ñîáîé
+    //ÑƒÐ±Ð¸Ñ€Ð°ÐµÐ¼ Ð·Ð° ÑÐ¾Ð±Ð¾Ð¹
     delete[] spvertices;
     delete[] spuvs;
     delete[] spnormals;
@@ -153,66 +143,57 @@ bool Mesh::Init(shared_ptr<Material> _mat,const char* model)
 
     return true;
 }
-void Mesh::Render(Camera* cam)
-{
-
-    Assistant TM,TM2;//TM - Äëÿ îáúåêòà, 2- äëÿ íîðìàëè îáúåêòà, 3 - äëÿ ïîçèöèè êàìåðà äëÿ ñïåêóëÿðà
-    TM.Scale(scale[0],scale[1],scale[2]);
-    TM.WorldPos(position[0],position[1],position[2]);
-    TM.Rotate(rotation[0],rotation[1],rotation[2]);
-    TM2.Rotate(rotation[0],rotation[1],rotation[2]);
-    TM.RotateOverVector( rv,rPhi);
-    TM2.RotateOverVector( rv,rPhi);
+void Mesh::Render(Camera* cam) {
+    Assistant TM, TM2;  // TM - Ð”Ð»Ñ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°, 2- Ð´Ð»Ñ Ð½Ð¾Ñ€Ð¼Ð°Ð»Ð¸ Ð¾Ð±ÑŠÐµÐºÑ‚Ð°, 3 - Ð´Ð»Ñ
+                        // Ð¿Ð¾Ð·Ð¸Ñ†Ð¸Ð¸ ÐºÐ°Ð¼ÐµÑ€Ð° Ð´Ð»Ñ ÑÐ¿ÐµÐºÑƒÐ»ÑÑ€Ð°
+    TM.Scale(scale[0], scale[1], scale[2]);
+    TM.WorldPos(position[0], position[1], position[2]);
+    TM.Rotate(rotation[0], rotation[1], rotation[2]);
+    TM2.Rotate(rotation[0], rotation[1], rotation[2]);
+    TM.RotateOverVector(rv, rPhi);
+    TM2.RotateOverVector(rv, rPhi);
 
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(),cam->GetWidth(),cam->GetHeight(), cam->GetZNear(), cam->GetZFar());
+    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
+                          cam->GetZNear(), cam->GetZFar());
 
     mat->Use();
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,nullptr);
-    glVertexAttribPointer(normalID,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(float)*3*spverts));
-    glVertexAttribPointer(uvID,2,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(float)*6*spverts));
-    glVertexAttribPointer(tangentID,3,GL_FLOAT,GL_FALSE,0,BUFFER_OFFSET(sizeof(float)*8*spverts));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,IBO);
-
+    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 3 * spverts));
+    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 6 * spverts));
+    glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 8 * spverts));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSR());
-    glUniformMatrix4fv(rotateID, 1, GL_TRUE,(const GLfloat*)TM2.GetRotate());//âðàùåíèå ìîäåëè
-
+    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
+                       (const GLfloat*)TM2.GetRotate());  //Ð²Ñ€Ð°Ñ‰ÐµÐ½Ð¸Ðµ Ð¼Ð¾Ð´ÐµÐ»Ð¸
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);
     glEnableVertexAttribArray(uvID);
     glEnableVertexAttribArray(tangentID);
-    glDrawElements(GL_TRIANGLES,spfaces*3,GL_UNSIGNED_INT,nullptr);
+    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(positionID);
     glDisableVertexAttribArray(normalID);
     glDisableVertexAttribArray(uvID);
     glDisableVertexAttribArray(tangentID);
 }
 
-
-void Mesh::SetVectorRotate(Vector3f v, float phi)
-{
+void Mesh::SetVectorRotate(Vector3f v, float phi) {
     rPhi = phi;
     rv = v;
 }
 
-int Mesh::GetNumFaces()
-{
-    return spfaces;
-}
+int Mesh::GetNumFaces() { return spfaces; }
 
-int Mesh::GetNumVerts()
-{
-    return spverts;
-}
+int Mesh::GetNumVerts() { return spverts; }
 
-void Mesh::SetTexture(GLuint textureUnit)
-{
-    shadowMap=textureUnit;
-}
+void Mesh::SetTexture(GLuint textureUnit) { shadowMap = textureUnit; }
 
 /*shared_ptr<Shader> Mesh::GetShader()
 {

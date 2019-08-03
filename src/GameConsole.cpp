@@ -1,16 +1,11 @@
 #include "GameConsole.h"
 
-GameConsole::GameConsole()
-{
-    //ctor
+GameConsole::GameConsole() {
+    // ctor
 }
 
-GameConsole::~GameConsole()
-{
-    //dtor
+GameConsole::~GameConsole() {
+    // dtor
 }
 
-void GameConsole::Print(std::string str)
-{
-    outFunction(str);
-}
+void GameConsole::Print(std::string str) { outFunction(str); }

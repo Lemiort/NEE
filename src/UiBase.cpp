@@ -1,11 +1,9 @@
 #include "UiBase.h"
 
-UiBase::UiBase()
-{
-    //ctor
+UiBase::UiBase() {
+    // ctor
 }
 
-UiBase::~UiBase()
-{
-    //dtor
+UiBase::~UiBase() {
+    // dtor
 }

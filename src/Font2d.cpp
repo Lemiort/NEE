@@ -1,262 +1,239 @@
 #include "Font2d.h"
 
-Character2d::Character2d()
-{
-}
+Character2d::Character2d() {}
 
-Character2d::~Character2d()
-{
+Character2d::~Character2d() {}
 
-}
-
-bool Character2d::Init(shared_ptr<Material> _mat, string _fileName)
-{
-    mesh.Init(_mat,"Models/quad2x2front.ho3d");
+bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
+    mesh.Init(_mat, "Models/quad2x2front.ho3d");
     this->mat = _mat;
 
-    //TODO сделать загрузку шрифта
+    // TODO СЃРґРµР»Р°С‚СЊ Р·Р°РіСЂСѓР·РєСѓ С€СЂРёС„С‚Р°
     fileName = _fileName;
 
-    //открываем файл шрифта на чтение
+    //РѕС‚РєСЂС‹РІР°РµРј С„Р°Р№Р» С€СЂРёС„С‚Р° РЅР° С‡С‚РµРЅРёРµ
     fstream fin;
-    fin.open(fileName.c_str(),ios::in);
-    //временная переменная для чтения
+    fin.open(fileName.c_str(), ios::in);
+    //РІСЂРµРјРµРЅРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ С‡С‚РµРЅРёСЏ
     string inStr;
 
-    //временная переменная для загрузки текстуры
+    //РІСЂРµРјРµРЅРЅР°СЏ РїРµСЂРµРјРµРЅРЅР°СЏ РґР»СЏ Р·Р°РіСЂСѓР·РєРё С‚РµРєСЃС‚СѓСЂС‹
     string imgFilename;
 
-    //флаг того, что пошли данные о кернинге
-    bool kerning=false;
-    //флаг того, что пошли данные о символах
-    bool data=false;
-    while(1)
-    {
-        //читаем построчно
+    //С„Р»Р°Рі С‚РѕРіРѕ, С‡С‚Рѕ РїРѕС€Р»Рё РґР°РЅРЅС‹Рµ Рѕ РєРµСЂРЅРёРЅРіРµ
+    bool kerning = false;
+    //С„Р»Р°Рі С‚РѕРіРѕ, С‡С‚Рѕ РїРѕС€Р»Рё РґР°РЅРЅС‹Рµ Рѕ СЃРёРјРІРѕР»Р°С…
+    bool data = false;
+    while (1) {
+        //С‡РёС‚Р°РµРј РїРѕСЃС‚СЂРѕС‡РЅРѕ
         getline(fin, inStr);
-        //пока не достигнем конца файлв
-        if(!fin.eof())
-        {
-            //чтение данных
-             if(data)
-            {
-                //поток для конвертации
+        //РїРѕРєР° РЅРµ РґРѕСЃС‚РёРіРЅРµРј РєРѕРЅС†Р° С„Р°Р№Р»РІ
+        if (!fin.eof()) {
+            //С‡С‚РµРЅРёРµ РґР°РЅРЅС‹С…
+            if (data) {
+                //РїРѕС‚РѕРє РґР»СЏ РєРѕРЅРІРµСЂС‚Р°С†РёРё
                 stringstream sstr;
                 //???
                 unsigned int t1[6];
                 //???
                 int t2[2];
-                sstr<<inStr;
+                sstr << inStr;
                 unsigned int code;
-                sstr>>code;
-                sstr>>t1[0]>>t1[1]>>t1[2]>>t1[3]>>t2[0]>>t2[1]>>t1[4]>>t1[5];
-                //инициализируем данные о новой букве
-                FontCharacter temp2=FontCharacter(t1[0],t1[1],t1[2],t1[3],t2[0],t2[1],t1[4],t1[5]);
-                //сохраняем данные о букве в список
-                fontInfo.insert( pair<unsigned int,FontCharacter>(code,temp2) ) ;
+                sstr >> code;
+                sstr >> t1[0] >> t1[1] >> t1[2] >> t1[3] >> t2[0] >> t2[1] >>
+                    t1[4] >> t1[5];
+                //РёРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РґР°РЅРЅС‹Рµ Рѕ РЅРѕРІРѕР№ Р±СѓРєРІРµ
+                FontCharacter temp2 = FontCharacter(t1[0], t1[1], t1[2], t1[3],
+                                                    t2[0], t2[1], t1[4], t1[5]);
+                //СЃРѕС…СЂР°РЅСЏРµРј РґР°РЅРЅС‹Рµ Рѕ Р±СѓРєРІРµ РІ СЃРїРёСЃРѕРє
+                fontInfo.insert(pair<unsigned int, FontCharacter>(code, temp2));
             }
-            //заполняем инфу о кернинге
-            if(kerning)
-            {
+            //Р·Р°РїРѕР»РЅСЏРµРј РёРЅС„Сѓ Рѕ РєРµСЂРЅРёРЅРіРµ
+            if (kerning) {
                 stringstream sstr;
-                sstr<<inStr;
+                sstr << inStr;
                 uint16_t code1;
-                sstr>>code1;
+                sstr >> code1;
                 uint16_t code2;
                 float f1;
-                sstr>>code2>>f1;
-                uint32_t code=((uint32_t)code1<<16)|((uint32_t)code2);
-                //сохраняем данные о кернинге
-                kerningInfo.insert( pair<uint32_t,float>(code,f1));
+                sstr >> code2 >> f1;
+                uint32_t code = ((uint32_t)code1 << 16) | ((uint32_t)code2);
+                //СЃРѕС…СЂР°РЅСЏРµРј РґР°РЅРЅС‹Рµ Рѕ РєРµСЂРЅРёРЅРіРµ
+                kerningInfo.insert(pair<uint32_t, float>(code, f1));
             }
-            //ищем название текстуры
-            int t= inStr.find("textures: ");
+            //РёС‰РµРј РЅР°Р·РІР°РЅРёРµ С‚РµРєСЃС‚СѓСЂС‹
+            int t = inStr.find("textures: ");
             string temp("textures: ");
-            //нашли название текстуры
-            if(t==0)
-            {
-                imgFilename=string("Fonts/")+string(inStr,temp.length());
-                printf("\nFont image is %s",imgFilename.c_str());
+            //РЅР°С€Р»Рё РЅР°Р·РІР°РЅРёРµ С‚РµРєСЃС‚СѓСЂС‹
+            if (t == 0) {
+                imgFilename = string("Fonts/") + string(inStr, temp.length());
+                printf("\nFont image is %s", imgFilename.c_str());
             }
 
-            //ищем название шрифта
-            t= inStr.find("px");
-            if(t>=0)
-            {
-                int t2= inStr.find(" ");
-                fontName=string(inStr,0,t2);
+            //РёС‰РµРј РЅР°Р·РІР°РЅРёРµ С€СЂРёС„С‚Р°
+            t = inStr.find("px");
+            if (t >= 0) {
+                int t2 = inStr.find(" ");
+                fontName = string(inStr, 0, t2);
                 stringstream sstr;
-                temp=string(inStr,t2,t-t2);
-                sstr<<temp;
-                sstr>>fontHeight;
+                temp = string(inStr, t2, t - t2);
+                sstr << temp;
+                sstr >> fontHeight;
 
-                //флаг о том, что сейчас будут читаться данные
-                data=true;
-                printf("\nFont name is %s",fontName.c_str());
-                printf("\nFont height is %d",fontHeight);
+                //С„Р»Р°Рі Рѕ С‚РѕРј, С‡С‚Рѕ СЃРµР№С‡Р°СЃ Р±СѓРґСѓС‚ С‡РёС‚Р°С‚СЊСЃСЏ РґР°РЅРЅС‹Рµ
+                data = true;
+                printf("\nFont name is %s", fontName.c_str());
+                printf("\nFont height is %d", fontHeight);
             }
-            //ищем информацию о том, что сейчас будет кернинг
-            t= inStr.find("kerning pairs:");
-            if(t>=0)
-            {
-                //перестали читать данные
-                data=false;
-                //начали читать о парах кернинга
-                kerning=true;
+            //РёС‰РµРј РёРЅС„РѕСЂРјР°С†РёСЋ Рѕ С‚РѕРј, С‡С‚Рѕ СЃРµР№С‡Р°СЃ Р±СѓРґРµС‚ РєРµСЂРЅРёРЅРі
+            t = inStr.find("kerning pairs:");
+            if (t >= 0) {
+                //РїРµСЂРµСЃС‚Р°Р»Рё С‡РёС‚Р°С‚СЊ РґР°РЅРЅС‹Рµ
+                data = false;
+                //РЅР°С‡Р°Р»Рё С‡РёС‚Р°С‚СЊ Рѕ РїР°СЂР°С… РєРµСЂРЅРёРЅРіР°
+                kerning = true;
             }
 
-        }
-        else
+        } else
             break;
         inStr.clear();
-    }//заполнили данные о шрифте
-
+    }  //Р·Р°РїРѕР»РЅРёР»Рё РґР°РЅРЅС‹Рµ Рѕ С€СЂРёС„С‚Рµ
 
     GLuint texBufferID;
-    //создаём текстуру
-    texBufferID=SOIL_load_OGL_texture
-                (
-                    (char*)imgFilename.c_str(),
-                    SOIL_LOAD_AUTO,
-                    SOIL_CREATE_NEW_ID,
-                    SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB | SOIL_FLAG_COMPRESS_TO_DXT
-                );
-    //загружаем в материал
+    //СЃРѕР·РґР°С‘Рј С‚РµРєСЃС‚СѓСЂСѓ
+    texBufferID = SOIL_load_OGL_texture(
+        (char*)imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
+        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
+            SOIL_FLAG_COMPRESS_TO_DXT);
+    //Р·Р°РіСЂСѓР¶Р°РµРј РІ РјР°С‚РµСЂРёР°Р»
     shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
-    _mat->SetColorTexture( temp);
+    _mat->SetColorTexture(temp);
 
-    //получаем размеры изображения
-    FILE* imageFile=fopen(imgFilename.c_str(), "rb");
+    //РїРѕР»СѓС‡Р°РµРј СЂР°Р·РјРµСЂС‹ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ
+    FILE* imageFile = fopen(imgFilename.c_str(), "rb");
     char buffer2[4];
 
-    //загружаем заголовочник
-    //TODO разобраться в этой хуите
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nBuffer 0 %x",buffer);
-    //printf("\nBuffer 0 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nBuffer 1 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nIHDR chank");
-    //printf("\nBuffer 2 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nBuffer 3 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nBuffer 4 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    //Р·Р°РіСЂСѓР¶Р°РµРј Р·Р°РіРѕР»РѕРІРѕС‡РЅРёРє
+    // TODO СЂР°Р·РѕР±СЂР°С‚СЊСЃСЏ РІ СЌС‚РѕР№ С…СѓРёС‚Рµ
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nBuffer 0 %x",buffer);
+    // printf("\nBuffer 0 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nBuffer 1 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nIHDR chank");
+    // printf("\nBuffer 2 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nBuffer 3 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nBuffer 4 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
 
-    //считаем собсно ширину
-    imageWidth=((uint32_t)buffer2[3]<<0)|((uint32_t)buffer2[2]<<8)|((uint32_t)buffer2[1]<<16)|((uint32_t)buffer2[0]<<24);
-    printf("\n width=%d",imageWidth);
+    //СЃС‡РёС‚Р°РµРј СЃРѕР±СЃРЅРѕ С€РёСЂРёРЅСѓ
+    imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
+                 ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
+    printf("\n width=%d", imageWidth);
 
-    //считаем высоту
-    fread(&buffer2,1,4,imageFile);
-    //printf("\nBuffer 5 %x %x %x %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    imageHeight=((uint32_t)buffer2[3]<<0)|((uint32_t)buffer2[2]<<8)|((uint32_t)buffer2[1]<<16)|((uint32_t)buffer2[0]<<24);
-    printf("\n height=%d",imageHeight);
+    //СЃС‡РёС‚Р°РµРј РІС‹СЃРѕС‚Сѓ
+    fread(&buffer2, 1, 4, imageFile);
+    // printf("\nBuffer 5 %x %x %x
+    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
+    imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
+                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
+    printf("\n height=%d", imageHeight);
 
-    //конверсия пикселя в относительные координаты
-    pkx=1.0f/(float)imageWidth;
-    pky=1.0f/(float)imageHeight;
+    //РєРѕРЅРІРµСЂСЃРёСЏ РїРёРєСЃРµР»СЏ РІ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹
+    pkx = 1.0f / (float)imageWidth;
+    pky = 1.0f / (float)imageHeight;
 
     fclose(imageFile);
 
     return true;
 }
 
-float Character2d::GetAspectRatio()
-{
-    return aratio;
+float Character2d::GetAspectRatio() { return aratio; }
+
+void Character2d::SetAspectRatio(int _width, int _height) {
+    aratio = (float)_height / (float)_width;
+    kx = (float)imageWidth / (float)_width;
+    ky = (float)imageHeight / (float)_height;
 }
 
-void Character2d::SetAspectRatio(int _width, int _height)
-{
-    aratio= (float)_height/(float)_width;
-    kx=(float)imageWidth/(float)_width;
-    ky=(float)imageHeight/(float)_height;
-}
-
-void Character2d::Render(Camera* cam)
-{
+void Character2d::Render(Camera* cam) {
     SetAspectRatio(cam->GetWidth(), cam->GetHeight());
     this->mat->Use();
 
-    //TODO идея: редактировать текстурные координаты в шейдере
-     /*float vertices[]={0.0f,(-2*dx)*realHeight*ky,
-					0.0f,0.0f,
-					(2*dx)*realWidth*kx,(-2*dx)*realHeight*ky,
-					(2*dx)*realWidth*kx,0.0f};
+    // TODO РёРґРµСЏ: СЂРµРґР°РєС‚РёСЂРѕРІР°С‚СЊ С‚РµРєСЃС‚СѓСЂРЅС‹Рµ РєРѕРѕСЂРґРёРЅР°С‚С‹ РІ С€РµР№РґРµСЂРµ
+    /*float vertices[]={0.0f,(-2*dx)*realHeight*ky,
+                                       0.0f,0.0f,
+                                       (2*dx)*realWidth*kx,(-2*dx)*realHeight*ky,
+                                       (2*dx)*realWidth*kx,0.0f};
 
-    float uvs[]={0.0f,-realHeight,
-                      0.0f,0.0f,
-                      realWidth,-realHeight,
-					  realWidth,0.0f};*/
+   float uvs[]={0.0f,-realHeight,
+                     0.0f,0.0f,
+                     realWidth,-realHeight,
+                                         realWidth,0.0f};*/
 
-    //mesh->SetScale()
+    // mesh->SetScale()
 }
 
-
-float Character2d::GetHeight(unsigned int c)
-{
-    FontCharacter temp=fontInfo.at(c);
-    float realHeight=(float)temp.height/(float)imageHeight;
-    float dx=1.0f;
-    return (2*dx)*realHeight*ky;
+float Character2d::GetHeight(unsigned int c) {
+    FontCharacter temp = fontInfo.at(c);
+    float realHeight = (float)temp.height / (float)imageHeight;
+    float dx = 1.0f;
+    return (2 * dx) * realHeight * ky;
 }
 
-float Character2d::GetWidth(unsigned int c)
-{
-    FontCharacter temp=fontInfo.at(c);
-    float realWidth=(float)temp.width/(float)imageWidth;
-    float dx=1.0f;
-    return (2*dx)*realWidth*kx;
+float Character2d::GetWidth(unsigned int c) {
+    FontCharacter temp = fontInfo.at(c);
+    float realWidth = (float)temp.width / (float)imageWidth;
+    float dx = 1.0f;
+    return (2 * dx) * realWidth * kx;
 }
 
-float Character2d::GetSpaceWidth()
-{
-    FontCharacter temp=fontInfo.at(34);
-    float realWidth=(float)temp.origW/(float)imageWidth;
-    float dx=1.0f;
-    return (2*dx)*realWidth*kx;
+float Character2d::GetSpaceWidth() {
+    FontCharacter temp = fontInfo.at(34);
+    float realWidth = (float)temp.origW / (float)imageWidth;
+    float dx = 1.0f;
+    return (2 * dx) * realWidth * kx;
 }
 
-int Character2d::GetFontHeight()
-{
-    return fontHeight;
-}
+int Character2d::GetFontHeight() { return fontHeight; }
 
-
-void Character2d::SetCharacter(unsigned int c)
-{
+void Character2d::SetCharacter(unsigned int c) {
     currentCharacter = c;
 
-    //TODO масштабирование???
-    position[2]=position[2]/(float)fontHeight;
-    temp = FontCharacter(0,0,0,0,0,0,0,0);
-    //ищем инфу о текущем символе
-    try
-    {
-        temp=fontInfo.at(currentCharacter);
-    }
-    catch(const std::out_of_range& oor)
-    {
-        //printf("\n char is out of range");
-        characterLength = Vector2f(-1.0f,-1.0f);
+    // TODO РјР°СЃС€С‚Р°Р±РёСЂРѕРІР°РЅРёРµ???
+    position[2] = position[2] / (float)fontHeight;
+    temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
+    //РёС‰РµРј РёРЅС„Сѓ Рѕ С‚РµРєСѓС‰РµРј СЃРёРјРІРѕР»Рµ
+    try {
+        temp = fontInfo.at(currentCharacter);
+    } catch (const std::out_of_range& oor) {
+        // printf("\n char is out of range");
+        characterLength = Vector2f(-1.0f, -1.0f);
         return;
     }
-    //ширина и высота в uv-координатах
-    realWidth=(float)temp.width/(float)imageWidth;
-    realHeight=(float)temp.height/(float)imageHeight;
-    dx=1.0f;
-    //позиции на текстуре
-    xOffset=position[2]*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
-    yOffset=position[2]*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;
+    //С€РёСЂРёРЅР° Рё РІС‹СЃРѕС‚Р° РІ uv-РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+    realWidth = (float)temp.width / (float)imageWidth;
+    realHeight = (float)temp.height / (float)imageHeight;
+    dx = 1.0f;
+    //РїРѕР·РёС†РёРё РЅР° С‚РµРєСЃС‚СѓСЂРµ
+    xOffset =
+        position[2] * (2 * dx) * kx * (float)temp.xOffset / (float)imageWidth;
+    yOffset =
+        position[2] * (-2 * dx) * ky * (float)temp.yOffset / (float)imageHeight;
 
-    //TODO считаем длину символа в текстурных координатах??
-    characterLength = Vector2f((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
+    // TODO СЃС‡РёС‚Р°РµРј РґР»РёРЅСѓ СЃРёРјРІРѕР»Р° РІ С‚РµРєСЃС‚СѓСЂРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…??
+    characterLength = Vector2f((2 * dx) * realWidth * kx * position[2],
+                               (2 * dx) * realHeight * ky);
 }
 
-Vector2f Character2d::GetLastCharacterLength()
-{
-    //return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
+Vector2f Character2d::GetLastCharacterLength() {
+    // return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
     return characterLength;
 }

@@ -1,10 +1,9 @@
 #ifndef PARTICLEUPDATEASSISTANT_H
 #define PARTICLEUPDATEASSISTANT_H
-#include "GL/glew.h"
 #include <EngineCommon.h>
+#include "GL/glew.h"
 
-class ParticleUpdateAssistant
-{
+class ParticleUpdateAssistant {
 public:
     ParticleUpdateAssistant();
     virtual ~ParticleUpdateAssistant();
@@ -25,7 +24,6 @@ public:
 
     void SetSecondaryShellLifetime(float Lifetime);
 
-
 protected:
 private:
     GLuint shaderProgramID;
@@ -38,4 +36,4 @@ private:
     GLuint m_secondaryShellLifetimeLocation;
 };
 
-#endif // PARTICLEUPDATEASSISTANT_H
+#endif  // PARTICLEUPDATEASSISTANT_H

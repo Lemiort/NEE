@@ -1,161 +1,148 @@
 #include "Material.h"
-#include <cstdlib>
 #include <util.h>
+#include <cstdlib>
 #include <iostream>
 
-Material::Material()
-{
-    //ctor
+Material::Material() {
+    // ctor
 
     colorMap = make_shared<Texture2D>();
-    auto tempMap=colorMap;
-    tempMap->Load( "Textures/checker.tga" );
+    auto tempMap = colorMap;
+    tempMap->Load("Textures/checker.tga");
 
     normalMap = make_shared<Texture2D>();
-    normalMap->Load( "Textures/normal_map.tga" );
+    normalMap->Load("Textures/normal_map.tga");
 
     specularMap = make_shared<Texture2D>();
-    specularMap->Load( "Textures/specular.tga" );
+    specularMap->Load("Textures/specular.tga");
 
     shadowMap = make_shared<Texture2D>();
     shadowMap->Load("Textures/white.png");
 
-    //абстрактная текстура
-    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS,&max_texture_units);
-    texturesID =  new GLuint[max_texture_units];
+    //Р°Р±СЃС‚СЂР°РєС‚РЅР°СЏ С‚РµРєСЃС‚СѓСЂР°
+    glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
+    texturesID = new GLuint[max_texture_units];
     abstractSamplersID = new GLuint[max_texture_units];
 
     abstractMap = make_shared<AbstractTexture>();
 
-    for(int i = 0; i < max_texture_units; i++)
-    {
+    for (int i = 0; i < max_texture_units; i++) {
         abstractSamplersID[i] = 0;
         texturesID[i] = 0;
     }
-    //std::cout<<"\n Max texture units is "<<max_texture_units;
+    // std::cout<<"\n Max texture units is "<<max_texture_units;
 }
 
-Material::~Material()
-{
-    //dtor
+Material::~Material() {
+    // dtor
     delete[] texturesID;
     delete[] abstractSamplersID;
 }
 
-bool Material::Init(shared_ptr<Shader> _sh)
-{
-    if(_sh==false)
-        return false;
-    shaderProgram=_sh;
+bool Material::Init(shared_ptr<Shader> _sh) {
+    if (_sh == false) return false;
+    shaderProgram = _sh;
     shaderProgram->Use();
 
-    //установка значение по умолчанию
+    //СѓСЃС‚Р°РЅРѕРІРєР° Р·РЅР°С‡РµРЅРёРµ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 
-    //загружем это в шейдер
+    //Р·Р°РіСЂСѓР¶РµРј СЌС‚Рѕ РІ С€РµР№РґРµСЂ
 
-    // делаем активным текстурный юнит 0
+    // РґРµР»Р°РµРј Р°РєС‚РёРІРЅС‹Рј С‚РµРєСЃС‚СѓСЂРЅС‹Р№ СЋРЅРёС‚ 0
     colorMap->Bind(GL_TEXTURE0);
     std::string colName("colTexSampler");
-    colTexID =	shaderProgram->GetUniformLocation(colName.c_str());
-    std::cout<<"\n color sampler num is "<<colTexID;
-    //говорим шейдеру, чтоб использовал в качестве текстуры №0
+    colTexID = shaderProgram->GetUniformLocation(colName.c_str());
+    std::cout << "\n color sampler num is " << colTexID;
+    //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР± РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ в„–0
     glUniform1i(colTexID, 0);
 
     normalMap->Bind(GL_TEXTURE1);
-    normSamplerID =	shaderProgram->GetUniformLocation("normTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №1
+    normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
+    //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР± РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ в„–1
     glUniform1i(normSamplerID, 1);
 
     specularMap->Bind(GL_TEXTURE2);
-    specSamplerID =	shaderProgram->GetUniformLocation("specTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №2
+    specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
+    //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР± РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ в„–2
     glUniform1i(specSamplerID, 2);
 
     shadowMap->Bind(GL_TEXTURE3);
-    shadowSamplerID =	shaderProgram->GetUniformLocation("shadowTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №3
+    shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
+    //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР± РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ в„–3
     glUniform1i(shadowSamplerID, 3);
 
-
     std::string abstractSamplerName("gSampler");
-    for(GLint i = 4; i < max_texture_units; i++)
-    {
-            abstractSamplersID[i] =	shaderProgram->GetUniformLocation((abstractSamplerName+ConvertToString(i)).c_str());
-            //std::cout<<"\nSampler name is "<<(abstractSamplerName+ConvertToString(i)).c_str();
+    for (GLint i = 4; i < max_texture_units; i++) {
+        abstractSamplersID[i] = shaderProgram->GetUniformLocation(
+            (abstractSamplerName + ConvertToString(i)).c_str());
+        // std::cout<<"\nSampler name is
+        // "<<(abstractSamplerName+ConvertToString(i)).c_str();
     }
-
 
     return true;
 }
 
-void Material::Use()
-{
+void Material::Use() {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
-    glUniform1i(colTexID,0);//говорим шейдеру, чтобы использовал в качестве текстуры 0
+    glUniform1i(colTexID,
+                0);  //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ 0
 
     normalMap->Bind(GL_TEXTURE1);
-    // назначаем текстуру на активный текстурный юнит
-    glUniform1i(normSamplerID, 1);//говорим шейдеру, чтобы использовал в качестве текстуры 1
+    // РЅР°Р·РЅР°С‡Р°РµРј С‚РµРєСЃС‚СѓСЂСѓ РЅР° Р°РєС‚РёРІРЅС‹Р№ С‚РµРєСЃС‚СѓСЂРЅС‹Р№ СЋРЅРёС‚
+    glUniform1i(normSamplerID,
+                1);  //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ 1
 
     specularMap->Bind(GL_TEXTURE2);
-    // назначаем текстуру на активный текстурный юнит
-    glUniform1i(specSamplerID, 2);//говорим шейдеру, чтобы использовал в качестве текстуры 2
+    // РЅР°Р·РЅР°С‡Р°РµРј С‚РµРєСЃС‚СѓСЂСѓ РЅР° Р°РєС‚РёРІРЅС‹Р№ С‚РµРєСЃС‚СѓСЂРЅС‹Р№ СЋРЅРёС‚
+    glUniform1i(specSamplerID,
+                2);  //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ 2
 
     shadowMap->Bind(GL_TEXTURE3);
-    // назначаем текстуру на активный текстурный юнит
-    glUniform1i(shadowSamplerID, 3);//говорим шейдеру, чтобы использовал в качестве текстуры 3
+    // РЅР°Р·РЅР°С‡Р°РµРј С‚РµРєСЃС‚СѓСЂСѓ РЅР° Р°РєС‚РёРІРЅС‹Р№ С‚РµРєСЃС‚СѓСЂРЅС‹Р№ СЋРЅРёС‚
+    glUniform1i(shadowSamplerID,
+                3);  //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ 3
 
-    //начиная с 4го, лежат кастомные текстурные юниты
-    for(GLint i = 4; i < max_texture_units; i++)
-    {
-        if(texturesID[i] != 0)
-        {
+    //РЅР°С‡РёРЅР°СЏ СЃ 4РіРѕ, Р»РµР¶Р°С‚ РєР°СЃС‚РѕРјРЅС‹Рµ С‚РµРєСЃС‚СѓСЂРЅС‹Рµ СЋРЅРёС‚С‹
+    for (GLint i = 4; i < max_texture_units; i++) {
+        if (texturesID[i] != 0) {
             abstractMap->SetTexture(texturesID[i]);
-            abstractMap->Bind(GL_TEXTURE0+i);
-            //std::cout<<"\n\ntex set as "<<texturesID[i]<<" render at unit num "<<i<<"\n sampler num is "<<abstractSamplersID[i];
-            //std::cout<<"\n color sampler num is "<<colTexID;
-            //std::cout<<"\n norm sampler num is "<<normSamplerID;
+            abstractMap->Bind(GL_TEXTURE0 + i);
+            // std::cout<<"\n\ntex set as "<<texturesID[i]<<" render at unit num
+            // "<<i<<"\n sampler num is "<<abstractSamplersID[i]; std::cout<<"\n
+            // color sampler num is "<<colTexID; std::cout<<"\n norm sampler num
+            // is "<<normSamplerID;
 
-
-
-            // назначаем текстуру на активный текстурный юнит
-            glUniform1i(abstractSamplersID[i], i);//говорим шейдеру, чтобы использовал в качестве текстуры i
+            // РЅР°Р·РЅР°С‡Р°РµРј С‚РµРєСЃС‚СѓСЂСѓ РЅР° Р°РєС‚РёРІРЅС‹Р№ С‚РµРєСЃС‚СѓСЂРЅС‹Р№ СЋРЅРёС‚
+            glUniform1i(
+                abstractSamplersID[i],
+                i);  //РіРѕРІРѕСЂРёРј С€РµР№РґРµСЂСѓ, С‡С‚РѕР±С‹ РёСЃРїРѕР»СЊР·РѕРІР°Р» РІ РєР°С‡РµСЃС‚РІРµ С‚РµРєСЃС‚СѓСЂС‹ i
         }
     }
 }
 
-void Material::SetColorTexture( shared_ptr<Texture2D> _colorMap )
-{
+void Material::SetColorTexture(shared_ptr<Texture2D> _colorMap) {
     colorMap = _colorMap;
 }
 
-
-void Material::SetNormalTexture( shared_ptr<Texture2D> _normalMap )
-{
+void Material::SetNormalTexture(shared_ptr<Texture2D> _normalMap) {
     normalMap = _normalMap;
 }
 
-void Material::SetSpecularTexture( shared_ptr<Texture2D> _specularMap )
-{
+void Material::SetSpecularTexture(shared_ptr<Texture2D> _specularMap) {
     specularMap = _specularMap;
 }
 
-void Material::SetShadowTexture( shared_ptr<Texture2D> _shadowMap )
-{
+void Material::SetShadowTexture(shared_ptr<Texture2D> _shadowMap) {
     shadowMap = _shadowMap;
 }
 
-void Material::SetTexture(shared_ptr<Texture2D> _map, GLuint num)
-{
-    if(num <=3)
-        return;
-    texturesID[num]=_map->GetTextureID();
+void Material::SetTexture(shared_ptr<Texture2D> _map, GLuint num) {
+    if (num <= 3) return;
+    texturesID[num] = _map->GetTextureID();
 }
 
-void  Material::SetTexture(GLuint _map, GLuint num)
-{
-    if(num <= 3)
-        return;
-    texturesID[num]=_map;
+void Material::SetTexture(GLuint _map, GLuint num) {
+    if (num <= 3) return;
+    texturesID[num] = _map;
 }
