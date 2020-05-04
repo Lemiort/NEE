@@ -13,3 +13,6 @@ Also to compile you should point path to this libraries in C::B global variables
 * glfw-32bit
 * glfw-64bit
 You can use 32-bit or 64-bit libraries, or both on the discretion.
+
+conan remote add lemiort https://api.bintray.com/conan/lemiort/conan-public
+conan remote add bincrafters https://api.bintray.com/conan/bincrafters/public-conan

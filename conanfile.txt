@@ -3,7 +3,7 @@ glfw/3.2.1.20180327@bincrafters/stable
 glew/2.1.0@bincrafters/stable
 jsonformoderncpp/3.5.0@vthiery/stable
 glm/0.9.9.1@g-truc/stable
-soil/1.1.0@lemiort/development
+soil2/1.20@bincrafters/stable
 
 [generators]
 cmake
