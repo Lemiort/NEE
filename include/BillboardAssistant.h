@@ -1,17 +1,18 @@
 #ifndef BILLBOARDASSISTANT_H
 #define BILLBOARDASSISTANT_H
 #include <GL/glew.h>
-#include <util.h>
+
 #include "ShaderFunctions.h"
 #include "math_3d.h"
+#include "util.h"
 class BillboardAssistant {
 public:
     BillboardAssistant();
     virtual ~BillboardAssistant();
     virtual bool Init();
-    void SetVP(const Matrix4f& VP);
+    void SetVP(const glm::mat4& VP);
     void SetVP(const GLfloat* VP);
-    void SetCameraPosition(const Vector3f& Pos);
+    void SetCameraPosition(const glm::vec3& Pos);
     void SetColorTextureUnit(unsigned int TextureUnit);
     void SetBillboardSize(float BillboardSize);
 

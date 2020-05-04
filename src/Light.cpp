@@ -1,13 +1,13 @@
 #include "Light.h"
 #include <iomanip>
 
-void DirectionalLight::SetCol(Vector3f col) {
+void DirectionalLight::SetCol(glm::vec3 col) {
     color[0] = col.x;
     color[1] = col.y;
     color[2] = col.z;
 }
 
-void DirectionalLight::SetDir(Vector3f dir) {
+void DirectionalLight::SetDir(glm::vec3 dir) {
     direction[0] = dir.x;
     direction[1] = dir.y;
     direction[2] = dir.z;
@@ -35,18 +35,18 @@ void DirectionalLight::Render(Camera* cam) {
     mesh->Render(cam);
 }
 
-Vector3f DirectionalLight::GetDir() {
-    return Vector3f(direction[0], direction[1], direction[2]);
+glm::vec3 DirectionalLight::GetDir() {
+    return glm::vec3(direction[0], direction[1], direction[2]);
 }
-Vector3f DirectionalLight::GetCol() {
-    return Vector3f(color[0], color[1], color[2]);
+glm::vec3 DirectionalLight::GetCol() {
+    return glm::vec3(color[0], color[1], color[2]);
 }
 
 DirectionalLight::DirectionalLight() {}
 DirectionalLight::~DirectionalLight() {}
 
-Vector3f SpotLight::GetPos() {
-    return Vector3f(position[0], position[1], position[2]);
+glm::vec3 SpotLight::GetPos() {
+    return glm::vec3(position[0], position[1], position[2]);
 }
 
 SpotLight::SpotLight() {}
@@ -82,11 +82,11 @@ void SpotLight::Render(Camera* cam) {
     direction[2] = target[2] - position[2];
     direction[3] = 1;
 
-    Vector3f dir(direction[0], direction[1], direction[2]);
-    Vector3f proj(0, 1, 0);
-    Vector3f directionXY(direction[0], direction[1], 0);
-    Vector3f directionYZ(0, direction[1], direction[2]);
-    Vector3f directionXZ(direction[0], 0, direction[2]);
+    glm::vec3 dir(direction[0], direction[1], direction[2]);
+    glm::vec3 proj(0, 1, 0);
+    glm::vec3 directionXY(direction[0], direction[1], 0);
+    glm::vec3 directionYZ(0, direction[1], direction[2]);
+    glm::vec3 directionXZ(direction[0], 0, direction[2]);
 
     float xrot = 0, yrot = 0, zrot = 0;
 
@@ -95,7 +95,7 @@ void SpotLight::Render(Camera* cam) {
     // X axis
     {
         // get the pojection
-        Vector3f projYZ(0, proj.y, proj.z);
+        glm::vec3 projYZ(0, proj.y, proj.z);
 
         // calc rotation
         if (glm::cross(projYZ,directionYZ).x > 0)
@@ -104,14 +104,14 @@ void SpotLight::Render(Camera* cam) {
             xrot = glm::degrees(glm::angle(directionYZ, projYZ));
 
         // update up vector
-        proj = glm::rotate(proj,-xrot, Vector3f(1, 0, 0));
+        proj = glm::rotate(proj,-xrot, glm::vec3(1, 0, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
     }
 
     // Y axis
     if (proj != dir) {
         // get the pojection
-        Vector3f projXZ(proj.x, 0, proj.z);
+        glm::vec3 projXZ(proj.x, 0, proj.z);
 
         // calc the rotation
         if (glm::cross(projXZ,directionXZ).y > 0)
@@ -120,20 +120,20 @@ void SpotLight::Render(Camera* cam) {
             yrot = glm::degrees(glm::angle(directionXZ, projXZ));
 
         // update the up vector
-        proj = glm::rotate(proj,-yrot, Vector3f(0, 1, 0));
+        proj = glm::rotate(proj,-yrot, glm::vec3(0, 1, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
 
         // Z axis
         if (proj != dir) {
             // get the pojection
-            Vector3f projXY(proj.x, proj.y, 0);
+            glm::vec3 projXY(proj.x, proj.y, 0);
 
             // calc the rotation
             if (glm::cross(projXY,directionXY).z > 0)
                 zrot = glm::degrees(glm::angle(directionXY, projXY));
             else
                 zrot = -glm::degrees(glm::angle(directionXY, projXY));
-            proj = glm::rotate(proj,-zrot, Vector3f(0, 0, 1));
+            proj = glm::rotate(proj,-zrot, glm::vec3(0, 0, 1));
         }
     }
     cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
@@ -146,8 +146,8 @@ void SpotLight::Render(Camera* cam) {
     //=======================================================
 
     /*//==========решение на основе сферических координат=======
-    Vector3f sphericalDirection = ToSphericalCoordinates( dir );
-    Vector3f sphericalUp = ToSphericalCoordinates( Vector3f(0.0,
+    glm::vec3 sphericalDirection = ToSphericalCoordinates( dir );
+    glm::vec3 sphericalUp = ToSphericalCoordinates( glm::vec3(0.0,
                                                             1.0,
                                                             0.0) );
     mesh->SetRotate( sphericalDirection.y-sphericalUp.y,
@@ -156,7 +156,7 @@ void SpotLight::Render(Camera* cam) {
     //=========================================================*/
 
     //=====решение на основе поворота вокруг вектора============
-    // Vector3f rotateVector =  dir.Cross(proj);
+    // glm::vec3 rotateVector =  dir.Cross(proj);
     /*mesh->SetVectorRotate(rotateVector,
                           glm::angle(dir,proj));*/
     // mesh->SetVectorRotate(proj,
@@ -172,7 +172,7 @@ void SpotLight::Render(Camera* cam) {
     mesh->Render(cam);
 }
 
-void SpotLight::SetTarget(Vector3f _target) {
+void SpotLight::SetTarget(glm::vec3 _target) {
     target[0] = _target.x;
     target[1] = _target.y;
     target[2] = _target.z;
@@ -198,7 +198,7 @@ void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
     Cutoff = cut;
 }
 
-void SpotLight::SetPos(Vector3f pos) {
+void SpotLight::SetPos(glm::vec3 pos) {
     position[0] = pos.x;
     position[1] = pos.y;
     position[2] = pos.z;
@@ -268,13 +268,13 @@ void PointLight::Render(Camera* cam) {
     sphere->Render(cam);
 }
 
-void PointLight::SetPos(Vector3f pos) {
+void PointLight::SetPos(glm::vec3 pos) {
     position[0] = pos.x;
     position[1] = pos.y;
     position[2] = pos.z;
 }
 
-void PointLight::SetCol(Vector3f col) {
+void PointLight::SetCol(glm::vec3 col) {
     color[0] = col.x;
     color[1] = col.y;
     color[2] = col.z;
@@ -283,11 +283,11 @@ void PointLight::SetCol(Vector3f col) {
 }
 float PointLight::CalcSphereSize() {
     return 8.0f *
-               sqrtf( glm::length(Vector3f(color[0], color[1], color[2])) * power) +
+               sqrtf( glm::length(glm::vec3(color[0], color[1], color[2])) * power) +
            1.0f;
 }
 
-Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
+Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vsh");
     char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fsh");
     shaderProgram = make_shared<Shader>();
@@ -318,7 +318,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
-Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,
+Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
            shared_ptr<Shader> shader) {
     // shaderProgramID=shader;
     shaderProgram = shader;
@@ -356,7 +356,7 @@ void Line::Render(Camera* cam) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSRVC());
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSRVC()));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(positionID);

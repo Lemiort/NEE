@@ -9,9 +9,9 @@
 
 class Line {
 public:
-    /*Vector3f p1;
-    Vector3f p2;
-    Vector3f c1;*/
+    /*glm::vec3 p1;
+    glm::vec3 p2;
+    glm::vec3 c1;*/
     //	GLuint shaderProgramID;
     GLuint PixelColorID, PointSizeID;
     GLuint gWorldID;
@@ -19,8 +19,8 @@ public:
     GLuint VBO;
     float col[3];
     float pos[6];
-    Line(Vector3f pos1, Vector3f pos2, Vector3f color);
-    Line(Vector3f pos1, Vector3f pos2, Vector3f color, GLuint shader);
+    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
+    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color, GLuint shader);
     ~Line();
     void Render(Camera* pGameCamera);
 

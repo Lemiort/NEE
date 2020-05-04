@@ -6,9 +6,9 @@ class RotatableObject {
 public:
     RotatableObject();
     virtual ~RotatableObject();
-    void SetRotation(Vector3f rot);
+    void SetRotation(glm::vec3 rot);
     void SetRotation(float x, float y, float z);
-    Vector3f GetRotation();
+    glm::vec3 GetRotation();
 
 protected:
     float rotation[3];

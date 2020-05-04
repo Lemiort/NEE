@@ -2,10 +2,10 @@
 #define SKYBOX_H_INCLUDED
 #include "cubemap_texture.h"
 //#include "ShaderFunctions.h"
-#include <PlaceableObject.h>
-#include <RenderableObject.h>
 #include "Assistant.h"
 #include "Camera.h"
+#include "PlaceableObject.h"
+#include "RenderableObject.h"
 #include "Shader.h"
 #include "tga_loader.h"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
@@ -21,7 +21,7 @@ public:
 
     void Render(Camera* cam);
     GLuint shaderProgramID;
-    GLuint VBO;  // vertex buffer, ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜
+    GLuint VBO;  // vertex buffer, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     GLuint positionID;
     GLuint IBO;  // index buffer
     GLuint gWorldID, gCamViewID;

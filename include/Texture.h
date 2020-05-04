@@ -2,6 +2,7 @@
 #define TEXTURE_H_INCLUDED
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
+
 #include <sstream>
 #include <string>
 class Texture {

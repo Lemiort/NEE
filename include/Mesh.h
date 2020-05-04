@@ -1,15 +1,15 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
-#include "Assistant.h"
-#include "Camera.h"
-//#include "ShaderFunctions.h"
-#include <MaterialObject.h>
-#include <PlaceableObject.h>
-#include <RotatableObject.h>
-#include <ScaleableObject.h>
 #include <fstream>
 #include <iostream>
+
+#include "Assistant.h"
+#include "Camera.h"
 #include "Material.h"
+#include "MaterialObject.h"
+#include "PlaceableObject.h"
+#include "RotatableObject.h"
+#include "ScaleableObject.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "math_3d.h"
@@ -18,12 +18,13 @@
 using namespace std;
 
 struct Vertex {
-    Vector3f Pos;
-    Vector3f UV;
-    Vector3f Normal;
-    Vector3f Tangent;
+    glm::vec3 Pos;
+    glm::vec3 UV;
+    glm::vec3 Normal;
+    glm::vec3 Tangent;
     Vertex() {}
-    Vertex(Vector3f& pos, Vector3f& uv, Vector3f& normal, Vector3f& tangent) {
+    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal,
+           glm::vec3& tangent) {
         Pos = pos;
         UV = uv;
         Normal = normal;
@@ -52,7 +53,7 @@ protected:
     //угол вращения вокруг вектора
     float rPhi;
     //вектор вращения
-    Vector3f rv;
+    glm::vec3 rv;
 
 public:
     Mesh();
@@ -63,7 +64,7 @@ public:
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
     void Render(Camera* cam);
-    void SetVectorRotate(Vector3f v, float phi);
+    void SetVectorRotate(glm::vec3 v, float phi);
     void Rotate(float x, float y, float z);
 
 private:

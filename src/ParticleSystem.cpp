@@ -3,13 +3,13 @@ ParticleSystem::ParticleSystem() {}
 
 ParticleSystem::~ParticleSystem() {}
 
-bool ParticleSystem::Init(Vector3f Pos) {
+bool ParticleSystem::Init(glm::vec3 Pos) {
     Particle Particles[MAX_PARTICLES];
     ZERO_MEM(Particles);
 
     Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
     Particles[0].Pos = Pos;
-    Particles[0].Vel = Vector3f(0.0f, 0.0001f, 0.0f);
+    Particles[0].Vel = glm::vec3(0.0f, 0.0001f, 0.0f);
     Particles[0].LifetimeMillis = 0.0f;
 
     glGenTransformFeedbacks(2, m_transformFeedback);
@@ -128,7 +128,7 @@ void ParticleSystem::RenderParticles(Camera* cam) {
 
     glUseProgram(shaderProgramID);
     m_billboardAssistant.SetCameraPosition(cam->GetPos());
-    m_billboardAssistant.SetVP((const GLfloat*)TM.GetVC());
+    m_billboardAssistant.SetVP(glm::value_ptr(TM.GetVC()));
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 
     glDisable(GL_RASTERIZER_DISCARD);

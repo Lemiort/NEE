@@ -3,7 +3,9 @@
 //#include "main.h"
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+
 #include <cassert>
+
 #include "Logger.h"
 
 #define ASSERT(x) assert(x)

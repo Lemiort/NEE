@@ -95,7 +95,7 @@ void ShadowPass() {
     // light3->SetDir(pGameCamera->GetTarget()-pGameCamera->GetPos());
     Camera* lightCam =
         new Camera(width, height, 45, 1, 1000.0f, spotLight1->GetPos(),
-                   Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+                   glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
@@ -110,7 +110,7 @@ void ShadowPass() {
     rotateID = shadowShader->GetUniformLocation("mRotate");
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
     //освещение
     {
         //направленный свет
@@ -118,7 +118,7 @@ void ShadowPass() {
         LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
                  directionalLight1->color[2]);
         glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                           (const GLfloat*)LA.GetScaleTrans());
+                           glm::value_ptr(LA.GetScaleTrans()));
         glUniform3f(dirLightDirID, directionalLight1->direction[0],
                     directionalLight1->direction[1],
                     directionalLight1->direction[2]);
@@ -127,7 +127,7 @@ void ShadowPass() {
         LA2.Scale(pointLight1->color[0], pointLight1->color[1],
                   pointLight1->color[2]);
         glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                           (const GLfloat*)LA2.GetScaleTrans());
+                           glm::value_ptr(LA2.GetScaleTrans()));
         glUniform3f(pointLightPosID, pointLight1->position[0],
                     pointLight1->position[1], pointLight1->position[2]);
         glUniform1f(pointLightIntID, pointLight1->power);
@@ -136,7 +136,7 @@ void ShadowPass() {
         LA3.Scale(spotLight1->color[0], spotLight1->color[1],
                   spotLight1->color[2]);
         glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                           (const GLfloat*)LA3.GetScaleTrans());
+                           glm::value_ptr(LA3.GetScaleTrans()));
         glUniform3f(spotLightDirID, spotLight1->direction[0],
                     spotLight1->direction[1], spotLight1->direction[2]);
         glUniform1f(spotLightCutoffID,
@@ -185,7 +185,7 @@ void RenderPass() {
     Camera* lightCam = new Camera(
         width, height, pGameCamera->GetFov(), pGameCamera->GetZNear(),
         pGameCamera->GetZFar(), spotLight1->GetPos(),
-        Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+        glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
     TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
     TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
@@ -254,9 +254,9 @@ void RenderPass() {
         rotateID = meshShader->GetUniformLocation("mRotate");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
 
-        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
         glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
-                           (const GLfloat*)TM2.GetVC());
+                           glm::value_ptr(TM2.GetVC()));
 
         //освещение
         {
@@ -265,7 +265,7 @@ void RenderPass() {
             LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
                      directionalLight1->color[2]);
             glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                               (const GLfloat*)LA.GetScaleTrans());
+                               glm::value_ptr(LA.GetScaleTrans()));
             glUniform3f(dirLightDirID, directionalLight1->direction[0],
                         directionalLight1->direction[1],
                         directionalLight1->direction[2]);
@@ -274,7 +274,7 @@ void RenderPass() {
             LA2.Scale(pointLight1->color[0], pointLight1->color[1],
                       pointLight1->color[2]);
             glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                               (const GLfloat*)LA2.GetScaleTrans());
+                               glm::value_ptr(LA2.GetScaleTrans()));
             glUniform3f(pointLightPosID, pointLight1->position[0],
                         pointLight1->position[1], pointLight1->position[2]);
             glUniform1f(pointLightIntID, pointLight1->power);
@@ -283,7 +283,7 @@ void RenderPass() {
             LA3.Scale(spotLight1->color[0], spotLight1->color[1],
                       spotLight1->color[2]);
             glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                               (const GLfloat*)LA3.GetScaleTrans());
+                               glm::value_ptr(LA3.GetScaleTrans()));
             glUniform3f(spotLightDirID, spotLight1->direction[0],
                         spotLight1->direction[1], spotLight1->direction[2]);
             glUniform1f(spotLightCutoffID,
@@ -428,7 +428,7 @@ void DSStencilPass(Light& light) {
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     //загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
 
     light.SetMaterial(DSStencilPassMaterial);
     light.Render(pGameCamera);
@@ -463,7 +463,7 @@ void DSPointLightPass(PointLight& pointLight) {
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     //загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
     //взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
@@ -490,7 +490,7 @@ void DSPointLightPass(PointLight& pointLight) {
     Assistant LA2;
     LA2.Scale(pointLight.color[0], pointLight.color[1], pointLight.color[2]);
     glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                       (const GLfloat*)LA2.GetScaleTrans());
+                       glm::value_ptr(LA2.GetScaleTrans()));
     glUniform3f(pointLightPosID, pointLight.position[0], pointLight.position[1],
                 pointLight.position[2]);
     glUniform1f(pointLightIntID, pointLight.power);
@@ -530,7 +530,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     //загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
     //взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
@@ -554,7 +554,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
                 spotLight.position[2]);
     glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                       (const GLfloat*)LA2.GetScaleTrans());
+                       glm::value_ptr(LA2.GetScaleTrans()));
     glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
                 spotLight.direction[2]);
     glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
@@ -592,7 +592,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
     //загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
 
     //получаем адрес переменных света
     dirLightColID =
@@ -605,7 +605,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     LA2.Scale(directionalLight.color[0], directionalLight.color[1],
               directionalLight.color[2]);
     glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                       (const GLfloat*)LA2.GetScaleTrans());
+                       glm::value_ptr(LA2.GetScaleTrans()));
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 
@@ -699,7 +699,7 @@ void DSGeometryPass() {
     DSGeometryPassShader->Use();
     gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
 
     Cube.SetMaterial(DSGeometryPassMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)
@@ -1093,10 +1093,10 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
                                0.0f, 1.0f, 0.0f,  // position
                                35.0f,             // cutoff in degrees
                                DSSpotLightMaterial);
-    Vector3f PX(1, 0, 0);
-    Vector3f PY(0, 1, 0);
-    Vector3f PZ(0, 0, 1);
-    Vector3f P0(0, 0, 0);
+    glm::vec3 PX(1, 0, 0);
+    glm::vec3 PY(0, 1, 0);
+    glm::vec3 PZ(0, 0, 1);
+    glm::vec3 P0(0, 0, 0);
 
     xline = new Line(PX, P0, PX);
     yline = new Line(PY, P0, PY, xline->GetShader());
@@ -1110,7 +1110,7 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
     InitRender(window, "Final steps...");
     bb1 = new Billboard();
     bb1->Init("Textures/monster_hellknight.png");
-    bb1->SetPos(Vector3f(0, 0, 0));
+    bb1->SetPos(glm::vec3(0, 0, 0));
 
     noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
 
@@ -1126,7 +1126,7 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
     // smfbo1->Init(width,height);
     //************************************/
     // pGameCamera = new
-    // Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+    // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
 }
 glFlush();
 initialized = true;

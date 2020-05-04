@@ -1,13 +1,15 @@
 #ifndef TEXT_2D_H_INCLUDED
 #define TEXT_2D_H_INCLUDED
 #include <GL/glew.h>
-#include <PlaceableObject.h>
-#include <RenderableObject.h>
 #include <SOIL2/SOIL2.h>
 #include <math_3d.h>
+
 #include <cstring>
 #include <map>
 #include <queue>
+
+#include "PlaceableObject.h"
+#include "RenderableObject.h"
 #include "Shader.h"
 #include "ShaderFunctions.h"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))

@@ -1,7 +1,8 @@
 #ifndef PARTICLEUPDATEASSISTANT_H
 #define PARTICLEUPDATEASSISTANT_H
-#include <EngineCommon.h>
-#include "GL/glew.h"
+#include <GL/glew.h>
+
+#include "EngineCommon.h"
 
 class ParticleUpdateAssistant {
 public:

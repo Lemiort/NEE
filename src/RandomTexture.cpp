@@ -13,7 +13,7 @@ RandomTexture::~RandomTexture() {
 }
 
 bool RandomTexture::InitRandomTexture(unsigned int Size) {
-    Vector3f* pRandomData = new Vector3f[Size];
+    glm::vec3* pRandomData = new glm::vec3[Size];
     for (unsigned int i = 0; i < Size; i++) {
         pRandomData[i].x = glm::linearRand(0,1);
         pRandomData[i].y = glm::linearRand(0,1);

@@ -169,9 +169,9 @@ void Mesh::Render(Camera* cam) {
                           BUFFER_OFFSET(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSR());
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSR()));
     glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       (const GLfloat*)TM2.GetRotate());  //вращение модели
+                       glm::value_ptr(TM2.GetRotate()));  //вращение модели
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);
@@ -184,7 +184,7 @@ void Mesh::Render(Camera* cam) {
     glDisableVertexAttribArray(tangentID);
 }
 
-void Mesh::SetVectorRotate(Vector3f v, float phi) {
+void Mesh::SetVectorRotate(glm::vec3 v, float phi) {
     rPhi = phi;
     rv = v;
 }

@@ -1,10 +1,11 @@
 #ifndef RENDERABLEOBJECT_H
 #define RENDERABLEOBJECT_H
 
-#include <Camera.h>
-#include <Object.h>
-#include <Shader.h>
 #include <memory>
+
+#include "Camera.h"
+#include "Object.h"
+#include "Shader.h"
 
 // Renderable Objects can be rendered, needs Shader to render
 class RenderableObject : public Object {

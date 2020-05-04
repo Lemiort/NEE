@@ -9,9 +9,9 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
                float zfar) {
     m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
-    m_pos = Vector3f(0.0f, 0.0f, 0.0f);
-    m_target = Vector3f(0.0f, 0.0f, -1.0f);
-    m_up = Vector3f(0.0f, 1.0f, 0.0f);
+    m_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+    m_target = glm::vec3(0.0f, 0.0f, -1.0f);
+    m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     FOV = fov;
     zNear = znear;
     zFar = zfar;
@@ -20,8 +20,8 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
 }
 
 Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-               float zfar, const Vector3f& Pos, const Vector3f& Target,
-               const Vector3f& Up) {
+               float zfar, const glm::vec3& Pos, const glm::vec3& Target,
+               const glm::vec3& Up) {
     m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
     m_pos = Pos;
@@ -38,7 +38,7 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
 }
 
 void Camera::Init() {
-    Vector3f HTarget(m_target.x, 0.0, m_target.z);
+    glm::vec3 HTarget(m_target.x, 0.0, m_target.z);
     HTarget = glm::normalize(HTarget);
 
     if (HTarget.z >= 0.0f) {
@@ -82,7 +82,7 @@ bool Camera::OnKeyboard(char Key) {
         } break;
 
         case GLFW_KEY_A: {
-            Vector3f Left = glm::cross(m_target,m_up);
+            glm::vec3 Left = glm::cross(m_target,m_up);
             Left = glm::normalize(Left);
             Left *= STEP_SCALE;
             m_pos += Left;
@@ -90,7 +90,7 @@ bool Camera::OnKeyboard(char Key) {
         } break;
 
         case GLFW_KEY_D: {
-            Vector3f Right = glm::cross(m_up,m_target);
+            glm::vec3 Right = glm::cross(m_up,m_target);
             Right = glm::normalize(Right);
             Right *= STEP_SCALE;
             m_pos += Right;
@@ -169,15 +169,15 @@ void Camera::OnRender() {
 }
 
 void Camera::Update() {
-    const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
+    const glm::vec3 Vaxis(0.0f, 1.0f, 0.0f);
 
     // Rotate the view vector by the horizontal angle around the vertical axis
-    Vector3f View(1.0f, 0.0f, 0.0f);
+    glm::vec3 View(1.0f, 0.0f, 0.0f);
     View = glm::rotate(View,m_AngleH, Vaxis);
     View = glm::normalize(View);
 
     // Rotate the view vector by the vertical angle around the horizontal axis
-    Vector3f Haxis = glm::cross(Vaxis,View);
+    glm::vec3 Haxis = glm::cross(Vaxis,View);
     Haxis = glm::normalize(Haxis);
     View = glm::rotate(View,m_AngleV, Haxis);
 
@@ -191,11 +191,11 @@ float Camera::GetFov() { return FOV; }
 
 void Camera::SetFOV(float fov) { FOV = fov; }
 
-const Vector3f& Camera::GetPos() const { return m_pos; }
+const glm::vec3& Camera::GetPos() const { return m_pos; }
 
-const Vector3f& Camera::GetTarget() const { return m_target; }
+const glm::vec3& Camera::GetTarget() const { return m_target; }
 
-const Vector3f& Camera::GetUp() const { return m_up; }
+const glm::vec3& Camera::GetUp() const { return m_up; }
 
 float Camera::GetZNear() { return zNear; }
 

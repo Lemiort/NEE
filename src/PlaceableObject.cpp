@@ -16,12 +16,12 @@ void PlaceableObject::SetPosition(float x, float y, float z) {
     position[1] = y;
     position[2] = z;
 }
-void PlaceableObject::SetPosition(Vector3f _pos) {
+void PlaceableObject::SetPosition(glm::vec3 _pos) {
     position[0] = _pos.x;
     position[1] = _pos.y;
     position[2] = _pos.z;
 }
 
-Vector3f PlaceableObject::GetPosition() {
-    return Vector3f(position[0], position[1], position[2]);
+glm::vec3 PlaceableObject::GetPosition() {
+    return glm::vec3(position[0], position[1], position[2]);
 }

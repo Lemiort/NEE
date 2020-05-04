@@ -38,15 +38,15 @@ bool BillboardAssistant::Init() {
     return GLCheckError();
 }
 
-void BillboardAssistant::SetVP(const Matrix4f& VP) {
-    glUniformMatrix4fv(m_VPLocation, 1, GL_TRUE, (const GLfloat*)VP.m);
+void BillboardAssistant::SetVP(const glm::mat4& VP) {
+    glUniformMatrix4fv(m_VPLocation, 1, GL_TRUE, glm::value_ptr(VP));
 }
 
 void BillboardAssistant::SetVP(const GLfloat* VP) {
     glUniformMatrix4fv(m_VPLocation, 1, GL_TRUE, VP);
 }
 
-void BillboardAssistant::SetCameraPosition(const Vector3f& Pos) {
+void BillboardAssistant::SetCameraPosition(const glm::vec3& Pos) {
     glUniform3f(m_cameraPosLocation, Pos.x, Pos.y, Pos.z);
 }
 

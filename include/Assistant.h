@@ -1,15 +1,16 @@
 #ifndef ASSISTANT_H_INCLUDED
 #define ASSISTANT_H_INCLUDED
-#define _USE_MATH_DEFINES  // for C++
+
 #include "math_3d.h"
+
 class Assistant {
 public:
-    Matrix4f transformation;
-    Matrix4f temp;
+    glm::mat4 transformation;
+    glm::mat4 temp;
     Assistant() {
-        scale = Vector3f(1.0f, 1.0f, 1.0f);
-        worldPos = Vector3f(0.0f, 0.0f, 0.0f);
-        rotate = Vector3f(0.0f, 0.0f, 0.0f);
+        scale = glm::vec3(1.0f, 1.0f, 1.0f);
+        worldPos = glm::vec3(0.0f, 0.0f, 0.0f);
+        rotate = glm::vec3(0.0f, 0.0f, 0.0f);
         phi = 0;
     }
     void Scale(float ScaleX, float ScaleY, float ScaleZ) {
@@ -23,7 +24,7 @@ public:
         worldPos.y = y;
         worldPos.z = z;
     }
-    void WorldPos(Vector3f v) {
+    void WorldPos(glm::vec3 v) {
         worldPos.x = v.x;
         worldPos.y = v.y;
         worldPos.z = v.z;
@@ -35,7 +36,7 @@ public:
         rotate.z = RotateZ;
     }
 
-    void RotateOverVector(Vector3f v, float _phi) {
+    void RotateOverVector(glm::vec3 v, float _phi) {
         rotateVector = v;
         phi = _phi;
     }
@@ -49,20 +50,20 @@ public:
         persProj.zFar = zFar;
     }
 
-    void SetCamera(const Vector3f& Pos, const Vector3f& Target,
-                   const Vector3f& Up) {
+    void SetCamera(const glm::vec3& Pos, const glm::vec3& Target,
+                   const glm::vec3& Up) {
         camera.Pos = Pos;
         camera.Target = Target;
         camera.Up = Up;
     }
 
-    const Matrix4f* GetTSRVC();
-    const Matrix4f* GetTSR();
-    const Matrix4f* GetVC();
-    const Matrix4f* GetRotate();
-    const Matrix4f* GetCameraTrans();
-    const Matrix4f* GetScaleTrans();
-    // const Matrix4f* GetCamTransMat();
+    const glm::mat4& GetTSRVC();
+    const glm::mat4& GetTSR();
+    const glm::mat4& GetVC();
+    const glm::mat4& GetRotate();
+    const glm::mat4& GetCameraTrans();
+    const glm::mat4& GetScaleTrans();
+    // const glm::mat4* GetCamTransMat();
 
 private:
     struct {
@@ -73,14 +74,14 @@ private:
         float zFar;
     } persProj;
     struct {
-        Vector3f Pos;
-        Vector3f Target;
-        Vector3f Up;
+        glm::vec3 Pos;
+        glm::vec3 Target;
+        glm::vec3 Up;
     } camera;
-    Vector3f scale;
-    Vector3f worldPos;
-    Vector3f rotate;
-    Vector3f rotateVector;
+    glm::vec3 scale;
+    glm::vec3 worldPos;
+    glm::vec3 rotate;
+    glm::vec3 rotateVector;
     float phi;
 };
 #endif  // ASSISTANT_H_INCLUDED

@@ -2,6 +2,7 @@
 #define SHADOWMAPFBO_H
 
 #include <GL/glew.h>
+
 #include <string>
 
 class ShadowMapFBO {

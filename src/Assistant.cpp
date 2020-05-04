@@ -1,61 +1,61 @@
 #include "Assistant.h"
 
-const Matrix4f* Assistant::GetTSRVC() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
+const glm::mat4& Assistant::GetTSRVC() {
+    glm::mat4 ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
         CameraTrans;
 
     ScaleTrans = glm::scale(scale);
     RotateTrans = glm::orientate4(rotate);
     TranslationTrans = glm::translate(worldPos);
     CameraTrans = glm::lookAt(camera.Pos, camera.Target, camera.Up);
-    PersProjTrans = glm::perspective(persProj.FOV, persProj.Width,
-                                        persProj.Height, persProj.zNear,
-                                        persProj.zFar);
+    PersProjTrans =
+        glm::perspectiveFov(persProj.FOV, persProj.Width, persProj.Height,
+                            persProj.zNear, persProj.zFar);
 
-    transformation = PersProjTrans * CameraTrans * TranslationTrans * RotateTrans *
-                     ScaleTrans;
-    return &transformation;
+    transformation = PersProjTrans * CameraTrans * TranslationTrans *
+                     RotateTrans * ScaleTrans;
+    return transformation;
 }
 
-const Matrix4f* Assistant::GetTSR() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans;
+const glm::mat4& Assistant::GetTSR() {
+    glm::mat4 ScaleTrans, RotateTrans, TranslationTrans;
 
     ScaleTrans = glm::scale(scale);
     RotateTrans = glm::orientate4(rotate);
     TranslationTrans = glm::translate(worldPos);
     transformation = TranslationTrans * RotateTrans * ScaleTrans;
-    return &transformation;
+    return transformation;
 }
 
-const Matrix4f* Assistant::GetVC() {
-    Matrix4f PersProjTrans, CameraTrans;
+const glm::mat4& Assistant::GetVC() {
+    glm::mat4 PersProjTrans, CameraTrans;
     CameraTrans = glm::lookAt(camera.Pos, camera.Target, camera.Up);
-    PersProjTrans = glm::perspective(persProj.FOV, persProj.Width,
-                                        persProj.Height, persProj.zNear,
-                                        persProj.zFar);
+    PersProjTrans =
+        glm::perspectiveFov(persProj.FOV, persProj.Width, persProj.Height,
+                            persProj.zNear, persProj.zFar);
 
     transformation = PersProjTrans * CameraTrans;
-    return &transformation;
+    return transformation;
 }
 
-const Matrix4f* Assistant::GetRotate() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans;
-    ScaleTrans= glm::scale(scale);
+const glm::mat4& Assistant::GetRotate() {
+    glm::mat4 ScaleTrans, RotateTrans, TranslationTrans;
+    ScaleTrans = glm::scale(scale);
     RotateTrans = glm::orientate4(rotate);
     TranslationTrans = glm::translate(worldPos);
     transformation = TranslationTrans * RotateTrans * ScaleTrans;
-    return &transformation;
+    return transformation;
 }
-const Matrix4f* Assistant::GetScaleTrans() {
-    Matrix4f ScaleTrans;
+const glm::mat4& Assistant::GetScaleTrans() {
+    glm::mat4 ScaleTrans;
     ScaleTrans = glm::scale(scale);
     transformation = ScaleTrans;
-    return &transformation;
+    return transformation;
 }
-const Matrix4f* Assistant::GetCameraTrans() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
+const glm::mat4& Assistant::GetCameraTrans() {
+    glm::mat4 ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
         CameraTranslationTrans, CameraRotateTrans;
     CameraTranslationTrans = glm::translate(-camera.Pos);
     transformation = CameraTranslationTrans;
-    return &transformation;
+    return transformation;
 }

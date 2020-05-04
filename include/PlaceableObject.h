@@ -11,8 +11,8 @@ public:
     float position[3];
 
     void SetPosition(float x, float y, float z);
-    void SetPosition(Vector3f _pos);
-    Vector3f GetPosition();
+    void SetPosition(glm::vec3 _pos);
+    glm::vec3 GetPosition();
 
 protected:
 private:

@@ -155,7 +155,7 @@ void SkyBox::Render(Camera* cam) {
     glUniform1i(textureID, 2);
     // cout<<colTexID<<"\n"<<textureID<<"\n";
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSRVC());
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSRVC()));
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);

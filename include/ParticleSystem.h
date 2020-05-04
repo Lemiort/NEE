@@ -2,14 +2,14 @@
 #define PARTICLESYSTEM_H_INCLUDED
 #define MAX_PARTICLES 1000
 //#include "Billboard.h"
-#include <BillboardAssistant.h>
-#include <Camera.h>
-#include <Texture.h>
-#include <util.h>
 #include "Assistant.h"
+#include "BillboardAssistant.h"
+#include "Camera.h"
 #include "ParticleUpdateAssistant.h"
 #include "RandomTexture.h"
 #include "ShaderFunctions.h"
+#include "Texture.h"
+#include "util.h"
 
 #define PARTICLE_LIFETIME 10.0f
 
@@ -21,7 +21,7 @@ class ParticleSystem {
 public:
     ParticleSystem();
     ~ParticleSystem();
-    bool Init(Vector3f Pos);
+    bool Init(glm::vec3 Pos);
     void Render(int DeltaTimeMillis, Camera* cam);
 
 private:
@@ -31,7 +31,7 @@ private:
     GLuint m_particleBuffer[2];
     GLuint m_transformFeedback[2];
     RandomTexture m_randomTexture;
-    Vector3f m_Pos;
+    glm::vec3 m_Pos;
     Texture2D m_colorTexture;
     ParticleUpdateAssistant m_updateAssistant;
     GLuint shaderProgramID;
@@ -41,8 +41,8 @@ private:
     void UpdateParticles(int DeltaTimeMillis);
     struct Particle {
         float Type;
-        Vector3f Pos;
-        Vector3f Vel;
+        glm::vec3 Pos;
+        glm::vec3 Vel;
         float LifetimeMillis;
     };
 };

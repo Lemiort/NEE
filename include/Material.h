@@ -1,9 +1,11 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
 #include <GL/glew.h>
-#include <Shader.h>
-#include <Texture.h>
+
 #include <memory>
+
+#include "Shader.h"
+#include "Texture.h"
 
 class Material {
 public:
