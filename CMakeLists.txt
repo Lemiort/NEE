@@ -7,47 +7,6 @@ conan_basic_setup()
 
 message("Building ${PROJECT_NAME}")
 
-message("Trying to find glfw")
-
-find_package(glfw3)
-
-if(glfw3_FOUND)
-    message("GLFW was found")
-else()
-    message(FATAL_ERROR "GLFW not found")
-endif()
-
-find_package("GLEW")
-if(GLEW_FOUND)
-    message("GLEW was found")
-else()
-    message(FATAL_ERROR "GLEW not found")
-endif()
-
-# find_package(SOIL2)
-# if(SOIL2_FOUND)
-#     message("SOIL was found")
-#     # include_directories(${SOIL_INCLUDE_DIRS})
-# else()
-#     message(FATAL_ERROR "SOIL not found")
-# endif()
-
-find_package(nlohmann_json 3.2.0 REQUIRED)
-
-if(nlohmann_json_FOUND)
-    message("nlohmann_json was found")
-else()
-    message(FATAL_ERROR "nlohmann_json not found")
-endif()
-
-find_package(GLM)
-
-if(GLM_FOUND)
-    message("GLM was found")
-else()
-    message(FATAL_ERROR "GLM not found")
-endif()
-
 enable_testing()
 
 if(BUILD_TESTING)
@@ -55,7 +14,6 @@ if(BUILD_TESTING)
 endif()
 
 include_directories(include)
-# include_directories(src)
 file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES_LIST})

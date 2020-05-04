@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <PlaceableObject.h>
 #include <RenderableObject.h>
-#include <SOIL/SOIL.h>
+#include <SOIL2/SOIL2.h>
 #include <math_3d.h>
 #include <cstring>
 #include <map>
