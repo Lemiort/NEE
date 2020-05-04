@@ -4,63 +4,29 @@
 #include <cmath>
 #include <cstdio>
 #include <iostream>
-
-#ifndef M_PI
-#define M_PI (3.14159265358979323846)
-#endif  // M_PI
-
-#define ToRadian(x) ((x)*M_PI / 180.0f)
-#define ToDegree(x) ((x)*180.0f / M_PI)
-
-float RandomFloat();
-
-class Vector2i {
-public:
-    int x;
-    int y;
-    Vector2i();
-};
-
-struct Vector2f {
-    float x;
-    float y;
-
-    Vector2f() {
-        x = 0;
-        y = 0;
-    }
-
-    Vector2f(float _x, float _y) {
-        x = _x;
-        y = _y;
-    }
-};
-
-struct Vector4f {
-    float r;
-    float g;
-    float b;
-    float a;
-
-    Vector4f() {
-        r = 0;
-        g = 0;
-        b = 0;
-        a = 0;
-    }
-
-    Vector4f(float _r, float _g, float _b, float _a) {
-        r = _r;
-        g = _g;
-        b = _b;
-        a = _a;
-    }
-};
+#include <glm/glm.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/transform.hpp>
+#include <glm/gtx/rotate_vector.hpp> 
+#include <glm/gtx/vector_angle.hpp> 
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtc/random.hpp>
 
 struct Vector3f {
     float x;
     float y;
     float z;
+
+    Vector3f(const glm::vec3& v) {
+        x = v.x;
+        y = v.y;
+        z = v.z;
+    }
+
+    glm::vec3 to_vec3() const{
+        return glm::vec3(x,y,z);
+    }
+
 
     Vector3f() {
         x = 0;
@@ -98,15 +64,7 @@ struct Vector3f {
         return *this;
     }
 
-    Vector3f Cross(const Vector3f& v) const;
-
-    Vector3f& Normalize();
-
-    void Rotate(float Angle, const Vector3f& Axis);
-
     void Print() const { printf("(%.02f, %.02f, %.02f", x, y, z); }
-
-    float Lenght();
 };
 
 inline Vector3f operator+(const Vector3f& l, const Vector3f& r) {
@@ -118,6 +76,11 @@ inline Vector3f operator+(const Vector3f& l, const Vector3f& r) {
 inline Vector3f operator-(const Vector3f& l, const Vector3f& r) {
     Vector3f Ret(l.x - r.x, l.y - r.y, l.z - r.z);
 
+    return Ret;
+}
+
+inline Vector3f operator-( const Vector3f& r) {
+    Vector3f Ret(-r.x,-r.y,-r.z);
     return Ret;
 }
 
@@ -151,7 +114,47 @@ class Matrix4f {
 public:
     float m[4][4];
 
+    Matrix4f(glm::mat4 mat){
+        m[0][0] = mat[0][0];
+        m[0][1] = mat[0][1];
+        m[0][2] = mat[0][2];
+        m[0][3] = mat[0][3];
+        m[1][0] = mat[1][0];
+        m[1][1] = mat[1][1];
+        m[1][2] = mat[1][2];
+        m[1][3] = mat[1][3];
+        m[2][0] = mat[2][0];
+        m[2][1] = mat[2][1];
+        m[2][2] = mat[2][2];
+        m[2][3] = mat[2][3];
+        m[3][0] = mat[3][0];
+        m[3][1] = mat[3][1];
+        m[3][2] = mat[3][2];
+        m[3][3] = mat[3][3];
+    }
+
     Matrix4f() {}
+
+    glm::mat4 to_mat4(){
+        glm::mat4 mat;
+        mat[0][0] = m[0][0];
+        mat[0][1] = m[0][1];
+        mat[0][2] = m[0][2];
+        mat[0][3] = m[0][3];
+        mat[1][0] = m[1][0];
+        mat[1][1] = m[1][1];
+        mat[1][2] = m[1][2];
+        mat[1][3] = m[1][3];
+        mat[2][0] = m[2][0];
+        mat[2][1] = m[2][1];
+        mat[2][2] = m[2][2];
+        mat[2][3] = m[2][3];
+        mat[3][0] = m[3][0];
+        mat[3][1] = m[3][1];
+        mat[3][2] = m[3][2];
+        mat[3][3] = m[3][3];
+        return mat;
+    }
 
     inline void InitIdentity() {
         m[0][0] = 1.0f;
@@ -185,26 +188,7 @@ public:
 
         return Ret;
     }
-
-    void InitScaleTransform(float ScaleX, float ScaleY, float ScaleZ);
-    void InitRotateTransform(float RotateX, float RotateY, float RotateZ);
-    void InitTranslationTransform(float x, float y, float z);
-    void InitCameraTransform(const Vector3f& Target, const Vector3f& Up);
-    void InitPersProjTransform(float FOV, float Width, float Height,
-                               float zNear, float zFar);
 };
-// return an angle in radians
-inline float CalcAngle(Vector3f left, Vector3f right) {
-    float resultLength = left.Lenght() * right.Lenght();
-    if (fabs(resultLength) < 1e-6) return 0;
-    return acos(left * right / (resultLength));
-}
-
-// return coordinates in spherical type: r, x, z
-inline Vector3f ToSphericalCoordinates(Vector3f v) {
-    return Vector3f(v.Lenght(), atan(sqrt(v.x * v.x + v.y + v.y) / v.z),
-                    atan(v.y / v.x));
-}
 
 struct Quaternion {
     float x, y, z, w;
@@ -219,4 +203,20 @@ struct Quaternion {
 Quaternion operator*(const Quaternion& l, const Quaternion& r);
 
 Quaternion operator*(const Quaternion& q, const Vector3f& v);
+
+namespace glm
+{
+    float length(const Vector3f& v);
+    Vector3f cross(const Vector3f& a, const Vector3f& b);
+    Vector3f rotate(const Vector3f& v,const float angle, const Vector3f& normal);
+    Vector3f normalize(const Vector3f& v);
+    float angle(Vector3f left, Vector3f right);
+    Matrix4f scale(const Vector3f& v);
+    Matrix4f translate(const Vector3f& v);
+    Matrix4f perspective(float FOV, float Width, float Height, float zNear, float zFar);
+    Matrix4f lookAt(const Vector3f& eye, const Vector3f& center, const Vector3f& up);
+    Matrix4f orientate4(const Vector3f& v);
+} // namespace glm
+
+
 #endif  // MTH3D_H_INCLUDED

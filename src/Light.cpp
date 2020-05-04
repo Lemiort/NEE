@@ -75,51 +75,6 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 }
 
 void SpotLight::Render(Camera* cam) {
-    /* Vector3f HTarget(direction[0], 0.0, direction[2]);
-HTarget.Normalize();
-
-float m_AngleH;
-float m_AngleV;
-
-if (HTarget.z >= 0.0f)
-{
-if (HTarget.x >= 0.0f)
-{
- m_AngleH = 360.0f - ToDegree(asin(HTarget.z));
-}
-else
-{
- m_AngleH = 180.0f + ToDegree(asin(HTarget.z));
-}
-}
-else
-{
-if (HTarget.x >= 0.0f)
-{
- m_AngleH = ToDegree(asin(-HTarget.z));
-}
-else
-{
- m_AngleH = 90.0f + ToDegree(asin(-HTarget.z));
-}
-}
-
-m_AngleV = -ToDegree(asin(direction[1]));
-
-
-     const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
-
-// Rotate the view vector by the horizontal angle around the vertical axis
-//Vector3f View(1.0f, 0.0f, 0.0f);
-//View.Rotate(m_AngleH, Vaxis);
-//View.Normalize();
-mesh->SetRotate(0,0,m_AngleH);
-cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
-
-    /*// Rotate the view vector by the vertical angle around the horizontal axis
-    Vector3f Haxis = Vaxis.Cross(View);
-    Haxis.Normalize();
-    View.Rotate(m_AngleV, Haxis);*/
 
     //======Предыдущее решение задачи========
     direction[0] = target[0] - position[0];
@@ -143,13 +98,13 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
         Vector3f projYZ(0, proj.y, proj.z);
 
         // calc rotation
-        if (projYZ.Cross(directionYZ).x > 0)
-            xrot = -ToDegree(CalcAngle(directionYZ, projYZ));
+        if (glm::cross(projYZ,directionYZ).x > 0)
+            xrot = -glm::degrees(glm::angle(directionYZ, projYZ));
         else
-            xrot = ToDegree(CalcAngle(directionYZ, projYZ));
+            xrot = glm::degrees(glm::angle(directionYZ, projYZ));
 
         // update up vector
-        proj.Rotate(-xrot, Vector3f(1, 0, 0));
+        proj = glm::rotate(proj,-xrot, Vector3f(1, 0, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
     }
 
@@ -159,13 +114,13 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
         Vector3f projXZ(proj.x, 0, proj.z);
 
         // calc the rotation
-        if (projXZ.Cross(directionXZ).y > 0)
-            yrot = -ToDegree(CalcAngle(directionXZ, projXZ));
+        if (glm::cross(projXZ,directionXZ).y > 0)
+            yrot = -glm::degrees(glm::angle(directionXZ, projXZ));
         else
-            yrot = ToDegree(CalcAngle(directionXZ, projXZ));
+            yrot = glm::degrees(glm::angle(directionXZ, projXZ));
 
         // update the up vector
-        proj.Rotate(-yrot, Vector3f(0, 1, 0));
+        proj = glm::rotate(proj,-yrot, Vector3f(0, 1, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
 
         // Z axis
@@ -174,11 +129,11 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
             Vector3f projXY(proj.x, proj.y, 0);
 
             // calc the rotation
-            if (projXY.Cross(directionXY).z > 0)
-                zrot = ToDegree(CalcAngle(directionXY, projXY));
+            if (glm::cross(projXY,directionXY).z > 0)
+                zrot = glm::degrees(glm::angle(directionXY, projXY));
             else
-                zrot = -ToDegree(CalcAngle(directionXY, projXY));
-            proj.Rotate(-zrot, Vector3f(0, 0, 1));
+                zrot = -glm::degrees(glm::angle(directionXY, projXY));
+            proj = glm::rotate(proj,-zrot, Vector3f(0, 0, 1));
         }
     }
     cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
@@ -203,15 +158,15 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
     //=====решение на основе поворота вокруг вектора============
     // Vector3f rotateVector =  dir.Cross(proj);
     /*mesh->SetVectorRotate(rotateVector,
-                          CalcAngle(dir,proj));*/
+                          glm::angle(dir,proj));*/
     // mesh->SetVectorRotate(proj,
     //                       -90.0f);
     //==========================================================
 
     // TODO идея: использовать скалярное произведение векторов
 
-    mesh->SetScale(dir.Lenght() * cos(ToRadian(Cutoff)), dir.Lenght(),
-                   dir.Lenght() * cos(ToRadian(Cutoff)));
+    mesh->SetScale(glm::length(dir) * cos(glm::radians(Cutoff)), glm::length(dir),
+                   glm::length(dir) * cos(glm::radians(Cutoff)));
 
     mesh->SetPosition(position[0], position[1], position[2]);
     mesh->Render(cam);
@@ -328,7 +283,7 @@ void PointLight::SetCol(Vector3f col) {
 }
 float PointLight::CalcSphereSize() {
     return 8.0f *
-               sqrtf(Vector3f(color[0], color[1], color[2]).Lenght() * power) +
+               sqrtf( glm::length(Vector3f(color[0], color[1], color[2])) * power) +
            1.0f;
 }
 

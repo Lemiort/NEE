@@ -11,7 +11,6 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
     m_windowHeight = WindowHeight;
     m_pos = Vector3f(0.0f, 0.0f, 0.0f);
     m_target = Vector3f(0.0f, 0.0f, -1.0f);
-    m_target.Normalize();
     m_up = Vector3f(0.0f, 1.0f, 0.0f);
     FOV = fov;
     zNear = znear;
@@ -27,11 +26,9 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
     m_windowHeight = WindowHeight;
     m_pos = Pos;
 
-    m_target = Target;
-    m_target.Normalize();
+    m_target = glm::normalize(Target);
 
-    m_up = Up;
-    m_up.Normalize();
+    m_up = glm::normalize(Up);
 
     FOV = fov;
     zNear = znear;
@@ -42,23 +39,23 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
 
 void Camera::Init() {
     Vector3f HTarget(m_target.x, 0.0, m_target.z);
-    HTarget.Normalize();
+    HTarget = glm::normalize(HTarget);
 
     if (HTarget.z >= 0.0f) {
         if (HTarget.x >= 0.0f) {
-            m_AngleH = 360.0f - ToDegree(asin(HTarget.z));
+            m_AngleH = 360.0f - glm::degrees(asin(HTarget.z));
         } else {
-            m_AngleH = 180.0f + ToDegree(asin(HTarget.z));
+            m_AngleH = 180.0f + glm::degrees(asin(HTarget.z));
         }
     } else {
         if (HTarget.x >= 0.0f) {
-            m_AngleH = ToDegree(asin(-HTarget.z));
+            m_AngleH = glm::degrees(asin(-HTarget.z));
         } else {
-            m_AngleH = 90.0f + ToDegree(asin(-HTarget.z));
+            m_AngleH = 90.0f + glm::degrees(asin(-HTarget.z));
         }
     }
 
-    m_AngleV = -ToDegree(asin(m_target.y));
+    m_AngleV = -glm::degrees(asin(m_target.y));
 
     m_OnUpperEdge = false;
     m_OnLowerEdge = false;
@@ -85,16 +82,16 @@ bool Camera::OnKeyboard(char Key) {
         } break;
 
         case GLFW_KEY_A: {
-            Vector3f Left = m_target.Cross(m_up);
-            Left.Normalize();
+            Vector3f Left = glm::cross(m_target,m_up);
+            Left = glm::normalize(Left);
             Left *= STEP_SCALE;
             m_pos += Left;
             Ret = true;
         } break;
 
         case GLFW_KEY_D: {
-            Vector3f Right = m_up.Cross(m_target);
-            Right.Normalize();
+            Vector3f Right = glm::cross(m_up,m_target);
+            Right = glm::normalize(Right);
             Right *= STEP_SCALE;
             m_pos += Right;
             Ret = true;
@@ -176,19 +173,18 @@ void Camera::Update() {
 
     // Rotate the view vector by the horizontal angle around the vertical axis
     Vector3f View(1.0f, 0.0f, 0.0f);
-    View.Rotate(m_AngleH, Vaxis);
-    View.Normalize();
+    View = glm::rotate(View,m_AngleH, Vaxis);
+    View = glm::normalize(View);
 
     // Rotate the view vector by the vertical angle around the horizontal axis
-    Vector3f Haxis = Vaxis.Cross(View);
-    Haxis.Normalize();
-    View.Rotate(m_AngleV, Haxis);
+    Vector3f Haxis = glm::cross(Vaxis,View);
+    Haxis = glm::normalize(Haxis);
+    View = glm::rotate(View,m_AngleV, Haxis);
 
-    m_target = View;
-    m_target.Normalize();
+    m_target = glm::normalize(View);
 
-    m_up = m_target.Cross(Haxis);
-    m_up.Normalize();
+    m_up = glm::cross(m_target,Haxis);
+    m_up = glm::normalize(m_up);
 }
 
 float Camera::GetFov() { return FOV; }

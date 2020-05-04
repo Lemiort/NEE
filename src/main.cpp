@@ -557,7 +557,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
                        (const GLfloat*)LA2.GetScaleTrans());
     glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
                 spotLight.direction[2]);
-    glUniform1f(spotLightCutoffID, cosf(ToRadian(spotLight.Cutoff)));
+    glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
 
     //включаем данные из буффера
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);

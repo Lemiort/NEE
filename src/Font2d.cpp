@@ -215,7 +215,7 @@ void Character2d::SetCharacter(unsigned int c) {
         temp = fontInfo.at(currentCharacter);
     } catch (const std::out_of_range& oor) {
         // printf("\n char is out of range");
-        characterLength = Vector2f(-1.0f, -1.0f);
+        characterLength = glm::vec2(-1.0f, -1.0f);
         return;
     }
     //ширина и высота в uv-координатах
@@ -229,11 +229,11 @@ void Character2d::SetCharacter(unsigned int c) {
         position[2] * (-2 * dx) * ky * (float)temp.yOffset / (float)imageHeight;
 
     // TODO считаем длину символа в текстурных координатах??
-    characterLength = Vector2f((2 * dx) * realWidth * kx * position[2],
+    characterLength = glm::vec2((2 * dx) * realWidth * kx * position[2],
                                (2 * dx) * realHeight * ky);
 }
 
-Vector2f Character2d::GetLastCharacterLength() {
-    // return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
+glm::vec2 Character2d::GetLastCharacterLength() {
+    // return glm::vec2((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
     return characterLength;
 }

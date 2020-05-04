@@ -2,6 +2,7 @@
 #define CAMERA_H_INCLUDED
 
 #include "math_3d.h"
+#include <glm/glm.hpp>
 
 class Camera {
 public:
@@ -65,7 +66,7 @@ private:
     bool m_OnLeftEdge;
     bool m_OnRightEdge;
 
-    Vector2i m_mousePos;
+    glm::vec2 m_mousePos;
 };
 
 #endif  // CAMERA_H_INCLUDED

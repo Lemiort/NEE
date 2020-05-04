@@ -47,7 +47,7 @@ private:
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
-    Vector4f color;
+    glm::vec4 color;
     string filename;
     unsigned int* indicies;
     float aratio;
@@ -70,7 +70,7 @@ private:
     FontCharacter temp;
 
 protected:
-    Vector2f characterLength;
+    glm::vec2 characterLength;
     unsigned int character;
     map<uint32_t, float> kerningInfo;
 
@@ -86,7 +86,7 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
 
-    Vector2f GetLastCharacterLength();  //возвращает длину текущего символа
+    glm::vec2 GetLastCharacterLength();  //возвращает длину текущего символа
     void Render(Camera* cam);
     friend class FontLine2d;
 };
@@ -123,7 +123,7 @@ private:
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
-    Vector4f color;
+    glm::vec4 color;
     unsigned int* indicies;
     float aratio;
 

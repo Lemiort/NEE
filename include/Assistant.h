@@ -65,11 +65,6 @@ public:
     // const Matrix4f* GetCamTransMat();
 
 private:
-    void InitScaleTransform(Matrix4f& m) const;
-    void InitRotateTransform(Matrix4f& m) const;
-    void InitTranslationTransform(Matrix4f& m) const;
-
-    void InitPerspectiveProj(Matrix4f& m) const;
     struct {
         float FOV;
         float Width;

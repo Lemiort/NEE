@@ -50,7 +50,7 @@ protected:
     map<uint32_t, float> kerningInfo;
 
     // TODO длина символа в текстурных координатах??
-    Vector2f characterLength;
+    glm::vec2 characterLength;
 
     //текущий символ
     unsigned int currentCharacter;
@@ -87,6 +87,6 @@ public:
     void Render(Camera* cam);
 
     // TODO возвращает длину текущего символа в экрнных координатах??
-    Vector2f GetLastCharacterLength();
+    glm::vec2 GetLastCharacterLength();
 };
 #endif  // FONT2D_H

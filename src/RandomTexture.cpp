@@ -15,9 +15,9 @@ RandomTexture::~RandomTexture() {
 bool RandomTexture::InitRandomTexture(unsigned int Size) {
     Vector3f* pRandomData = new Vector3f[Size];
     for (unsigned int i = 0; i < Size; i++) {
-        pRandomData[i].x = RandomFloat();
-        pRandomData[i].y = RandomFloat();
-        pRandomData[i].z = RandomFloat();
+        pRandomData[i].x = glm::linearRand(0,1);
+        pRandomData[i].y = glm::linearRand(0,1);
+        pRandomData[i].z = glm::linearRand(0,1);
     }
 
     glGenTextures(1, &textureID);
