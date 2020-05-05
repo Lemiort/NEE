@@ -1,5 +1,5 @@
-#ifndef PARTICLEUPDATEASSISTANT_H
-#define PARTICLEUPDATEASSISTANT_H
+#ifndef INCLUDE_PARTICLEUPDATEASSISTANT_H_
+#define INCLUDE_PARTICLEUPDATEASSISTANT_H_
 #include <GL/glew.h>
 
 #include "EngineCommon.h"
@@ -37,4 +37,4 @@ private:
     GLuint m_secondaryShellLifetimeLocation;
 };
 
-#endif  // PARTICLEUPDATEASSISTANT_H
+#endif  // INCLUDE_PARTICLEUPDATEASSISTANT_H_

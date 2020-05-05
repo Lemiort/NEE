@@ -1,7 +1,6 @@
-#ifndef PARTICLESYSTEM_H_INCLUDED
-#define PARTICLESYSTEM_H_INCLUDED
+#ifndef INCLUDE_PARTICLESYSTEM_H_
+#define INCLUDE_PARTICLESYSTEM_H_
 #define MAX_PARTICLES 1000
-//#include "Billboard.h"
 #include "Assistant.h"
 #include "BillboardAssistant.h"
 #include "Camera.h"
@@ -47,4 +46,4 @@ private:
     };
 };
 
-#endif  // PARTICLESYSTEM_H_INCLUDED
+#endif  // INCLUDE_PARTICLESYSTEM_H_

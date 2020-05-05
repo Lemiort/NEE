@@ -1,4 +1,5 @@
 #include "Shader.h"
+
 #include "ShaderFunctions.h"
 Shader::Shader() {
     // ctor
@@ -48,7 +49,7 @@ void Shader::Init() {
     if (fShader != 0) glAttachShader(shaderProgramID, fShader);
     if (gShader != 0) glAttachShader(shaderProgramID, gShader);
     glLinkProgram(shaderProgramID);
-    //проверка
+    // проверка
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};

@@ -6,8 +6,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
-const static float STEP_SCALE = 0.1f;
-const static int MARGIN = 100;
+constexpr float STEP_SCALE = 0.1f;
+constexpr int MARGIN = 100;
 
 Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
                float zfar) {
@@ -114,8 +114,8 @@ void Camera::OnMouse(int x, int y) {
     m_mousePos.x = x;
     m_mousePos.y = y;
 
-    m_AngleH += (float)DeltaX / 20.0f;
-    m_AngleV += (float)DeltaY / 20.0f;
+    m_AngleH += static_cast<float>(DeltaX) / 20.0f;
+    m_AngleV += static_cast<float>(DeltaY) / 20.0f;
 
     if (DeltaX == 0) {
         if (x <= MARGIN) {

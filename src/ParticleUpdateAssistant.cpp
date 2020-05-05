@@ -64,7 +64,7 @@ void ParticleUpdateAssistant::SetDeltaTimeMillis(float DeltaTimeMillis) {
 }
 
 void ParticleUpdateAssistant::SetTime(int Time) {
-    glUniform1f(m_timeLocation, (float)Time);
+    glUniform1f(m_timeLocation, static_cast<float>(Time));
 }
 
 void ParticleUpdateAssistant::SetRandomTextureUnit(unsigned int TextureUnit) {

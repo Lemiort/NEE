@@ -1,5 +1,5 @@
-#ifndef SHADERFUNCTIONS_H_INCLUDED
-#define SHADERFUNCTIONS_H_INCLUDED
+#ifndef INCLUDE_SHADERFUNCTIONS_H_
+#define INCLUDE_SHADERFUNCTIONS_H_
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <stdio.h>
@@ -16,5 +16,5 @@ GLuint MakeGeometryShader(const char* source);
 GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID);
 GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
                          GLuint fragmentShaderID);
-using namespace std;
-#endif  // SHADERFUNCTIONS_H_INCLUDED
+
+#endif  // INCLUDE_SHADERFUNCTIONS_H_

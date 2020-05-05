@@ -1,5 +1,5 @@
-#ifndef RENDERABLEOBJECT_H
-#define RENDERABLEOBJECT_H
+#ifndef INCLUDE_RENDERABLEOBJECT_H_
+#define INCLUDE_RENDERABLEOBJECT_H_
 
 #include <memory>
 
@@ -13,14 +13,14 @@ public:
     RenderableObject();
     virtual ~RenderableObject();
     virtual void Render(Camera* cam);
-    virtual shared_ptr<Shader> GetShader();
-    virtual void SetShader(shared_ptr<Shader> shader);
+    virtual std::shared_ptr<Shader> GetShader();
+    virtual void SetShader(std::shared_ptr<Shader> shader);
 
 protected:
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
     GLuint VBO, IBO;
 
 private:
 };
 
-#endif  // RENDERABLEOBJECT_H
+#endif  // INCLUDE_RENDERABLEOBJECT_H_

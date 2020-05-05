@@ -1,6 +1,8 @@
 #include "cubemap_texture.h"
+
 #include <cstring>
 #include <iostream>
+
 #include "tga_loader.h"
 #include "util.h"
 
@@ -60,7 +62,7 @@ bool CubemapTexture::Load() {
             return 0;
         }
 
-        header = (TGAHeader*)buffer;
+        header = reinterpret_cast<TGAHeader*>(buffer);
 
         // проверим формат TGA-файла - несжатое RGB или RGBA изображение
         if (header->datatype != 2 ||

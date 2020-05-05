@@ -1,5 +1,5 @@
-#ifndef RECTANGLE2D_H
-#define RECTANGLE2D_H
+#ifndef INCLUDE_RECTANGLE2D_H_
+#define INCLUDE_RECTANGLE2D_H_
 #include <PlaceableObject.h>
 #include <RenderableObject.h>
 
@@ -12,4 +12,4 @@ protected:
 private:
 };
 
-#endif  // RECTANGLE2D_H
+#endif  // INCLUDE_RECTANGLE2D_H_

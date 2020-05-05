@@ -1,5 +1,5 @@
-#ifndef UTIL_H_INCLUDED
-#define UTIL_H_INCLUDED
+#ifndef INCLUDE_UTIL_H_
+#define INCLUDE_UTIL_H_
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,4 +28,4 @@ std::string ConvertToString(int number);
 
 std::string ConvertToString(long number);
 
-#endif /* UTIL_H_INCLUDED */
+#endif  // INCLUDE_UTIL_H_

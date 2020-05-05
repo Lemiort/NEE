@@ -10,13 +10,13 @@ PerlinNoise::PerlinNoise() {
 
 PerlinNoise::PerlinNoise(double _persistence, double _frequency,
                          double _amplitude, int _octaves, int _randomseed) {
-    //сила, частота
+    // сила, частота
     persistence = _persistence;
-    //частота
+    // частота
     frequency = _frequency;
-    //амплитуда
+    // амплитуда
     amplitude = _amplitude;
-    //октава
+    // октава
     octaves = _octaves;
     randomseed = 2 + _randomseed * _randomseed;
 }
@@ -51,8 +51,8 @@ double PerlinNoise::Total(double i, double j) const {
 }
 
 double PerlinNoise::GetValue(double x, double y) const {
-    int Xint = (int)x;
-    int Yint = (int)y;
+    int Xint = static_cast<int>(x);
+    int Yint = static_cast<int>(y);
     double Xfrac = x - Xint;
     double Yfrac = y - Yint;
 
@@ -111,5 +111,6 @@ double PerlinNoise::Noise(int x, int y) const {
     int n = x + y * 57;
     n = (n << 13) ^ n;
     int t = (n * (n * n * 15731 + 789221) + 1376312589) & 0x7fffffff;
-    return 1.0 - double(t) * 0.931322574615478515625e-9;  /// 1073741824.0);
+    return 1.0 - static_cast<double>(t) *
+                     0.931322574615478515625e-9;  /// 1073741824.0);
 }

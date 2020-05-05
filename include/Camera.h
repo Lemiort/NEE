@@ -1,5 +1,5 @@
-#ifndef CAMERA_H_INCLUDED
-#define CAMERA_H_INCLUDED
+#ifndef INCLUDE_CAMERA_H_
+#define INCLUDE_CAMERA_H_
 
 #include <glm/glm.hpp>
 
@@ -68,4 +68,4 @@ private:
     glm::vec2 m_mousePos;
 };
 
-#endif  // CAMERA_H_INCLUDED
+#endif  // INCLUDE_CAMERA_H_

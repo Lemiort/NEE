@@ -1,7 +1,6 @@
-#ifndef GAMECONSOLE_H
-#define GAMECONSOLE_H
+#ifndef INCLUDE_GAMECONSOLE_H_
+#define INCLUDE_GAMECONSOLE_H_
 #include <string>
-//#include <vector>
 
 typedef void(stringOutFunc)(std::string);
 class GameConsole {
@@ -16,4 +15,4 @@ protected:
 private:
 };
 
-#endif  // GAMECONSOLE_H
+#endif  // INCLUDE_GAMECONSOLE_H_

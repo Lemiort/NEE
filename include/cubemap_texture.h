@@ -1,14 +1,15 @@
-#ifndef CUBEMAP_TEXTURE_H_INCLUDED
-#define CUBEMAP_TEXTURE_H_INCLUDED
+#ifndef INCLUDE_CUBEMAP_TEXTURE_H_
+#define INCLUDE_CUBEMAP_TEXTURE_H_
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include <string>
 
-using namespace std;
+using std::string;
+
 class CubemapTexture {
 public:
-    CubemapTexture(const string& Directory, const string& PosXFilename,
+        CubemapTexture(const string& Directory, const string& PosXFilename,
                    const string& NegXFilename, const string& PosYFilename,
                    const string& NegYFilename, const string& PosZFilename,
                    const string& NegZFilename);
@@ -26,4 +27,4 @@ public:
     GLuint m_textureObj;
 };
 
-#endif  // CUBEMAP_TEXTURE_H_INCLUDED
+#endif  // INCLUDE_CUBEMAP_TEXTURE_H_

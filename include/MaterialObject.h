@@ -1,5 +1,7 @@
-#ifndef MATERIALOBJECT_H
-#define MATERIALOBJECT_H
+#ifndef INCLUDE_MATERIALOBJECT_H_
+#define INCLUDE_MATERIALOBJECT_H_
+
+#include <memory>
 
 #include <Material.h>
 #include <RenderableObject.h>
@@ -9,13 +11,13 @@ class MaterialObject : public RenderableObject {
 public:
     MaterialObject();
     virtual ~MaterialObject();
-    virtual void SetMaterial(shared_ptr<Material> _mat);
-    virtual shared_ptr<Material> GetMaterial();
+    virtual void SetMaterial(std::shared_ptr<Material> _mat);
+    virtual std::shared_ptr<Material> GetMaterial();
 
 protected:
-    shared_ptr<Material> mat;
+    std::shared_ptr<Material> mat;
 
 private:
 };
 
-#endif  // MATERIALOBJECT_H
+#endif  // INCLUDE_MATERIALOBJECT_H_

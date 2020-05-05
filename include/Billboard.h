@@ -1,6 +1,8 @@
-#ifndef BILLBOARD_H
-#define BILLBOARD_H
+#ifndef INCLUDE_BILLBOARD_H_
+#define INCLUDE_BILLBOARD_H_
+
 #include <glm/glm.hpp>
+#include <memory>
 
 #include "Assistant.h"
 #include "Camera.h"
@@ -12,7 +14,7 @@ class Billboard : public RenderableObject {
 public:
     Billboard();
     //  Billboard(GLuint shader);
-    Billboard(shared_ptr<Shader> shader);
+    explicit Billboard(std::shared_ptr<Shader> shader);
     ~Billboard();
     void Init(const char* TexFilename);
     void Render(Camera* cam);
@@ -30,4 +32,4 @@ private:
     GLuint camViewID, camPosID;
 };
 
-#endif  // BILLBOARD_H
+#endif  // INCLUDE_BILLBOARD_H_

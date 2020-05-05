@@ -11,7 +11,7 @@ char* ReadFile(const char* filename) {
         return 0;
     }
     fseek(fp, 0, SEEK_END);
-    long file_length = ftell(fp);
+    int64_t file_length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     char* contents = new char[file_length + 1];
     for (int i = 0; i < file_length + 1; i++) {
@@ -71,7 +71,6 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID) {
     glAttachShader(shaderID, vertexShaderID);
     glAttachShader(shaderID, fragmentShaderID);
     glLinkProgram(shaderID);
-    //��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};
@@ -112,7 +111,6 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
     glAttachShader(shaderID, fragmentShaderID);
     glAttachShader(shaderID, geometryShaderID);
     glLinkProgram(shaderID);
-    //��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};

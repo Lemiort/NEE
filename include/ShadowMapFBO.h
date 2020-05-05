@@ -1,5 +1,5 @@
-#ifndef SHADOWMAPFBO_H
-#define SHADOWMAPFBO_H
+#ifndef INCLUDE_SHADOWMAPFBO_H_
+#define INCLUDE_SHADOWMAPFBO_H_
 
 #include <GL/glew.h>
 
@@ -37,4 +37,4 @@ private:
     GLuint m_textures[GBUFFER_NUM_TEXTURES];
 };
 
-#endif  // SHADOWMAPFBO_H
+#endif  // INCLUDE_SHADOWMAPFBO_H_

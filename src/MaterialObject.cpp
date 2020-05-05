@@ -8,9 +8,9 @@ MaterialObject::~MaterialObject() {
     // dtor
 }
 
-shared_ptr<Material> MaterialObject::GetMaterial() { return mat; }
+std::shared_ptr<Material> MaterialObject::GetMaterial() { return mat; }
 
-void MaterialObject::SetMaterial(shared_ptr<Material> _mat) {
+void MaterialObject::SetMaterial(std::shared_ptr<Material> _mat) {
     mat = _mat;
     this->SetShader(mat->GetShader());
     // shaderProgram = mat->GetShader();

@@ -1,5 +1,6 @@
 #include "Mesh.h"
 
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 
 Mesh::Mesh() {
@@ -13,7 +14,7 @@ Mesh::~Mesh() {
     glDeleteBuffers(1, &IBO);
 }
 
-void Mesh::SetMaterial(shared_ptr<Material> _mat) {
+void Mesh::SetMaterial(std::shared_ptr<Material> _mat) {
     mat = _mat;
     this->SetShader(mat->GetShader());
 
@@ -22,12 +23,13 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
     normalID = shaderProgram->GetAttribLocation("s_vNormal");
     uvID = shaderProgram->GetAttribLocation("s_vUV");
     tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-    //находим позиции uniform-переменных
+    // находим позиции uniform-переменных
     gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID = shaderProgram->GetUniformLocation("mRotate");  //вращение объекта
+    rotateID =
+        shaderProgram->GetUniformLocation("mRotate");  // вращение объекта
 }
 
-bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
+bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     mat = _mat;
     shaderProgram = mat->GetShader();
     // mat->Use();
@@ -44,12 +46,12 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     spverts = 0;
     try {
         FILE* fp;
-        fstream fout("ImporObj.log", ios::out);
+        std::fstream fout("ImporObj.log", std::ios::out);
         // fopen_s(&fp,model,"r+b");
         fp = fopen(model, "r+b");
         if (!fp) return false;
         fread(&spverts, sizeof(int), 1, fp);
-        fout << spverts << endl;
+        fout << spverts << std::endl;
         spvertices = new float[spverts * 3];
         spuvs = new float[spverts * 2];
         spnormals = new float[spverts * 3];
@@ -80,7 +82,7 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         }
         // vertices[0]=f;
         fread(&spfaces, sizeof(int), 1, fp);
-        fout << "\n" << spfaces << endl;
+        fout << "\n" << spfaces << std::endl;
         spindices = new int[spfaces * 3];
         for (int i = 0; i < spfaces; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
@@ -90,7 +92,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         fclose(fp);
         for (int i = 0; i < spfaces; i++) {
             fout << spindices[3 * i] << ",";
-            fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2] << endl;
+            fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2]
+                 << std::endl;
         }
         fout.close();
     } catch (const std::bad_alloc&) {
@@ -98,26 +101,26 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         return false;
     }
 
-    //создаём буффер, в котором будем хранить всё
+    // создаём буффер, в котором будем хранить всё
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3 + 3 + 2 + 3) * (spverts),
                  nullptr, GL_STATIC_DRAW);
-    //загружаем вершины в буффер
+    // загружаем вершины в буффер
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
                     spvertices);
-    //нормали
+    // нормали
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * spverts,
                     sizeof(float) * 3 * spverts, spnormals);
-    //текстурные координаты
+    // текстурные координаты
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * spverts,
                     sizeof(float) * 2 * spverts, spuvs);
-    //тангент
+    // тангент
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * spverts,
                     sizeof(float) * 3 * spverts, sptangent);
 
-    //привязываем индексы к буфферу
+    // привязываем индексы к буфферу
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
@@ -127,9 +130,10 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     normalID = shaderProgram->GetAttribLocation("s_vNormal");
     uvID = shaderProgram->GetAttribLocation("s_vUV");
     tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-    //находим позиции uniform-переменных
+    // находим позиции uniform-переменных
     gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID = shaderProgram->GetUniformLocation("mRotate");  //вращение объекта
+    rotateID =
+        shaderProgram->GetUniformLocation("mRotate");  // вращение объекта
 
     for (int i = 0; i < 3; i++) {
         position[i] = 0;
@@ -137,7 +141,7 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         scale[i] = 1;
     }
 
-    //убираем за собой
+    // убираем за собой
     delete[] spvertices;
     delete[] spuvs;
     delete[] spnormals;
@@ -163,17 +167,20 @@ void Mesh::Render(Camera* cam) {
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 3 * spverts));
-    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 6 * spverts));
-    glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 8 * spverts));
+    glVertexAttribPointer(
+        normalID, 3, GL_FLOAT, GL_FALSE, 0,
+        reinterpret_cast<const void*>(sizeof(float) * 3 * spverts));
+    glVertexAttribPointer(
+        uvID, 2, GL_FLOAT, GL_FALSE, 0,
+        reinterpret_cast<const void*>(sizeof(float) * 6 * spverts));
+    glVertexAttribPointer(
+        tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+        reinterpret_cast<const void*>(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSR()));
     glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       glm::value_ptr(TM2.GetRotate()));  //вращение модели
+                       glm::value_ptr(TM2.GetRotate()));  // вращение модели
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);

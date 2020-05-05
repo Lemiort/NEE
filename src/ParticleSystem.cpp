@@ -124,9 +124,9 @@ void ParticleSystem::RenderParticles(Camera* cam) {
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
     TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
                           cam->GetZNear(), cam->GetZFar());
-    //матрица проекции камеры
+    // матрица проекции камеры
     // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //позиция камеры
+    // позиция камеры
     // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 
     glUseProgram(shaderProgramID);

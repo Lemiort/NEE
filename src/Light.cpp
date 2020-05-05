@@ -19,7 +19,7 @@ void DirectionalLight::SetDir(glm::vec3 dir) {
 
 DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
                                    GLfloat r, GLfloat g, GLfloat b,
-                                   shared_ptr<Material> _mat) {
+                                   std::shared_ptr<Material> _mat) {
     direction[0] = d1;
     direction[1] = d2;
     direction[2] = d3;
@@ -28,7 +28,7 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     color[1] = g;
     color[2] = b;
 
-    mesh = make_shared<Mesh>();
+    mesh = std::make_shared<Mesh>();
     // mesh->Init(_mat,"models/quad2x2front.ho3d");
     mesh->Init(_mat, "models/cube2x2x2.ho3d");
 }
@@ -57,7 +57,7 @@ SpotLight::SpotLight() {}
 
 SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
                      GLfloat b, float p1, float p2, float p3, float cut,
-                     shared_ptr<Material> _mat) {
+                     std::shared_ptr<Material> _mat) {
     color[0] = r;
     color[1] = g;
     color[2] = b;
@@ -73,13 +73,13 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     direction[3] = 1;
     Cutoff = cut;
 
-    mesh = make_shared<Mesh>();
+    mesh = std::make_shared<Mesh>();
     mesh->Init(_mat, "models/cone2.ho3d");
     mesh->SetRotation(90, 0, 0);
 }
 
 void SpotLight::Render(Camera* cam) {
-    //======Предыдущее решение задачи========
+    // ======Предыдущее решение задачи========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
     direction[2] = target[2] - position[2];
@@ -93,7 +93,7 @@ void SpotLight::Render(Camera* cam) {
 
     float xrot = 0, yrot = 0, zrot = 0;
 
-    cout << "\rproj:(" << setprecision(1);
+    std::cout << "\rproj:(" << std::setprecision(1);
 
     // X axis
     {
@@ -108,7 +108,7 @@ void SpotLight::Render(Camera* cam) {
 
         // update up vector
         proj = glm::rotate(proj, -xrot, glm::vec3(1, 0, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
     }
 
     // Y axis
@@ -124,7 +124,7 @@ void SpotLight::Render(Camera* cam) {
 
         // update the up vector
         proj = glm::rotate(proj, -yrot, glm::vec3(0, 1, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
 
         // Z axis
         if (proj != dir) {
@@ -139,14 +139,8 @@ void SpotLight::Render(Camera* cam) {
             proj = glm::rotate(proj, -zrot, glm::vec3(0, 0, 1));
         }
     }
-    cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
-
-    cout << setprecision(1) << (int)xrot << " " << (int)yrot << " " << (int)zrot
-         << ", dir:(" << direction[0] << ", " << direction[1] << ","
-         << direction[2] << ")";
 
     mesh->SetRotation(xrot, yrot, zrot);
-    //=======================================================
 
     /*//==========решение на основе сферических координат=======
     glm::vec3 sphericalDirection = ToSphericalCoordinates( dir );
@@ -158,7 +152,7 @@ void SpotLight::Render(Camera* cam) {
                     sphericalDirection.z - sphericalUp.z);
     //=========================================================*/
 
-    //=====решение на основе поворота вокруг вектора============
+    // =====решение на основе поворота вокруг вектора============
     // glm::vec3 rotateVector =  dir.Cross(proj);
     /*mesh->SetVectorRotate(rotateVector,
                           glm::angle(dir,proj));*/
@@ -214,7 +208,7 @@ void SpotLight::SetPos(glm::vec3 pos) {
 }
 
 PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
-                       float p, shared_ptr<Material> _mat) {
+                       float p, std::shared_ptr<Material> _mat) {
     position[0] = d1;
     position[1] = d2;
     position[2] = d3;
@@ -241,7 +235,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
-    sphere = make_shared<Mesh>();
+    sphere = std::make_shared<Mesh>();
     sphere->Init(_mat, "models/normal_geosphere.ho3d");
     radius = CalcSphereSize() / 2;
     std::cout << "\nLight radius is " << radius;
@@ -294,7 +288,7 @@ float PointLight::CalcSphereSize() {
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vs");
     char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fs");
-    shaderProgram = make_shared<Shader>();
+    shaderProgram = std::make_shared<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
     shaderProgram->Init();
@@ -323,7 +317,7 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
-           shared_ptr<Shader> shader) {
+           std::shared_ptr<Shader> shader) {
     // shaderProgramID=shader;
     shaderProgram = shader;
     glGenBuffers(1, &VBO);
@@ -367,4 +361,4 @@ void Line::Render(Camera* cam) {
     glDrawArrays(GL_LINES, 0, 2);
     glDisableVertexAttribArray(positionID);
 }
-shared_ptr<Shader> Line::GetShader() { return shaderProgram; }
+std::shared_ptr<Shader> Line::GetShader() { return shaderProgram; }

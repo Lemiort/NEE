@@ -1,5 +1,5 @@
-#ifndef TEXTURE_H_INCLUDED
-#define TEXTURE_H_INCLUDED
+#ifndef INCLUDE_TEXTURE_H_
+#define INCLUDE_TEXTURE_H_
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
 
@@ -13,7 +13,7 @@ protected:
 
 public:
     GLuint GetTextureID();
-    Texture(bool _del = true);
+    explicit Texture(bool _del = true);
     virtual ~Texture();
     // virtual ~Texture(bool del=true);
     std::string GetParameters();
@@ -23,10 +23,10 @@ public:
 class Texture2D : public Texture {
 protected:
 public:
-    //конструктор абстрактной текстуры
-    Texture2D(GLuint texBufferID, bool _del = true);
+    // конструктор абстрактной текстуры
+    explicit Texture2D(GLuint texBufferID, bool _del = true);
 
-    //конструктор по умолчанию, удаляет текстуру после использования
+    // конструктор по умолчанию, удаляет текстуру после использования
     Texture2D() {}
     virtual ~Texture2D();
     virtual bool Load(const char* filename);
@@ -49,4 +49,4 @@ public:
 protected:
 };
 
-#endif  // TEXTURE_H_INCLUDED
+#endif  // INCLUDE_TEXTURE_H_

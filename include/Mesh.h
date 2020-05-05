@@ -1,8 +1,8 @@
-#ifndef MESH_H_INCLUDED
-#define MESH_H_INCLUDED
-#include <fstream>
+#ifndef INCLUDE_MESH_H_
+#define INCLUDE_MESH_H_
+
 #include <glm/glm.hpp>
-#include <iostream>
+#include <memory>
 
 #include "Assistant.h"
 #include "Camera.h"
@@ -13,9 +13,6 @@
 #include "ScaleableObject.h"
 #include "Shader.h"
 #include "Texture.h"
-//#include "Light.h"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
-using namespace std;
 
 struct Vertex {
     glm::vec3 Pos;
@@ -23,8 +20,8 @@ struct Vertex {
     glm::vec3 Normal;
     glm::vec3 Tangent;
     Vertex() {}
-    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal,
-           glm::vec3& tangent) {
+    Vertex(const glm::vec3& pos, const glm::vec3& uv, const glm::vec3& normal,
+           const glm::vec3& tangent) {
         Pos = pos;
         UV = uv;
         Normal = normal;
@@ -50,9 +47,9 @@ protected:
     int spfaces, spverts;
     int Scale;
 
-    //угол вращения вокруг вектора
+    // угол вращения вокруг вектора
     float rPhi;
-    //вектор вращения
+    // вектор вращения
     glm::vec3 rv;
 
 public:
@@ -60,8 +57,8 @@ public:
     virtual ~Mesh();
     int GetNumFaces();
     int GetNumVerts();
-    void SetMaterial(shared_ptr<Material> _mat);
-    bool Init(shared_ptr<Material> _mat, const char* model);
+    void SetMaterial(std::shared_ptr<Material> _mat);
+    bool Init(std::shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
     void Render(Camera* cam);
     void SetVectorRotate(glm::vec3 v, float phi);
@@ -69,4 +66,5 @@ public:
 
 private:
 };
-#endif  // MESH_H_INCLUDED
+
+#endif  // INCLUDE_MESH_H_

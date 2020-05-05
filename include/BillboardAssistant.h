@@ -1,11 +1,12 @@
-#ifndef BILLBOARDASSISTANT_H
-#define BILLBOARDASSISTANT_H
+#ifndef INCLUDE_BILLBOARDASSISTANT_H_
+#define INCLUDE_BILLBOARDASSISTANT_H_
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
 
 #include "ShaderFunctions.h"
 #include "util.h"
+
 class BillboardAssistant {
 public:
     BillboardAssistant();
@@ -25,4 +26,4 @@ private:
     GLuint shaderProgramID;
 };
 
-#endif  // BILLBOARDASSISTANT_H
+#endif  // INCLUDE_BILLBOARDASSISTANT_H_

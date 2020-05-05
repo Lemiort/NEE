@@ -63,7 +63,7 @@ GLuint TextureCreateFromTGA(const char *fileName) {
         return 0;
     }
 
-    header = (TGAHeader *)buffer;
+    header = reinterpret_cast<TGAHeader *>(buffer);
 
     // проверим формат TGA-файла - несжатое RGB или RGBA изображение
     if (header->datatype != 2 ||

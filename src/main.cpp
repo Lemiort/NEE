@@ -1,20 +1,157 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <main.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <ctime>
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <iostream>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <thread>
 
-using namespace std;
+#include "Billboard.h"
+#include "GBuffer.h"
+#include "Light.h"
+#include "Logger.h"
+#include "Material.h"
+#include "Mesh.h"
+#include "PerlinNoise.h"
+#include "ShadowMapFBO.h"
+#include "Text_2D.h"
+#include "skybox.h"
+#include "tga_loader.h"
+#include "util.h"
+#include "version.h"
+
+#define WINDOW_WIDTH 1366
+#define WINDOW_HEIGHT 768
+
+#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a) / sizeof(a[0]))
+
+std::shared_ptr<Shader> meshShader;
+std::shared_ptr<Shader> skyboxShader;
+std::shared_ptr<Shader> textShader;
+std::shared_ptr<Shader> lightShader;
+std::shared_ptr<Shader> shadowShader;
+std::shared_ptr<Shader> shadowMeshShader;
+std::shared_ptr<Shader> DSGeometryPassShader;
+std::shared_ptr<Shader> DSPointLightShader;
+std::shared_ptr<Shader> DSDirectionalLightShader;
+std::shared_ptr<Shader> DSSpotLightShader;
+std::shared_ptr<Shader> DSStencilPassShader;
+
+std::shared_ptr<Material> shadowMeshMaterial;
+std::shared_ptr<Material> DSGeometryPassMaterial;
+std::shared_ptr<Material> DSPointLightMaterial;
+std::shared_ptr<Material> DSDirectionalLightMaterial;
+std::shared_ptr<Material> DSSpotLightMaterial;
+std::shared_ptr<Material> DSStencilPassMaterial;
+
+GBuffer* gBuffer1;
+GLFWwindow* hiddenWindow;
+
+struct Mouse {
+    bool rightButtonPressed;
+    bool leftButtonPressed;
+    double posX;
+    double posY;
+    double dx, dy;
+    Mouse() {
+        rightButtonPressed = false;
+        leftButtonPressed = false;
+        posX = 0.0f;
+        posY = 0.0f;
+        dx = 0.0f;
+        dy = 0.0f;
+    }
+    void Update(double x, double y) {
+        dx = x - posX;
+        dy = y - posY;
+        posX = x;
+        posY = y;
+    }
+} mouse;
+
+void PreInitScene(GLFWwindow* window);
+void InitRender(GLFWwindow* window, string message);
+int InitScene(GLFWwindow* window);
+
+void RenderScene(GLFWwindow* window);
+
+void DSLightingPass();
+
+void RenderPass();
+void ShadowPass();
+
+void DSGeometryPass();
+void DSBeginLightPasses();
+void DSStencilPass(Light& light);
+void DSSpotLightPass(SpotLight& spotLight);
+void DSPointLightPass(PointLight& pointLight);
+void DSDirectionalLightPass(DirectionalLight& directionalLight);
+void DSFinalPass();
+void DSEndLigtPasses();
+void InterfacePass();
+
+void FrameBufferSizeCallback(GLFWwindow* window, int w, int h);
+void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+void MousePosCallBack(GLFWwindow* window, double x, double y);
+void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
+                 int mods);
+void ErrorCallback(int error, const char* description);
+void CalcFPS();
+
+int width;
+int height;
+
+GLuint gWorldID, gCamViewID;
+GLuint rotateID;
+GLuint dirLightDirID, dirLightColID;
+GLuint pointLightColID, pointLightIntID, pointLightPosID;
+GLuint spotLightColID, spotLightDirID, spotLightCutoffID, spotLightPosID;
+GLuint camtransID, camPosID;
+
+DirectionalLight* directionalLight1;
+PointLight *pointLight1, *pointLight2;
+SpotLight* spotLight1;
+static Camera* pGameCamera =
+    new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f);
+float Scale;
+// GLfloat light[]= {0.0,1.0,-1.0,1.0};
+int spfaces;
+int spverts;
+Line* xline;
+Line* yline;
+Line* zline;
+Line* dirLightLine;
+Mesh TestMesh, Plane, Cube;
+SkyBox* skybox1;
+TextLine2d *tline1, *tline2;
+FontLine2d* fLine1;
+PerlinNoise* noise1;
+Billboard* bb1;
+ShadowMapFBO* smfbo1;
+
+// сигнал о том, что прогрузка шейдеров и пр. завершилась
+bool initialized;
+
+// сообщение, передаваемое между двум потоками
+std::string sharedMessage;
+std::shared_ptr<Material> mainMaterial, secondMaterial, shadowMaterial;
+std::shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;
+float fps;
+int frameCount;
+double lastTime;
+int renderType;
 
 void CalcFPS() {
     double currentTime = glfwGetTime();
     ++frameCount;
     if (currentTime - lastTime >= 1.0) {
-        fps = (double)frameCount / (currentTime - lastTime);
+        fps = static_cast<double>(frameCount) / (currentTime - lastTime);
         lastTime += 1.0;
         frameCount = 0;
     }
@@ -50,9 +187,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                      timeinfo);
             int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_TGA, 0, 0,
                                               width, height);
-            if (result) cout << "\n Screenshot saved as " << buffer;
-        } else
+            if (result) std::cout << "\n Screenshot saved as " << buffer;
+        } else {
             pGameCamera->OnKeyboard(key);
+        }
     }
 }
 void MousePosCallBack(GLFWwindow* window, double x, double y) {
@@ -62,8 +200,7 @@ void MousePosCallBack(GLFWwindow* window, double x, double y) {
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-    if (button == GLFW_MOUSE_BUTTON_2)  // right button
-    {
+    if (button == GLFW_MOUSE_BUTTON_2) {  // right button
         if (action == GLFW_PRESS) {
             mouse.rightButtonPressed = true;
         } else {
@@ -86,7 +223,7 @@ void FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
 void ShadowPass() {
     smfbo1->BindForWriting();
     // gBuffer1->BindForWriting();
-    //этап рисовки
+    // этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
     Scale += 0.021f;
@@ -113,9 +250,9 @@ void ShadowPass() {
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
-    //освещение
+    // освещение
     {
-        //направленный свет
+        // направленный свет
         Assistant LA;
         LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
                  directionalLight1->color[2]);
@@ -124,7 +261,7 @@ void ShadowPass() {
         glUniform3f(dirLightDirID, directionalLight1->direction[0],
                     directionalLight1->direction[1],
                     directionalLight1->direction[2]);
-        //точечный
+        // точечный
         Assistant LA2;
         LA2.Scale(pointLight1->color[0], pointLight1->color[1],
                   pointLight1->color[2]);
@@ -133,7 +270,7 @@ void ShadowPass() {
         glUniform3f(pointLightPosID, pointLight1->position[0],
                     pointLight1->position[1], pointLight1->position[2]);
         glUniform1f(pointLightIntID, pointLight1->power);
-        //прожектор
+        // прожектор
         Assistant LA3;
         LA3.Scale(spotLight1->color[0], spotLight1->color[1],
                   spotLight1->color[2]);
@@ -147,7 +284,7 @@ void ShadowPass() {
                     spotLight1->position[1], spotLight1->position[2]);
     }
 
-    //вращение камеры для спекуляра
+    // вращение камеры для спекуляра
     glUniform3f(camPosID, lightCam->GetPos().x, lightCam->GetPos().y,
                 lightCam->GetPos().z);
 
@@ -167,7 +304,7 @@ void ShadowPass() {
 }
 
 void RenderPass() {
-    //этап рисовки
+    // этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
     Scale += 0.021f;
@@ -248,7 +385,7 @@ void RenderPass() {
     mainMaterial->SetColorTexture(tempTexture);
     fLine1->Render(tempTexture->GetParameters(),-1.0f,-0.2f,32.0f);*/
     Plane.SetMaterial(mainMaterial);
-    //тупо копипаст
+    // тупо копипаст
     {
         meshShader->Use();
         GLuint gLightCamViewID = meshShader->GetUniformLocation("gLightVC");
@@ -260,9 +397,9 @@ void RenderPass() {
         glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
                            glm::value_ptr(TM2.GetVC()));
 
-        //освещение
+        // освещение
         {
-            //направленный свет
+            // направленный свет
             Assistant LA;
             LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
                      directionalLight1->color[2]);
@@ -271,7 +408,7 @@ void RenderPass() {
             glUniform3f(dirLightDirID, directionalLight1->direction[0],
                         directionalLight1->direction[1],
                         directionalLight1->direction[2]);
-            //точечный
+            // точечный
             Assistant LA2;
             LA2.Scale(pointLight1->color[0], pointLight1->color[1],
                       pointLight1->color[2]);
@@ -280,7 +417,7 @@ void RenderPass() {
             glUniform3f(pointLightPosID, pointLight1->position[0],
                         pointLight1->position[1], pointLight1->position[2]);
             glUniform1f(pointLightIntID, pointLight1->power);
-            //прожектор
+            // прожектор
             Assistant LA3;
             LA3.Scale(spotLight1->color[0], spotLight1->color[1],
                       spotLight1->color[2]);
@@ -294,7 +431,7 @@ void RenderPass() {
                         spotLight1->position[1], spotLight1->position[2]);
         }
 
-        //вращение камеры для спекуляра
+        // вращение камеры для спекуляра
         glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                     pGameCamera->GetPos().z);
     }
@@ -395,7 +532,7 @@ void DSLightingPass() {
 
 void DSStencilPass(Light& light) {
     // m_nullTech.Enable();
-    //включаем шейдер
+    // включаем шейдер
     DSStencilPassShader->Use();
 
     // Отключаем запись цвета / глубины и включаем трафарет
@@ -424,12 +561,12 @@ void DSStencilPass(Light& light) {
                  pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    //определяем адрес переменных камеры
+    // определяем адрес переменных камеры
     gCamViewID = DSStencilPassShader->GetUniformLocation("gVC");
     rotateID = DSStencilPassShader->GetUniformLocation("mRotate");
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
-    //загружаем матрицу камеры
+    // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
 
     light.SetMaterial(DSStencilPassMaterial);
@@ -456,39 +593,39 @@ void DSPointLightPass(PointLight& pointLight) {
                  pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    //включаем шейдер
+    // включаем шейдер
     DSPointLightShader->Use();
 
-    //определяем адрес переменных камеры
+    // определяем адрес переменных камеры
     gCamViewID = DSPointLightShader->GetUniformLocation("gVC");
     rotateID = DSPointLightShader->GetUniformLocation("mRotate");
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
-    //загружаем матрицу камеры
+    // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
-    //взагружаем вращение камеры для спекуляра
+    // взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
 
-    //загружаем текстуры в шейдер
+    // загружаем текстуры в шейдер
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
 
-    //включаем данные из буффера
+    // включаем данные из буффера
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
 
-    //определяем адрес параметров света
+    // определяем адрес параметров света
     pointLightPosID =
         DSPointLightShader->GetUniformLocation("s_vPointLightPos");
     pointLightIntID =
         DSPointLightShader->GetUniformLocation("pointLightIntensity");
     pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
 
-    //загружаем параметры света для источника 1
+    // загружаем параметры света для источника 1
     Assistant LA2;
     LA2.Scale(pointLight.color[0], pointLight.color[1], pointLight.color[2]);
     glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
@@ -523,34 +660,34 @@ void DSSpotLightPass(SpotLight& spotLight) {
                  pGameCamera->GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    //включаем шейдер
+    // включаем шейдер
     DSSpotLightShader->Use();
 
-    //определяем адрес переменных камеры
+    // определяем адрес переменных камеры
     gCamViewID = DSSpotLightShader->GetUniformLocation("gVC");
     rotateID = DSSpotLightShader->GetUniformLocation("mRotate");
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
-    //загружаем матрицу камеры
+    // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
-    //взагружаем вращение камеры для спекуляра
+    // взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
 
-    //загружаем текстуры в шейдер
+    // загружаем текстуры в шейдер
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
 
-    //определяем адрес параметров света
+    // определяем адрес параметров света
     spotLightPosID = DSSpotLightShader->GetUniformLocation("sLightPos");
     spotLightColID = DSSpotLightShader->GetUniformLocation("sLightCol");
     spotLightDirID = DSSpotLightShader->GetUniformLocation("sLightDir");
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
-    //загружаем параметры света для источника 1
+    // загружаем параметры света для источника 1
     Assistant LA2;
     LA2.Scale(spotLight.color[0], spotLight.color[1], spotLight.color[2]);
     glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
@@ -561,7 +698,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
                 spotLight.direction[2]);
     glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
 
-    //включаем данные из буффера
+    // включаем данные из буффера
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     spotLight.SetMaterial(DSSpotLightMaterial);
@@ -586,23 +723,23 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     DSDirectionalLightShader->Use();
-    //получаем адрес параметров камеры
+    // получаем адрес параметров камеры
     gCamViewID = DSDirectionalLightShader->GetUniformLocation("gVC");
     rotateID = DSDirectionalLightShader->GetUniformLocation("mRotate");
     camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
-    //загружаем вращение камеры для спекуляра
+    // загружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
-    //загружаем матрицу камеры
+    // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
 
-    //получаем адрес переменных света
+    // получаем адрес переменных света
     dirLightColID =
         DSDirectionalLightShader->GetUniformLocation("dirLightColor");
     dirLightDirID =
         DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
 
-    //загрузка параметров света
+    // загрузка параметров света
     Assistant LA2;
     LA2.Scale(directionalLight.color[0], directionalLight.color[1],
               directionalLight.color[2]);
@@ -611,7 +748,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 
-    //загружаем текстуры в шейдер
+    // загружаем текстуры в шейдер
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
                                            4);  // world pos
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),
@@ -629,7 +766,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
                             directionalLight1->direction[2]);*/
     // glUniform1f(pointLightIntID,pointLight1->power);
 
-    //включаем данные из буффера
+    // включаем данные из буффера
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
@@ -682,7 +819,7 @@ void InterfacePass() {
 void DSGeometryPass() {
     gBuffer1->BindForGeomPass();
     // gBuffer1->BindForWriting();
-    //Только геометрический проход обновляет тест глубины
+    // Только геометрический проход обновляет тест глубины
     glDepthMask(GL_TRUE);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -725,7 +862,7 @@ void RenderScene(GLFWwindow* window) {
     // DSBeginLightPasses();//вообще пока не нужно
     // DSPointLightPass();
     // DSLightingPass();
-    //обычный deffered shading
+    // обычный deffered shading
     if (renderType == 0) {
         gBuffer1->StartFrame();
         DSGeometryPass();
@@ -752,9 +889,7 @@ void RenderScene(GLFWwindow* window) {
 
         DSFinalPass();
         // DSEndLigtPasses();
-    }
-    //дебагинговый вид
-    else if (renderType <= 4) {
+    } else if (renderType <= 4) {  // дебагинговый вид
         DSGeometryPass();
         DSLightingPass();
     } else {
@@ -767,12 +902,12 @@ void PreInitScene(GLFWwindow* window) {
     lastTime = glfwGetTime();
     frameCount = 0;
 
-    //шейдер текста
+    // шейдер текста
     {
         char* vertexShaderSorceCode = ReadFile("shaders/text2d.vs");
         char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fs");
 
-        textShader = make_shared<Shader>();
+        textShader = std::make_shared<Shader>();
         textShader->AddShader(vertexShaderSorceCode, VertexShader);
         textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
         textShader->Init();
@@ -838,12 +973,12 @@ int InitScene(GLFWwindow* window) {
 
     pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
 
-    //нормальный шейдер
+    // нормальный шейдер
     // InitRender(window, "Normal shader loading...");
     char* vertexShaderSorceCode = ReadFile("shaders/vertexShader.vs");
     char* fragmentShaderSourceCode = ReadFile("shaders/fragmentShader.fs");
     {
-        meshShader = make_shared<Shader>();
+        meshShader = std::make_shared<Shader>();
         meshShader->AddShader((const char*)vertexShaderSorceCode, VertexShader);
         meshShader->AddShader((const char*)fragmentShaderSourceCode,
                               FragmnetShader);
@@ -856,10 +991,10 @@ int InitScene(GLFWwindow* window) {
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
 
-    //основной материал
+    // основной материал
     {
         InitRender(window, "Main material loading...");
-        mainMaterial = make_shared<Material>();
+        mainMaterial = std::make_shared<Material>();
         mainMaterial->Init(meshShader);
     }
 
@@ -867,12 +1002,12 @@ int InitScene(GLFWwindow* window) {
     TestMesh.Init(mainMaterial, "models/torus1.ho3d");
     // Plane.Init(mainMaterial, "models/plane.ho3d");
 
-    //шейдер тени
+    // шейдер тени
     {
         InitRender(window, "Shade shader loading...");
         vertexShaderSorceCode = ReadFile("shaders/fbo.vs");
         fragmentShaderSourceCode = ReadFile("shaders/fbo.fs");
-        shadowShader = make_shared<Shader>();
+        shadowShader = std::make_shared<Shader>();
         shadowShader->AddShader((const char*)vertexShaderSorceCode,
                                 VertexShader);
         shadowShader->AddShader((const char*)fragmentShaderSourceCode,
@@ -883,20 +1018,20 @@ int InitScene(GLFWwindow* window) {
         delete[] fragmentShaderSourceCode;
     }
 
-    //материал тени
+    // материал тени
     {
         InitRender(window, "Shade Material loading...");
-        shadowMaterial = make_shared<Material>();
+        shadowMaterial = std::make_shared<Material>();
         shadowMaterial->Init(shadowShader);
     }
 
-    //затенённый шейдер
+    // затенённый шейдер
     {
         InitRender(window, "Shaded shader loading...");
         vertexShaderSorceCode = ReadFile("shaders/shadowed.vs");
         // fragmentShaderSourceCode=ReadFile("shaders/fragmentShader.fs");
         fragmentShaderSourceCode = ReadFile("shaders/shadowed.fs");
-        shadowMeshShader = make_shared<Shader>();
+        shadowMeshShader = std::make_shared<Shader>();
         shadowMeshShader->AddShader((const char*)vertexShaderSorceCode,
                                     VertexShader);
         shadowMeshShader->AddShader((const char*)fragmentShaderSourceCode,
@@ -907,48 +1042,48 @@ int InitScene(GLFWwindow* window) {
         delete[] fragmentShaderSourceCode;
     }
 
-    //затенённый материал
+    // затенённый материал
     {
         InitRender(window, "Shaded material loading...");
-        shadowMeshMaterial = make_shared<Material>();
+        shadowMeshMaterial = std::make_shared<Material>();
         shadowMeshMaterial->Init(shadowMeshShader);
-        whiteTexture = make_shared<Texture2D>();
+        whiteTexture = std::make_shared<Texture2D>();
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
         Cube.Init(shadowMeshMaterial, "models/normal_geosphere.ho3d");
         Plane.Init(shadowMeshMaterial, "models/normal_plane.ho3d");
     }
 
-    //шейдер StencilPass материал
+    // шейдер StencilPass материал
     {
         InitRender(window, "StencilPass shader loading...");
-        //грузим шейдер
+        // грузим шейдер
         {
             vertexShaderSorceCode = ReadFile("shaders/DSStencilPass.vs");
-            DSStencilPassShader = make_shared<Shader>();
+            DSStencilPassShader = std::make_shared<Shader>();
             DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,
                                            VertexShader);
             DSStencilPassShader->Init();
 
             delete[] vertexShaderSorceCode;
         }
-        //грузим материал
+        // грузим материал
         {
-            DSStencilPassMaterial = make_shared<Material>();
+            DSStencilPassMaterial = std::make_shared<Material>();
             DSStencilPassMaterial->Init(DSStencilPassShader);
         }
     }
 
-    //шейдер GBufferа и сам буффер, материал
+    // шейдер GBufferа и сам буффер, материал
     {
         InitRender(window, "Gbuffer shader loading...");
         gBuffer1 = new GBuffer;
         gBuffer1->Init(width, height);
-        //грузим шейдер
+        // грузим шейдер
         {
             vertexShaderSorceCode = ReadFile("shaders/DSGeometryPass.vs");
             fragmentShaderSourceCode = ReadFile("shaders/DSGeometryPass.fs");
-            DSGeometryPassShader = make_shared<Shader>();
+            DSGeometryPassShader = std::make_shared<Shader>();
             DSGeometryPassShader->AddShader((const char*)vertexShaderSorceCode,
                                             VertexShader);
             DSGeometryPassShader->AddShader(
@@ -958,21 +1093,21 @@ int InitScene(GLFWwindow* window) {
             delete[] vertexShaderSorceCode;
             delete[] fragmentShaderSourceCode;
         }
-        //грузим материал
+        // грузим материал
         {
-            DSGeometryPassMaterial = make_shared<Material>();
+            DSGeometryPassMaterial = std::make_shared<Material>();
             DSGeometryPassMaterial->Init(DSGeometryPassShader);
         }
     }
 
-    //шейдера света
+    // шейдера света
     {
         InitRender(window, "Light shader loading...");
-        //шейдер точечного света
-        {//грузим шейдер
+        // шейдер точечного света
+        {// грузим шейдер
          {vertexShaderSorceCode = ReadFile("shaders/DSPointLight.vs");
         fragmentShaderSourceCode = ReadFile("shaders/DSPointLight.fs");
-        DSPointLightShader = make_shared<Shader>();
+        DSPointLightShader = std::make_shared<Shader>();
         DSPointLightShader->AddShader((const char*)vertexShaderSorceCode,
                                       VertexShader);
         DSPointLightShader->AddShader((const char*)fragmentShaderSourceCode,
@@ -982,18 +1117,17 @@ int InitScene(GLFWwindow* window) {
         delete[] vertexShaderSorceCode;
         delete[] fragmentShaderSourceCode;
     }
-    //грузим материал
+    // грузим материал
     {
-        DSPointLightMaterial = make_shared<Material>();
+        DSPointLightMaterial = std::make_shared<Material>();
         DSPointLightMaterial->Init(DSPointLightShader);
     }
 }
-
-//шейдер направленного света
-{//грузим шейдер
- {vertexShaderSorceCode = ReadFile("shaders/DSDirectionalLight.vs");
+// шейдер направленного света
+{{// грузим шейдер
+  vertexShaderSorceCode = ReadFile("shaders/DSDirectionalLight.vs");
 fragmentShaderSourceCode = ReadFile("shaders/DSDirectionalLight.fs");
-DSDirectionalLightShader = make_shared<Shader>();
+DSDirectionalLightShader = std::make_shared<Shader>();
 DSDirectionalLightShader->AddShader((const char*)vertexShaderSorceCode,
                                     VertexShader);
 DSDirectionalLightShader->AddShader((const char*)fragmentShaderSourceCode,
@@ -1003,20 +1137,19 @@ DSDirectionalLightShader->Init();
 delete[] vertexShaderSorceCode;
 delete[] fragmentShaderSourceCode;
 }
-//грузим материал
+// грузим материал
 {
-    DSDirectionalLightMaterial = make_shared<Material>();
+    DSDirectionalLightMaterial = std::make_shared<Material>();
     DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
 }
 }
-
-//шейдер прожектора света
+// шейдер прожектора света
 {
-    //грузим шейдер
+    // грузим шейдер
     {
         vertexShaderSorceCode = ReadFile("shaders/DSSpotLight.vs");
         fragmentShaderSourceCode = ReadFile("shaders/DSSpotLight.fs");
-        DSSpotLightShader = make_shared<Shader>();
+        DSSpotLightShader = std::make_shared<Shader>();
         DSSpotLightShader->AddShader((const char*)vertexShaderSorceCode,
                                      VertexShader);
         DSSpotLightShader->AddShader((const char*)fragmentShaderSourceCode,
@@ -1026,21 +1159,21 @@ delete[] fragmentShaderSourceCode;
         delete[] vertexShaderSorceCode;
         delete[] fragmentShaderSourceCode;
     }
-    //грузим материал
+    // грузим материал
     {
-        DSSpotLightMaterial = make_shared<Material>();
+        DSSpotLightMaterial = std::make_shared<Material>();
         DSSpotLightMaterial->Init(DSSpotLightShader);
     }
 }
 }
 
-//шейдер скайбокса
+// шейдер скайбокса
 {
     InitRender(window, "Skybox shader loading...");
     vertexShaderSorceCode = ReadFile("shaders/skybox.vs");
     fragmentShaderSourceCode = ReadFile("shaders/skybox.fs");
 
-    skyboxShader = make_shared<Shader>();
+    skyboxShader = std::make_shared<Shader>();
 
     skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
     skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
@@ -1066,7 +1199,7 @@ delete[] fragmentShaderSourceCode;
 skybox1 = new SkyBox(skyboxShader);
 skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
               "sp3bot.tga", "sp3front.tga", "sp3back.tga");
-//настройка света и единичных векторов
+// настройка света и единичных векторов
 {
     InitRender(window, "Init lights...");
     dirLightDirID = meshShader->GetUniformLocation("dLightDir");
@@ -1107,7 +1240,7 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
         new Line(P0, directionalLight1->GetDir(), directionalLight1->GetCol());
 }
 
-//прочее
+// прочее
 {
     InitRender(window, "Final steps...");
     bb1 = new Billboard();
@@ -1123,7 +1256,7 @@ skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
     // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
     // fLine1->SetAspectRatio(width,height);
 
-    //*************Shadow MAP FBO**********/
+    // *************Shadow MAP FBO**********/
     // smfbo1 = new ShadowMapFBO();
     // smfbo1->Init(width,height);
     //************************************/
@@ -1147,7 +1280,7 @@ int main(int argc, char** argv) {
     // glewExperimental = true; // Needed for core profile
     if (!glfwInit()) exit(EXIT_FAILURE);
 
-    //заголовок
+    // заголовок
     string title("HOGL ");
     title += AutoVersion::STATUS;
     title += " ";
@@ -1192,7 +1325,7 @@ int main(int argc, char** argv) {
     glCullFace(GL_FRONT);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    //включаем прозрачность
+    // включаем прозрачность
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

@@ -1,18 +1,16 @@
-#ifndef LINE_H_INCLUDED
-#define LINE_H_INCLUDED
+#ifndef INCLUDE_LINE_H_
+#define INCLUDE_LINE_H_
+#include <memory>
+
 #include "Assistant.h"
 #include "Camera.h"
 #include "Shader.h"
 #include "ShaderFunctions.h"
-#include "math_3d.h"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
+
+using std::shared_ptr;
 
 class Line {
 public:
-    /*glm::vec3 p1;
-    glm::vec3 p2;
-    glm::vec3 c1;*/
-    //	GLuint shaderProgramID;
     GLuint PixelColorID, PointSizeID;
     GLuint gWorldID;
     GLuint positionID;
@@ -25,6 +23,6 @@ public:
     void Render(Camera* pGameCamera);
 
 private:
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
 };
-#endif  // LINE_H_INCLUDED
+#endif  // INCLUDE_LINE_H_

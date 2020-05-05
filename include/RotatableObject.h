@@ -1,5 +1,5 @@
-#ifndef ROTATABLEOBJECT_H
-#define ROTATABLEOBJECT_H
+#ifndef INCLUDE_ROTATABLEOBJECT_H_
+#define INCLUDE_ROTATABLEOBJECT_H_
 #include <glm/glm.hpp>
 
 class RotatableObject {
@@ -16,4 +16,4 @@ protected:
 private:
 };
 
-#endif  // ROTATABLEOBJECT_H
+#endif  // INCLUDE_ROTATABLEOBJECT_H_

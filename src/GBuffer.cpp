@@ -1,6 +1,9 @@
 #include "GBuffer.h"
+
 #include <Texture.h>
+
 #include <iostream>
+
 #include "util.h"
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
@@ -8,7 +11,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    //создаём и инициализируем карты цвета и пр.
+    // создаём и инициализируем карты цвета и пр.
     glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
@@ -26,7 +29,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
 
     // создаём текстуру глубины
     glGenTextures(1, &m_depthTexture);
-    //инициализируем карту глубины
+    // инициализируем карту глубины
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth,
     // WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);

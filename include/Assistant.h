@@ -1,5 +1,5 @@
-#ifndef ASSISTANT_H_INCLUDED
-#define ASSISTANT_H_INCLUDED
+#ifndef INCLUDE_ASSISTANT_H_
+#define INCLUDE_ASSISTANT_H_
 
 #include <glm/glm.hpp>
 
@@ -82,4 +82,4 @@ private:
     glm::vec3 rotateVector;
     float phi;
 };
-#endif  // ASSISTANT_H_INCLUDED
+#endif  // INCLUDE_ASSISTANT_H_

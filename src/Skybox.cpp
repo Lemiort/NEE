@@ -2,15 +2,17 @@
 
 #include <glm/gtc/type_ptr.hpp>
 
-SkyBox::SkyBox(shared_ptr<Shader> shader) {
+SkyBox::SkyBox(std::shared_ptr<Shader> shader) {
     shaderProgram = shader;
     shaderProgramID = shader->shaderProgramID;
 }
 SkyBox::~SkyBox() {}
-bool SkyBox::Init(const string& Directory, const string& PosXFilename,
-                  const string& NegXFilename, const string& PosYFilename,
-                  const string& NegYFilename, const string& PosZFilename,
-                  const string& NegZFilename) {
+bool SkyBox::Init(const std::string& Directory, const std::string& PosXFilename,
+                  const std::string& NegXFilename,
+                  const std::string& PosYFilename,
+                  const std::string& NegYFilename,
+                  const std::string& PosZFilename,
+                  const std::string& NegZFilename) {
     Scale = 0;
     int* spindices = NULL;
     float* spvertices = NULL;
@@ -80,17 +82,17 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         printf("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
-    //создаём буффер, в котором будем хранить всё
+    // создаём буффер, в котором будем хранить всё
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (spverts), nullptr,
                  GL_STATIC_DRAW);
-    //загружаем вершины в буффер
+    // загружаем вершины в буффер
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
                     spvertices);
 
-    //привязываем индексы к буфферу
+    // привязываем индексы к буфферу
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
@@ -107,10 +109,10 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     pCubemapTex->Load();
 
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    //находим позиции uniform-переменных
+    // находим позиции uniform-переменных
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
 
-    //делаем то же самое
+    // делаем то же самое
     pCubemapTex->Bind(GL_TEXTURE2);
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
@@ -121,7 +123,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         scale[i] = 1;
     }
 
-    //чистим память
+    // чистим память
     delete[] spindices;
     delete[] spvertices;
     delete[] spnormals;
@@ -129,6 +131,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     delete sptangent;
     return true;
 }
+
 void SkyBox::Render(Camera* cam) {
     GLint OldCullFaceMode;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);

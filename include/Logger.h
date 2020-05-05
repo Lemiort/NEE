@@ -1,5 +1,5 @@
-#ifndef LOGGER_H_INCLUDED
-#define LOGGER_H_INCLUDED
+#ifndef INCLUDE_LOGGER_H_
+#define INCLUDE_LOGGER_H_
 
 #include <cstdarg>
 #include <cstdio>
@@ -29,4 +29,4 @@ void LoggerDestroy();
 
 void LoggerWrite(const char *format, ...);
 
-#endif  // LOGGER_H_INCLUDED
+#endif  // INCLUDE_LOGGER_H_

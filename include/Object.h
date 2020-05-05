@@ -1,5 +1,5 @@
-#ifndef OBJECT_H
-#define OBJECT_H
+#ifndef INCLUDE_OBJECT_H_
+#define INCLUDE_OBJECT_H_
 
 class Object {
 public:
@@ -10,4 +10,4 @@ protected:
 private:
 };
 
-#endif  // OBJECT_H
+#endif  // INCLUDE_OBJECT_H_

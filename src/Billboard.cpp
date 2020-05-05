@@ -14,7 +14,7 @@ Billboard::Billboard() {
     shader=true;
 }*/
 
-Billboard::Billboard(shared_ptr<Shader> _shader) {
+Billboard::Billboard(std::shared_ptr<Shader> _shader) {
     Pos = glm::vec3(0, 0, 0);
     shaderProgram = _shader;
     // shaderProgramID=_shader->shaderProgramID;
@@ -30,7 +30,7 @@ void Billboard::Init(const char* TexFilename) {
         char* vertexShaderSorceCode = ReadFile("shaders/billboard.vs");
         char* fragmentShaderSourceCode = ReadFile("shaders/billboard.fs");
         char* geometryShaderSourceCode = ReadFile("shaders/billboard.gs");
-        shaderProgram = make_shared<Shader>();
+        shaderProgram = std::make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
         shaderProgram->AddShader(geometryShaderSourceCode, GeometryShader);
@@ -53,7 +53,7 @@ void Billboard::Init(const char* TexFilename) {
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     float coords[3] = {Pos.x, Pos.y, Pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
@@ -65,7 +65,7 @@ void Billboard::SetPos(glm::vec3 _Pos) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     float coords[3] = {Pos.x, Pos.y, Pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
@@ -80,9 +80,9 @@ void Billboard::Render(Camera* cam) {
     TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
                           cam->GetZNear(), cam->GetZFar());
 
-    //матрица проекции камеры
+    // матрица проекции камеры
     glUniformMatrix4fv(camViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
-    //позиция камеры
+    // позиция камеры
     glUniform3f(camPosID, cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -90,7 +90,7 @@ void Billboard::Render(Camera* cam) {
 
     colorMap.Bind(GL_TEXTURE0);
     glUniform1i(colSamplerID,
-                0);  //говорим шейдеру, чтобы использовал в качестве текстуры 0
+                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);

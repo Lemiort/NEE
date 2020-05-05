@@ -1,19 +1,19 @@
-#ifndef TEXT_2D_H_INCLUDED
-#define TEXT_2D_H_INCLUDED
+#ifndef INCLUDE_TEXT_2D_H_
+#define INCLUDE_TEXT_2D_H_
+
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
 
-#include <cstring>
 #include <glm/glm.hpp>
 #include <map>
+#include <memory>
 #include <queue>
+#include <string>
 
 #include "PlaceableObject.h"
 #include "RenderableObject.h"
 #include "Shader.h"
 #include "ShaderFunctions.h"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
-using namespace std;
 
 struct FontCharacter {
     //    X pos   Y pos   Width   Height   Xoffset  Yoffset  Orig W   Orig H
@@ -41,7 +41,7 @@ struct KerningPairs {
     }
 };
 
-//шрифт
+// шрифт
 class Font2d : public RenderableObject, public PlaceableObject {
 private:
     GLuint sverticesID, spositionID;
@@ -50,19 +50,19 @@ private:
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
     glm::vec4 color;
-    string filename;
+    std::string filename;
     unsigned int* indicies;
     float aratio;
 
-    //отношение размеров картинки к экрану
+    // отношение размеров картинки к экрану
     float kx, ky;
 
-    //размер пикселя в uv
+    // размер пикселя в uv
     float pkx, pky;
     int fontHeight;
     uint32_t imageWidth, imageHeight;
-    string fontName;
-    map<unsigned int, FontCharacter> fontInfo;
+    std::string fontName;
+    std::map<unsigned int, FontCharacter> fontInfo;
 
     float realWidth;
     float realHeight;
@@ -74,12 +74,12 @@ private:
 protected:
     glm::vec2 characterLength;
     unsigned int character;
-    map<uint32_t, float> kerningInfo;
+    std::map<uint32_t, float> kerningInfo;
 
 public:
     Font2d();
     ~Font2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
     int GetFontHeight();
     float GetWidth(unsigned int c);
     float GetHeight(unsigned int c);
@@ -88,33 +88,33 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
 
-    glm::vec2 GetLastCharacterLength();  //возвращает длину текущего символа
+    glm::vec2 GetLastCharacterLength();  // возвращает длину текущего символа
     void Render(Camera* cam);
     friend class FontLine2d;
 };
 
-//строчка шрифта
+// строчка шрифта
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
     float prevX, prevY;
     float aratio;
     float spaceWidth;
     unsigned int prevChar;
-    string text;
+    std::string text;
 
 public:
     FontLine2d();
     ~FontLine2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
     void SetAspectRatio(int w, int h);
-    void SetText(string _text);
+    void SetText(std::string _text);
     // void Render(string text,float x, float y, float size);
     void Render(Camera* cam);
 };
 
-//класс отрисовки побуквенно
+// класс отрисовки побуквенно
 class Text2d : public RenderableObject, public PlaceableObject {
 private:
     bool yourselfShader;
@@ -129,14 +129,14 @@ private:
     unsigned int* indicies;
     float aratio;
 
-    //номер символа в кодовой таблице
+    // номер символа в кодовой таблице
     unsigned int character;
 
 public:
     Text2d();
     ~Text2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
-    void Init(shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
+    void Init(int width, int height, std::shared_ptr<Shader> _sh = nullptr);
+    void Init(std::shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
@@ -144,22 +144,22 @@ public:
     void Render(Camera* cam);
 };
 
-//класс линии из отрисовки букв
+// класс линии из отрисовки букв
 class TextLine2d : public RenderableObject, public PlaceableObject {
 private:
     Text2d* symbol;
     float aratio;
     float pixelSize;
     // shared_ptr<Shader> shaderProgram;
-    string text;
+    std::string text;
 
 public:
     TextLine2d();
     ~TextLine2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
+    void Init(int width, int height, std::shared_ptr<Shader> _sh = NULL);
     void SetAspectRatio(int width, int height);
-    void SetText(string _text);
+    void SetText(std::string _text);
     // void Render(float x, float y,float size, char* input);
     void Render(Camera* cam);
 };
-#endif  // TEXT_2D_H_INCLUDED
+#endif  // INCLUDE_TEXT_2D_H_

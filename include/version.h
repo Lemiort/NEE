@@ -1,5 +1,5 @@
-#ifndef VERSION_H
-#define VERSION_H
+#ifndef INCLUDE_VERSION_H_
+#define INCLUDE_VERSION_H_
 
 namespace AutoVersion {
 
@@ -29,4 +29,4 @@ static const char FULLVERSION_STRING[] = "1.0.6.92";
 static const long BUILD_HISTORY = 6;
 
 }  // namespace AutoVersion
-#endif  // VERSION_H
+#endif  // INCLUDE_VERSION_H_

@@ -1,27 +1,30 @@
-#ifndef SKYBOX_H_INCLUDED
-#define SKYBOX_H_INCLUDED
-#include "cubemap_texture.h"
-//#include "ShaderFunctions.h"
+#ifndef INCLUDE_SKYBOX_H_
+#define INCLUDE_SKYBOX_H_
+
+#include <memory>
+#include <string>
+
 #include "Assistant.h"
 #include "Camera.h"
 #include "PlaceableObject.h"
 #include "RenderableObject.h"
 #include "Shader.h"
+#include "cubemap_texture.h"
 #include "tga_loader.h"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
+
 class SkyBox : public RenderableObject, public PlaceableObject {
 public:
-    SkyBox(shared_ptr<Shader> shader);
+    explicit SkyBox(std::shared_ptr<Shader> shader);
     ~SkyBox();
 
-    bool Init(const string& Directory, const string& PosXFilename,
-              const string& NegXFilename, const string& PosYFilename,
-              const string& NegYFilename, const string& PosZFilename,
-              const string& NegZFilename);
+    bool Init(const std::string& Directory, const std::string& PosXFilename,
+              const std::string& NegXFilename, const std::string& PosYFilename,
+              const std::string& NegYFilename, const std::string& PosZFilename,
+              const std::string& NegZFilename);
 
     void Render(Camera* cam);
     GLuint shaderProgramID;
-    GLuint VBO;  // vertex buffer, ������ ������� ��� ���������
+    GLuint VBO;  // vertex buffer
     GLuint positionID;
     GLuint IBO;  // index buffer
     GLuint gWorldID, gCamViewID;
@@ -46,4 +49,4 @@ public:
     float scale[3];
 };
 
-#endif  // SKYBOX_H_INCLUDED
+#endif  // INCLUDE_SKYBOX_H_
