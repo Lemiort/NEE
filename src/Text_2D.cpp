@@ -1,4 +1,5 @@
 #include "Text_2D.h"
+
 #include <fstream>
 #include <sstream>
 #include <stdexcept>  // std::out_of_range
@@ -276,7 +277,7 @@ void Font2d::SetCharacter(unsigned int c) {
         position[2] * (-2 * dx) * ky * (float)temp.yOffset / (float)imageHeight;
 
     characterLength = glm::vec2((2 * dx) * realWidth * kx * position[2],
-                               (2 * dx) * realHeight * ky);
+                                (2 * dx) * realHeight * ky);
 }
 
 glm::vec2 Font2d::GetLastCharacterLength() {
@@ -380,8 +381,8 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     if (_sh == nullptr) {
         yourselfShader = true;
         aratio = (float)height / (float)width;
-        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
-        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
+        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vs");
+        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fs");
         shaderProgram = make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);

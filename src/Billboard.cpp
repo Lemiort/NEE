@@ -25,9 +25,9 @@ Billboard::~Billboard() {
 
 void Billboard::Init(const char* TexFilename) {
     if (shader == false) {
-        char* vertexShaderSorceCode = ReadFile("shaders/billboard.vsh");
-        char* fragmentShaderSourceCode = ReadFile("shaders/billboard.fsh");
-        char* geometryShaderSourceCode = ReadFile("shaders/billboard.gsh");
+        char* vertexShaderSorceCode = ReadFile("shaders/billboard.vs");
+        char* fragmentShaderSourceCode = ReadFile("shaders/billboard.fs");
+        char* geometryShaderSourceCode = ReadFile("shaders/billboard.gs");
         shaderProgram = make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);

@@ -1,4 +1,5 @@
 #include "Light.h"
+
 #include <iomanip>
 
 void DirectionalLight::SetCol(glm::vec3 col) {
@@ -75,7 +76,6 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 }
 
 void SpotLight::Render(Camera* cam) {
-
     //======Предыдущее решение задачи========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
@@ -98,13 +98,13 @@ void SpotLight::Render(Camera* cam) {
         glm::vec3 projYZ(0, proj.y, proj.z);
 
         // calc rotation
-        if (glm::cross(projYZ,directionYZ).x > 0)
+        if (glm::cross(projYZ, directionYZ).x > 0)
             xrot = -glm::degrees(glm::angle(directionYZ, projYZ));
         else
             xrot = glm::degrees(glm::angle(directionYZ, projYZ));
 
         // update up vector
-        proj = glm::rotate(proj,-xrot, glm::vec3(1, 0, 0));
+        proj = glm::rotate(proj, -xrot, glm::vec3(1, 0, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
     }
 
@@ -114,13 +114,13 @@ void SpotLight::Render(Camera* cam) {
         glm::vec3 projXZ(proj.x, 0, proj.z);
 
         // calc the rotation
-        if (glm::cross(projXZ,directionXZ).y > 0)
+        if (glm::cross(projXZ, directionXZ).y > 0)
             yrot = -glm::degrees(glm::angle(directionXZ, projXZ));
         else
             yrot = glm::degrees(glm::angle(directionXZ, projXZ));
 
         // update the up vector
-        proj = glm::rotate(proj,-yrot, glm::vec3(0, 1, 0));
+        proj = glm::rotate(proj, -yrot, glm::vec3(0, 1, 0));
         cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
 
         // Z axis
@@ -129,11 +129,11 @@ void SpotLight::Render(Camera* cam) {
             glm::vec3 projXY(proj.x, proj.y, 0);
 
             // calc the rotation
-            if (glm::cross(projXY,directionXY).z > 0)
+            if (glm::cross(projXY, directionXY).z > 0)
                 zrot = glm::degrees(glm::angle(directionXY, projXY));
             else
                 zrot = -glm::degrees(glm::angle(directionXY, projXY));
-            proj = glm::rotate(proj,-zrot, glm::vec3(0, 0, 1));
+            proj = glm::rotate(proj, -zrot, glm::vec3(0, 0, 1));
         }
     }
     cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
@@ -165,7 +165,8 @@ void SpotLight::Render(Camera* cam) {
 
     // TODO идея: использовать скалярное произведение векторов
 
-    mesh->SetScale(glm::length(dir) * cos(glm::radians(Cutoff)), glm::length(dir),
+    mesh->SetScale(glm::length(dir) * cos(glm::radians(Cutoff)),
+                   glm::length(dir),
                    glm::length(dir) * cos(glm::radians(Cutoff)));
 
     mesh->SetPosition(position[0], position[1], position[2]);
@@ -221,8 +222,8 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     temp[0] = 0;
     temp[1] = 0;
     temp[2] = 0;
-    /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vsh");
-    char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fsh");
+    /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vs");
+    char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fs");
     shaderProgram=new Shader();
     shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
@@ -282,14 +283,14 @@ void PointLight::SetCol(glm::vec3 col) {
     radius = CalcSphereSize();
 }
 float PointLight::CalcSphereSize() {
-    return 8.0f *
-               sqrtf( glm::length(glm::vec3(color[0], color[1], color[2])) * power) +
+    return 8.0f * sqrtf(glm::length(glm::vec3(color[0], color[1], color[2])) *
+                        power) +
            1.0f;
 }
 
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
-    char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vsh");
-    char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fsh");
+    char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vs");
+    char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fs");
     shaderProgram = make_shared<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);

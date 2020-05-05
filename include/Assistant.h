@@ -61,9 +61,7 @@ public:
     const glm::mat4& GetTSR();
     const glm::mat4& GetVC();
     const glm::mat4& GetRotate();
-    const glm::mat4& GetCameraTrans();
     const glm::mat4& GetScaleTrans();
-    // const glm::mat4* GetCamTransMat();
 
 private:
     struct {

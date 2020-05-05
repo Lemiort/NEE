@@ -9,9 +9,9 @@ BillboardAssistant::~BillboardAssistant() {
 }
 
 bool BillboardAssistant::Init() {
-    char* vertexShaderSorceCode = ReadFile("shaders/particle.vsh");
-    char* fragmentShaderSourceCode = ReadFile("shaders/particle.fsh");
-    char* geometryShaderSourceCode = ReadFile("shaders/particle.gsh");
+    char* vertexShaderSorceCode = ReadFile("shaders/particle.vs");
+    char* fragmentShaderSourceCode = ReadFile("shaders/particle.fs");
+    char* geometryShaderSourceCode = ReadFile("shaders/particle.gs");
     GLuint vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
     GLuint fragmentShaderID = MakeFragmentShader(fragmentShaderSourceCode);
     GLuint geometryShaderID = MakeGeometryShader(geometryShaderSourceCode);

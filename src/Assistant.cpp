@@ -52,10 +52,3 @@ const glm::mat4& Assistant::GetScaleTrans() {
     transformation = ScaleTrans;
     return transformation;
 }
-const glm::mat4& Assistant::GetCameraTrans() {
-    glm::mat4 ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
-        CameraTranslationTrans, CameraRotateTrans;
-    CameraTranslationTrans = glm::translate(-camera.Pos);
-    transformation = CameraTranslationTrans;
-    return transformation;
-}
