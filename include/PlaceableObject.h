@@ -1,5 +1,5 @@
-#ifndef INCLUDE_PLACEABLEOBJECT_H_
-#define INCLUDE_PLACEABLEOBJECT_H_
+#ifndef INCLUDE_PLACEABLEOBJECT_H
+#define INCLUDE_PLACEABLEOBJECT_H
 
 #include <glm/glm.hpp>
 
@@ -19,4 +19,4 @@ protected:
 private:
 };
 
-#endif  // INCLUDE_PLACEABLEOBJECT_H_
+#endif  // INCLUDE_PLACEABLEOBJECT_H

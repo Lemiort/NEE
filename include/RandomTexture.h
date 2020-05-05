@@ -1,5 +1,5 @@
-#ifndef INCLUDE_RANDOMTEXTURE_H_
-#define INCLUDE_RANDOMTEXTURE_H_
+#ifndef INCLUDE_RANDOMTEXTURE_H
+#define INCLUDE_RANDOMTEXTURE_H
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
@@ -18,4 +18,4 @@ private:
     GLuint textureID;
 };
 
-#endif  // INCLUDE_RANDOMTEXTURE_H_
+#endif  // INCLUDE_RANDOMTEXTURE_H

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TEXTURE_H_
-#define INCLUDE_TEXTURE_H_
+#ifndef INCLUDE_TEXTURE_H
+#define INCLUDE_TEXTURE_H
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
 
@@ -49,4 +49,4 @@ public:
 protected:
 };
 
-#endif  // INCLUDE_TEXTURE_H_
+#endif  // INCLUDE_TEXTURE_H

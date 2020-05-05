@@ -1,5 +1,5 @@
-#ifndef INCLUDE_CUBEMAP_TEXTURE_H_
-#define INCLUDE_CUBEMAP_TEXTURE_H_
+#ifndef INCLUDE_CUBEMAP_TEXTURE_H
+#define INCLUDE_CUBEMAP_TEXTURE_H
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
@@ -22,4 +22,4 @@ public:
     GLuint m_textureObj;
 };
 
-#endif  // INCLUDE_CUBEMAP_TEXTURE_H_
+#endif  // INCLUDE_CUBEMAP_TEXTURE_H

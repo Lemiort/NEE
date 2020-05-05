@@ -1,5 +1,5 @@
-#ifndef INCLUDE_RENDERABLEOBJECT_H_
-#define INCLUDE_RENDERABLEOBJECT_H_
+#ifndef INCLUDE_RENDERABLEOBJECT_H
+#define INCLUDE_RENDERABLEOBJECT_H
 
 #include <memory>
 
@@ -23,4 +23,4 @@ protected:
 private:
 };
 
-#endif  // INCLUDE_RENDERABLEOBJECT_H_
+#endif  // INCLUDE_RENDERABLEOBJECT_H

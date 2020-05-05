@@ -1,5 +1,5 @@
-#ifndef INCLUDE_BILLBOARDASSISTANT_H_
-#define INCLUDE_BILLBOARDASSISTANT_H_
+#ifndef INCLUDE_BILLBOARDASSISTANT_H
+#define INCLUDE_BILLBOARDASSISTANT_H
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
@@ -25,4 +25,4 @@ private:
     GLuint shaderProgramID;
 };
 
-#endif  // INCLUDE_BILLBOARDASSISTANT_H_
+#endif  // INCLUDE_BILLBOARDASSISTANT_H

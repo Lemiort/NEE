@@ -1,5 +1,5 @@
-#ifndef INCLUDE_GAMECONSOLE_H_
-#define INCLUDE_GAMECONSOLE_H_
+#ifndef INCLUDE_GAMECONSOLE_H
+#define INCLUDE_GAMECONSOLE_H
 #include <string>
 
 typedef void(stringOutFunc)(std::string);
@@ -15,4 +15,4 @@ protected:
 private:
 };
 
-#endif  // INCLUDE_GAMECONSOLE_H_
+#endif  // INCLUDE_GAMECONSOLE_H

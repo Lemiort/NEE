@@ -1,5 +1,5 @@
-#ifndef INCLUDE_SKYBOX_H_
-#define INCLUDE_SKYBOX_H_
+#ifndef INCLUDE_SKYBOX_H
+#define INCLUDE_SKYBOX_H
 
 #include <memory>
 #include <string>
@@ -45,4 +45,4 @@ public:
     float scale[3];
 };
 
-#endif  // INCLUDE_SKYBOX_H_
+#endif  // INCLUDE_SKYBOX_H

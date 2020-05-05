@@ -1,5 +1,5 @@
-#ifndef INCLUDE_PARTICLESYSTEM_H_
-#define INCLUDE_PARTICLESYSTEM_H_
+#ifndef INCLUDE_PARTICLESYSTEM_H
+#define INCLUDE_PARTICLESYSTEM_H
 
 #define MAX_PARTICLES 1000
 #include "Assistant.h"
@@ -46,4 +46,4 @@ private:
     };
 };
 
-#endif  // INCLUDE_PARTICLESYSTEM_H_
+#endif  // INCLUDE_PARTICLESYSTEM_H

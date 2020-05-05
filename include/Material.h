@@ -1,5 +1,5 @@
-#ifndef INCLUDE_MATERIAL_H_
-#define INCLUDE_MATERIAL_H_
+#ifndef INCLUDE_MATERIAL_H
+#define INCLUDE_MATERIAL_H
 #include <GL/glew.h>
 
 #include <memory>
@@ -35,4 +35,4 @@ protected:
     GLuint* texturesID;
 };
 
-#endif  // INCLUDE_MATERIAL_H_
+#endif  // INCLUDE_MATERIAL_H

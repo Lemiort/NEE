@@ -1,5 +1,5 @@
-#ifndef INCLUDE_SCALEABLEOBJECT_H_
-#define INCLUDE_SCALEABLEOBJECT_H_
+#ifndef INCLUDE_SCALEABLEOBJECT_H
+#define INCLUDE_SCALEABLEOBJECT_H
 #include <glm/glm.hpp>
 
 class ScaleableObject {
@@ -16,4 +16,4 @@ protected:
 private:
 };
 
-#endif  // INCLUDE_SCALEABLEOBJECT_H_
+#endif  // INCLUDE_SCALEABLEOBJECT_H

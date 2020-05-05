@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LINE_H_
-#define INCLUDE_LINE_H_
+#ifndef INCLUDE_LINE_H
+#define INCLUDE_LINE_H
 #include <memory>
 
 #include "Assistant.h"
@@ -25,4 +25,4 @@ public:
 private:
     std::shared_ptr<Shader> shaderProgram;
 };
-#endif  // INCLUDE_LINE_H_
+#endif  // INCLUDE_LINE_H

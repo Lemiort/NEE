@@ -1,5 +1,5 @@
-#ifndef INCLUDE_MESH_H_
-#define INCLUDE_MESH_H_
+#ifndef INCLUDE_MESH_H
+#define INCLUDE_MESH_H
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -67,4 +67,4 @@ public:
 private:
 };
 
-#endif  // INCLUDE_MESH_H_
+#endif  // INCLUDE_MESH_H

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_FONT2D_H_
-#define INCLUDE_FONT2D_H_
+#ifndef INCLUDE_FONT2D_H
+#define INCLUDE_FONT2D_H
 #include <Mesh.h>
 #include <Text_2D.h>
 
@@ -90,4 +90,4 @@ public:
     // TODO возвращает длину текущего символа в экрнных координатах??
     glm::vec2 GetLastCharacterLength();
 };
-#endif  // INCLUDE_FONT2D_H_
+#endif  // INCLUDE_FONT2D_H

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_LIGHT_H_
-#define INCLUDE_LIGHT_H_
+#ifndef INCLUDE_LIGHT_H
+#define INCLUDE_LIGHT_H
 
 #include <memory>
 
@@ -98,4 +98,4 @@ public:
 private:
 };
 
-#endif  // INCLUDE_LIGHT_H_
+#endif  // INCLUDE_LIGHT_H

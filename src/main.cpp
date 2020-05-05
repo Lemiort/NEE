@@ -133,8 +133,6 @@ ShadowMapFBO* smfbo1;
 // сигнал о том, что прогрузка шейдеров и пр. завершилась
 bool initialized;
 
-// сообщение, передаваемое между двум потоками
-std::string sharedMessage;
 std::shared_ptr<Material> mainMaterial, secondMaterial, shadowMaterial;
 std::shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;
 float fps;

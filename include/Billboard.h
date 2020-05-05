@@ -1,5 +1,5 @@
-#ifndef INCLUDE_BILLBOARD_H_
-#define INCLUDE_BILLBOARD_H_
+#ifndef INCLUDE_BILLBOARD_H
+#define INCLUDE_BILLBOARD_H
 
 #include <glm/glm.hpp>
 #include <memory>
@@ -32,4 +32,4 @@ private:
     GLuint camViewID, camPosID;
 };
 
-#endif  // INCLUDE_BILLBOARD_H_
+#endif  // INCLUDE_BILLBOARD_H

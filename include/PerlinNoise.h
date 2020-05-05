@@ -1,5 +1,5 @@
-#ifndef INCLUDE_PERLINNOISE_H_
-#define INCLUDE_PERLINNOISE_H_
+#ifndef INCLUDE_PERLINNOISE_H
+#define INCLUDE_PERLINNOISE_H
 
 class PerlinNoise {
 public:
@@ -38,4 +38,4 @@ private:
     int octaves, randomseed;
 };
 
-#endif  // INCLUDE_PERLINNOISE_H_
+#endif  // INCLUDE_PERLINNOISE_H

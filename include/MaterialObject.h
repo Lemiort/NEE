@@ -1,10 +1,10 @@
-#ifndef INCLUDE_MATERIALOBJECT_H_
-#define INCLUDE_MATERIALOBJECT_H_
-
-#include <memory>
+#ifndef INCLUDE_MATERIALOBJECT_H
+#define INCLUDE_MATERIALOBJECT_H
 
 #include <Material.h>
 #include <RenderableObject.h>
+
+#include <memory>
 
 // renderable object, using materials
 class MaterialObject : public RenderableObject {
@@ -20,4 +20,4 @@ protected:
 private:
 };
 
-#endif  // INCLUDE_MATERIALOBJECT_H_
+#endif  // INCLUDE_MATERIALOBJECT_H

@@ -1,5 +1,5 @@
-#ifndef INCLUDE_TEXT_2D_H_
-#define INCLUDE_TEXT_2D_H_
+#ifndef INCLUDE_TEXT_2D_H
+#define INCLUDE_TEXT_2D_H
 
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
@@ -162,4 +162,4 @@ public:
     // void Render(float x, float y,float size, char* input);
     void Render(Camera* cam);
 };
-#endif  // INCLUDE_TEXT_2D_H_
+#endif  // INCLUDE_TEXT_2D_H

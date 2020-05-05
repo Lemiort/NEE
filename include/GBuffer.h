@@ -1,5 +1,5 @@
-#ifndef INCLUDE_GBUFFER_H_
-#define INCLUDE_GBUFFER_H_
+#ifndef INCLUDE_GBUFFER_H
+#define INCLUDE_GBUFFER_H
 
 #include <GL/glew.h>
 
@@ -44,4 +44,4 @@ private:
     GLuint m_finalTexture;
 };
 
-#endif  // INCLUDE_GBUFFER_H_
+#endif  // INCLUDE_GBUFFER_H

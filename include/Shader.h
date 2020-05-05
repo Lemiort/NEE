@@ -1,5 +1,5 @@
-#ifndef INCLUDE_SHADER_H_
-#define INCLUDE_SHADER_H_
+#ifndef INCLUDE_SHADER_H
+#define INCLUDE_SHADER_H
 #include <GL/glew.h>
 
 #include <string>
@@ -29,4 +29,4 @@ private:
     bool initialized;
 };
 
-#endif  // INCLUDE_SHADER_H_
+#endif  // INCLUDE_SHADER_H
