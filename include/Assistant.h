@@ -61,7 +61,6 @@ public:
     const glm::mat4& GetTSR();
     const glm::mat4& GetVC();
     const glm::mat4& GetRotate();
-    const glm::mat4& GetScaleTrans();
 
 private:
     struct {

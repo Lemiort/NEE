@@ -6,6 +6,8 @@
 #include <ctime>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/matrix_operation.hpp>
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -246,29 +248,20 @@ void ShadowPass() {
     // освещение
     {
         // направленный свет
-        Assistant LA;
-        LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
-                 directionalLight1->color[2]);
-        glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                           glm::value_ptr(LA.GetScaleTrans()));
+        auto la = glm::diagonal4x4(directionalLight1->color);
+        glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
         glUniform3f(dirLightDirID, directionalLight1->direction[0],
                     directionalLight1->direction[1],
                     directionalLight1->direction[2]);
         // точечный
-        Assistant LA2;
-        LA2.Scale(pointLight1->color[0], pointLight1->color[1],
-                  pointLight1->color[2]);
-        glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                           glm::value_ptr(LA2.GetScaleTrans()));
+        auto la2 = glm::diagonal4x4(pointLight1->color);
+        glUniformMatrix4fv(pointLightColID, 1, GL_TRUE, glm::value_ptr(la2));
         glUniform3f(pointLightPosID, pointLight1->position[0],
                     pointLight1->position[1], pointLight1->position[2]);
         glUniform1f(pointLightIntID, pointLight1->power);
         // прожектор
-        Assistant LA3;
-        LA3.Scale(spotLight1->color[0], spotLight1->color[1],
-                  spotLight1->color[2]);
-        glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                           glm::value_ptr(LA3.GetScaleTrans()));
+        auto la3 = glm::diagonal4x4(spotLight1->color);
+        glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
         glUniform3f(spotLightDirID, spotLight1->direction[0],
                     spotLight1->direction[1], spotLight1->direction[2]);
         glUniform1f(spotLightCutoffID,
@@ -322,61 +315,8 @@ void RenderPass() {
     TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
     TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    /*meshShader->Use();
-    gCamViewID =	meshShader->GetUniformLocation("gVC");
-    rotateID =	    meshShader->GetUniformLocation("mRotate");
-    camPosID =    meshShader->GetUniformLocation("s_vCamPos");
-
-
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //освещение
-    {
-
-        //направленный свет
-        Assistant LA;
-        LA.Scale(light1->color[0],light1->color[1],light1->color[2]);
-        glUniformMatrix4fv(dirLightColID,1, GL_TRUE, (const
-    GLfloat*)LA.GetScaleTrans());
-        glUniform3f(dirLightDirID,light1->direction[0],light1->direction[1],light1->direction[2]);
-        //точечный
-        Assistant LA2;
-        LA2.Scale(light2->color[0],light2->color[1],light2->color[2]);
-        glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const
-    GLfloat*)LA2.GetScaleTrans());
-        glUniform3f(pointLightPosID,light2->position[0],light2->position[1],light2->position[2]);
-        glUniform1f(pointLightIntID,light2->power);
-        //прожектор
-        Assistant LA3;
-        LA3.Scale(light3->color[0],light3->color[1],light3->color[2]);
-        glUniformMatrix4fv(spotLightColID,1, GL_TRUE, (const
-    GLfloat*)LA3.GetScaleTrans());
-        glUniform3f(spotLightDirID,light3->direction[0],light3->direction[1],light3->direction[2]);
-        glUniform1f(spotLightCutoffID,cosf((light3->Cutoff)*3.14/180.0f));
-        glUniform3f(spotLightPosID,light3->position[0],light3->position[1],light3->position[2]);
-    }
-
-    //вращение камеры для спекуляра
-    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);*/
-
-    /*Cube.SetMaterial(mainMaterial);
-    for(float i=-5.0f;i<5.0f;i+=0.1f)
-        for(float j=-5.0f;j<5.0f;j+=0.1f)
-    {
-        Cube.SetScale(0.001f,0.001f,0.001f);
-        Cube.SetRotate(0,30*sinf(Scale),0);
-        Cube.SetPosition(i,noise1->GetHeight(i,j),j);
-        Cube.Render(30,width, height, 1, 1000,pGameCamera);
-    }*/
-
-    /* TestMesh.Render(30,width, height, 1, 1000,pGameCamera);
-      TestMesh.SetPosition(-3,-0.2,0);
-      TestMesh.Render(30,width, height, 1, 1000,pGameCamera);*/
     skybox1->Render(pGameCamera);
 
-    /*Texture2D* tempTexture=new Texture2D(gBuffer1->GetTexture(2),false);
-    //shadowMeshMaterial->SetShadowTexture(tempTexture);
-    mainMaterial->SetColorTexture(tempTexture);
-    fLine1->Render(tempTexture->GetParameters(),-1.0f,-0.2f,32.0f);*/
     Plane.SetMaterial(mainMaterial);
     // тупо копипаст
     {
@@ -393,29 +333,22 @@ void RenderPass() {
         // освещение
         {
             // направленный свет
-            Assistant LA;
-            LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
-                     directionalLight1->color[2]);
-            glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                               glm::value_ptr(LA.GetScaleTrans()));
+            auto la = glm::diagonal4x4(directionalLight1->color);
+            glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
             glUniform3f(dirLightDirID, directionalLight1->direction[0],
                         directionalLight1->direction[1],
                         directionalLight1->direction[2]);
             // точечный
-            Assistant LA2;
-            LA2.Scale(pointLight1->color[0], pointLight1->color[1],
-                      pointLight1->color[2]);
+            auto la2 = glm::diagonal4x4(pointLight1->color);
             glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                               glm::value_ptr(LA2.GetScaleTrans()));
+                               glm::value_ptr(la2));
             glUniform3f(pointLightPosID, pointLight1->position[0],
                         pointLight1->position[1], pointLight1->position[2]);
             glUniform1f(pointLightIntID, pointLight1->power);
+
             // прожектор
-            Assistant LA3;
-            LA3.Scale(spotLight1->color[0], spotLight1->color[1],
-                      spotLight1->color[2]);
-            glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                               glm::value_ptr(LA3.GetScaleTrans()));
+            auto la3 = glm::diagonal4x4(spotLight1->color);
+            glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
             glUniform3f(spotLightDirID, spotLight1->direction[0],
                         spotLight1->direction[1], spotLight1->direction[2]);
             glUniform1f(spotLightCutoffID,
@@ -442,18 +375,6 @@ void RenderPass() {
 
     bb1->Render(pGameCamera);
 
-    /* xline->Render(pGameCamera,width, height);
-     yline->Render(pGameCamera, width, height);
-     zline->Render(pGameCamera,width, height);
-
-    //
-    tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Cube.GetNumFaces()*10000)+"
-    faces").c_str());
-     //tline1->Render(-1,0.5,32.0,(char*)ConvertToString(fps).c_str());
-     //fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-     spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
-     fLine1->Render((ConvertToString(spfaces)+"
-    faces").c_str(),-1.0f,0.0f,45.0f);*/
     delete lightCam;
 }
 
@@ -619,10 +540,8 @@ void DSPointLightPass(PointLight& pointLight) {
     pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
 
     // загружаем параметры света для источника 1
-    Assistant LA2;
-    LA2.Scale(pointLight.color[0], pointLight.color[1], pointLight.color[2]);
-    glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                       glm::value_ptr(LA2.GetScaleTrans()));
+    auto la2 = glm::diagonal4x4(pointLight.color);
+    glUniformMatrix4fv(pointLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(pointLightPosID, pointLight.position[0], pointLight.position[1],
                 pointLight.position[2]);
     glUniform1f(pointLightIntID, pointLight.power);
@@ -681,12 +600,10 @@ void DSSpotLightPass(SpotLight& spotLight) {
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
     // загружаем параметры света для источника 1
-    Assistant LA2;
-    LA2.Scale(spotLight.color[0], spotLight.color[1], spotLight.color[2]);
+    auto la2 = glm::diagonal4x4(spotLight.color);
     glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
                 spotLight.position[2]);
-    glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                       glm::value_ptr(LA2.GetScaleTrans()));
+    glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
                 spotLight.direction[2]);
     glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
@@ -733,11 +650,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
         DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
 
     // загрузка параметров света
-    Assistant LA2;
-    LA2.Scale(directionalLight.color[0], directionalLight.color[1],
-              directionalLight.color[2]);
-    glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                       glm::value_ptr(LA2.GetScaleTrans()));
+    auto la2 = glm::diagonal4x4(directionalLight.color);
+    glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 

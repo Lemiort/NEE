@@ -7,7 +7,7 @@
 
 class CubemapTexture {
 public:
-    CubemapTexture(const std::string& filename);
+    explicit CubemapTexture(const std::string& filename);
 
     ~CubemapTexture();
 

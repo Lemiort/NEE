@@ -14,7 +14,7 @@
 class Light : public MaterialObject {
 public:
     // TODO сделать его protected
-    GLfloat color[3];
+    glm::vec4 color{1.0f};
 };
 
 class DirectionalLight : public Light {

@@ -18,6 +18,8 @@ const glm::mat4& Assistant::GetTSRVC() {
 
     transformation = PersProjTrans * CameraTrans * TranslationTrans *
                      RotateTrans * ScaleTrans;
+    // transformation = CameraTrans * PersProjTrans * RotateTrans * ScaleTrans *
+    //                  TranslationTrans;
     return transformation;
 }
 
@@ -28,6 +30,7 @@ const glm::mat4& Assistant::GetTSR() {
     RotateTrans = glm::orientate4(rotate);
     TranslationTrans = glm::translate(worldPos);
     transformation = TranslationTrans * RotateTrans * ScaleTrans;
+    // transformation = RotateTrans * ScaleTrans * TranslationTrans;
     return transformation;
 }
 
@@ -39,6 +42,7 @@ const glm::mat4& Assistant::GetVC() {
                             persProj.zNear, persProj.zFar);
 
     transformation = PersProjTrans * CameraTrans;
+    // transformation = CameraTrans * PersProjTrans;
     return transformation;
 }
 
@@ -48,11 +52,5 @@ const glm::mat4& Assistant::GetRotate() {
     RotateTrans = glm::orientate4(rotate);
     TranslationTrans = glm::translate(worldPos);
     transformation = TranslationTrans * RotateTrans * ScaleTrans;
-    return transformation;
-}
-const glm::mat4& Assistant::GetScaleTrans() {
-    glm::mat4 ScaleTrans;
-    ScaleTrans = glm::scale(scale);
-    transformation = ScaleTrans;
     return transformation;
 }

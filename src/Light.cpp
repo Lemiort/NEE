@@ -6,9 +6,9 @@
 #include <glm/gtx/vector_angle.hpp>
 
 void DirectionalLight::SetCol(glm::vec3 col) {
-    color[0] = col.x;
-    color[1] = col.y;
-    color[2] = col.z;
+    color.x = col.x;
+    color.y = col.y;
+    color.z = col.z;
 }
 
 void DirectionalLight::SetDir(glm::vec3 dir) {
@@ -24,9 +24,9 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     direction[1] = d2;
     direction[2] = d3;
     direction[3] = 1;
-    color[0] = r;
-    color[1] = g;
-    color[2] = b;
+    color.x = r;
+    color.y = g;
+    color.z = b;
 
     mesh = std::make_shared<Mesh>();
     // mesh->Init(_mat,"models/quad2x2front.ho3d");
@@ -42,9 +42,7 @@ void DirectionalLight::Render(Camera* cam) {
 glm::vec3 DirectionalLight::GetDir() {
     return glm::vec3(direction[0], direction[1], direction[2]);
 }
-glm::vec3 DirectionalLight::GetCol() {
-    return glm::vec3(color[0], color[1], color[2]);
-}
+glm::vec3 DirectionalLight::GetCol() { return color; }
 
 DirectionalLight::DirectionalLight() {}
 DirectionalLight::~DirectionalLight() {}
@@ -280,9 +278,7 @@ void PointLight::SetCol(glm::vec3 col) {
     radius = CalcSphereSize();
 }
 float PointLight::CalcSphereSize() {
-    return 8.0f * sqrtf(glm::length(glm::vec3(color[0], color[1], color[2])) *
-                        power) +
-           1.0f;
+    return 8.0f * sqrtf(glm::length(color) * power) + 1.0f;
 }
 
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
