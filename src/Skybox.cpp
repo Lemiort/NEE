@@ -7,12 +7,7 @@ SkyBox::SkyBox(std::shared_ptr<Shader> shader) {
     shaderProgramID = shader->shaderProgramID;
 }
 SkyBox::~SkyBox() {}
-bool SkyBox::Init(const std::string& Directory, const std::string& PosXFilename,
-                  const std::string& NegXFilename,
-                  const std::string& PosYFilename,
-                  const std::string& NegYFilename,
-                  const std::string& PosZFilename,
-                  const std::string& NegZFilename) {
+bool SkyBox::Init(const std::string& filename) {
     Scale = 0;
     int* spindices = NULL;
     float* spvertices = NULL;
@@ -99,9 +94,7 @@ bool SkyBox::Init(const std::string& Directory, const std::string& PosXFilename,
                  GL_STATIC_DRAW);
 
     try {
-        pCubemapTex = new CubemapTexture(Directory, PosXFilename, NegXFilename,
-                                         PosYFilename, NegYFilename,
-                                         PosZFilename, NegZFilename);
+        pCubemapTex = new CubemapTexture(filename);
     } catch (const std::bad_alloc&) {
         printf("\nError creating new Cubemap");
         return false;

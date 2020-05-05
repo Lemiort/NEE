@@ -10,17 +10,13 @@
 #include "RenderableObject.h"
 #include "Shader.h"
 #include "cubemap_texture.h"
-#include "tga_loader.h"
 
 class SkyBox : public RenderableObject, public PlaceableObject {
 public:
     explicit SkyBox(std::shared_ptr<Shader> shader);
     ~SkyBox();
 
-    bool Init(const std::string& Directory, const std::string& PosXFilename,
-              const std::string& NegXFilename, const std::string& PosYFilename,
-              const std::string& NegYFilename, const std::string& PosZFilename,
-              const std::string& NegZFilename);
+    bool Init(const std::string& filename);
 
     void Render(Camera* cam);
     GLuint shaderProgramID;

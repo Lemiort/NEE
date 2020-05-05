@@ -5,14 +5,9 @@
 
 #include <string>
 
-using std::string;
-
 class CubemapTexture {
 public:
-        CubemapTexture(const string& Directory, const string& PosXFilename,
-                   const string& NegXFilename, const string& PosYFilename,
-                   const string& NegYFilename, const string& PosZFilename,
-                   const string& NegZFilename);
+    CubemapTexture(const std::string& filename);
 
     ~CubemapTexture();
 
@@ -21,7 +16,7 @@ public:
     void Bind(GLenum TextureUnit);
 
 private:
-    string m_fileNames[6];
+    std::string filename_;
 
 public:
     GLuint m_textureObj;

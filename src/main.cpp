@@ -22,7 +22,6 @@
 #include "ShadowMapFBO.h"
 #include "Text_2D.h"
 #include "skybox.h"
-#include "tga_loader.h"
 
 #define WINDOW_WIDTH 1366
 #define WINDOW_HEIGHT 768
@@ -72,7 +71,7 @@ struct Mouse {
 } mouse;
 
 void PreInitScene(GLFWwindow* window);
-void InitRender(GLFWwindow* window, string message);
+void InitRender(GLFWwindow* window, std::string message);
 int InitScene(GLFWwindow* window);
 
 void RenderScene(GLFWwindow* window);
@@ -911,7 +910,7 @@ void PreInitScene(GLFWwindow* window) {
         delete[] fragmentShaderSourceCode;
     }
     fLine1 = new FontLine2d();
-    fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"), textShader);
+    fLine1->Init(std::string("fonts/MagistralIC_UTF-8.fnt"), textShader);
     fLine1->SetAspectRatio(width, height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -923,7 +922,7 @@ void PreInitScene(GLFWwindow* window) {
     initialized = false;
 }
 
-void InitRender(GLFWwindow* window, string message) {
+void InitRender(GLFWwindow* window, std::string message) {
     // thread thr(InitScene,hiddenWindow);
 
     // thr.detach();
@@ -1193,8 +1192,7 @@ delete[] fragmentShaderSourceCode;
 }*/
 
 skybox1 = new SkyBox(skyboxShader);
-skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
-              "sp3bot.tga", "sp3front.tga", "sp3back.tga");
+skybox1->Init("textures/canyon1.jpg");
 // настройка света и единичных векторов
 {
     InitRender(window, "Init lights...");
@@ -1277,7 +1275,7 @@ int main(int argc, char** argv) {
     if (!glfwInit()) exit(EXIT_FAILURE);
 
     // заголовок
-    string title("NEE");
+    std::string title("NEE");
 
     glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),

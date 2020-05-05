@@ -1,7 +1,6 @@
 #include "ShadowMapFBO.h"
 
 #include <Texture.h>
-#include <stdio.h>
 
 #include <iostream>
 
