@@ -3,6 +3,9 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
 #define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_operation.hpp>
+#include <glm/gtx/transform.hpp>
 #include <glm/gtx/vector_angle.hpp>
 
 void DirectionalLight::SetCol(glm::vec3 col) {
@@ -339,18 +342,20 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
 Line::~Line() {}
 // void Line::Render(Camera* pGameCamera, int width, int height)
 void Line::Render(Camera* cam) {
-    Assistant TM;
-    TM.WorldPos(0, 0, 0);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    glm::mat4 model =
+        glm::mat4() * glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    glm::mat4 projection = glm::perspectiveFov(
+        cam->GetFov(), static_cast<float>(cam->GetWidth()),
+        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
+    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    glm::mat4 mvp_matrix = projection * view * model;
 
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSRVC()));
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(positionID);

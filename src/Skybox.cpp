@@ -1,6 +1,10 @@
 #include "skybox.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_operation.hpp>
+#include <glm/gtx/transform.hpp>
 
 SkyBox::SkyBox(std::shared_ptr<Shader> shader) {
     shaderProgram = shader;
@@ -134,14 +138,14 @@ void SkyBox::Render(Camera* cam) {
     glCullFace(GL_BACK);
     glDepthFunc(GL_LEQUAL);
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.Scale(3, 3, 3);
-    TM.WorldPos(cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
-    TM.Rotate(180, 180, 0);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    glm::mat4 model = glm::translate(cam->GetPos()) *
+                      glm::orientate4(glm::vec3{180, 180, 0}) *
+                      glm::scale(glm::vec3{3});
+    glm::mat4 projection = glm::perspectiveFov(
+        cam->GetFov(), static_cast<float>(cam->GetWidth()),
+        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
+    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    glm::mat4 mvp_matrix = projection * view * model;
 
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
@@ -153,7 +157,7 @@ void SkyBox::Render(Camera* cam) {
     glUniform1i(textureID, 2);
     // cout<<colTexID<<"\n"<<textureID<<"\n";
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSRVC()));
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);

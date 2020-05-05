@@ -2,7 +2,6 @@
 #define INCLUDE_PARTICLESYSTEM_H
 
 #define MAX_PARTICLES 1000
-#include "Assistant.h"
 #include "BillboardAssistant.h"
 #include "Camera.h"
 #include "ParticleUpdateAssistant.h"

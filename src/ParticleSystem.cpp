@@ -118,11 +118,13 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
 void ParticleSystem::RenderParticles(Camera* cam) {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+
+    glm::mat4 projection = glm::perspectiveFov(
+        cam->GetFov(), static_cast<float>(cam->GetWidth()),
+        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
+    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    glm::mat4 vp_matrix = projection * view;
+
     // матрица проекции камеры
     // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
     // позиция камеры
@@ -130,7 +132,7 @@ void ParticleSystem::RenderParticles(Camera* cam) {
 
     glUseProgram(shaderProgramID);
     m_billboardAssistant.SetCameraPosition(cam->GetPos());
-    m_billboardAssistant.SetVP(glm::value_ptr(TM.GetVC()));
+    m_billboardAssistant.SetVP(glm::value_ptr(vp_matrix));
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 
     glDisable(GL_RASTERIZER_DISCARD);

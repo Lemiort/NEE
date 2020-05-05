@@ -9,7 +9,7 @@ class PlaceableObject : public Object {
 public:
     PlaceableObject();
     virtual ~PlaceableObject();
-    float position[3];
+    glm::vec3 position;
 
     void SetPosition(float x, float y, float z);
     void SetPosition(glm::vec3 _pos);

@@ -2,6 +2,10 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_operation.hpp>
+#include <glm/gtx/transform.hpp>
 
 Mesh::Mesh() {
     // mat=NULL;
@@ -150,18 +154,15 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(Camera* cam) {
-    Assistant TM, TM2;  // TM - Для объекта, 2- для нормали объекта, 3 - для
-                        // позиции камера для спекуляра
-    TM.Scale(scale[0], scale[1], scale[2]);
-    TM.WorldPos(position[0], position[1], position[2]);
-    TM.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM2.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM.RotateOverVector(rv, rPhi);
-    TM2.RotateOverVector(rv, rPhi);
-
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    glm::mat4 model = glm::translate(position) * glm::orientate4(rotation) *
+                      glm::scale(scale);
+    glm::mat4 projection = glm::perspectiveFov(
+        cam->GetFov(), static_cast<float>(cam->GetWidth()),
+        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
+    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    glm::mat4 mvp_matrix = projection * view * model;
+    auto rotate_matrix =
+        glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));  // TODO fix
 
     mat->Use();
 
@@ -178,9 +179,10 @@ void Mesh::Render(Camera* cam) {
         reinterpret_cast<const void*>(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(TM.GetTSR()));
-    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       glm::value_ptr(TM2.GetRotate()));  // вращение модели
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(
+        rotateID, 1, GL_TRUE,
+        glm::value_ptr(rotate_matrix));  // TODO add model rotation
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);

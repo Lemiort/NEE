@@ -234,17 +234,21 @@ void ShadowPass() {
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
     Plane.SetRotation(0.0, 0.0, 0.0);
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+
+    glm::mat4 projection = glm::perspectiveFov(
+        lightCam->GetFov(), static_cast<float>(lightCam->GetWidth()),
+        static_cast<float>(lightCam->GetHeight()), lightCam->GetZNear(),
+        lightCam->GetZFar());
+    glm::mat4 view = glm::lookAt(lightCam->GetPos(), lightCam->GetTarget(),
+                                 lightCam->GetUp());
+    glm::mat4 vp_matrix = projection * view;
 
     shadowShader->Use();
     gCamViewID = shadowShader->GetUniformLocation("gVC");
     rotateID = shadowShader->GetUniformLocation("mRotate");
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix));
     // освещение
     {
         // направленный свет
@@ -301,19 +305,26 @@ void RenderPass() {
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
     Plane.SetRotation(0.0, 0.0, 0.0);
-    Assistant TM, TM2;  // TM - Для объекта, 2- для нормали объекта, 3 - для
-                        // позиции камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     Camera* lightCam = new Camera(
         width, height, pGameCamera->GetFov(), pGameCamera->GetZNear(),
         pGameCamera->GetZFar(), spotLight1->GetPos(),
         glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
-    TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
-    TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection2 = glm::perspectiveFov(
+        lightCam->GetFov(), static_cast<float>(lightCam->GetWidth()),
+        static_cast<float>(lightCam->GetHeight()), lightCam->GetZNear(),
+        lightCam->GetZFar());
+    glm::mat4 view2 = glm::lookAt(lightCam->GetPos(), lightCam->GetTarget(),
+                                  lightCam->GetUp());
+    glm::mat4 vp_matrix2 = projection2 * view2;
 
     skybox1->Render(pGameCamera);
 
@@ -326,9 +337,9 @@ void RenderPass() {
         rotateID = meshShader->GetUniformLocation("mRotate");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
 
-        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
         glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
-                           glm::value_ptr(TM2.GetVC()));
+                           glm::value_ptr(vp_matrix2));
 
         // освещение
         {
@@ -469,11 +480,13 @@ void DSStencilPass(Light& light) {
     glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_INCR,
                         GL_KEEP);  // TODO сделать наоборот
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     // определяем адрес переменных камеры
     gCamViewID = DSStencilPassShader->GetUniformLocation("gVC");
@@ -481,7 +494,7 @@ void DSStencilPass(Light& light) {
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
 
     light.SetMaterial(DSStencilPassMaterial);
     light.Render(pGameCamera);
@@ -501,11 +514,13 @@ void DSPointLightPass(PointLight& pointLight) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     // включаем шейдер
     DSPointLightShader->Use();
@@ -516,7 +531,7 @@ void DSPointLightPass(PointLight& pointLight) {
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
     // взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
@@ -566,11 +581,13 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glEnable(GL_CULL_FACE);
     glCullFace(GL_BACK);
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     // включаем шейдер
     DSSpotLightShader->Use();
@@ -581,7 +598,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
     // взагружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
@@ -626,11 +643,13 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     DSDirectionalLightShader->Use();
     // получаем адрес параметров камеры
@@ -641,7 +660,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
                 pGameCamera->GetPos().z);
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
 
     // получаем адрес переменных света
     dirLightColID =
@@ -736,16 +755,18 @@ void DSGeometryPass() {
 
     CalcFPS();
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
-    TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
+    glm::mat4 projection1 = glm::perspectiveFov(
+        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
+        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
+        pGameCamera->GetZFar());
+    glm::mat4 view1 = glm::lookAt(
+        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+    glm::mat4 vp_matrix1 = projection1 * view1;
 
     DSGeometryPassShader->Use();
     gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
 
     Cube.SetMaterial(DSGeometryPassMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)

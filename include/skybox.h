@@ -4,7 +4,6 @@
 #include <memory>
 #include <string>
 
-#include "Assistant.h"
 #include "Camera.h"
 #include "PlaceableObject.h"
 #include "RenderableObject.h"

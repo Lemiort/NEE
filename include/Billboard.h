@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <memory>
 
-#include "Assistant.h"
 #include "Camera.h"
 #include "RenderableObject.h"
 #include "Shader.h"
@@ -25,7 +24,7 @@ private:
     // shared_ptr<Shader> shaderProgram;
     bool shader;
     GLuint VBO;
-    glm::vec3 Pos;
+    glm::vec3 pos;
     Texture2D colorMap;
     GLuint colSamplerID;
     GLuint positionID;

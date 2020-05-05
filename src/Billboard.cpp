@@ -1,9 +1,13 @@
 #include "Billboard.h"
 
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/matrix_operation.hpp>
+#include <glm/gtx/transform.hpp>
 
 Billboard::Billboard() {
-    Pos = glm::vec3(1, 1, 1);
+    pos = glm::vec3(1, 1, 1);
     shader = false;
 }
 
@@ -15,7 +19,7 @@ Billboard::Billboard() {
 }*/
 
 Billboard::Billboard(std::shared_ptr<Shader> _shader) {
-    Pos = glm::vec3(0, 0, 0);
+    pos = glm::vec3(0, 0, 0);
     shaderProgram = _shader;
     // shaderProgramID=_shader->shaderProgramID;
     shader = true;
@@ -54,19 +58,19 @@ void Billboard::Init(const char* TexFilename) {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // создаём буффер
-    float coords[3] = {Pos.x, Pos.y, Pos.z};
+    float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
 void Billboard::SetPos(glm::vec3 _Pos) {
-    Pos = _Pos;
+    pos = _Pos;
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // создаём буффер
-    float coords[3] = {Pos.x, Pos.y, Pos.z};
+    float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
 }
@@ -74,14 +78,18 @@ void Billboard::SetPos(glm::vec3 _Pos) {
 void Billboard::Render(Camera* cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+
+    glm::mat4 model = glm::translate(pos) *
+                      glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+    glm::mat4 projection = glm::perspectiveFov(
+        cam->GetFov(), static_cast<float>(cam->GetWidth()),
+        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
+    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    glm::mat4 mvp_matrix = projection * view * model;
 
     // матрица проекции камеры
-    glUniformMatrix4fv(camViewID, 1, GL_TRUE, glm::value_ptr(TM.GetVC()));
+    glUniformMatrix4fv(camViewID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     // позиция камеры
     glUniform3f(camPosID, cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
 

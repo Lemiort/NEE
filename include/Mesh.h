@@ -4,7 +4,6 @@
 #include <glm/glm.hpp>
 #include <memory>
 
-#include "Assistant.h"
 #include "Camera.h"
 #include "Material.h"
 #include "MaterialObject.h"

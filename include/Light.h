@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "Assistant.h"
 #include "Camera.h"
 #include "MaterialObject.h"
 #include "Mesh.h"
