@@ -37,7 +37,7 @@ bool BillboardAssistant::Init() {
         return false;
     }
 
-    return GLCheckError();
+    return glGetError() == GL_NO_ERROR;
 }
 
 void BillboardAssistant::SetVP(const glm::mat4& VP) {

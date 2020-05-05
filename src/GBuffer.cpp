@@ -4,16 +4,14 @@
 
 #include <iostream>
 
-#include "util.h"
-
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     // Создаем FBO
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
     // создаём и инициализируем карты цвета и пр.
-    glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+    glGenTextures(std::size(m_textures), m_textures);
+    for (unsigned int i = 0; i < std::size(m_textures); i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WindowWidth, WindowHeight, 0,
                      GL_RGB, GL_FLOAT, nullptr);
@@ -50,17 +48,16 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glBindTexture(GL_TEXTURE_2D, m_finalTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0,
                  GL_RGB, GL_FLOAT, nullptr);
-    glFramebufferTexture2D(
-        GL_DRAW_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures),
-        GL_TEXTURE_2D, m_finalTexture, 0);
+    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+                           GL_COLOR_ATTACHMENT0 + std::size(m_textures),
+                           GL_TEXTURE_2D, m_finalTexture, 0);
 
     GLenum DrawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                             GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
                             GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
-    std::cout << "\n draw buffers:" << ARRAY_SIZE_IN_ELEMENTS(DrawBuffers);
+    glDrawBuffers(std::size(DrawBuffers), DrawBuffers);
+    std::cout << "\n draw buffers:" << std::size(DrawBuffers);
 
     // check FBO status
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
@@ -116,7 +113,7 @@ void GBuffer::BindForWriting() {
 void GBuffer::BindForReading() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
 
-    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+    /*for (unsigned int i = 0 ; i < std::size(m_textures); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
     i]);
@@ -128,7 +125,7 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 }
 
 void GBuffer::CheckTextures() {
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+    for (unsigned int i = 0; i < std::size(m_textures); i++) {
         Texture2D* temp = new Texture2D(m_textures[i], false);
         std::cout << "\n" << temp->GetParameters();
         delete temp;
@@ -141,7 +138,7 @@ GLuint GBuffer::GetDepthTexture() { return m_depthTexture; }
 
 void GBuffer::StartFrame() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glDrawBuffer(GL_COLOR_ATTACHMENT0 + std::size(m_textures));
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
@@ -152,7 +149,7 @@ void GBuffer::BindForGeomPass() {
                             GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
                             GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
+    glDrawBuffers(std::size(DrawBuffers), DrawBuffers);
 }
 
 void GBuffer::BindForStencilPass() {
@@ -161,9 +158,9 @@ void GBuffer::BindForStencilPass() {
 }
 
 void GBuffer::BindForLightPass() {
-    glDrawBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glDrawBuffer(GL_COLOR_ATTACHMENT0 + std::size(m_textures));
 
-    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+    /*for (unsigned int i = 0 ; i < std::size(m_textures); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
         glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
     i]);
@@ -173,5 +170,5 @@ void GBuffer::BindForLightPass() {
 void GBuffer::BindForFinalPass() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
-    glReadBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glReadBuffer(GL_COLOR_ATTACHMENT0 + std::size(m_textures));
 }

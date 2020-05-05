@@ -32,7 +32,7 @@ bool RandomTexture::InitRandomTexture(unsigned int Size) {
 
     delete[] pRandomData;
 
-    return GLCheckError();
+    return glGetError() == GL_NO_ERROR;
 }
 
 void RandomTexture::Bind(GLenum TextureUnit) {

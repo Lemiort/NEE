@@ -23,13 +23,9 @@
 #include "Text_2D.h"
 #include "skybox.h"
 #include "tga_loader.h"
-#include "util.h"
-#include "version.h"
 
 #define WINDOW_WIDTH 1366
 #define WINDOW_HEIGHT 768
-
-#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a) / sizeof(a[0]))
 
 std::shared_ptr<Shader> meshShader;
 std::shared_ptr<Shader> skyboxShader;
@@ -789,9 +785,9 @@ void InterfacePass() {
     xline->Render(pGameCamera);
     yline->Render(pGameCamera);
     zline->Render(pGameCamera);
-    std::string strCampos = ConvertToString(pGameCamera->GetPos().x) + "; " +
-                            ConvertToString(pGameCamera->GetPos().y) + "; " +
-                            ConvertToString(pGameCamera->GetPos().z);
+    std::string strCampos = std::to_string(pGameCamera->GetPos().x) + "; " +
+                            std::to_string(pGameCamera->GetPos().y) + "; " +
+                            std::to_string(pGameCamera->GetPos().z);
     // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText((strCampos).c_str());
     fLine1->SetPosition(-1.0f, 0.0f, 24.0f);
@@ -799,7 +795,7 @@ void InterfacePass() {
     // gBuffer1->CheckTextures();
     CalcFPS();
     // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-    fLine1->SetText(ConvertToString(fps));
+    fLine1->SetText(std::to_string(fps));
     fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
     fLine1->Render(pGameCamera);
 
@@ -938,7 +934,7 @@ void InitRender(GLFWwindow* window, string message) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         CalcFPS();
         // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-        fLine1->SetText(ConvertToString(fps));
+        fLine1->SetText(std::to_string(fps));
         fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
         fLine1->Render(pGameCamera);
 
@@ -1281,12 +1277,7 @@ int main(int argc, char** argv) {
     if (!glfwInit()) exit(EXIT_FAILURE);
 
     // заголовок
-    string title("HOGL ");
-    title += AutoVersion::STATUS;
-    title += " ";
-    title += AutoVersion::FULLVERSION_STRING;
-    title += " build ";
-    title += ConvertToString(AutoVersion::BUILDS_COUNT);
+    string title("NEE");
 
     glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
     window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),

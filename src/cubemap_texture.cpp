@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include "tga_loader.h"
-#include "util.h"
 
 static const GLenum types[6] = {
     GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
@@ -44,7 +43,7 @@ bool CubemapTexture::Load() {
     // Magick::Image* pImage = NULL;
     // Magick::Blob blob;
 
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(types); i++) {
+    for (unsigned int i = 0; i < std::size(types); i++) {
         ASSERT(m_fileNames[i].c_str());
 
         TGAHeader* header;

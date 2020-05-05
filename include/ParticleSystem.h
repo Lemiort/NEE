@@ -1,5 +1,6 @@
 #ifndef INCLUDE_PARTICLESYSTEM_H_
 #define INCLUDE_PARTICLESYSTEM_H_
+
 #define MAX_PARTICLES 1000
 #include "Assistant.h"
 #include "BillboardAssistant.h"
@@ -8,7 +9,6 @@
 #include "RandomTexture.h"
 #include "ShaderFunctions.h"
 #include "Texture.h"
-#include "util.h"
 
 #define PARTICLE_LIFETIME 10.0f
 

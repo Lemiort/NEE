@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "EngineCommon.h"
-#include "util.h"
+
 class RandomTexture {
 public:
     RandomTexture();

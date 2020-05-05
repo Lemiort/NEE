@@ -1,8 +1,5 @@
 #include "Material.h"
 
-#include <util.h>
-
-#include <cstdlib>
 #include <iostream>
 
 Material::Material() {
@@ -76,7 +73,7 @@ bool Material::Init(std::shared_ptr<Shader> _sh) {
     std::string abstractSamplerName("gSampler");
     for (GLint i = 4; i < max_texture_units; i++) {
         abstractSamplersID[i] = shaderProgram->GetUniformLocation(
-            (abstractSamplerName + ConvertToString(i)).c_str());
+            (abstractSamplerName + std::to_string(i)).c_str());
         // std::cout<<"\nSampler name is
         // "<<(abstractSamplerName+ConvertToString(i)).c_str();
     }

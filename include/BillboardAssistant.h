@@ -5,7 +5,6 @@
 #include <glm/glm.hpp>
 
 #include "ShaderFunctions.h"
-#include "util.h"
 
 class BillboardAssistant {
 public:

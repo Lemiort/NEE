@@ -1,7 +1,8 @@
 #include "ShadowMapFBO.h"
+
 #include <Texture.h>
 #include <stdio.h>
-#include <util.h>
+
 #include <iostream>
 
 ShadowMapFBO::ShadowMapFBO() {
@@ -45,8 +46,8 @@ bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
 
     // Отключаем запись в буфер цвета
     // glDrawBuffer(GL_NONE);
-    glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+    glGenTextures(std::size(m_textures), m_textures);
+    for (unsigned int i = 0; i < std::size(m_textures); i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WindowWidth, WindowHeight, 0,
                      GL_RGB, GL_FLOAT, nullptr);
@@ -58,7 +59,7 @@ bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     GLenum DrawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
                             GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3};
 
-    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
+    glDrawBuffers(std::size(DrawBuffers), DrawBuffers);
 
     // check FBO status
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);

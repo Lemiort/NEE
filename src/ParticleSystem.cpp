@@ -7,8 +7,7 @@ ParticleSystem::ParticleSystem() {}
 ParticleSystem::~ParticleSystem() {}
 
 bool ParticleSystem::Init(glm::vec3 Pos) {
-    Particle Particles[MAX_PARTICLES];
-    ZERO_MEM(Particles);
+    Particle Particles[MAX_PARTICLES] = {};
 
     Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
     Particles[0].Pos = Pos;
@@ -57,7 +56,7 @@ bool ParticleSystem::Init(glm::vec3 Pos) {
     m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
     m_colorTexture.Load("Textures/fireworks_red.png");
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
-    return GLCheckError();
+    return glGetError() == GL_NO_ERROR;
 }
 
 void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam) {
