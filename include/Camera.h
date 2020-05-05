@@ -3,8 +3,6 @@
 
 #include <glm/glm.hpp>
 
-#include "math_3d.h"
-
 class Camera {
 public:
     Camera(int WindowWidth, int WindowHeight, float fov, float znear,

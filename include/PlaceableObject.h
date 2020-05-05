@@ -1,8 +1,9 @@
 #ifndef PLACEABLEOBJECT_H
 #define PLACEABLEOBJECT_H
 
-#include <Object.h>
-#include <math_3d.h>
+#include <glm/glm.hpp>
+
+#include "Object.h"
 
 class PlaceableObject : public Object {
 public:

@@ -1,12 +1,13 @@
 #ifndef BILLBOARD_H
 #define BILLBOARD_H
+#include <glm/glm.hpp>
+
 #include "Assistant.h"
 #include "Camera.h"
 #include "RenderableObject.h"
 #include "Shader.h"
 #include "ShaderFunctions.h"
 #include "Texture.h"
-#include "math_3d.h"
 class Billboard : public RenderableObject {
 public:
     Billboard();

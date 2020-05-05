@@ -2,8 +2,9 @@
 #define BILLBOARDASSISTANT_H
 #include <GL/glew.h>
 
+#include <glm/glm.hpp>
+
 #include "ShaderFunctions.h"
-#include "math_3d.h"
 #include "util.h"
 class BillboardAssistant {
 public:

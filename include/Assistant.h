@@ -1,7 +1,7 @@
 #ifndef ASSISTANT_H_INCLUDED
 #define ASSISTANT_H_INCLUDED
 
-#include "math_3d.h"
+#include <glm/glm.hpp>
 
 class Assistant {
 public:

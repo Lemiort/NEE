@@ -2,9 +2,9 @@
 #define TEXT_2D_H_INCLUDED
 #include <GL/glew.h>
 #include <SOIL2/SOIL2.h>
-#include <math_3d.h>
 
 #include <cstring>
+#include <glm/glm.hpp>
 #include <map>
 #include <queue>
 

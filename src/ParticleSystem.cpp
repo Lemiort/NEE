@@ -1,4 +1,7 @@
 #include "ParticleSystem.h"
+
+#include <glm/gtc/type_ptr.hpp>
+
 ParticleSystem::ParticleSystem() {}
 
 ParticleSystem::~ParticleSystem() {}

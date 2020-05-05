@@ -1,6 +1,9 @@
 #include "Light.h"
 
+#include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/vector_angle.hpp>
 
 void DirectionalLight::SetCol(glm::vec3 col) {
     color[0] = col.x;

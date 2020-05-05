@@ -1,5 +1,7 @@
 #include "BillboardAssistant.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 BillboardAssistant::BillboardAssistant() {
     // ctor
 }

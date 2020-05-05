@@ -1,5 +1,7 @@
 #include "Billboard.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 Billboard::Billboard() {
     Pos = glm::vec3(1, 1, 1);
     shader = false;

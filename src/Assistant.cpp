@@ -1,5 +1,9 @@
 #include "Assistant.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/euler_angles.hpp>
+#include <glm/gtx/transform.hpp>
+
 const glm::mat4& Assistant::GetTSRVC() {
     glm::mat4 ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
         CameraTrans;

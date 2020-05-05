@@ -1,5 +1,7 @@
 #include "Mesh.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 Mesh::Mesh() {
     // mat=NULL;
     shadowMap = 0;

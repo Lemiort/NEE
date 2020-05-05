@@ -1,5 +1,7 @@
 #include "skybox.h"
 
+#include <glm/gtc/type_ptr.hpp>
+
 SkyBox::SkyBox(shared_ptr<Shader> shader) {
     shaderProgram = shader;
     shaderProgramID = shader->shaderProgramID;

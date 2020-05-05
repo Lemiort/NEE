@@ -1,6 +1,7 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
 #include <fstream>
+#include <glm/glm.hpp>
 #include <iostream>
 
 #include "Assistant.h"
@@ -12,7 +13,6 @@
 #include "ScaleableObject.h"
 #include "Shader.h"
 #include "Texture.h"
-#include "math_3d.h"
 //#include "Light.h"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;

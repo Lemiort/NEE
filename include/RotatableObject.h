@@ -1,6 +1,6 @@
 #ifndef ROTATABLEOBJECT_H
 #define ROTATABLEOBJECT_H
-#include <math_3d.h>
+#include <glm/glm.hpp>
 
 class RotatableObject {
 public:
