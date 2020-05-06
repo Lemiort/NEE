@@ -11,7 +11,7 @@ public:
     glm::vec3 GetRotation();
 
 protected:
-    glm::vec3 rotation;
+    glm::vec3 model_rotation;
 
 private:
 };

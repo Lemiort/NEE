@@ -20,9 +20,9 @@ public:
     void Render(Camera* cam);
     GLuint shaderProgramID;
     GLuint VBO;  // vertex buffer
-    GLuint positionID;
+    GLuint position_id;
     GLuint IBO;  // index buffer
-    GLuint gWorldID, gCamViewID;
+    GLuint model_id, gCamViewID;
     int spfaces, spverts;
     int Scale;
     void Init(GLuint shader, const char* model);
@@ -34,13 +34,13 @@ private:
     GLuint textureID;
     // shared_ptr<Shader> shaderProgram;
 public:
-    GLuint uvID, normalID;
-    GLuint rotateID;
+    GLuint uv_id, normal_id;
+    GLuint rotation_id;
     GLuint camtransID, camPosID;
     GLuint colTexID, texBufferID;
 
     // float position[3];
-    float rotation[3];
+    float model_rotation[3];
     float scale[3];
 };
 

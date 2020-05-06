@@ -45,7 +45,7 @@ struct KerningPairs {
 class Font2d : public RenderableObject, public PlaceableObject {
 private:
     GLuint sverticesID, spositionID;
-    GLuint uvID, suvID;
+    GLuint uv_id, suvID;
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
@@ -120,8 +120,8 @@ private:
     bool yourselfShader;
     // GLuint shaderProgramID;
     // shared_ptr<Shader> shaderProgram;
-    GLuint positionID, spositionID;
-    GLuint uvID, suvID;
+    GLuint position_id, spositionID;
+    GLuint uv_id, suvID;
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
     GLuint colorID;

@@ -101,7 +101,7 @@ void SpotLight::Render(Camera* cam) {
         // get the pojection
         glm::vec3 projYZ(0, proj.y, proj.z);
 
-        // calc rotation
+        // calc model_rotation
         if (glm::cross(projYZ, directionYZ).x > 0)
             xrot = -glm::degrees(glm::angle(directionYZ, projYZ));
         else
@@ -117,7 +117,7 @@ void SpotLight::Render(Camera* cam) {
         // get the pojection
         glm::vec3 projXZ(proj.x, 0, proj.z);
 
-        // calc the rotation
+        // calc the model_rotation
         if (glm::cross(projXZ, directionXZ).y > 0)
             yrot = -glm::degrees(glm::angle(directionXZ, projXZ));
         else
@@ -132,7 +132,7 @@ void SpotLight::Render(Camera* cam) {
             // get the pojection
             glm::vec3 projXY(proj.x, proj.y, 0);
 
-            // calc the rotation
+            // calc the model_rotation
             if (glm::cross(projXY, directionXY).z > 0)
                 zrot = glm::degrees(glm::angle(directionXY, projXY));
             else
@@ -231,8 +231,8 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER,sizeof(temp),NULL, GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(temp),temp);
-    positionID=	    shaderProgram->GetAttribLocation("position");
-    gWorldID=	    shaderProgram->GetUniformLocation("gWVCP");
+    position_id=	    shaderProgram->GetAttribLocation("position");
+    model_id=	    shaderProgram->GetUniformLocation("gWVCP");
     PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
@@ -251,16 +251,16 @@ void PointLight::Render(Camera* cam) {
     /*shaderProgram->Use();
                     //glUseProgram(shaderProgramID);
                     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                    glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
+                    glVertexAttribPointer(position_id,3,GL_FLOAT,GL_FALSE,0,0);
 
 
-                    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const
+                    glUniformMatrix4fv(model_id, 1, GL_TRUE, (const
        GLfloat*)TM.GetTSRVC());
                     glUniform4f(PixelColorID,color[0],color[1],color[2],1);
                     glUniform1f(PointSizeID, 5.0);
-                    glEnableVertexAttribArray(positionID);
+                    glEnableVertexAttribArray(position_id);
                     glDrawArrays(GL_POINTS,0,1);
-                    glDisableVertexAttribArray(positionID);*/
+                    glDisableVertexAttribArray(position_id);*/
 
     sphere->SetScale(radius, radius, radius);
     sphere->SetPosition(position[0], position[1], position[2]);
@@ -310,8 +310,8 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     col[1] = color.y;
     col[2] = color.z;
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos);
-    positionID = shaderProgram->GetAttribLocation("position");
-    gWorldID = shaderProgram->GetUniformLocation("gWVCP");
+    position_id = shaderProgram->GetAttribLocation("position");
+    model_id = shaderProgram->GetUniformLocation("gWVCP");
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
@@ -334,8 +334,8 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
     col[1] = color.y;
     col[2] = color.z;
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos);
-    positionID = shaderProgram->GetAttribLocation("position");
-    gWorldID = shaderProgram->GetUniformLocation("gWVCP");
+    position_id = shaderProgram->GetAttribLocation("position");
+    model_id = shaderProgram->GetUniformLocation("gWVCP");
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
@@ -353,13 +353,13 @@ void Line::Render(Camera* cam) {
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
-    glEnableVertexAttribArray(positionID);
+    glEnableVertexAttribArray(position_id);
     glDrawArrays(GL_LINES, 0, 2);
-    glDisableVertexAttribArray(positionID);
+    glDisableVertexAttribArray(position_id);
 }
 std::shared_ptr<Shader> Line::GetShader() { return shaderProgram; }

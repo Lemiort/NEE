@@ -105,9 +105,9 @@ bool SkyBox::Init(const std::string& filename) {
     }
     pCubemapTex->Load();
 
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    position_id = shaderProgram->GetAttribLocation("vertex_position");
     // находим позиции uniform-переменных
-    gWorldID = shaderProgram->GetUniformLocation("gWVP");
+    model_id = shaderProgram->GetUniformLocation("gWVP");
 
     // делаем то же самое
     pCubemapTex->Bind(GL_TEXTURE2);
@@ -116,7 +116,7 @@ bool SkyBox::Init(const std::string& filename) {
     glUniform1i(textureID, 2);
     for (int i = 0; i < 3; i++) {
         position[i] = 0;
-        rotation[i] = 0;
+        model_rotation[i] = 0;
         scale[i] = 1;
     }
 
@@ -150,18 +150,18 @@ void SkyBox::Render(Camera* cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, NULL);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     pCubemapTex->Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
     // cout<<colTexID<<"\n"<<textureID<<"\n";
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
 
-    glEnableVertexAttribArray(positionID);
+    glEnableVertexAttribArray(position_id);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
+    glDisableVertexAttribArray(position_id);
 
     glCullFace(OldCullFaceMode);
     glDepthFunc(OldDepthFuncMode);

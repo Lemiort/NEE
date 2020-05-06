@@ -104,8 +104,8 @@ void CalcFPS();
 int width;
 int height;
 
-GLuint gWorldID, gCamViewID;
-GLuint rotateID;
+GLuint model_id, gCamViewID;
+GLuint rotation_id;
 GLuint dirLightDirID, dirLightColID;
 GLuint pointLightColID, pointLightIntID, pointLightPosID;
 GLuint spotLightColID, spotLightDirID, spotLightCutoffID, spotLightPosID;
@@ -255,8 +255,8 @@ void ShadowPass() {
     glm::mat4 vp_matrix = projection * view;
 
     shadowShader->Use();
-    gCamViewID = shadowShader->GetUniformLocation("gVC");
-    rotateID = shadowShader->GetUniformLocation("mRotate");
+    gCamViewID = shadowShader->GetUniformLocation("view_projection");
+    rotation_id = shadowShader->GetUniformLocation("model_rotation");
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix));
@@ -344,8 +344,8 @@ void RenderPass() {
     {
         meshShader->Use();
         GLuint gLightCamViewID = meshShader->GetUniformLocation("gLightVC");
-        gCamViewID = meshShader->GetUniformLocation("gVC");
-        rotateID = meshShader->GetUniformLocation("mRotate");
+        gCamViewID = meshShader->GetUniformLocation("view_projection");
+        rotation_id = meshShader->GetUniformLocation("model_rotation");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
 
         glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
@@ -417,26 +417,6 @@ void DSLightingPass() {
 
     gBuffer1->BindForReading();
 
-    // GLsizei HalfWidth = (GLsizei)(width / 2.0f);
-    // GLsizei HalfHeight = (GLsizei)(height / 2.0f);
-
-    // gBuffer1->CheckTextures();
-    /*
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
-    glBlitFramebuffer(0, 0,width, height, 0, 0, HalfWidth, HalfHeight,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
-    glBlitFramebuffer(0, 0, width, height, 0, HalfHeight, HalfWidth, height,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
-    glBlitFramebuffer(0, 0, width, height, HalfWidth, HalfHeight, width, height,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
-    glBlitFramebuffer(0, 0, width, height, HalfWidth, 0, width, HalfHeight,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);*/
     switch (renderType) {
         case RenderType::Position:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
@@ -461,11 +441,6 @@ void DSLightingPass() {
         default:
             break;
     }
-
-    /* fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-     spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
-     fLine1->Render((ConvertToString(spfaces)+"
-     faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
 void DSStencilPass(Light& light) {
@@ -502,8 +477,8 @@ void DSStencilPass(Light& light) {
     glm::mat4 vp_matrix1 = projection1 * view1;
 
     // определяем адрес переменных камеры
-    gCamViewID = DSStencilPassShader->GetUniformLocation("gVC");
-    rotateID = DSStencilPassShader->GetUniformLocation("mRotate");
+    gCamViewID = DSStencilPassShader->GetUniformLocation("view_projection");
+    rotation_id = DSStencilPassShader->GetUniformLocation("model_rotation");
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
@@ -539,8 +514,8 @@ void DSPointLightPass(PointLight& pointLight) {
     DSPointLightShader->Use();
 
     // определяем адрес переменных камеры
-    gCamViewID = DSPointLightShader->GetUniformLocation("gVC");
-    rotateID = DSPointLightShader->GetUniformLocation("mRotate");
+    gCamViewID = DSPointLightShader->GetUniformLocation("view_projection");
+    rotation_id = DSPointLightShader->GetUniformLocation("model_rotation");
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
@@ -606,8 +581,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
     DSSpotLightShader->Use();
 
     // определяем адрес переменных камеры
-    gCamViewID = DSSpotLightShader->GetUniformLocation("gVC");
-    rotateID = DSSpotLightShader->GetUniformLocation("mRotate");
+    gCamViewID = DSSpotLightShader->GetUniformLocation("view_projection");
+    rotation_id = DSSpotLightShader->GetUniformLocation("model_rotation");
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
@@ -666,8 +641,10 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
 
     DSDirectionalLightShader->Use();
     // получаем адрес параметров камеры
-    gCamViewID = DSDirectionalLightShader->GetUniformLocation("gVC");
-    rotateID = DSDirectionalLightShader->GetUniformLocation("mRotate");
+    gCamViewID =
+        DSDirectionalLightShader->GetUniformLocation("view_projection");
+    rotation_id =
+        DSDirectionalLightShader->GetUniformLocation("model_rotation");
     camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
     // загружаем вращение камеры для спекуляра
     glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
@@ -768,7 +745,6 @@ void InterfacePass() {
     fLine1->SetPosition(-1.0f, -0.2f, 36.0f);
     fLine1->Render(pGameCamera);
 
-    // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera);
     // glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
@@ -796,7 +772,7 @@ void DSGeometryPass() {
     glm::mat4 vp_matrix1 = projection1 * view1;
 
     DSGeometryPassShader->Use();
-    gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
+    gCamViewID = DSGeometryPassShader->GetUniformLocation("view_projection");
 
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
 
@@ -808,8 +784,6 @@ void DSGeometryPass() {
             Cube.SetPosition(i, noise1->GetHeight(i, j), j);
             Cube.Render(pGameCamera);
         }
-
-    // glBindFramebuffer(GL_FRAMEBUFFER,0);
 
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
@@ -958,8 +932,8 @@ int InitScene(GLFWwindow* window) {
         delete[] vertexShaderSorceCode;
         delete[] fragmentShaderSourceCode;
 
-        gCamViewID = meshShader->GetUniformLocation("gVC");
-        rotateID = meshShader->GetUniformLocation("mRotate");
+        gCamViewID = meshShader->GetUniformLocation("view_projection");
+        rotation_id = meshShader->GetUniformLocation("model_rotation");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
 

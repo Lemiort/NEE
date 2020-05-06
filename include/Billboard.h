@@ -27,7 +27,7 @@ private:
     glm::vec3 pos;
     Texture2D colorMap;
     GLuint colSamplerID;
-    GLuint positionID;
+    GLuint position_id;
     GLuint camViewID, camPosID;
 };
 

@@ -23,14 +23,14 @@ void Mesh::SetMaterial(std::shared_ptr<Material> _mat) {
     this->SetShader(mat->GetShader());
 
     // mat->Use();
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    normalID = shaderProgram->GetAttribLocation("s_vNormal");
-    uvID = shaderProgram->GetAttribLocation("s_vUV");
-    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
+    position_id = shaderProgram->GetAttribLocation("vertex_position");
+    normal_id = shaderProgram->GetAttribLocation("vertex_normal");
+    uv_id = shaderProgram->GetAttribLocation("vertex_uv");
+    tangent_id = shaderProgram->GetAttribLocation("vertex_tangent");
     // находим позиции uniform-переменных
-    gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID =
-        shaderProgram->GetUniformLocation("mRotate");  // вращение объекта
+    model_id = shaderProgram->GetUniformLocation("model");
+    rotation_id = shaderProgram->GetUniformLocation(
+        "model_rotation");  // вращение объекта
 }
 
 bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
@@ -130,18 +130,18 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
                  GL_STATIC_DRAW);
 
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    normalID = shaderProgram->GetAttribLocation("s_vNormal");
-    uvID = shaderProgram->GetAttribLocation("s_vUV");
-    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
+    position_id = shaderProgram->GetAttribLocation("vertex_position");
+    normal_id = shaderProgram->GetAttribLocation("vertex_normal");
+    uv_id = shaderProgram->GetAttribLocation("vertex_uv");
+    tangent_id = shaderProgram->GetAttribLocation("vertex_tangent");
     // находим позиции uniform-переменных
-    gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID =
-        shaderProgram->GetUniformLocation("mRotate");  // вращение объекта
+    model_id = shaderProgram->GetUniformLocation("model");
+    rotation_id = shaderProgram->GetUniformLocation(
+        "model_rotation");  // вращение объекта
 
     for (int i = 0; i < 3; i++) {
         position[i] = 0;
-        rotation[i] = 0;
+        model_rotation[i] = 0;
         scale[i] = 1;
     }
 
@@ -154,45 +154,40 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(Camera* cam) {
-    glm::mat4 model = glm::translate(position) * glm::orientate4(rotation) *
-                      glm::scale(scale);
-    glm::mat4 projection = glm::perspectiveFov(
-        cam->GetFov(), static_cast<float>(cam->GetWidth()),
-        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
-    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    glm::mat4 mvp_matrix = projection * view * model;
+    glm::mat4 model = glm::translate(position) *
+                      glm::orientate4(model_rotation) * glm::scale(scale);
     auto rotate_matrix =
         glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));  // TODO fix
 
     mat->Use();
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glVertexAttribPointer(
-        normalID, 3, GL_FLOAT, GL_FALSE, 0,
+        normal_id, 3, GL_FLOAT, GL_FALSE, 0,
         reinterpret_cast<const void*>(sizeof(float) * 3 * spverts));
     glVertexAttribPointer(
-        uvID, 2, GL_FLOAT, GL_FALSE, 0,
+        uv_id, 2, GL_FLOAT, GL_FALSE, 0,
         reinterpret_cast<const void*>(sizeof(float) * 6 * spverts));
     glVertexAttribPointer(
-        tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+        tangent_id, 3, GL_FLOAT, GL_FALSE, 0,
         reinterpret_cast<const void*>(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(model));
     glUniformMatrix4fv(
-        rotateID, 1, GL_TRUE,
-        glm::value_ptr(rotate_matrix));  // TODO add model rotation
+        rotation_id, 1, GL_TRUE,
+        glm::value_ptr(rotate_matrix));  // TODO add model model_rotation
 
-    glEnableVertexAttribArray(positionID);
-    glEnableVertexAttribArray(normalID);
-    glEnableVertexAttribArray(uvID);
-    glEnableVertexAttribArray(tangentID);
+    glEnableVertexAttribArray(position_id);
+    glEnableVertexAttribArray(normal_id);
+    glEnableVertexAttribArray(uv_id);
+    glEnableVertexAttribArray(tangent_id);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
-    glDisableVertexAttribArray(normalID);
-    glDisableVertexAttribArray(uvID);
-    glDisableVertexAttribArray(tangentID);
+    glDisableVertexAttribArray(position_id);
+    glDisableVertexAttribArray(normal_id);
+    glDisableVertexAttribArray(uv_id);
+    glDisableVertexAttribArray(tangent_id);
 }
 
 void Mesh::SetVectorRotate(glm::vec3 v, float phi) {

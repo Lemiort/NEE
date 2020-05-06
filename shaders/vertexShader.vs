@@ -1,13 +1,13 @@
 #version 330
 
-uniform mat4 gWorld;
-uniform mat4 gVC;
-uniform mat4 mRotate;
+uniform mat4 model;
+uniform mat4 view_projection;
+uniform mat4 model_rotation;
 
-in vec3 s_vPosition;
-in vec4 s_vNormal;
-in vec2 s_vUV;
-in vec3 s_vTangent;
+in vec3 vertex_position;
+in vec4 vertex_normal;
+in vec2 vertex_uv;
+in vec3 vertex_tangent;
 uniform vec3 s_vCamPos;
 
 uniform vec3 dLightDir;
@@ -31,17 +31,17 @@ out vec3 fB;
 out float power;
 
 void main() {
-    gl_Position = gVC * gWorld * vec4(s_vPosition, 1.0);
-    fN = (mRotate * s_vNormal).xyz;
+    gl_Position = view_projection * model * vec4(vertex_position, 1.0);
+    fN = (model_rotation * vertex_normal).xyz;
     fL = -dLightDir;
-    fE = (gVC * gWorld * vec4(s_vCamPos, 1)).xyz;
-    UV = s_vUV;
+    fE = (view_projection * model * vec4(s_vCamPos, 1)).xyz;
+    UV = vertex_uv;
 
     //длина вектора от света до точки
-    float temp = length(-(gWorld * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
+    float temp = length(-(model * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
     power = pLightInt * pow(temp, -2);
-    pL = (-(gWorld * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
-    sR = ((gWorld * vec4(1, 1, 1, 1.0)).xyz - sLightPos);
+    pL = (-(model * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
+    sR = ((model * vec4(1, 1, 1, 1.0)).xyz - sLightPos);
 
-    Tangent = normalize((gWorld * vec4(s_vTangent, 0.0)).xyz);
+    Tangent = normalize((model * vec4(vertex_tangent, 0.0)).xyz);
 }

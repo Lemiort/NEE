@@ -60,7 +60,7 @@ void Billboard::Init(const char* TexFilename) {
     // создаём буффер
     float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    position_id = shaderProgram->GetAttribLocation("vertex_position");
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
@@ -72,7 +72,7 @@ void Billboard::SetPos(glm::vec3 _Pos) {
     // создаём буффер
     float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    position_id = shaderProgram->GetAttribLocation("vertex_position");
 }
 
 void Billboard::Render(Camera* cam) {
@@ -94,15 +94,15 @@ void Billboard::Render(Camera* cam) {
     glUniform3f(camPosID, cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     colorMap.Bind(GL_TEXTURE0);
     glUniform1i(colSamplerID,
                 0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(positionID);
+    glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glEnableVertexAttribArray(position_id);
     glDrawArrays(GL_POINTS, 0, 1);
-    glDisableVertexAttribArray(positionID);
+    glDisableVertexAttribArray(position_id);
 }

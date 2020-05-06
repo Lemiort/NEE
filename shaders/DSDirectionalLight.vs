@@ -1,13 +1,13 @@
 #version 330
 
-uniform mat4 gWorld;
-uniform mat4 gVC;
-uniform mat4 mRotate;  //вращение объекта, нужно ли оно?
+uniform mat4 model;
+uniform mat4 view_projection;
+uniform mat4 model_rotation;  //вращение объекта, нужно ли оно?
 
-in vec3 s_vPosition;
-in vec4 s_vNormal;
-in vec2 s_vUV;
-in vec3 s_vTangent;
+in vec3 vertex_position;
+in vec4 vertex_normal;
+in vec2 vertex_uv;
+in vec3 vertex_tangent;
 
 uniform vec3 s_vCamPos;
 
@@ -25,14 +25,14 @@ void main() {
     once[2][2] = 1.0;
     once[3][3] = 1.0;*/
 
-    gl_Position = vec4(s_vPosition.x, s_vPosition.y, 0.0, 1.0);
-    screenSpacePos = vec4(s_vPosition, 1.0);
+    gl_Position = vec4(vertex_position.x, vertex_position.y, 0.0, 1.0);
+    screenSpacePos = vec4(vertex_position, 1.0);
     // gl_Position.z = 0.0;
 
-    fN = (mRotate * s_vNormal).xyz;
-    // fE=(gVC*gWorld*vec4(s_vCamPos,1)).xyz;
+    fN = (model_rotation * vertex_normal).xyz;
+    // fE=(view_projection*model*vec4(s_vCamPos,1)).xyz;
     fE = s_vCamPos;
-    UV = s_vUV;
+    UV = vertex_uv;
 
-    Tangent = normalize((gWorld * vec4(s_vTangent, 0.0)).xyz);
+    Tangent = normalize((model * vec4(vertex_tangent, 0.0)).xyz);
 }

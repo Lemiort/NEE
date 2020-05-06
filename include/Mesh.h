@@ -34,9 +34,9 @@ class Mesh : public PlaceableObject,
              public ScaleableObject {
 public:
 protected:
-    GLuint positionID, uvID, normalID, tangentID;
-    GLuint gWorldID, gCamViewID;
-    GLuint rotateID;
+    GLuint position_id, uv_id, normal_id, tangent_id;
+    GLuint model_id, gCamViewID;
+    GLuint rotation_id;
     GLuint dirLightDirID, dirLightColID;
     GLuint pointLightColID, pointLightIntID, pointLightPosID;
     GLuint camtransID, camPosID;

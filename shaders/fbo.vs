@@ -1,11 +1,13 @@
 #version 330
 
-uniform mat4 gWorld;
-uniform mat4 gVC;
+uniform mat4 model;
+uniform mat4 view_projection;
 
-in vec3 s_vPosition;
-in vec4 s_vNormal;
-in vec2 s_vUV;
-in vec3 s_vTangent;
+in vec3 vertex_position;
+in vec4 vertex_normal;
+in vec2 vertex_uv;
+in vec3 vertex_tangent;
 
-void main() { gl_Position = gVC * gWorld * vec4(s_vPosition, 1.0); }
+void main() {
+    gl_Position = view_projection * model * vec4(vertex_position, 1.0);
+}

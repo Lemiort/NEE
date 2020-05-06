@@ -106,7 +106,7 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     // получаем значения шейдерных переменных
     sverticesID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
+    uv_id = shaderProgram->GetAttribLocation("UV");
     spositionID = shaderProgram->GetUniformLocation("s_Position");
     suvID = shaderProgram->GetUniformLocation("s_UV");
     colorID = shaderProgram->GetUniformLocation("textColor");
@@ -341,7 +341,7 @@ void Font2d::Render(Camera* cam) {
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(vertices), &uvs);
 
     sverticesID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
+    uv_id = shaderProgram->GetAttribLocation("UV");
     spositionID = shaderProgram->GetUniformLocation("s_Position");
     suvID = shaderProgram->GetUniformLocation("s_UV");
     sizeID = shaderProgram->GetUniformLocation("size");
@@ -362,7 +362,7 @@ void Font2d::Render(Camera* cam) {
     glUniform1f(sizeID, position[2]);
 
     glVertexAttribPointer(sverticesID, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
+    glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0,
                           reinterpret_cast<const void*>(sizeof(float) * 8));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
@@ -373,10 +373,10 @@ void Font2d::Render(Camera* cam) {
                 0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
     glUniform4f(colorID, color.r, color.g, color.b, color.a);
     glEnableVertexAttribArray(sverticesID);
-    glEnableVertexAttribArray(uvID);
+    glEnableVertexAttribArray(uv_id);
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(sverticesID);
-    glDisableVertexAttribArray(uvID);
+    glDisableVertexAttribArray(uv_id);
     // return glm::vec2((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
 }
 
@@ -417,8 +417,8 @@ void Text2d::Init(int width, int height, std::shared_ptr<Shader> _sh) {
                  GL_DYNAMIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(vertices), &uvs);
-    positionID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
+    position_id = shaderProgram->GetAttribLocation("Position");
+    uv_id = shaderProgram->GetAttribLocation("UV");
     spositionID = shaderProgram->GetUniformLocation("s_Position");
     suvID = shaderProgram->GetUniformLocation("s_UV");
     colorID = shaderProgram->GetUniformLocation("textColor");
@@ -478,8 +478,8 @@ void Text2d::Init(std::shared_ptr<Shader> shader, GLuint textureID,
                  GL_STATIC_DRAW);
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(vertices), &uvs);
-    positionID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
+    position_id = shaderProgram->GetAttribLocation("Position");
+    uv_id = shaderProgram->GetAttribLocation("UV");
 
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
@@ -507,9 +507,9 @@ void Text2d::Render(Camera* cam) {
     // 16 строк и 16 столбцов
     float x = (static_cast<float>(num % 32)) / 32;
     float y = 1 - (static_cast<float>((unsigned)num / 32) / 8);
-    positionID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
-    positionID = shaderProgram->GetUniformLocation("s_Position");
+    position_id = shaderProgram->GetAttribLocation("Position");
+    uv_id = shaderProgram->GetAttribLocation("UV");
+    position_id = shaderProgram->GetUniformLocation("s_Position");
     suvID = shaderProgram->GetUniformLocation("s_UV");
     sizeID = shaderProgram->GetUniformLocation("size");
     colorID = shaderProgram->GetUniformLocation("textColor");
@@ -519,8 +519,8 @@ void Text2d::Render(Camera* cam) {
     glUniform2f(suvID, x, y);
     glUniform1f(sizeID, dx);
 
-    glVertexAttribPointer(positionID, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
+    glVertexAttribPointer(position_id, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(uv_id, 2, GL_FLOAT, GL_FALSE, 0,
                           reinterpret_cast<const void*>(sizeof(float) * 8));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
@@ -530,11 +530,11 @@ void Text2d::Render(Camera* cam) {
     glUniform1i(texSamplerID,
                 0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
     glUniform4f(colorID, color.r, color.g, color.b, color.a);
-    glEnableVertexAttribArray(positionID);
-    glEnableVertexAttribArray(uvID);
+    glEnableVertexAttribArray(position_id);
+    glEnableVertexAttribArray(uv_id);
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
-    glDisableVertexAttribArray(uvID);
+    glDisableVertexAttribArray(position_id);
+    glDisableVertexAttribArray(uv_id);
 }
 
 TextLine2d::TextLine2d() { aratio = 1; }

@@ -47,8 +47,8 @@ protected:
     // GLuint shaderProgramID;
     float CalcSphereSize();
     // shared_ptr<Shader> shaderProgram;
-    GLuint positionID;
-    GLuint gWorldID;
+    GLuint position_id;
+    GLuint model_id;
     GLuint PixelColorID;
     GLuint PointSizeID;
     float temp[3];
@@ -82,8 +82,8 @@ public:
     glm::vec3 c1;*/
     // GLuint shaderProgramID;
     GLuint PixelColorID, PointSizeID;
-    GLuint gWorldID;
-    GLuint positionID;
+    GLuint model_id;
+    GLuint position_id;
     float col[3];
     float pos[6];
     Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
