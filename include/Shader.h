@@ -12,7 +12,7 @@ public:
     Shader();
     virtual ~Shader();
     void Init();  // собирает и компилирует шейдер
-    void AddShader(const char* source, ShaderType type);
+    void AddShader(const std::string& source, ShaderType type);
     GLuint shaderProgramID;
     void Use();
     GLuint GetAttribLocation(const char* Attribute);

@@ -390,11 +390,20 @@ void Text2d::Init(int width, int height, std::shared_ptr<Shader> _sh) {
     if (_sh == nullptr) {
         yourselfShader = true;
         aratio = static_cast<float>(height) / static_cast<float>(width);
-        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vs");
-        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fs");
+
+        std::ifstream vertex_shader_file("shaders/text2d.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream fragment_shader_file("shaders/text2d.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
         shaderProgram = std::make_shared<Shader>();
-        shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-        shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        shaderProgram->AddShader(vertex_shader_text, VertexShader);
+        shaderProgram->AddShader(fragment_shader_text, FragmnetShader);
         shaderProgram->Init();
     } else {
         shaderProgram = _sh;

@@ -1,5 +1,7 @@
 #include "Font2d.h"
 
+#include <fstream>
+
 Character2d::Character2d() {}
 
 Character2d::~Character2d() {}

@@ -189,11 +189,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
             time(&rawtime);
             timeinfo = localtime(&rawtime);
 
-            strftime(buffer, 80, "screenshots/Screenshot %d-%m-%Y %I.%M.%S.tga",
+            strftime(buffer, 80, "screenshots/Screenshot %d-%m-%Y %I.%M.%S.png",
                      timeinfo);
-            int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_TGA, 0, 0,
+            int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_PNG, 0, 0,
                                               width, height);
-            if (result) std::cout << "\n Screenshot saved as " << buffer;
+            if (result != 0) {
+                std::cout << "\n Screenshot saved as " << buffer;
+            }
         } else {
             pGameCamera->OnKeyboard(key);
         }
@@ -850,15 +852,20 @@ void PreInitScene(GLFWwindow* window) {
 
     // шейдер текста
     {
-        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vs");
-        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fs");
+        std::ifstream vertex_shader_file("shaders/text2d.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream fragment_shader_file("shaders/text2d.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
 
         textShader = std::make_shared<Shader>();
-        textShader->AddShader(vertexShaderSorceCode, VertexShader);
-        textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        textShader->AddShader(vertex_shader_text, VertexShader);
+        textShader->AddShader(fragment_shader_text, FragmnetShader);
         textShader->Init();
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
     }
     fLine1 = new FontLine2d();
     fLine1->Init(std::string("fonts/MagistralIC_UTF-8.fnt"), textShader);
@@ -921,16 +928,22 @@ int InitScene(GLFWwindow* window) {
 
     // нормальный шейдер
     // InitRender(window, "Normal shader loading...");
-    char* vertexShaderSorceCode = ReadFile("shaders/vertexShader.vs");
-    char* fragmentShaderSourceCode = ReadFile("shaders/fragmentShader.fs");
+
     {
+        std::ifstream vertex_shader_file("shaders/vertexShader.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream fragment_shader_file("shaders/fragmentShader.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
         meshShader = std::make_shared<Shader>();
-        meshShader->AddShader((const char*)vertexShaderSorceCode, VertexShader);
-        meshShader->AddShader((const char*)fragmentShaderSourceCode,
-                              FragmnetShader);
+        meshShader->AddShader(vertex_shader_text, VertexShader);
+        meshShader->AddShader(fragment_shader_text, FragmnetShader);
         meshShader->Init();
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
 
         gCamViewID = meshShader->GetUniformLocation("view_projection");
         rotation_id = meshShader->GetUniformLocation("model_rotation");
@@ -950,18 +963,21 @@ int InitScene(GLFWwindow* window) {
 
     // шейдер тени
     {
-        InitRender(window, "Shade shader loading...");
-        vertexShaderSorceCode = ReadFile("shaders/fbo.vs");
-        fragmentShaderSourceCode = ReadFile("shaders/fbo.fs");
-        shadowShader = std::make_shared<Shader>();
-        shadowShader->AddShader((const char*)vertexShaderSorceCode,
-                                VertexShader);
-        shadowShader->AddShader((const char*)fragmentShaderSourceCode,
-                                FragmnetShader);
-        shadowShader->Init();
+        std::ifstream vertex_shader_file("shaders/fbo.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
 
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
+        std::ifstream fragment_shader_file("shaders/fbo.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        InitRender(window, "Shade shader loading...");
+        shadowShader = std::make_shared<Shader>();
+        shadowShader->AddShader(vertex_shader_text, VertexShader);
+        shadowShader->AddShader(fragment_shader_text, FragmnetShader);
+        shadowShader->Init();
     }
 
     // материал тени
@@ -974,18 +990,20 @@ int InitScene(GLFWwindow* window) {
     // затенённый шейдер
     {
         InitRender(window, "Shaded shader loading...");
-        vertexShaderSorceCode = ReadFile("shaders/shadowed.vs");
-        // fragmentShaderSourceCode=ReadFile("shaders/fragmentShader.fs");
-        fragmentShaderSourceCode = ReadFile("shaders/shadowed.fs");
-        shadowMeshShader = std::make_shared<Shader>();
-        shadowMeshShader->AddShader((const char*)vertexShaderSorceCode,
-                                    VertexShader);
-        shadowMeshShader->AddShader((const char*)fragmentShaderSourceCode,
-                                    FragmnetShader);
-        shadowMeshShader->Init();
 
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
+        std::ifstream vertex_shader_file("shaders/shadowed.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream fragment_shader_file("shaders/shadowed.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+        shadowMeshShader = std::make_shared<Shader>();
+        shadowMeshShader->AddShader(vertex_shader_text, VertexShader);
+        shadowMeshShader->AddShader(fragment_shader_text, FragmnetShader);
+        shadowMeshShader->Init();
     }
 
     // затенённый материал
@@ -1005,13 +1023,13 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "StencilPass shader loading...");
         // грузим шейдер
         {
-            vertexShaderSorceCode = ReadFile("shaders/DSStencilPass.vs");
+            std::ifstream vertex_shader_file("shaders/DSStencilPass.vs");
+            std::string vertex_shader_text(
+                (std::istreambuf_iterator<char>(vertex_shader_file)),
+                (std::istreambuf_iterator<char>()));
             DSStencilPassShader = std::make_shared<Shader>();
-            DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,
-                                           VertexShader);
+            DSStencilPassShader->AddShader(vertex_shader_text, VertexShader);
             DSStencilPassShader->Init();
-
-            delete[] vertexShaderSorceCode;
         }
         // грузим материал
         {
@@ -1027,17 +1045,21 @@ int InitScene(GLFWwindow* window) {
         gBuffer1->Init(width, height);
         // грузим шейдер
         {
-            vertexShaderSorceCode = ReadFile("shaders/DSGeometryPass.vs");
-            fragmentShaderSourceCode = ReadFile("shaders/DSGeometryPass.fs");
-            DSGeometryPassShader = std::make_shared<Shader>();
-            DSGeometryPassShader->AddShader((const char*)vertexShaderSorceCode,
-                                            VertexShader);
-            DSGeometryPassShader->AddShader(
-                (const char*)fragmentShaderSourceCode, FragmnetShader);
-            DSGeometryPassShader->Init();
+            std::ifstream vertex_shader_file("shaders/DSGeometryPass.vs");
+            std::string vertex_shader_text(
+                (std::istreambuf_iterator<char>(vertex_shader_file)),
+                (std::istreambuf_iterator<char>()));
 
-            delete[] vertexShaderSorceCode;
-            delete[] fragmentShaderSourceCode;
+            std::ifstream fragment_shader_file("shaders/DSGeometryPass.fs");
+            std::string fragment_shader_text(
+                (std::istreambuf_iterator<char>(fragment_shader_file)),
+                (std::istreambuf_iterator<char>()));
+
+            DSGeometryPassShader = std::make_shared<Shader>();
+            DSGeometryPassShader->AddShader(vertex_shader_text, VertexShader);
+            DSGeometryPassShader->AddShader(fragment_shader_text,
+                                            FragmnetShader);
+            DSGeometryPassShader->Init();
         }
         // грузим материал
         {
@@ -1050,167 +1072,165 @@ int InitScene(GLFWwindow* window) {
     {
         InitRender(window, "Light shader loading...");
         // шейдер точечного света
-        {// грузим шейдер
-         {vertexShaderSorceCode = ReadFile("shaders/DSPointLight.vs");
-        fragmentShaderSourceCode = ReadFile("shaders/DSPointLight.fs");
-        DSPointLightShader = std::make_shared<Shader>();
-        DSPointLightShader->AddShader((const char*)vertexShaderSorceCode,
-                                      VertexShader);
-        DSPointLightShader->AddShader((const char*)fragmentShaderSourceCode,
-                                      FragmnetShader);
-        DSPointLightShader->Init();
+        // грузим шейдер
+        {
+            std::ifstream vertex_shader_file("shaders/DSPointLight.vs");
+            std::string vertex_shader_text(
+                (std::istreambuf_iterator<char>(vertex_shader_file)),
+                (std::istreambuf_iterator<char>()));
 
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
+            std::ifstream fragment_shader_file("shaders/DSPointLight.fs");
+            std::string fragment_shader_text(
+                (std::istreambuf_iterator<char>(fragment_shader_file)),
+                (std::istreambuf_iterator<char>()));
+
+            DSPointLightShader = std::make_shared<Shader>();
+            DSPointLightShader->AddShader(vertex_shader_text, VertexShader);
+            DSPointLightShader->AddShader(fragment_shader_text, FragmnetShader);
+            DSPointLightShader->Init();
+
+            // грузим материал
+            DSPointLightMaterial = std::make_shared<Material>();
+            DSPointLightMaterial->Init(DSPointLightShader);
+        }
+        // шейдер направленного света
+        {
+            // грузим шейдер
+            std::ifstream vertex_shader_file("shaders/DSDirectionalLight.vs");
+            std::string vertex_shader_text(
+                (std::istreambuf_iterator<char>(vertex_shader_file)),
+                (std::istreambuf_iterator<char>()));
+
+            std::ifstream fragment_shader_file("shaders/DSDirectionalLight.fs");
+            std::string fragment_shader_text(
+                (std::istreambuf_iterator<char>(fragment_shader_file)),
+                (std::istreambuf_iterator<char>()));
+            DSDirectionalLightShader = std::make_shared<Shader>();
+            DSDirectionalLightShader->AddShader(vertex_shader_text,
+                                                VertexShader);
+            DSDirectionalLightShader->AddShader(fragment_shader_text,
+                                                FragmnetShader);
+            DSDirectionalLightShader->Init();
+
+            // грузим материал
+
+            DSDirectionalLightMaterial = std::make_shared<Material>();
+            DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
+        }
+        // шейдер прожектора света
+        {
+            // грузим шейдер
+            std::ifstream vertex_shader_file("shaders/DSSpotLight.vs");
+            std::string vertex_shader_text(
+                (std::istreambuf_iterator<char>(vertex_shader_file)),
+                (std::istreambuf_iterator<char>()));
+
+            std::ifstream fragment_shader_file("shaders/DSSpotLight.fs");
+            std::string fragment_shader_text(
+                (std::istreambuf_iterator<char>(fragment_shader_file)),
+                (std::istreambuf_iterator<char>()));
+
+            DSSpotLightShader = std::make_shared<Shader>();
+            DSSpotLightShader->AddShader(vertex_shader_text, VertexShader);
+            DSSpotLightShader->AddShader(fragment_shader_text, FragmnetShader);
+            DSSpotLightShader->Init();
+
+            // грузим материал
+            DSSpotLightMaterial = std::make_shared<Material>();
+            DSSpotLightMaterial->Init(DSSpotLightShader);
+        }
     }
-    // грузим материал
+
+    // шейдер скайбокса
     {
-        DSPointLightMaterial = std::make_shared<Material>();
-        DSPointLightMaterial->Init(DSPointLightShader);
-    }
-}
-// шейдер направленного света
-{{// грузим шейдер
-  vertexShaderSorceCode = ReadFile("shaders/DSDirectionalLight.vs");
-fragmentShaderSourceCode = ReadFile("shaders/DSDirectionalLight.fs");
-DSDirectionalLightShader = std::make_shared<Shader>();
-DSDirectionalLightShader->AddShader((const char*)vertexShaderSorceCode,
-                                    VertexShader);
-DSDirectionalLightShader->AddShader((const char*)fragmentShaderSourceCode,
-                                    FragmnetShader);
-DSDirectionalLightShader->Init();
+        InitRender(window, "Skybox shader loading...");
+        std::ifstream vertex_shader_file("shaders/skybox.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
 
-delete[] vertexShaderSorceCode;
-delete[] fragmentShaderSourceCode;
-}
-// грузим материал
-{
-    DSDirectionalLightMaterial = std::make_shared<Material>();
-    DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
-}
-}
-// шейдер прожектора света
-{
-    // грузим шейдер
+        std::ifstream fragment_shader_file("shaders/skybox.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        skyboxShader = std::make_shared<Shader>();
+
+        skyboxShader->AddShader(vertex_shader_text, VertexShader);
+        skyboxShader->AddShader(fragment_shader_text, FragmnetShader);
+        skyboxShader->Init();
+    }
+
+    skybox1 = new SkyBox(skyboxShader);
+    skybox1->Init("textures/canyon1.jpg");
+    // настройка света и единичных векторов
     {
-        vertexShaderSorceCode = ReadFile("shaders/DSSpotLight.vs");
-        fragmentShaderSourceCode = ReadFile("shaders/DSSpotLight.fs");
-        DSSpotLightShader = std::make_shared<Shader>();
-        DSSpotLightShader->AddShader((const char*)vertexShaderSorceCode,
-                                     VertexShader);
-        DSSpotLightShader->AddShader((const char*)fragmentShaderSourceCode,
-                                     FragmnetShader);
-        DSSpotLightShader->Init();
+        InitRender(window, "Init lights...");
+        dirLightDirID = meshShader->GetUniformLocation("dLightDir");
+        dirLightColID = meshShader->GetUniformLocation("dLightCol");
+        spotLightDirID = meshShader->GetUniformLocation("sLightDir");
+        spotLightColID = meshShader->GetUniformLocation("sLightCol");
+        spotLightCutoffID = meshShader->GetUniformLocation("sLightCutoff");
+        spotLightPosID = meshShader->GetUniformLocation("sLightPos");
 
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
+        pointLightIntID = meshShader->GetUniformLocation("pLightInt");
+        pointLightColID = meshShader->GetUniformLocation("pLightCol");
+        pointLightPosID = meshShader->GetUniformLocation("pLightPos");
+
+        directionalLight1 =
+            new DirectionalLight(-1.5f, -1.0f, -1.5f,  // direction
+                                 0.5f, 0.5f, 0.5f,     // color
+                                 DSDirectionalLightMaterial);
+        pointLight1 = new PointLight(0, 1, -0.2,     // position
+                                     1.0, 1.0, 1.0,  // color
+                                     1.0, DSPointLightMaterial);
+        pointLight2 = new PointLight(1.5, 0.4, 0.0,  // position
+                                     0.3, 0.3, 1.0,  // color
+                                     1.1,            // power
+                                     DSPointLightMaterial);
+        spotLight1 = new SpotLight(1.5f, 0.0f, 0.5f,  // target
+                                   1.0f, 0.4f, 0.4f,  // color
+                                   0.0f, 1.0f, 0.0f,  // position
+                                   35.0f,             // cutoff in degrees
+                                   DSSpotLightMaterial);
+        glm::vec3 PX(1, 0, 0);
+        glm::vec3 PY(0, 1, 0);
+        glm::vec3 PZ(0, 0, 1);
+        glm::vec3 P0(0, 0, 0);
+
+        xline = new Line(PX, P0, PX);
+        yline = new Line(PY, P0, PY, xline->GetShader());
+        zline = new Line(PZ, P0, PZ, xline->GetShader());
+        dirLightLine = new Line(P0, directionalLight1->GetDir(),
+                                directionalLight1->GetCol());
     }
-    // грузим материал
+
+    // прочее
     {
-        DSSpotLightMaterial = std::make_shared<Material>();
-        DSSpotLightMaterial->Init(DSSpotLightShader);
+        InitRender(window, "Final steps...");
+        bb1 = new Billboard();
+        bb1->Init("Textures/monster_hellknight.png");
+        bb1->SetPos(glm::vec3(0, 0, 0));
+
+        noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
+
+        tline1 = new TextLine2d();
+        tline2 = new TextLine2d();
+        tline1->Init(width, height, textShader);
+        tline2->Init(width, height, textShader);
+        // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
+        // fLine1->SetAspectRatio(width,height);
+
+        // *************Shadow MAP FBO**********/
+        // smfbo1 = new ShadowMapFBO();
+        // smfbo1->Init(width,height);
+        //************************************/
+        // pGameCamera = new
+        // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
-}
-}
-
-// шейдер скайбокса
-{
-    InitRender(window, "Skybox shader loading...");
-    vertexShaderSorceCode = ReadFile("shaders/skybox.vs");
-    fragmentShaderSourceCode = ReadFile("shaders/skybox.fs");
-
-    skyboxShader = std::make_shared<Shader>();
-
-    skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
-    skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
-    skyboxShader->Init();
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
-}
-
-/*//шейдер текста
-{
-vertexShaderSorceCode=ReadFile("shaders/text2d.vs");
-fragmentShaderSourceCode=ReadFile("shaders/text2d.fs");
-
-
-textShader=new Shader();
-textShader->AddShader(vertexShaderSorceCode,VertexShader);
-textShader->AddShader(fragmentShaderSourceCode,FragmnetShader);
-textShader->Init();
-delete[] vertexShaderSorceCode;
-delete[] fragmentShaderSourceCode;
-}*/
-
-skybox1 = new SkyBox(skyboxShader);
-skybox1->Init("textures/canyon1.jpg");
-// настройка света и единичных векторов
-{
-    InitRender(window, "Init lights...");
-    dirLightDirID = meshShader->GetUniformLocation("dLightDir");
-    dirLightColID = meshShader->GetUniformLocation("dLightCol");
-    spotLightDirID = meshShader->GetUniformLocation("sLightDir");
-    spotLightColID = meshShader->GetUniformLocation("sLightCol");
-    spotLightCutoffID = meshShader->GetUniformLocation("sLightCutoff");
-    spotLightPosID = meshShader->GetUniformLocation("sLightPos");
-
-    pointLightIntID = meshShader->GetUniformLocation("pLightInt");
-    pointLightColID = meshShader->GetUniformLocation("pLightCol");
-    pointLightPosID = meshShader->GetUniformLocation("pLightPos");
-
-    directionalLight1 = new DirectionalLight(-1.5f, -1.0f, -1.5f,  // direction
-                                             0.5f, 0.5f, 0.5f,     // color
-                                             DSDirectionalLightMaterial);
-    pointLight1 = new PointLight(0, 1, -0.2,     // position
-                                 1.0, 1.0, 1.0,  // color
-                                 1.0, DSPointLightMaterial);
-    pointLight2 = new PointLight(1.5, 0.4, 0.0,  // position
-                                 0.3, 0.3, 1.0,  // color
-                                 1.1,            // power
-                                 DSPointLightMaterial);
-    spotLight1 = new SpotLight(1.5f, 0.0f, 0.5f,  // target
-                               1.0f, 0.4f, 0.4f,  // color
-                               0.0f, 1.0f, 0.0f,  // position
-                               35.0f,             // cutoff in degrees
-                               DSSpotLightMaterial);
-    glm::vec3 PX(1, 0, 0);
-    glm::vec3 PY(0, 1, 0);
-    glm::vec3 PZ(0, 0, 1);
-    glm::vec3 P0(0, 0, 0);
-
-    xline = new Line(PX, P0, PX);
-    yline = new Line(PY, P0, PY, xline->GetShader());
-    zline = new Line(PZ, P0, PZ, xline->GetShader());
-    dirLightLine =
-        new Line(P0, directionalLight1->GetDir(), directionalLight1->GetCol());
-}
-
-// прочее
-{
-    InitRender(window, "Final steps...");
-    bb1 = new Billboard();
-    bb1->Init("Textures/monster_hellknight.png");
-    bb1->SetPos(glm::vec3(0, 0, 0));
-
-    noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
-
-    tline1 = new TextLine2d();
-    tline2 = new TextLine2d();
-    tline1->Init(width, height, textShader);
-    tline2->Init(width, height, textShader);
-    // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
-    // fLine1->SetAspectRatio(width,height);
-
-    // *************Shadow MAP FBO**********/
-    // smfbo1 = new ShadowMapFBO();
-    // smfbo1->Init(width,height);
-    //************************************/
-    // pGameCamera = new
-    // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
-}
-glFlush();
-initialized = true;
-return 0;
+    glFlush();
+    initialized = true;
+    return 0;
 }
 
 int main(int argc, char** argv) {

@@ -9,24 +9,24 @@ Shader::Shader() {
     shaderProgramID = 0;
     initialized = false;
 }
-void Shader::AddShader(const char* source, ShaderType type) {
+void Shader::AddShader(const std::string& source, ShaderType type) {
     switch (type) {
         case VertexShader:
-            if (source != 0)
+            if (!source.empty())
                 vShaderFileName = source;
             else
                 vShaderFileName = "none";
             vShader = MakeVertexShader(source);
             break;
         case FragmnetShader:
-            if (source != 0)
+            if (!source.empty())
                 fShaderFileName = source;
             else
                 fShaderFileName = "none";
             fShader = MakeFragmentShader(source);
             break;
         case GeometryShader:
-            if (source != 0)
+            if (!source.empty())
                 gShaderFileName = source;
             else
                 gShaderFileName = "none";

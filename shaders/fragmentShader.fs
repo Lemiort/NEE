@@ -74,7 +74,8 @@ void main() {
     vec4 pointLightColor = CalcBaseLight(pL, Normal, pLightCol) * power;
     //свет прожектора
     vec4 spotLightColor = CalcSpotLight(sLightDir, Normal, sLightCol);
-    fColor = pointLightColor + /*+dirLightColor+*/ spotLightColor;
+    // fColor = pointLightColor + /*+dirLightColor+*/ spotLightColor;
+    fColor = vec4(1.0, 0.01, 0.01, 0.5);
     fColor.a = 1.0;
     // fColor=vec4(Tangent,1.0);
     /*if(fColor.x==0 && fColor.y==0 && fColor.z==0)

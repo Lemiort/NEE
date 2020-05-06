@@ -1,5 +1,6 @@
 #include "Billboard.h"
 
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
@@ -31,23 +32,26 @@ Billboard::~Billboard() {
 
 void Billboard::Init(const char* TexFilename) {
     if (shader == false) {
-        char* vertexShaderSorceCode = ReadFile("shaders/billboard.vs");
-        char* fragmentShaderSourceCode = ReadFile("shaders/billboard.fs");
-        char* geometryShaderSourceCode = ReadFile("shaders/billboard.gs");
+        std::ifstream vertex_shader_file("shaders/billboard.vs");
+        std::string vertex_shader_text(
+            (std::istreambuf_iterator<char>(vertex_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream fragment_shader_file("shaders/billboard.fs");
+        std::string fragment_shader_text(
+            (std::istreambuf_iterator<char>(fragment_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
+        std::ifstream geomentry_shader_file("shaders/billboard.gs");
+        std::string geometry_shader_text(
+            (std::istreambuf_iterator<char>(geomentry_shader_file)),
+            (std::istreambuf_iterator<char>()));
+
         shaderProgram = std::make_shared<Shader>();
-        shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-        shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
-        shaderProgram->AddShader(geometryShaderSourceCode, GeometryShader);
+        shaderProgram->AddShader(vertex_shader_text, VertexShader);
+        shaderProgram->AddShader(fragment_shader_text, FragmnetShader);
+        shaderProgram->AddShader(geometry_shader_text, GeometryShader);
         shaderProgram->Init();
-        /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-        GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-        GLuint geometryShaderID=MakeGeometryShader(geometryShaderSourceCode);
-        shaderProgramID=MakeShaderProgram(vertexShaderID,geometryShaderID,
-        fragmentShaderID);*/
-        // shaderProgramID=MakeShaderProgram(vertexShaderID, fragmentShaderID);
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
-        delete[] geometryShaderSourceCode;
         shader = true;
     }
     colorMap.Load(TexFilename);

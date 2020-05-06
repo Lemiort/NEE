@@ -1,7 +1,10 @@
 #include "Light.h"
 
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <iomanip>
+#include <iostream>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_operation.hpp>
@@ -285,11 +288,19 @@ float PointLight::CalcSphereSize() {
 }
 
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
-    char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vs");
-    char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fs");
+    std::ifstream vertex_shader_file("shaders/lightVS.vs");
+    std::string vertex_shader_text(
+        (std::istreambuf_iterator<char>(vertex_shader_file)),
+        (std::istreambuf_iterator<char>()));
+
+    std::ifstream fragment_shader_file("shaders/lightFS.fs");
+    std::string fragment_shader_text(
+        (std::istreambuf_iterator<char>(fragment_shader_file)),
+        (std::istreambuf_iterator<char>()));
+
     shaderProgram = std::make_shared<Shader>();
-    shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-    shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
+    shaderProgram->AddShader(vertex_shader_text, VertexShader);
+    shaderProgram->AddShader(fragment_shader_text, FragmnetShader);
     shaderProgram->Init();
     /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
     GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);

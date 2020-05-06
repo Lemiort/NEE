@@ -1,5 +1,6 @@
 #include "ParticleSystem.h"
 
+#include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 
 ParticleSystem::ParticleSystem() {}
@@ -26,17 +27,26 @@ bool ParticleSystem::Init(glm::vec3 Pos) {
                      GL_DYNAMIC_DRAW);
     }
 
-    char* vertexShaderSorceCode = ReadFile("shaders/particle.vs");
-    char* fragmentShaderSourceCode = ReadFile("shaders/particle.fs");
-    char* geometryShaderSourceCode = ReadFile("shaders/particle.gs");
-    GLuint vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
-    GLuint fragmentShaderID = MakeFragmentShader(fragmentShaderSourceCode);
-    GLuint geometryShaderID = MakeGeometryShader(geometryShaderSourceCode);
+    std::ifstream vertex_shader_file("shaders/particle.vs");
+    std::string vertex_shader_text(
+        (std::istreambuf_iterator<char>(vertex_shader_file)),
+        (std::istreambuf_iterator<char>()));
+
+    std::ifstream fragment_shader_file("shaders/particle.fs");
+    std::string fragment_shader_text(
+        (std::istreambuf_iterator<char>(fragment_shader_file)),
+        (std::istreambuf_iterator<char>()));
+
+    std::ifstream geomentry_shader_file("shaders/particle.gs");
+    std::string geometry_shader_text(
+        (std::istreambuf_iterator<char>(geomentry_shader_file)),
+        (std::istreambuf_iterator<char>()));
+
+    GLuint vertexShaderID = MakeVertexShader(vertex_shader_text);
+    GLuint fragmentShaderID = MakeFragmentShader(fragment_shader_text);
+    GLuint geometryShaderID = MakeGeometryShader(geometry_shader_text);
     shaderProgramID =
         MakeShaderProgram(vertexShaderID, geometryShaderID, fragmentShaderID);
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
-    delete[] geometryShaderSourceCode;
 
     if (!m_updateAssistant.Init(shaderProgramID)) {
         return false;
