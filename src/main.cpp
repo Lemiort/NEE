@@ -115,7 +115,7 @@ DirectionalLight* directionalLight1;
 PointLight *pointLight1, *pointLight2;
 SpotLight* spotLight1;
 static Camera* pGameCamera =
-    new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f);
+    new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, 45.0f, 0.1f, 1000.0f);
 float Scale;
 // GLfloat light[]= {0.0,1.0,-1.0,1.0};
 int spfaces;
@@ -140,7 +140,16 @@ std::shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;
 float fps;
 int frameCount;
 double lastTime;
-int renderType;
+enum class RenderType : uint8_t {
+    Deferred = 0,
+    Position,
+    Diffuse,
+    Normal,
+    TextureCoordinates,
+    Forward
+};
+
+RenderType renderType{RenderType::Deferred};
 
 void CalcFPS() {
     double currentTime = glfwGetTime();
@@ -167,8 +176,10 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
         if (key == GLFW_KEY_U) spotLight1->target[2] += 0.1;
         if (key == GLFW_KEY_J) spotLight1->target[2] -= 0.1;
         if (key == GLFW_KEY_F5) {
-            renderType += 1;
-            renderType %= 6;
+            renderType =
+                static_cast<RenderType>(static_cast<uint8_t>(renderType) + 1);
+            renderType =
+                static_cast<RenderType>(static_cast<uint8_t>(renderType) % 6);
         }
         if (key == GLFW_KEY_PRINT_SCREEN) {
             time_t rawtime;
@@ -427,25 +438,27 @@ void DSLightingPass() {
     glBlitFramebuffer(0, 0, width, height, HalfWidth, 0, width, HalfHeight,
     GL_COLOR_BUFFER_BIT, GL_LINEAR);*/
     switch (renderType) {
-        case 1:
+        case RenderType::Position:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 2:
+        case RenderType::Diffuse:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 3:
+        case RenderType::Normal:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 4:
+        case RenderType::TextureCoordinates:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            break;
+        default:
             break;
     }
 
@@ -729,12 +742,31 @@ void InterfacePass() {
     fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
     fLine1->Render(pGameCamera);
 
-    if (renderType == 0) {
-        // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
-        fLine1->SetText("Deferred shading");
-        fLine1->SetPosition(-1.0f, -0.2f, 36.0f);
-        fLine1->Render(pGameCamera);
+    switch (renderType) {
+        case RenderType::Deferred:
+            fLine1->SetText("Deferred shading");
+            break;
+        case RenderType::Position:
+            fLine1->SetText("Position printing");
+            break;
+        case RenderType::Diffuse:
+            fLine1->SetText("Diffuse printing");
+            break;
+        case RenderType::Normal:
+            fLine1->SetText("Normal printing");
+            break;
+        case RenderType::TextureCoordinates:
+            fLine1->SetText("UV printing");
+            break;
+        case RenderType::Forward:
+            fLine1->SetText("Forward rendering");
+            break;
+        default:
+            fLine1->SetText("Unknown");
+            break;
     }
+    fLine1->SetPosition(-1.0f, -0.2f, 36.0f);
+    fLine1->Render(pGameCamera);
 
     // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera);
@@ -791,37 +823,49 @@ void RenderScene(GLFWwindow* window) {
     // DSPointLightPass();
     // DSLightingPass();
     // обычный deffered shading
-    if (renderType == 0) {
-        gBuffer1->StartFrame();
-        DSGeometryPass();
-        // Для того, что бы обновился буфер трафарета нужно его активировать,
-        // так же он потребуется и в проходе света, так как свет рендерится
-        // только при успешном проходе трафарета.
-        glEnable(GL_STENCIL_TEST);
-        // DSBeginLightPasses();//уже устарело
-        {
-            DSStencilPass(*pointLight1);
-            DSPointLightPass(*pointLight1);
+    switch (renderType) {
+        case RenderType::Deferred:
+            gBuffer1->StartFrame();
+            DSGeometryPass();
+            // Для того, что бы обновился буфер трафарета нужно его
+            // активировать, так же он потребуется и в проходе света, так как
+            // свет рендерится только при успешном проходе трафарета.
+            glEnable(GL_STENCIL_TEST);
+            // DSBeginLightPasses();//уже устарело
+            {
+                DSStencilPass(*pointLight1);
+                DSPointLightPass(*pointLight1);
 
-            DSStencilPass(*pointLight2);
-            DSPointLightPass(*pointLight2);
+                DSStencilPass(*pointLight2);
+                DSPointLightPass(*pointLight2);
 
-            DSStencilPass(*spotLight1);
-            DSSpotLightPass(*spotLight1);
-        }
-        // Направленному свету не требуется трафарет
-        // так как его действие не ограничено расстоянием.
-        glDisable(GL_STENCIL_TEST);
+                DSStencilPass(*spotLight1);
+                DSSpotLightPass(*spotLight1);
+            }
+            // Направленному свету не требуется трафарет
+            // так как его действие не ограничено расстоянием.
+            glDisable(GL_STENCIL_TEST);
 
-        DSDirectionalLightPass(*directionalLight1);
+            DSDirectionalLightPass(*directionalLight1);
 
-        DSFinalPass();
-        // DSEndLigtPasses();
-    } else if (renderType <= 4) {  // дебагинговый вид
-        DSGeometryPass();
-        DSLightingPass();
-    } else {
-        RenderPass();
+            DSFinalPass();
+            // DSEndLigtPasses();
+            break;
+        case RenderType::Position:
+            [[fallthrough]];
+        case RenderType::Diffuse:
+            [[fallthrough]];
+        case RenderType::Normal:
+            [[fallthrough]];
+        case RenderType::TextureCoordinates:
+            DSGeometryPass();
+            DSLightingPass();
+            break;
+        case RenderType::Forward:
+            RenderPass();
+            break;
+        default:
+            break;
     }
     InterfacePass();
 }
@@ -1196,7 +1240,6 @@ return 0;
 }
 
 int main(int argc, char** argv) {
-    renderType = 0;
     glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
