@@ -94,7 +94,7 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
         imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
         SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
             SOIL_FLAG_COMPRESS_TO_DXT);
-    std::shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
+    std::shared_ptr<Texture2D> temp = std::make_shared<Texture2D>(texBufferID);
     _mat->SetColorTexture(temp);
 
     // read png header

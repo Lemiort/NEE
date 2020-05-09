@@ -5,11 +5,10 @@
 #include <iostream>
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
-    // Создаем FBO
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    // создаём и инициализируем карты цвета и пр.
+    // create and init color maps, etc
     glGenTextures(std::size(m_textures), m_textures);
     for (unsigned int i = 0; i < std::size(m_textures); i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
@@ -25,15 +24,15 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
                                GL_TEXTURE_2D, m_textures[i], 0);
     }
 
-    // создаём текстуру глубины
+    // create depth texture
     glGenTextures(1, &m_depthTexture);
-    // инициализируем карту глубины
+    // init depth texture
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth,
     // WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, WindowWidth,
                  WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    /*//TODO расставить правильно эти параметры
+    /*//TODO check parameters
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -43,7 +42,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                            GL_TEXTURE_2D, m_depthTexture, 0);
 
-    // создаём и инциализируем финальную карту цвета
+    // create and init final color map
     glGenTextures(1, &m_finalTexture);
     glBindTexture(GL_TEXTURE_2D, m_finalTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0,
@@ -100,7 +99,7 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
             return false;
     }
 
-    // возвращаем стандартный FBO
+    // return regular fbo
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     return true;
@@ -126,9 +125,8 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 
 void GBuffer::CheckTextures() {
     for (unsigned int i = 0; i < std::size(m_textures); i++) {
-        Texture2D* temp = new Texture2D(m_textures[i], false);
-        std::cout << "\n" << temp->GetParameters();
-        delete temp;
+        Texture2D temp{m_textures[i], false};
+        std::cout << "\n" << temp.GetParameters();
     }
 }
 
@@ -153,7 +151,7 @@ void GBuffer::BindForGeomPass() {
 }
 
 void GBuffer::BindForStencilPass() {
-    // должны отключить буфер цвета
+    // disable color buffer
     glDrawBuffer(GL_NONE);
 }
 

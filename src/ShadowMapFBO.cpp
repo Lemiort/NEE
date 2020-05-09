@@ -111,9 +111,8 @@ GLuint ShadowMapFBO::GetTexture() { return m_shadowMap; }
 GLuint ShadowMapFBO::GetTexture(unsigned num) { return m_textures[num]; }
 
 std::string ShadowMapFBO::CheckShadowTexture() {
-    Texture2D* tempTexture = new Texture2D(m_shadowMap, false);
-    return tempTexture->GetParameters();
-    delete tempTexture;
+    Texture2D tempTexture{m_shadowMap, false};
+    return tempTexture.GetParameters();
 }
 
 void ShadowMapFBO::BindForReading(GLenum TextureUnit) {

@@ -2,6 +2,7 @@
 #define INCLUDE_MATERIAL_H
 #include <GL/glew.h>
 
+#include <map>
 #include <memory>
 
 #include "Shader.h"
@@ -9,16 +10,17 @@
 
 class Material {
 public:
+    using TextureNumber = GLuint;
     Material();
-    virtual ~Material();
+    virtual ~Material() = default;
     bool Init(std::shared_ptr<Shader> _sh);
     void Use();
     void SetColorTexture(std::shared_ptr<Texture2D> _colorMap);
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
     void SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap);
     void SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap);
-    void SetTexture(std::shared_ptr<Texture2D> _map, GLuint num);
-    void SetTexture(GLuint _map, GLuint num);
+    void SetTexture(std::shared_ptr<Texture2D> map, TextureNumber num);
+    void SetTexture(GLuint map, TextureNumber num);
     std::shared_ptr<Shader> GetShader() { return shaderProgram; }
 
 protected:
@@ -28,11 +30,9 @@ protected:
     std::shared_ptr<AbstractTexture> abstractMap;
     GLuint colTexID, texBufferID, normBufferID, normSamplerID;
     GLuint specBufferID, specSamplerID;
-    GLuint* abstractSamplersID;
-    // GLuint colSamplerUI, normSamplerUI;
+    std::map<TextureNumber, GLuint> abstractSamplersID;
     GLuint shadowSamplerID;
-    GLint max_texture_units;
-    GLuint* texturesID;
+    std::map<TextureNumber, GLuint> texturesID;
 };
 
 #endif  // INCLUDE_MATERIAL_H

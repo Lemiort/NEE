@@ -50,14 +50,9 @@ glm::vec3 DirectionalLight::GetDir() {
 }
 glm::vec3 DirectionalLight::GetCol() { return color; }
 
-DirectionalLight::DirectionalLight() {}
-DirectionalLight::~DirectionalLight() {}
-
 glm::vec3 SpotLight::GetPos() {
     return glm::vec3(position[0], position[1], position[2]);
 }
-
-SpotLight::SpotLight() {}
 
 SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
                      GLfloat b, float p1, float p2, float p3, float cut,
@@ -181,7 +176,6 @@ void SpotLight::SetTarget(glm::vec3 _target) {
     direction[3] = 1;
 }
 
-SpotLight::~SpotLight() {}
 void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, float p1, float p2, float p3, float cut) {
     direction[0] = d1;
@@ -226,7 +220,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     radius = CalcSphereSize() / 2;
     std::cout << "\nLight radius is " << radius;
 }
-PointLight::~PointLight() {}
+
 void PointLight::Render(const Camera& cam) {
     sphere->SetScale(radius, radius, radius);
     sphere->SetPosition(position[0], position[1], position[2]);
@@ -310,7 +304,7 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
-Line::~Line() {}
+
 // void Line::Render(Camera* pGameCamera, int width, int height)
 void Line::Render(const Camera& cam) {
     glm::mat4 model =

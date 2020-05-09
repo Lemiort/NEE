@@ -47,7 +47,7 @@ std::shared_ptr<Material> DSDirectionalLightMaterial;
 std::shared_ptr<Material> DSSpotLightMaterial;
 std::shared_ptr<Material> DSStencilPassMaterial;
 
-GBuffer* gBuffer1;
+GBuffer gBuffer1;
 GLFWwindow* hiddenWindow;
 
 struct Mouse {
@@ -111,22 +111,22 @@ GLuint pointLightColID, pointLightIntID, pointLightPosID;
 GLuint spotLightColID, spotLightDirID, spotLightCutoffID, spotLightPosID;
 GLuint camtransID, camPosID;
 
-DirectionalLight* directionalLight1;
-PointLight *pointLight1, *pointLight2;
-SpotLight* spotLight1;
+DirectionalLight directionalLight1;
+PointLight pointLight1, pointLight2;
+SpotLight spotLight1;
 Camera gGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f};
 float Scale;
 int vertices_count;
-Line* x_line;
-Line* y_line;
-Line* z_line;
-Line* dirLightLine;
+Line x_line;
+Line y_line;
+Line z_line;
+Line dirLightLine;
 Mesh TestMesh, Plane, Cube;
-SkyBox* skybox1;
-FontLine2d* fLine1;
-PerlinNoise* noise1;
-Billboard* bb1;
-ShadowMapFBO* shadowmap_fbo;
+SkyBox skybox1;
+FontLine2d fLine1;
+PerlinNoise noise1;
+Billboard bb1;
+ShadowMapFBO shadowmap_fbo;
 
 bool initialized{false};
 
@@ -164,12 +164,12 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_I) spotLight1->target[0] += 0.1;
-        if (key == GLFW_KEY_K) spotLight1->target[0] -= 0.1;
-        if (key == GLFW_KEY_O) spotLight1->target[1] += 0.1;
-        if (key == GLFW_KEY_L) spotLight1->target[1] -= 0.1;
-        if (key == GLFW_KEY_U) spotLight1->target[2] += 0.1;
-        if (key == GLFW_KEY_J) spotLight1->target[2] -= 0.1;
+        if (key == GLFW_KEY_I) spotLight1.target[0] += 0.1;
+        if (key == GLFW_KEY_K) spotLight1.target[0] -= 0.1;
+        if (key == GLFW_KEY_O) spotLight1.target[1] += 0.1;
+        if (key == GLFW_KEY_L) spotLight1.target[1] -= 0.1;
+        if (key == GLFW_KEY_U) spotLight1.target[2] += 0.1;
+        if (key == GLFW_KEY_J) spotLight1.target[2] -= 0.1;
         if (key == GLFW_KEY_F5) {
             renderType =
                 static_cast<RenderType>(static_cast<uint8_t>(renderType) + 1);
@@ -215,16 +215,16 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 void FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
     width = w;
     height = h;
-    if (fLine1 != NULL) fLine1->SetAspectRatio(width, height);
-    if (shadowmap_fbo != NULL) shadowmap_fbo->Init(w, h);
-    if (gBuffer1 != NULL) gBuffer1->Init(w, h);
+    fLine1.SetAspectRatio(width, height);
+    shadowmap_fbo.Init(w, h);
+    gBuffer1.Init(w, h);
     gGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
 
 void ShadowPass() {
-    shadowmap_fbo->BindForWriting();
-    // gBuffer1->BindForWriting();
+    shadowmap_fbo.BindForWriting();
+    // gBuffer1.BindForWriting();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
     Scale += 0.021f;
@@ -238,7 +238,7 @@ void ShadowPass() {
                     45,
                     1,
                     1000.0f,
-                    spotLight1->GetPos(),
+                    spotLight1.GetPos(),
                     glm::vec3(-1.0, -1.0, -1.0),
                     glm::vec3(0.0, 1.0, 0.0)};
 
@@ -265,26 +265,26 @@ void ShadowPass() {
     // lightning
     {
         // direct light
-        auto la = glm::diagonal4x4(directionalLight1->color);
+        auto la = glm::diagonal4x4(directionalLight1.color);
         glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
-        glUniform3f(dirLightDirID, directionalLight1->direction[0],
-                    directionalLight1->direction[1],
-                    directionalLight1->direction[2]);
+        glUniform3f(dirLightDirID, directionalLight1.direction[0],
+                    directionalLight1.direction[1],
+                    directionalLight1.direction[2]);
         // point light
-        auto la2 = glm::diagonal4x4(pointLight1->color);
+        auto la2 = glm::diagonal4x4(pointLight1.color);
         glUniformMatrix4fv(pointLightColID, 1, GL_TRUE, glm::value_ptr(la2));
-        glUniform3f(pointLightPosID, pointLight1->position[0],
-                    pointLight1->position[1], pointLight1->position[2]);
-        glUniform1f(pointLightIntID, pointLight1->power);
+        glUniform3f(pointLightPosID, pointLight1.position[0],
+                    pointLight1.position[1], pointLight1.position[2]);
+        glUniform1f(pointLightIntID, pointLight1.power);
         // projector
-        auto la3 = glm::diagonal4x4(spotLight1->color);
+        auto la3 = glm::diagonal4x4(spotLight1.color);
         glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
-        glUniform3f(spotLightDirID, spotLight1->direction[0],
-                    spotLight1->direction[1], spotLight1->direction[2]);
+        glUniform3f(spotLightDirID, spotLight1.direction[0],
+                    spotLight1.direction[1], spotLight1.direction[2]);
         glUniform1f(spotLightCutoffID,
-                    cosf((spotLight1->cutoff_angle) * 3.14 / 180.0f));
-        glUniform3f(spotLightPosID, spotLight1->position[0],
-                    spotLight1->position[1], spotLight1->position[2]);
+                    cosf((spotLight1.cutoff_angle) * 3.14 / 180.0f));
+        glUniform3f(spotLightPosID, spotLight1.position[0],
+                    spotLight1.position[1], spotLight1.position[2]);
     }
 
     // cam rotation for specular
@@ -296,7 +296,7 @@ void ShadowPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
             Cube.Render(gGameCamera);
         }
     Plane.SetMaterial(shadowMaterial);
@@ -331,7 +331,7 @@ void RenderPass() {
                     gGameCamera.GetFov(),
                     gGameCamera.GetZNear(),
                     gGameCamera.GetZFar(),
-                    spotLight1->GetPos(),
+                    spotLight1.GetPos(),
                     glm::vec3(-1.0, -1.0, -1.0),
                     glm::vec3(0.0, 1.0, 0.0)};
 
@@ -344,7 +344,7 @@ void RenderPass() {
     glm::mat4 vp_matrix2 = projection2 * view2;
     vp_matrix2 = glm::transpose(vp_matrix2);
 
-    skybox1->Render(gGameCamera);
+    skybox1.Render(gGameCamera);
 
     Plane.SetMaterial(mainMaterial);
     // copy-paste
@@ -363,28 +363,28 @@ void RenderPass() {
         // lighting
         {
             // direct light
-            auto la = glm::diagonal4x4(directionalLight1->color);
+            auto la = glm::diagonal4x4(directionalLight1.color);
             glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
-            glUniform3f(dirLightDirID, directionalLight1->direction[0],
-                        directionalLight1->direction[1],
-                        directionalLight1->direction[2]);
+            glUniform3f(dirLightDirID, directionalLight1.direction[0],
+                        directionalLight1.direction[1],
+                        directionalLight1.direction[2]);
             // spot light
-            auto la2 = glm::diagonal4x4(pointLight1->color);
+            auto la2 = glm::diagonal4x4(pointLight1.color);
             glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
                                glm::value_ptr(la2));
-            glUniform3f(pointLightPosID, pointLight1->position[0],
-                        pointLight1->position[1], pointLight1->position[2]);
-            glUniform1f(pointLightIntID, pointLight1->power);
+            glUniform3f(pointLightPosID, pointLight1.position[0],
+                        pointLight1.position[1], pointLight1.position[2]);
+            glUniform1f(pointLightIntID, pointLight1.power);
 
             // projector
-            auto la3 = glm::diagonal4x4(spotLight1->color);
+            auto la3 = glm::diagonal4x4(spotLight1.color);
             glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
-            glUniform3f(spotLightDirID, spotLight1->direction[0],
-                        spotLight1->direction[1], spotLight1->direction[2]);
+            glUniform3f(spotLightDirID, spotLight1.direction[0],
+                        spotLight1.direction[1], spotLight1.direction[2]);
             glUniform1f(spotLightCutoffID,
-                        cosf((spotLight1->cutoff_angle) * 3.14 / 180.0f));
-            glUniform3f(spotLightPosID, spotLight1->position[0],
-                        spotLight1->position[1], spotLight1->position[2]);
+                        cosf((spotLight1.cutoff_angle) * 3.14 / 180.0f));
+            glUniform3f(spotLightPosID, spotLight1.position[0],
+                        spotLight1.position[1], spotLight1.position[2]);
         }
 
         // camera rotation for specular
@@ -398,12 +398,12 @@ void RenderPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
             Cube.Render(gGameCamera);
         }
     // delete tempTexture;
 
-    bb1->Render(gGameCamera);
+    bb1.Render(gGameCamera);
 }
 
 void DSBeginLightPasses() {
@@ -411,7 +411,7 @@ void DSBeginLightPasses() {
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    // gBuffer1->BindForReading();
+    // gBuffer1.BindForReading();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
@@ -421,26 +421,26 @@ void DSLightingPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-    gBuffer1->BindForReading();
+    gBuffer1.BindForReading();
 
     switch (renderType) {
         case RenderType::Position:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
+            gBuffer1.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
         case RenderType::Diffuse:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
+            gBuffer1.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
         case RenderType::Normal:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
+            gBuffer1.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
         case RenderType::TextureCoordinates:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
+            gBuffer1.SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
@@ -454,7 +454,7 @@ void DSStencilPass(Light& light) {
     DSStencilPassShader->Use();
 
     // disable color/depth and enable stencil
-    gBuffer1->BindForStencilPass();
+    gBuffer1.BindForStencilPass();
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);  //??
 
@@ -495,8 +495,8 @@ void DSStencilPass(Light& light) {
 }
 
 void DSPointLightPass(PointLight& pointLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
+    // gBuffer1.BindForReading();
+    gBuffer1.BindForLightPass();
 
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
 
@@ -530,11 +530,11 @@ void DSPointLightPass(PointLight& pointLight) {
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(0), 4);  // world pos
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(1), 5);  // diffuse
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(2), 6);  // normal
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(4), 8);  // specular
 
     pointLightPosID =
         DSPointLightShader->GetUniformLocation("s_vPointLightPos");
@@ -557,8 +557,8 @@ void DSPointLightPass(PointLight& pointLight) {
 }
 
 void DSSpotLightPass(SpotLight& spotLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
+    // gBuffer1.BindForReading();
+    gBuffer1.BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
 
     glDisable(GL_DEPTH_TEST);
@@ -589,11 +589,11 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(0), 4);  // world pos
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(1), 5);  // diffuse
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(2), 6);  // normal
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(4), 8);  // specular
 
     spotLightPosID = DSSpotLightShader->GetUniformLocation("sLightPos");
     spotLightColID = DSSpotLightShader->GetUniformLocation("sLightCol");
@@ -617,8 +617,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
 }
 
 void DSDirectionalLightPass(DirectionalLight& directionalLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
+    // gBuffer1.BindForReading();
+    gBuffer1.BindForLightPass();
     // glDisable(GL_DEPTH_TEST);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
@@ -656,14 +656,14 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(0),
                                            4);  // world pos
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(1),
                                            5);  // diffuse
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(2),
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(2),
                                            6);  // normal
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(4),
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(4),
                                            8);  // specular
 
     directionalLight.SetMaterial(DSDirectionalLightMaterial);
@@ -674,7 +674,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
 }
 
 void DSFinalPass() {
-    gBuffer1->BindForFinalPass();
+    gBuffer1.BindForFinalPass();
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH,
                       WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
@@ -684,57 +684,57 @@ void InterfacePass() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // glDisable(GL_DEPTH_TEST);
-    x_line->Render(gGameCamera);
-    y_line->Render(gGameCamera);
-    z_line->Render(gGameCamera);
+    x_line.Render(gGameCamera);
+    y_line.Render(gGameCamera);
+    z_line.Render(gGameCamera);
     std::string strCampos = std::to_string(gGameCamera.GetPos().x) + "; " +
                             std::to_string(gGameCamera.GetPos().y) + "; " +
                             std::to_string(gGameCamera.GetPos().z);
-    // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
-    fLine1->SetText((strCampos).c_str());
-    fLine1->SetPosition(-1.0f, 0.0f, 24.0f);
-    fLine1->Render(gGameCamera);
-    // gBuffer1->CheckTextures();
+    // fLine1.Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
+    fLine1.SetText((strCampos).c_str());
+    fLine1.SetPosition(-1.0f, 0.0f, 24.0f);
+    fLine1.Render(gGameCamera);
+    // gBuffer1.CheckTextures();
     CalcFPS();
-    // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-    fLine1->SetText(std::to_string(fps));
-    fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
-    fLine1->Render(gGameCamera);
+    // fLine1.Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+    fLine1.SetText(std::to_string(fps));
+    fLine1.SetPosition(-1.0f, 0.9f, 24.0f);
+    fLine1.Render(gGameCamera);
 
     switch (renderType) {
         case RenderType::Deferred:
-            fLine1->SetText("Deferred shading");
+            fLine1.SetText("Deferred shading");
             break;
         case RenderType::Position:
-            fLine1->SetText("Position printing");
+            fLine1.SetText("Position printing");
             break;
         case RenderType::Diffuse:
-            fLine1->SetText("Diffuse printing");
+            fLine1.SetText("Diffuse printing");
             break;
         case RenderType::Normal:
-            fLine1->SetText("Normal printing");
+            fLine1.SetText("Normal printing");
             break;
         case RenderType::TextureCoordinates:
-            fLine1->SetText("UV printing");
+            fLine1.SetText("UV printing");
             break;
         case RenderType::Forward:
-            fLine1->SetText("Forward rendering");
+            fLine1.SetText("Forward rendering");
             break;
         default:
-            fLine1->SetText("Unknown");
+            fLine1.SetText("Unknown");
             break;
     }
-    fLine1->SetPosition(-1.0f, -0.2f, 36.0f);
-    fLine1->Render(gGameCamera);
+    fLine1.SetPosition(-1.0f, -0.2f, 36.0f);
+    fLine1.Render(gGameCamera);
 
-    dirLightLine->Render(gGameCamera);
+    dirLightLine.Render(gGameCamera);
     // glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
 
 void DSGeometryPass() {
-    gBuffer1->BindForGeomPass();
-    // gBuffer1->BindForWriting();
+    gBuffer1.BindForGeomPass();
+    // gBuffer1.BindForWriting();
     // enable depth test for geometry part
     glDepthMask(GL_TRUE);
 
@@ -766,7 +766,7 @@ void DSGeometryPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
             Cube.Render(gGameCamera);
         }
 
@@ -777,24 +777,24 @@ void DSGeometryPass() {
 void RenderScene(GLFWwindow* window) {
     switch (renderType) {
         case RenderType::Deferred:
-            gBuffer1->StartFrame();
+            gBuffer1.StartFrame();
             DSGeometryPass();
             // enable stencil for stencil buffer update. Also we need stencil
             // for light, because it renders only after stencil pass
             glEnable(GL_STENCIL_TEST);
             {
-                DSStencilPass(*pointLight1);
-                DSPointLightPass(*pointLight1);
+                DSStencilPass(pointLight1);
+                DSPointLightPass(pointLight1);
 
-                DSStencilPass(*pointLight2);
-                DSPointLightPass(*pointLight2);
+                DSStencilPass(pointLight2);
+                DSPointLightPass(pointLight2);
 
-                DSStencilPass(*spotLight1);
-                DSSpotLightPass(*spotLight1);
+                DSStencilPass(spotLight1);
+                DSSpotLightPass(spotLight1);
             }
             // direct light doesn't need stencil
             glDisable(GL_STENCIL_TEST);
-            DSDirectionalLightPass(*directionalLight1);
+            DSDirectionalLightPass(directionalLight1);
 
             DSFinalPass();
             // DSEndLightPasses();
@@ -839,15 +839,14 @@ void PreInitScene(GLFWwindow* window) {
         textShader->AddShader(fragment_shader_text, kFragmentShader);
         textShader->Init();
     }
-    fLine1 = new FontLine2d();
-    fLine1->Init(std::string("fonts/MagistralIC_UTF-8.fnt"), textShader);
-    fLine1->SetAspectRatio(width, height);
+    fLine1.Init(std::string("fonts/MagistralIC_UTF-8.fnt"), textShader);
+    fLine1.SetAspectRatio(width, height);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
-    fLine1->SetText("Loading...");
-    fLine1->SetPosition(-1.0f, -0.1f, 72.0f);
-    fLine1->Render(gGameCamera);
+    // fLine1.Render("Loading...",-1.0f,-0.1f,72.0f);
+    fLine1.SetText("Loading...");
+    fLine1.SetPosition(-1.0f, -0.1f, 72.0f);
+    fLine1.Render(gGameCamera);
     glfwSwapBuffers(window);
     initialized = false;
 }
@@ -862,15 +861,15 @@ void InitRender(GLFWwindow* window, std::string message) {
     if (initialized == false) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         CalcFPS();
-        // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-        fLine1->SetText(std::to_string(fps));
-        fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
-        fLine1->Render(gGameCamera);
+        // fLine1.Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+        fLine1.SetText(std::to_string(fps));
+        fLine1.SetPosition(-1.0f, 0.9f, 24.0f);
+        fLine1.Render(gGameCamera);
 
-        // fLine1->Render(message,-1.0f,-0.1f,36.0f);
-        fLine1->SetText(message);
-        fLine1->SetPosition(-1.0f, -0.1f, 36.0f);
-        fLine1->Render(gGameCamera);
+        // fLine1.Render(message,-1.0f,-0.1f,36.0f);
+        fLine1.SetText(message);
+        fLine1.SetPosition(-1.0f, -0.1f, 36.0f);
+        fLine1.Render(gGameCamera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -892,11 +891,6 @@ int InitScene(GLFWwindow* window) {
     } else {
         printf("\nGLEW status is %d \n", res);
     }
-    /*Scale=0;
-    lastTime = glfwGetTime();
-    frameCount=0;
-
-    gGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
 
     // regular shader
     {
@@ -1011,8 +1005,7 @@ int InitScene(GLFWwindow* window) {
     // GBuffer shader, material
     {
         InitRender(window, "Gbuffer shader loading...");
-        gBuffer1 = new GBuffer;
-        gBuffer1->Init(width, height);
+        gBuffer1.Init(width, height);
         // load shader
         {
             std::ifstream vertex_shader_file("shaders/DSGeometryPass.vs");
@@ -1132,8 +1125,8 @@ int InitScene(GLFWwindow* window) {
         skyboxShader->Init();
     }
 
-    skybox1 = new SkyBox(skyboxShader);
-    skybox1->Init("textures/canyon1.jpg");
+    skybox1 = SkyBox(skyboxShader);
+    skybox1.Init("textures/canyon1.jpg");
     // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
@@ -1148,42 +1141,41 @@ int InitScene(GLFWwindow* window) {
         pointLightColID = meshShader->GetUniformLocation("pLightCol");
         pointLightPosID = meshShader->GetUniformLocation("pLightPos");
 
-        directionalLight1 =
-            new DirectionalLight(-1.5f, -1.0f, -1.5f,  // direction
-                                 0.5f, 0.5f, 0.5f,     // color
-                                 DSDirectionalLightMaterial);
-        pointLight1 = new PointLight(0, 1, -0.2,     // position
-                                     1.0, 1.0, 1.0,  // color
-                                     1.0, DSPointLightMaterial);
-        pointLight2 = new PointLight(1.5, 0.4, 0.0,  // position
-                                     0.3, 0.3, 1.0,  // color
-                                     1.1,            // power
-                                     DSPointLightMaterial);
-        spotLight1 = new SpotLight(1.5f, 0.0f, 0.5f,  // target
-                                   1.0f, 0.4f, 0.4f,  // color
-                                   0.0f, 1.0f, 0.0f,  // position
-                                   35.0f,             // cutoff in degrees
-                                   DSSpotLightMaterial);
+        directionalLight1 = DirectionalLight(-1.5f, -1.0f, -1.5f,  // direction
+                                             0.5f, 0.5f, 0.5f,     // color
+                                             DSDirectionalLightMaterial);
+        pointLight1 = PointLight(0, 1, -0.2,     // position
+                                 1.0, 1.0, 1.0,  // color
+                                 1.0, DSPointLightMaterial);
+        pointLight2 = PointLight(1.5, 0.4, 0.0,  // position
+                                 0.3, 0.3, 1.0,  // color
+                                 1.1,            // power
+                                 DSPointLightMaterial);
+        spotLight1 = SpotLight(1.5f, 0.0f, 0.5f,  // target
+                               1.0f, 0.4f, 0.4f,  // color
+                               0.0f, 1.0f, 0.0f,  // position
+                               35.0f,             // cutoff in degrees
+                               DSSpotLightMaterial);
         glm::vec3 PX(1, 0, 0);
         glm::vec3 PY(0, 1, 0);
         glm::vec3 PZ(0, 0, 1);
         glm::vec3 P0(0, 0, 0);
 
-        x_line = new Line(PX, P0, PX);
-        y_line = new Line(PY, P0, PY, x_line->GetShader());
-        z_line = new Line(PZ, P0, PZ, x_line->GetShader());
-        dirLightLine = new Line(P0, directionalLight1->GetDir(),
-                                directionalLight1->GetCol());
+        x_line = Line(PX, P0, PX);
+        y_line = Line(PY, P0, PY, x_line.GetShader());
+        z_line = Line(PZ, P0, PZ, x_line.GetShader());
+        dirLightLine =
+            Line(P0, directionalLight1.GetDir(), directionalLight1.GetCol());
     }
 
     // misc
     {
         InitRender(window, "Final steps...");
-        bb1 = new Billboard();
-        bb1->Init("Textures/monster_hellknight.png");
-        bb1->SetPos(glm::vec3(0, 0, 0));
+        bb1 = Billboard();
+        bb1.Init("Textures/monster_hellknight.png");
+        bb1.SetPos(glm::vec3(0, 0, 0));
 
-        noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
+        noise1 = PerlinNoise(1, 10.3, 0.5, 2, 42);
     }
     glFlush();
     initialized = true;

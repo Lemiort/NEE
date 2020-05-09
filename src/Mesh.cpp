@@ -2,6 +2,8 @@
 
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
+
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_operation.hpp>
@@ -39,11 +41,11 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     if (shaderProgram == NULL) return false;
 
     Scale = 0;
-    int* spindices = NULL;
-    float* vertexes_buffer = NULL;
-    float* normals_buffer = NULL;
-    float* uvs_buffer = NULL;
-    float* tangents_buffer = NULL;
+    std::vector<int> indices;
+    std::vector<float> vertexes_buffer;
+    std::vector<float> normals_buffer;
+    std::vector<float> uvs_buffer;
+    std::vector<float> tangents_buffer;
     faces_count = 0;
     vertices_count = 0;
     try {
@@ -54,10 +56,10 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
         if (!fp) return false;
         fread(&vertices_count, sizeof(int), 1, fp);
         fout << vertices_count << std::endl;
-        vertexes_buffer = new float[vertices_count * 3];
-        uvs_buffer = new float[vertices_count * 2];
-        normals_buffer = new float[vertices_count * 3];
-        tangents_buffer = new float[vertices_count * 3];
+        vertexes_buffer.resize(vertices_count * 3);
+        uvs_buffer.resize(vertices_count * 2);
+        normals_buffer.resize(vertices_count * 3);
+        tangents_buffer.resize(vertices_count * 3);
         for (int i = 0; i < vertices_count; i++) {
             fread(&vertexes_buffer[3 * i], sizeof(float), 1, fp);
             fread(&vertexes_buffer[3 * i + 1], sizeof(float), 1, fp);
@@ -85,16 +87,16 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
         // vertices[0]=f;
         fread(&faces_count, sizeof(int), 1, fp);
         fout << "\n" << faces_count << std::endl;
-        spindices = new int[faces_count * 3];
+        indices.resize(faces_count * 3);
         for (int i = 0; i < faces_count; i++) {
-            fread(&spindices[3 * i], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
+            fread(&indices[3 * i], sizeof(int), 1, fp);
+            fread(&indices[3 * i + 1], sizeof(int), 1, fp);
+            fread(&indices[3 * i + 2], sizeof(int), 1, fp);
         }
         fclose(fp);
         for (int i = 0; i < faces_count; i++) {
-            fout << spindices[3 * i] << ",";
-            fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2]
+            fout << indices[3 * i] << ",";
+            fout << indices[3 * i + 1] << "," << indices[3 * i + 2]
                  << std::endl;
         }
         fout.close();
@@ -106,21 +108,29 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER,
-                 sizeof(float) * (3 + 3 + 2 + 3) * (vertices_count), nullptr,
-                 GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * vertices_count,
-                    vertexes_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * vertices_count,
-                    sizeof(float) * 3 * vertices_count, normals_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * vertices_count,
-                    sizeof(float) * 2 * vertices_count, uvs_buffer);
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * vertices_count,
-                    sizeof(float) * 3 * vertices_count, tangents_buffer);
+                 (vertexes_buffer.size() + normals_buffer.size() +
+                  uvs_buffer.size() + tangents_buffer.size()) *
+                     sizeof(float),
+                 nullptr, GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertexes_buffer.size() * sizeof(float),
+                    vertexes_buffer.data());
+    glBufferSubData(GL_ARRAY_BUFFER, vertexes_buffer.size() * sizeof(float),
+                    normals_buffer.size() * sizeof(float),
+                    normals_buffer.data());
+    glBufferSubData(
+        GL_ARRAY_BUFFER,
+        sizeof(float) * (vertexes_buffer.size() + normals_buffer.size()),
+        uvs_buffer.size() * sizeof(float), uvs_buffer.data());
+    glBufferSubData(GL_ARRAY_BUFFER,
+                    sizeof(float) * (vertexes_buffer.size() +
+                                     normals_buffer.size() + uvs_buffer.size()),
+                    tangents_buffer.size() * sizeof(float),
+                    tangents_buffer.data());
 
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * faces_count,
-                 spindices, GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
+                 indices.data(), GL_STATIC_DRAW);
 
     position_id = shaderProgram->GetAttribLocation("vertex_position");
     normal_id = shaderProgram->GetAttribLocation("vertex_normal");
@@ -134,10 +144,6 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
         model_rotation[i] = 0;
         scale[i] = 1;
     }
-    delete[] vertexes_buffer;
-    delete[] uvs_buffer;
-    delete[] normals_buffer;
-    delete[] tangents_buffer;
 
     return true;
 }

@@ -12,8 +12,9 @@
 
 class SkyBox : public RenderableObject, public PlaceableObject {
 public:
+    SkyBox() = default;
     explicit SkyBox(std::shared_ptr<Shader> shader);
-    ~SkyBox();
+    ~SkyBox() override = default;
 
     bool Init(const std::string& filename);
 
@@ -28,8 +29,7 @@ public:
     void Init(GLuint shader, const char* model);
 
 private:
-    const Camera* pCamera;
-    CubemapTexture* pCubemapTex;
+    CubemapTexture cubemapTexture;
     GLuint WVPID;
     GLuint textureID;
     // shared_ptr<Shader> shaderProgram;

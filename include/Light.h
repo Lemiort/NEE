@@ -12,6 +12,7 @@
 
 class Light : public MaterialObject {
 public:
+    ~Light() override = default;
     glm::vec4 color{1.0f};
 };
 
@@ -22,7 +23,7 @@ protected:
 
 public:
     GLfloat direction[4];
-    DirectionalLight();
+    DirectionalLight() = default;
     glm::vec3 GetDir();
     glm::vec3 GetCol();
     void SetDir(glm::vec3 dir);
@@ -30,14 +31,15 @@ public:
     DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, std::shared_ptr<Material> _mat);
     void Render(const Camera& cam) override;
-    ~DirectionalLight();
+    ~DirectionalLight() override = default;
 };
 class PointLight : public Light, public PlaceableObject {
 public:
     float power;
+    PointLight() = default;
     PointLight(float d1, float d2, float d3, float r, float g, float b, float p,
                std::shared_ptr<Material> _mat);
-    ~PointLight();
+    ~PointLight() override = default;
     void Render(const Camera& cam) override;
     void SetPos(glm::vec3 pos);
     void SetCol(glm::vec3 col);
@@ -59,11 +61,11 @@ public:
     // in radians
     float cutoff_angle;
     float target[3];
-    SpotLight();
+    SpotLight() = default;
     SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
               GLfloat b, float p1, float p2, float p3, float cutoff,
               std::shared_ptr<Material> _mat);
-    ~SpotLight();
+    ~SpotLight() override = default;
     glm::vec3 GetPos();
     void SetPos(glm::vec3 pos);
     void SetTarget(glm::vec3 _target);
@@ -85,10 +87,11 @@ public:
     GLuint position_id;
     float col[3];
     float pos[6];
+    Line() = default;
     Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
     Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
          std::shared_ptr<Shader> shader);
-    ~Line();
+    ~Line() override = default;
     // void Render(Camera* pGameCamera, int width, int height);
     void Render(const Camera& cam) override;
     std::shared_ptr<Shader> GetShader();

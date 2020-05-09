@@ -1,5 +1,6 @@
 #include "Text_2D.h"
 
+#include <array>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>  // std::out_of_range
@@ -110,14 +111,10 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     colorID = shaderProgram->GetUniformLocation("textColor");
 
     // fill indexes
-    indicies = new unsigned int[4];
-    indicies[0] = 0;
-    indicies[1] = 1;
-    indicies[2] = 2;
-    indicies[3] = 3;
+    std::array<int, 4> indicies{0, 1, 2, 3};
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * std::size(indicies),
+                 indicies.data(), GL_STATIC_DRAW);
 
     // fillling font info
     std::fstream fin;

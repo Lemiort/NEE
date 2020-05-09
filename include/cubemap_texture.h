@@ -7,9 +7,10 @@
 
 class CubemapTexture {
 public:
+    CubemapTexture() = default;
     explicit CubemapTexture(const std::string& filename);
 
-    ~CubemapTexture();
+    virtual ~CubemapTexture();
 
     bool Load();
 
