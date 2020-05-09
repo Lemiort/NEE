@@ -232,7 +232,7 @@ void ShadowPass() {
     Scale += 0.021f;
     TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
     TestMesh.SetScale(0.02, 0.02, 0.02);
-    TestMesh.SetPosition(0, -0.2, 0);
+    TestMesh.SetPosition({0, -0.2, 0});
     // light3->SetPos(gGameCamera.GetPos());
     // light3->SetDir(gGameCamera.GetTarget()-gGameCamera.GetPos());
     Camera lightCam{width,
@@ -245,7 +245,7 @@ void ShadowPass() {
                     glm::vec3(0.0, 1.0, 0.0)};
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
-    Plane.SetPosition(0.0f, -3.0f, 0.0f);
+    Plane.SetPosition({0.0f, -3.0f, 0.0f});
     Plane.SetRotation(0.0, 0.0, 0.0);
 
     glm::mat4 projection = glm::perspectiveFov(
@@ -298,7 +298,7 @@ void ShadowPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
+            Cube.SetPosition({i, noise1.GetHeight(i, j), j});
             Cube.Render(gGameCamera);
         }
     Plane.SetMaterial(shadowMaterial);
@@ -314,10 +314,10 @@ void RenderPass() {
     Scale += 0.021f;
     TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
     TestMesh.SetScale(0.02, 0.02, 0.02);
-    TestMesh.SetPosition(0, -0.2, 0);
+    TestMesh.SetPosition({0, -0.2, 0});
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
-    Plane.SetPosition(0.0f, -3.0f, 0.0f);
+    Plane.SetPosition({0.0f, -3.0f, 0.0f});
     Plane.SetRotation(0.0, 0.0, 0.0);
     glm::mat4 projection1 = glm::perspectiveFov(
         gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
@@ -400,7 +400,7 @@ void RenderPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
+            Cube.SetPosition({i, noise1.GetHeight(i, j), j});
             Cube.Render(gGameCamera);
         }
     // delete tempTexture;
@@ -694,13 +694,13 @@ void InterfacePass() {
                             std::to_string(gGameCamera.GetPos().z);
     // fLine1.Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1.SetText((strCampos).c_str());
-    fLine1.SetPosition(-1.0f, 0.0f, 24.0f);
+    fLine1.SetPosition({-1.0f, 0.0f, 24.0f});
     fLine1.Render(gGameCamera);
     // gBuffer1.CheckTextures();
     CalcFPS();
     // fLine1.Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1.SetText(std::to_string(fps));
-    fLine1.SetPosition(-1.0f, 0.9f, 24.0f);
+    fLine1.SetPosition({-1.0f, 0.9f, 24.0f});
     fLine1.Render(gGameCamera);
 
     switch (renderType) {
@@ -726,7 +726,7 @@ void InterfacePass() {
             fLine1.SetText("Unknown");
             break;
     }
-    fLine1.SetPosition(-1.0f, -0.2f, 36.0f);
+    fLine1.SetPosition({-1.0f, -0.2f, 36.0f});
     fLine1.Render(gGameCamera);
 
     dirLightLine.Render(gGameCamera);
@@ -768,7 +768,7 @@ void DSGeometryPass() {
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1.GetHeight(i, j), j);
+            Cube.SetPosition({i, noise1.GetHeight(i, j), j});
             Cube.Render(gGameCamera);
         }
 
@@ -847,7 +847,7 @@ void PreInitScene(GLFWwindow* window) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // fLine1.Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1.SetText("Loading...");
-    fLine1.SetPosition(-1.0f, -0.1f, 72.0f);
+    fLine1.SetPosition({-1.0f, -0.1f, 72.0f});
     fLine1.Render(gGameCamera);
     glfwSwapBuffers(window);
     initialized = false;
@@ -865,12 +865,12 @@ void InitRender(GLFWwindow* window, std::string message) {
         CalcFPS();
         // fLine1.Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
         fLine1.SetText(std::to_string(fps));
-        fLine1.SetPosition(-1.0f, 0.9f, 24.0f);
+        fLine1.SetPosition({-1.0f, 0.9f, 24.0f});
         fLine1.Render(gGameCamera);
 
         // fLine1.Render(message,-1.0f,-0.1f,36.0f);
         fLine1.SetText(message);
-        fLine1.SetPosition(-1.0f, -0.1f, 36.0f);
+        fLine1.SetPosition({-1.0f, -0.1f, 36.0f});
         fLine1.Render(gGameCamera);
 
         glfwSwapBuffers(window);

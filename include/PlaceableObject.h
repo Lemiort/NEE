@@ -3,17 +3,13 @@
 
 #include <glm/glm.hpp>
 
-#include "Object.h"
-
-class PlaceableObject : public Object {
+class PlaceableObject {
 public:
-    PlaceableObject();
-    virtual ~PlaceableObject();
+    PlaceableObject() = default;
+    virtual ~PlaceableObject() = default;
+    void SetPosition(glm::vec3 pos);
+    glm::vec3 GetPosition() const;
     glm::vec3 position;
-
-    void SetPosition(float x, float y, float z);
-    void SetPosition(glm::vec3 _pos);
-    glm::vec3 GetPosition();
 
 protected:
 private:

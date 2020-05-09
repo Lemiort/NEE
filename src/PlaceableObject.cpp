@@ -1,27 +1,5 @@
 #include "PlaceableObject.h"
 
-PlaceableObject::PlaceableObject() {
-    // ctor
-    position[0] = 0.0f;
-    position[1] = 0.0f;
-    position[2] = 0.0f;
-}
+void PlaceableObject::SetPosition(glm::vec3 pos) { position = pos; }
 
-PlaceableObject::~PlaceableObject() {
-    // dtor
-}
-
-void PlaceableObject::SetPosition(float x, float y, float z) {
-    position[0] = x;
-    position[1] = y;
-    position[2] = z;
-}
-void PlaceableObject::SetPosition(glm::vec3 _pos) {
-    position[0] = _pos.x;
-    position[1] = _pos.y;
-    position[2] = _pos.z;
-}
-
-glm::vec3 PlaceableObject::GetPosition() {
-    return glm::vec3(position[0], position[1], position[2]);
-}
+glm::vec3 PlaceableObject::GetPosition() const { return position; }

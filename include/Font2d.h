@@ -18,43 +18,27 @@ private:
 
     std::string fileName;
 
-    /**
-     * @brief scale of image
-     */
+    /** @brief scale of image */
     float kx, ky;
 
-    /**
-     * @brief sapect ratio
-     */
+    /** @brief sapect ratio */
     float aspect_ratio;
 
-    /**
-     * @brief size of pixel in uv coordinates
-     */
+    /** @brief size of pixel in uv coordinates */
     float pkx, pky;
 
-    /**
-     * @brief size of font in pixels
-     */
+    /** @brief size of font in pixels */
     int fontHeight;
-    /**
-     * @brief size of font's texture
-     */
+    /** @brief size of font's texture */
     uint32_t imageWidth, imageHeight;
 
-    /**
-     * @brief info about every font's character
-     */
+    /** @brief info about every font's character */
     std::map<unsigned int, FontCharacter> fontInfo;
 
-    /**
-     * @brief Character width in UV space
-     */
+    /** @brief Character width in UV space */
     float realWidth;
 
-    /**
-     * @brief Character height in UV space
-     */
+    /** @brief Character height in UV space */
     float realHeight;
 
     /**
@@ -64,21 +48,16 @@ private:
      */
     float dx;
 
-    /**
-     * @brief x offset in UV
-     */
+    /** @brief x offset in UV */
     float xOffset;
 
-    /**
-     * @brief y offset in uv
-     */
+    /** @brief y offset in uv */
     float yOffset;
 
     FontCharacter temp;
 
 protected:
     std::map<uint32_t, float> kerningInfo;
-
     /**
      * @brief character length in UV
      * @todo check if is true
@@ -88,7 +67,8 @@ protected:
     uint32_t currentCharacter;
 
 public:
-    Character2d();
+    Character2d() = default;
+    ~Character2d() override = default;
 
     float GetAspectRatio();
 
@@ -146,7 +126,6 @@ public:
      * @return false otherwise
      */
     bool Init(std::shared_ptr<Material> _mat, std::string _fileName);
-    ~Character2d();
     void Render(const Camera& cam) override;
 
     /**

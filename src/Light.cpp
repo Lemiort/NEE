@@ -41,7 +41,7 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
 
 void DirectionalLight::Render(const Camera& cam) {
     // mesh->SetScale(1.0,1.0,1.0);
-    mesh->SetPosition(0, 0, 0);
+    mesh->SetPosition({0, 0, 0});
     mesh->Render(cam);
 }
 
@@ -161,7 +161,7 @@ void SpotLight::Render(const Camera& cam) {
                    glm::length(dir),
                    glm::length(dir) * cos(glm::radians(cutoff_angle)));
 
-    mesh->SetPosition(position[0], position[1], position[2]);
+    mesh->SetPosition(position);
     mesh->Render(cam);
 }
 
@@ -222,7 +222,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
 
 void PointLight::Render(const Camera& cam) {
     sphere->SetScale(radius, radius, radius);
-    sphere->SetPosition(position[0], position[1], position[2]);
+    sphere->SetPosition(position);
     sphere->Render(cam);
 }
 

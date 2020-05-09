@@ -101,12 +101,6 @@ void GBuffer::BindForWriting() {
 
 void GBuffer::BindForReading() {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
-
-    /*for (unsigned int i = 0 ; i < std::size(m_textures); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
-    i]);
-    }*/
 }
 
 void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
@@ -147,12 +141,6 @@ void GBuffer::BindForStencilPass() {
 
 void GBuffer::BindForLightPass() {
     glDrawBuffer(GL_COLOR_ATTACHMENT0 + std::size(m_textures));
-
-    /*for (unsigned int i = 0 ; i < std::size(m_textures); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
-    i]);
-    }*/
 }
 
 void GBuffer::BindForFinalPass() {

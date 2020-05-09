@@ -4,11 +4,10 @@
 #include <memory>
 
 #include "Camera.h"
-#include "Object.h"
 #include "Shader.h"
 
 // Renderable Objects can be rendered, needs Shader to render
-class RenderableObject : public Object {
+class RenderableObject {
 public:
     RenderableObject() = default;
     virtual ~RenderableObject() = default;

@@ -4,10 +4,6 @@
 
 #include <fstream>
 
-Character2d::Character2d() {}
-
-Character2d::~Character2d() {}
-
 bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
     mesh.Init(_mat, "models/quad2x2front.ho3d");
     this->mat = _mat;

@@ -7,7 +7,6 @@
 #include <sstream>
 #include <stdexcept>  // std::out_of_range
 
-
 FontLine2d::FontLine2d() { shaderProgram = nullptr; }
 
 FontLine2d::~FontLine2d() {}
@@ -48,7 +47,7 @@ void FontLine2d::Render(const Camera& cam) {
         }
 
         // rendering
-        character.SetPosition(position[0] + dx, position[1], position[2]);
+        character.SetPosition({position[0] + dx, position[1], position[2]});
         character.SetCharacter(text.at(i));
         temp = character.GetLastCharacterLength();
         character.Render(cam);
