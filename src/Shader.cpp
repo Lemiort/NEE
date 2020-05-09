@@ -11,21 +11,21 @@ Shader::Shader() {
 }
 void Shader::AddShader(const std::string& source, ShaderType type) {
     switch (type) {
-        case VertexShader:
+        case kVertexShader:
             if (!source.empty())
                 vShaderFileName = source;
             else
                 vShaderFileName = "none";
             vShader = MakeVertexShader(source);
             break;
-        case FragmnetShader:
+        case kFragmentShader:
             if (!source.empty())
                 fShaderFileName = source;
             else
                 fShaderFileName = "none";
             fShader = MakeFragmentShader(source);
             break;
-        case GeometryShader:
+        case kGeometryShader:
             if (!source.empty())
                 gShaderFileName = source;
             else
@@ -49,8 +49,8 @@ void Shader::Init() {
     if (fShader != 0) glAttachShader(shaderProgramID, fShader);
     if (gShader != 0) glAttachShader(shaderProgramID, gShader);
     glLinkProgram(shaderProgramID);
-    // проверка
 
+    // check
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};
     glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);

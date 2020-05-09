@@ -14,34 +14,34 @@ SkyBox::~SkyBox() {}
 bool SkyBox::Init(const std::string& filename) {
     Scale = 0;
     int* spindices = NULL;
-    float* spvertices = NULL;
-    float* spnormals = NULL;
-    float* spuvs = NULL;
-    float* sptangent = NULL;
-    spfaces = 0;
-    spverts = 0;
+    float* vertexes_buffer = NULL;
+    float* normals_buffer = NULL;
+    float* uvs_buffer = NULL;
+    float* tangents_buffer = NULL;
+    faces_count = 0;
+    vertices_count = 0;
     try {
         /*FILE* fp;
                 fp=fopen("models/sphere.ho3d","r+b");
                 if(!fp) return false;
-                fread(&spverts,sizeof(int),1,fp);
-                spvertices=new float[spverts*3];
-                spuvs=new float[spverts*2];
-                spnormals=new float[spverts*3];
-                for(int i=0;i<spverts;i++)
+                fread(&vertices_count,sizeof(int),1,fp);
+                vertexes_buffer=new float[vertices_count*3];
+                uvs_buffer=new float[vertices_count*2];
+                normals_buffer=new float[vertices_count*3];
+                for(int i=0;i<vertices_count;i++)
                         {
-                        fread(&spvertices[3*i],sizeof(float),1,fp);
-                        fread(&spvertices[3*i+1],sizeof(float),1,fp);
-                        fread(&spvertices[3*i+2],sizeof(float),1,fp);
-                        fread(&spuvs[2*i],sizeof(float),1,fp);
-                        fread(&spuvs[2*i+1],sizeof(float),1,fp);
-                        fread(&spnormals[3*i],sizeof(float),1,fp);
-                        fread(&spnormals[3*i+1],sizeof(float),1,fp);
-                        fread(&spnormals[3*i+2],sizeof(float),1,fp);
+                        fread(&vertexes_buffer[3*i],sizeof(float),1,fp);
+                        fread(&vertexes_buffer[3*i+1],sizeof(float),1,fp);
+                        fread(&vertexes_buffer[3*i+2],sizeof(float),1,fp);
+                        fread(&uvs_buffer[2*i],sizeof(float),1,fp);
+                        fread(&uvs_buffer[2*i+1],sizeof(float),1,fp);
+                        fread(&normals_buffer[3*i],sizeof(float),1,fp);
+                        fread(&normals_buffer[3*i+1],sizeof(float),1,fp);
+                        fread(&normals_buffer[3*i+2],sizeof(float),1,fp);
                         }
-                fread(&spfaces,sizeof(int),1,fp);
-                spindices=new int[spfaces*3];
-                for(int i=0;i<spfaces;i++)
+                fread(&faces_count,sizeof(int),1,fp);
+                spindices=new int[faces_count*3];
+                for(int i=0;i<faces_count;i++)
                         {
                                 fread(&spindices[3*i],sizeof(int),1,fp);
                                 fread(&spindices[3*i+1],sizeof(int),1,fp);
@@ -51,27 +51,27 @@ bool SkyBox::Init(const std::string& filename) {
         FILE* fp;
         fp = fopen("models/sphere.ho3d", "r+b");
         if (!fp) return false;
-        fread(&spverts, sizeof(int), 1, fp);
-        spvertices = new float[spverts * 3];
-        spuvs = new float[spverts * 2];
-        spnormals = new float[spverts * 3];
-        sptangent = new float;
-        for (int i = 0; i < spverts; i++) {
-            fread(&spvertices[3 * i], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 2], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
+        fread(&vertices_count, sizeof(int), 1, fp);
+        vertexes_buffer = new float[vertices_count * 3];
+        uvs_buffer = new float[vertices_count * 2];
+        normals_buffer = new float[vertices_count * 3];
+        tangents_buffer = new float;
+        for (int i = 0; i < vertices_count; i++) {
+            fread(&vertexes_buffer[3 * i], sizeof(float), 1, fp);
+            fread(&vertexes_buffer[3 * i + 1], sizeof(float), 1, fp);
+            fread(&vertexes_buffer[3 * i + 2], sizeof(float), 1, fp);
+            fread(&uvs_buffer[2 * i], sizeof(float), 1, fp);
+            fread(&uvs_buffer[2 * i + 1], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i + 1], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i + 2], sizeof(float), 1, fp);
         }
-        for (int i = 0; i < spverts * 3; i++) {
-            fread(sptangent, sizeof(float), 1, fp);
+        for (int i = 0; i < vertices_count * 3; i++) {
+            fread(tangents_buffer, sizeof(float), 1, fp);
         }
-        fread(&spfaces, sizeof(int), 1, fp);
-        spindices = new int[spfaces * 3];
-        for (int i = 0; i < spfaces; i++) {
+        fread(&faces_count, sizeof(int), 1, fp);
+        spindices = new int[faces_count * 3];
+        for (int i = 0; i < faces_count; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
             fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
             fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
@@ -81,21 +81,17 @@ bool SkyBox::Init(const std::string& filename) {
         printf("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
-    // создаём буффер, в котором будем хранить всё
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (spverts), nullptr,
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (vertices_count), nullptr,
                  GL_STATIC_DRAW);
-    // загружаем вершины в буффер
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
-                    spvertices);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * vertices_count,
+                    vertexes_buffer);
 
-    // привязываем индексы к буфферу
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * faces_count,
+                 spindices, GL_STATIC_DRAW);
 
     try {
         pCubemapTex = new CubemapTexture(filename);
@@ -106,10 +102,8 @@ bool SkyBox::Init(const std::string& filename) {
     pCubemapTex->Load();
 
     position_id = shaderProgram->GetAttribLocation("vertex_position");
-    // находим позиции uniform-переменных
     model_id = shaderProgram->GetUniformLocation("gWVP");
 
-    // делаем то же самое
     pCubemapTex->Bind(GL_TEXTURE2);
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
@@ -120,12 +114,11 @@ bool SkyBox::Init(const std::string& filename) {
         scale[i] = 1;
     }
 
-    // чистим память
     delete[] spindices;
-    delete[] spvertices;
-    delete[] spnormals;
-    delete[] spuvs;
-    delete sptangent;
+    delete[] vertexes_buffer;
+    delete[] normals_buffer;
+    delete[] uvs_buffer;
+    delete tangents_buffer;
     return true;
 }
 
@@ -161,7 +154,7 @@ void SkyBox::Render(const Camera& cam) {
     glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
 
     glEnableVertexAttribArray(position_id);
-    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, faces_count * 3, GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(position_id);
 
     glCullFace(OldCullFaceMode);

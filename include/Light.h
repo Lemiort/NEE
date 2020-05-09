@@ -12,7 +12,6 @@
 
 class Light : public MaterialObject {
 public:
-    // TODO сделать его protected
     glm::vec4 color{1.0f};
 };
 
@@ -57,8 +56,8 @@ protected:
 };
 class SpotLight : public DirectionalLight, public PlaceableObject {
 public:
-    float Cutoff;  // угол отсечения в радианах
-                   // float position[3];
+    // in radians
+    float cutoff_angle;
     float target[3];
     SpotLight();
     SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,

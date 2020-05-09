@@ -48,9 +48,9 @@ void Billboard::Init(const char* TexFilename) {
             (std::istreambuf_iterator<char>()));
 
         shaderProgram = std::make_shared<Shader>();
-        shaderProgram->AddShader(vertex_shader_text, VertexShader);
-        shaderProgram->AddShader(fragment_shader_text, FragmnetShader);
-        shaderProgram->AddShader(geometry_shader_text, GeometryShader);
+        shaderProgram->AddShader(vertex_shader_text, kVertexShader);
+        shaderProgram->AddShader(fragment_shader_text, kFragmentShader);
+        shaderProgram->AddShader(geometry_shader_text, kGeometryShader);
         shaderProgram->Init();
         shader = true;
     }
@@ -61,11 +61,12 @@ void Billboard::Init(const char* TexFilename) {
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
+
+    // create buffer
     float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     position_id = shaderProgram->GetAttribLocation("vertex_position");
-    camViewID = shaderProgram->GetUniformLocation("gVP");
+    mvp_id = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
 void Billboard::SetPos(glm::vec3 _Pos) {
@@ -73,7 +74,7 @@ void Billboard::SetPos(glm::vec3 _Pos) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
+    // create buffer
     float coords[3] = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     position_id = shaderProgram->GetAttribLocation("vertex_position");
@@ -94,17 +95,14 @@ void Billboard::Render(const Camera& cam) {
     glm::mat4 vp_matrix = glm::transpose(projection * view);
     glm::mat4 mvp_matrix = vp_matrix * model;
 
-    // матрица проекции камеры
-    glUniformMatrix4fv(camViewID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
-    // позиция камеры
+    glUniformMatrix4fv(mvp_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     colorMap.Bind(GL_TEXTURE0);
-    glUniform1i(colSamplerID,
-                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
+    glUniform1i(colSamplerID, 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);

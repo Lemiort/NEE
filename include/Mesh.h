@@ -43,19 +43,17 @@ protected:
     GLuint specBufferID, specSamplerID;
     GLuint colSamplerUI, normSamplerUI;
     GLuint shadowMap;
-    int spfaces, spverts;
+    int faces_count, vertices_count;
     int Scale;
 
-    // угол вращения вокруг вектора
-    float rPhi;
-    // вектор вращения
-    glm::vec3 rv;
+    float rotation_angle;
+    glm::vec3 rotation_vector;
 
 public:
     Mesh();
     virtual ~Mesh();
-    int GetNumFaces();
-    int GetNumVerts();
+    int GetFacesCount();
+    int GetVerticesCount();
     void SetMaterial(std::shared_ptr<Material> _mat);
     bool Init(std::shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);

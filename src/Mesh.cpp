@@ -10,7 +10,7 @@
 Mesh::Mesh() {
     // mat=NULL;
     shadowMap = 0;
-    rPhi = 0;
+    rotation_angle = 0;
 }
 
 Mesh::~Mesh() {
@@ -27,10 +27,8 @@ void Mesh::SetMaterial(std::shared_ptr<Material> _mat) {
     normal_id = shaderProgram->GetAttribLocation("vertex_normal");
     uv_id = shaderProgram->GetAttribLocation("vertex_uv");
     tangent_id = shaderProgram->GetAttribLocation("vertex_tangent");
-    // находим позиции uniform-переменных
     model_id = shaderProgram->GetUniformLocation("model");
-    rotation_id = shaderProgram->GetUniformLocation(
-        "model_rotation");  // вращение объекта
+    rotation_id = shaderProgram->GetUniformLocation("model_rotation");
 }
 
 bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
@@ -42,59 +40,59 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
 
     Scale = 0;
     int* spindices = NULL;
-    float* spvertices = NULL;
-    float* spnormals = NULL;
-    float* spuvs = NULL;
-    float* sptangent = NULL;
-    spfaces = 0;
-    spverts = 0;
+    float* vertexes_buffer = NULL;
+    float* normals_buffer = NULL;
+    float* uvs_buffer = NULL;
+    float* tangents_buffer = NULL;
+    faces_count = 0;
+    vertices_count = 0;
     try {
         FILE* fp;
-        std::fstream fout("ImporObj.log", std::ios::out);
+        std::ofstream fout("ImportObj.log");
         // fopen_s(&fp,model,"r+b");
         fp = fopen(model, "r+b");
         if (!fp) return false;
-        fread(&spverts, sizeof(int), 1, fp);
-        fout << spverts << std::endl;
-        spvertices = new float[spverts * 3];
-        spuvs = new float[spverts * 2];
-        spnormals = new float[spverts * 3];
-        sptangent = new float[spverts * 3];
-        for (int i = 0; i < spverts; i++) {
-            fread(&spvertices[3 * i], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 2], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
+        fread(&vertices_count, sizeof(int), 1, fp);
+        fout << vertices_count << std::endl;
+        vertexes_buffer = new float[vertices_count * 3];
+        uvs_buffer = new float[vertices_count * 2];
+        normals_buffer = new float[vertices_count * 3];
+        tangents_buffer = new float[vertices_count * 3];
+        for (int i = 0; i < vertices_count; i++) {
+            fread(&vertexes_buffer[3 * i], sizeof(float), 1, fp);
+            fread(&vertexes_buffer[3 * i + 1], sizeof(float), 1, fp);
+            fread(&vertexes_buffer[3 * i + 2], sizeof(float), 1, fp);
+            fread(&uvs_buffer[2 * i], sizeof(float), 1, fp);
+            fread(&uvs_buffer[2 * i + 1], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i + 1], sizeof(float), 1, fp);
+            fread(&normals_buffer[3 * i + 2], sizeof(float), 1, fp);
         }
-        for (int i = 0; i < spverts * 3; i++) {
-            fread(&sptangent[i], sizeof(float), 1, fp);
+        for (int i = 0; i < vertices_count * 3; i++) {
+            fread(&tangents_buffer[i], sizeof(float), 1, fp);
         }
-        for (int i = 0; i < spverts; i++) {
+        for (int i = 0; i < vertices_count; i++) {
             fout << i << " ";
-            fout << spvertices[3 * i] << ",";
-            fout << spvertices[3 * i + 1] << ",";
-            fout << spvertices[3 * i + 2] << ",";
-            fout << spuvs[2 * i + 0] << ",";
-            fout << spuvs[2 * i + 1] << ",";
-            fout << spnormals[3 * i + 0] << ",";
-            fout << spnormals[3 * i + 1] << ",";
-            fout << spnormals[3 * i + 2] << ",\n";
+            fout << vertexes_buffer[3 * i] << ",";
+            fout << vertexes_buffer[3 * i + 1] << ",";
+            fout << vertexes_buffer[3 * i + 2] << ",";
+            fout << uvs_buffer[2 * i + 0] << ",";
+            fout << uvs_buffer[2 * i + 1] << ",";
+            fout << normals_buffer[3 * i + 0] << ",";
+            fout << normals_buffer[3 * i + 1] << ",";
+            fout << normals_buffer[3 * i + 2] << ",\n";
         }
         // vertices[0]=f;
-        fread(&spfaces, sizeof(int), 1, fp);
-        fout << "\n" << spfaces << std::endl;
-        spindices = new int[spfaces * 3];
-        for (int i = 0; i < spfaces; i++) {
+        fread(&faces_count, sizeof(int), 1, fp);
+        fout << "\n" << faces_count << std::endl;
+        spindices = new int[faces_count * 3];
+        for (int i = 0; i < faces_count; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
             fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
             fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
         }
         fclose(fp);
-        for (int i = 0; i < spfaces; i++) {
+        for (int i = 0; i < faces_count; i++) {
             fout << spindices[3 * i] << ",";
             fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2]
                  << std::endl;
@@ -105,51 +103,41 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
         return false;
     }
 
-    // создаём буффер, в котором будем хранить всё
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3 + 3 + 2 + 3) * (spverts),
-                 nullptr, GL_STATIC_DRAW);
-    // загружаем вершины в буффер
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
-                    spvertices);
-    // нормали
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * spverts,
-                    sizeof(float) * 3 * spverts, spnormals);
-    // текстурные координаты
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * spverts,
-                    sizeof(float) * 2 * spverts, spuvs);
-    // тангент
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * spverts,
-                    sizeof(float) * 3 * spverts, sptangent);
+    glBufferData(GL_ARRAY_BUFFER,
+                 sizeof(float) * (3 + 3 + 2 + 3) * (vertices_count), nullptr,
+                 GL_STATIC_DRAW);
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * vertices_count,
+                    vertexes_buffer);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * vertices_count,
+                    sizeof(float) * 3 * vertices_count, normals_buffer);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * vertices_count,
+                    sizeof(float) * 2 * vertices_count, uvs_buffer);
+    glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * vertices_count,
+                    sizeof(float) * 3 * vertices_count, tangents_buffer);
 
-    // привязываем индексы к буфферу
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * faces_count,
+                 spindices, GL_STATIC_DRAW);
 
     position_id = shaderProgram->GetAttribLocation("vertex_position");
     normal_id = shaderProgram->GetAttribLocation("vertex_normal");
     uv_id = shaderProgram->GetAttribLocation("vertex_uv");
     tangent_id = shaderProgram->GetAttribLocation("vertex_tangent");
-    // находим позиции uniform-переменных
     model_id = shaderProgram->GetUniformLocation("model");
-    rotation_id = shaderProgram->GetUniformLocation(
-        "model_rotation");  // вращение объекта
+    rotation_id = shaderProgram->GetUniformLocation("model_rotation");
 
     for (int i = 0; i < 3; i++) {
         position[i] = 0;
         model_rotation[i] = 0;
         scale[i] = 1;
     }
-
-    // убираем за собой
-    delete[] spvertices;
-    delete[] spuvs;
-    delete[] spnormals;
-    delete[] sptangent;
+    delete[] vertexes_buffer;
+    delete[] uvs_buffer;
+    delete[] normals_buffer;
+    delete[] tangents_buffer;
 
     return true;
 }
@@ -166,13 +154,13 @@ void Mesh::Render(const Camera& cam) {
     glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glVertexAttribPointer(
         normal_id, 3, GL_FLOAT, GL_FALSE, 0,
-        reinterpret_cast<const void*>(sizeof(float) * 3 * spverts));
+        reinterpret_cast<const void*>(sizeof(float) * 3 * vertices_count));
     glVertexAttribPointer(
         uv_id, 2, GL_FLOAT, GL_FALSE, 0,
-        reinterpret_cast<const void*>(sizeof(float) * 6 * spverts));
+        reinterpret_cast<const void*>(sizeof(float) * 6 * vertices_count));
     glVertexAttribPointer(
         tangent_id, 3, GL_FLOAT, GL_FALSE, 0,
-        reinterpret_cast<const void*>(sizeof(float) * 8 * spverts));
+        reinterpret_cast<const void*>(sizeof(float) * 8 * vertices_count));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(model));
@@ -184,7 +172,7 @@ void Mesh::Render(const Camera& cam) {
     glEnableVertexAttribArray(normal_id);
     glEnableVertexAttribArray(uv_id);
     glEnableVertexAttribArray(tangent_id);
-    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, faces_count * 3, GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(position_id);
     glDisableVertexAttribArray(normal_id);
     glDisableVertexAttribArray(uv_id);
@@ -192,13 +180,13 @@ void Mesh::Render(const Camera& cam) {
 }
 
 void Mesh::SetVectorRotate(glm::vec3 v, float phi) {
-    rPhi = phi;
-    rv = v;
+    rotation_angle = phi;
+    rotation_vector = v;
 }
 
-int Mesh::GetNumFaces() { return spfaces; }
+int Mesh::GetFacesCount() { return faces_count; }
 
-int Mesh::GetNumVerts() { return spverts; }
+int Mesh::GetVerticesCount() { return vertices_count; }
 
 void Mesh::SetTexture(GLuint textureUnit) { shadowMap = textureUnit; }
 

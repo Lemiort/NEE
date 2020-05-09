@@ -1,93 +1,159 @@
 #ifndef INCLUDE_FONT2D_H
 #define INCLUDE_FONT2D_H
-#include <Mesh.h>
-#include <Text_2D.h>
-
 #include <map>
 #include <memory>
 #include <string>
 
+#include "Mesh.h"
+#include "Text_2D.h"
+
+/**
+ * @brief Font, that uses 3d object to rendering
+ */
 class Character2d : public MaterialObject, public PlaceableObject {
 private:
     Mesh mesh;
 
-    // название шрифта
     std::string fontName;
-    // ссылка на файл
+
     std::string fileName;
 
-    // отношение размеров картинки к экрану
+    /**
+     * @brief scale of image
+     */
     float kx, ky;
 
-    // соотношение сторон экрана
-    float aratio;
+    /**
+     * @brief sapect ratio
+     */
+    float aspect_ratio;
 
-    // размер пикселя в uv
+    /**
+     * @brief size of pixel in uv coordinates
+     */
     float pkx, pky;
-    // размер шрифта в пикселях
+
+    /**
+     * @brief size of font in pixels
+     */
     int fontHeight;
-    // размеры текстуры шрифта
+    /**
+     * @brief size of font's texture
+     */
     uint32_t imageWidth, imageHeight;
-    // информация о шрифте, вернее обо всех буквах
+
+    /**
+     * @brief info about every font's character
+     */
     std::map<unsigned int, FontCharacter> fontInfo;
 
-    // ширина символа в UV-координатах
+    /**
+     * @brief Character width in UV space
+     */
     float realWidth;
-    // высота символа в UV-координатах
+
+    /**
+     * @brief Character height in UV space
+     */
     float realHeight;
 
-    // какой-то коэффициент масштабирования
-    // TODO подписать более подробно
+    /**
+     * @brief scaling coefficient
+     *
+     * @todo add detailed decr
+     */
     float dx;
-    // смещение по х на текстуре в UV
+
+    /**
+     * @brief x offset in UV
+     */
     float xOffset;
-    // смещение по y на текстуре в UV
+
+    /**
+     * @brief y offset in uv
+     */
     float yOffset;
 
     FontCharacter temp;
 
 protected:
-    // информация о кернинге
     std::map<uint32_t, float> kerningInfo;
 
-    // TODO длина символа в текстурных координатах??
+    /**
+     * @brief character length in UV
+     * @todo check if is true
+     */
     glm::vec2 characterLength;
 
-    // текущий символ
-    unsigned int currentCharacter;
+    uint32_t currentCharacter;
 
 public:
     Character2d();
 
     float GetAspectRatio();
-    // установка отношения + корректировка коээффициентов
-    // машстабирования текстуры
+
+    /**
+     * @brief Set the Aspect Ratio and recalculate scaling
+     *
+     * @param _width
+     * @param _height
+     */
     void SetAspectRatio(int _width, int _height);
 
-    // возвращает высоту шрифта(в пикселях)
+    /**
+     * @brief Get the Font Height
+     *
+     * @return int  height in pixels
+     */
     int GetFontHeight();
 
-    // возвращает  ширину в экранных координатах
-    // текущего символа
+    /**
+     * @brief Get the Width
+     *
+     * @param c character
+     * @return float width of character in screen-space
+     */
     float GetWidth(unsigned int c);
 
-    // возвращает высоту в экранных координатах
-    // текущего символа
+    /**
+     * @brief Get the Height
+     *
+     * @param c character
+     * @return float height of character in scree-space
+     */
     float GetHeight(unsigned int c);
 
-    // возвращает ширину пробела в экранных координатах
+    /**
+     * @brief Get the Space Width
+     *
+     * @return float space width in screen-space
+     */
     float GetSpaceWidth();
 
-    // устанавливает текущий символ
+    /**
+     * @brief Set the current Character
+     *
+     * @param c character
+     */
     void SetCharacter(unsigned int c);
 
-    // инициализируем материалом и моделью quad2x2front.ho3d
-    // и шрифтом
+    /**
+     * @brief Init with material and quad2x2front.ho3d model
+     *
+     * @param _mat
+     * @param _fileName
+     * @return true if succeed
+     * @return false otherwise
+     */
     bool Init(std::shared_ptr<Material> _mat, std::string _fileName);
     ~Character2d();
     void Render(const Camera& cam) override;
 
-    // TODO возвращает длину текущего символа в экрнных координатах??
+    /**
+     * @brief Get the Last Character size
+     *
+     * @return glm::vec2 size of characer in screen space
+     */
     glm::vec2 GetLastCharacterLength();
 };
 #endif  // INCLUDE_FONT2D_H

@@ -90,7 +90,7 @@ void DSSpotLightPass(SpotLight& spotLight);
 void DSPointLightPass(PointLight& pointLight);
 void DSDirectionalLightPass(DirectionalLight& directionalLight);
 void DSFinalPass();
-void DSEndLigtPasses();
+void DSEndLightPasses();
 void InterfacePass();
 
 void FrameBufferSizeCallback(GLFWwindow* window, int w, int h);
@@ -116,21 +116,19 @@ PointLight *pointLight1, *pointLight2;
 SpotLight* spotLight1;
 Camera gGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f};
 float Scale;
-int spverts;
-Line* xline;
-Line* yline;
-Line* zline;
+int vertices_count;
+Line* x_line;
+Line* y_line;
+Line* z_line;
 Line* dirLightLine;
 Mesh TestMesh, Plane, Cube;
 SkyBox* skybox1;
-TextLine2d *tline1, *tline2;
 FontLine2d* fLine1;
 PerlinNoise* noise1;
 Billboard* bb1;
-ShadowMapFBO* smfbo1;
+ShadowMapFBO* shadowmap_fbo;
 
-// сигнал о том, что прогрузка шейдеров и пр. завершилась
-bool initialized;
+bool initialized{false};
 
 std::shared_ptr<Material> mainMaterial, secondMaterial, shadowMaterial;
 std::shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;
@@ -217,18 +215,16 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 void FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
     width = w;
     height = h;
-    if (tline1 != NULL) tline1->SetAspectRatio(width, height);
     if (fLine1 != NULL) fLine1->SetAspectRatio(width, height);
-    if (smfbo1 != NULL) smfbo1->Init(w, h);
+    if (shadowmap_fbo != NULL) shadowmap_fbo->Init(w, h);
     if (gBuffer1 != NULL) gBuffer1->Init(w, h);
     gGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
 
 void ShadowPass() {
-    smfbo1->BindForWriting();
+    shadowmap_fbo->BindForWriting();
     // gBuffer1->BindForWriting();
-    // этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
     Scale += 0.021f;
@@ -266,32 +262,32 @@ void ShadowPass() {
 
     glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
                        glm::value_ptr(vp_matrix));
-    // освещение
+    // lightning
     {
-        // направленный свет
+        // direct light
         auto la = glm::diagonal4x4(directionalLight1->color);
         glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
         glUniform3f(dirLightDirID, directionalLight1->direction[0],
                     directionalLight1->direction[1],
                     directionalLight1->direction[2]);
-        // точечный
+        // point light
         auto la2 = glm::diagonal4x4(pointLight1->color);
         glUniformMatrix4fv(pointLightColID, 1, GL_TRUE, glm::value_ptr(la2));
         glUniform3f(pointLightPosID, pointLight1->position[0],
                     pointLight1->position[1], pointLight1->position[2]);
         glUniform1f(pointLightIntID, pointLight1->power);
-        // прожектор
+        // projector
         auto la3 = glm::diagonal4x4(spotLight1->color);
         glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
         glUniform3f(spotLightDirID, spotLight1->direction[0],
                     spotLight1->direction[1], spotLight1->direction[2]);
         glUniform1f(spotLightCutoffID,
-                    cosf((spotLight1->Cutoff) * 3.14 / 180.0f));
+                    cosf((spotLight1->cutoff_angle) * 3.14 / 180.0f));
         glUniform3f(spotLightPosID, spotLight1->position[0],
                     spotLight1->position[1], spotLight1->position[2]);
     }
 
-    // вращение камеры для спекуляра
+    // cam rotation for specular
     glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
                 lightCam.GetPos().z);
 
@@ -310,7 +306,6 @@ void ShadowPass() {
 }
 
 void RenderPass() {
-    // этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glCullFace(GL_BACK);
     // CalcFPS();
@@ -352,7 +347,7 @@ void RenderPass() {
     skybox1->Render(gGameCamera);
 
     Plane.SetMaterial(mainMaterial);
-    // тупо копипаст
+    // copy-paste
     {
         meshShader->Use();
         GLuint gLightCamViewID = meshShader->GetUniformLocation("gLightVC");
@@ -365,15 +360,15 @@ void RenderPass() {
         glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
                            glm::value_ptr(vp_matrix2));
 
-        // освещение
+        // lighting
         {
-            // направленный свет
+            // direct light
             auto la = glm::diagonal4x4(directionalLight1->color);
             glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la));
             glUniform3f(dirLightDirID, directionalLight1->direction[0],
                         directionalLight1->direction[1],
                         directionalLight1->direction[2]);
-            // точечный
+            // spot light
             auto la2 = glm::diagonal4x4(pointLight1->color);
             glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
                                glm::value_ptr(la2));
@@ -381,18 +376,18 @@ void RenderPass() {
                         pointLight1->position[1], pointLight1->position[2]);
             glUniform1f(pointLightIntID, pointLight1->power);
 
-            // прожектор
+            // projector
             auto la3 = glm::diagonal4x4(spotLight1->color);
             glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la3));
             glUniform3f(spotLightDirID, spotLight1->direction[0],
                         spotLight1->direction[1], spotLight1->direction[2]);
             glUniform1f(spotLightCutoffID,
-                        cosf((spotLight1->Cutoff) * 3.14 / 180.0f));
+                        cosf((spotLight1->cutoff_angle) * 3.14 / 180.0f));
             glUniform3f(spotLightPosID, spotLight1->position[0],
                         spotLight1->position[1], spotLight1->position[2]);
         }
 
-        // вращение камеры для спекуляра
+        // camera rotation for specular
         glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                     gGameCamera.GetPos().z);
     }
@@ -420,7 +415,7 @@ void DSBeginLightPasses() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void DSEndLigtPasses() { glDisable(GL_BLEND); }
+void DSEndLightPasses() { glDisable(GL_BLEND); }
 
 void DSLightingPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -456,10 +451,9 @@ void DSLightingPass() {
 
 void DSStencilPass(Light& light) {
     // m_nullTech.Enable();
-    // включаем шейдер
     DSStencilPassShader->Use();
 
-    // Отключаем запись цвета / глубины и включаем трафарет
+    // disable color/depth and enable stencil
     gBuffer1->BindForStencilPass();
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);  //??
@@ -468,16 +462,16 @@ void DSStencilPass(Light& light) {
 
     glClear(GL_STENCIL_BUFFER_BIT);
 
-    // Нам нужен тест трафарета, но мы хотим, что бы он всегда
-    // успешно проходил. Важен только тест глубины.
+    // we need stencil test, but it should always pass. Only depth test is
+    // important
     glStencilFunc(GL_ALWAYS, 0, 0);
 
     // glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
     // glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
     glStencilOpSeparate(GL_BACK, GL_KEEP, GL_DECR,
-                        GL_KEEP);  // TODO сделать наоборот
+                        GL_KEEP);  // TODO revert
     glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_INCR,
-                        GL_KEEP);  // TODO сделать наоборот
+                        GL_KEEP);  // TODO revert
 
     glm::mat4 projection1 = glm::perspectiveFov(
         gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
@@ -488,13 +482,11 @@ void DSStencilPass(Light& light) {
     glm::mat4 vp_matrix1 = projection1 * view1;
     vp_matrix1 = glm::transpose(vp_matrix1);
 
-    // определяем адрес переменных камеры
     view_projection_id =
         DSStencilPassShader->GetUniformLocation("view_projection");
     rotation_id = DSStencilPassShader->GetUniformLocation("model_rotation");
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
-    // загружаем матрицу камеры
     glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
                        glm::value_ptr(vp_matrix1));
 
@@ -525,41 +517,32 @@ void DSPointLightPass(PointLight& pointLight) {
     glm::mat4 vp_matrix1 = projection1 * view1;
     vp_matrix1 = glm::transpose(vp_matrix1);
 
-    // включаем шейдер
     DSPointLightShader->Use();
 
-    // определяем адрес переменных камеры
     view_projection_id =
         DSPointLightShader->GetUniformLocation("view_projection");
     rotation_id = DSPointLightShader->GetUniformLocation("model_rotation");
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
-    // загружаем матрицу камеры
     glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
                        glm::value_ptr(vp_matrix1));
-    // взагружаем вращение камеры для спекуляра
+    // load camera rot for specular
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    // загружаем текстуры в шейдер
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
 
-    // включаем данные из буффера
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
-
-    // определяем адрес параметров света
     pointLightPosID =
         DSPointLightShader->GetUniformLocation("s_vPointLightPos");
     pointLightIntID =
         DSPointLightShader->GetUniformLocation("pointLightIntensity");
     pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
 
-    // загружаем параметры света для источника 1
+    // load light parameters for light 1
     auto la2 = glm::diagonal4x4(pointLight.color);
     glUniformMatrix4fv(pointLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(pointLightPosID, pointLight.position[0], pointLight.position[1],
@@ -594,46 +577,37 @@ void DSSpotLightPass(SpotLight& spotLight) {
                                   gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
 
-    // включаем шейдер
     DSSpotLightShader->Use();
-
-    // определяем адрес переменных камеры
     view_projection_id =
         DSSpotLightShader->GetUniformLocation("view_projection");
     rotation_id = DSSpotLightShader->GetUniformLocation("model_rotation");
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
-    // загружаем матрицу камеры
     glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
                        glm::value_ptr(vp_matrix1));
-    // взагружаем вращение камеры для спекуляра
+    // camera rot for specular
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    // загружаем текстуры в шейдер
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
 
-    // определяем адрес параметров света
     spotLightPosID = DSSpotLightShader->GetUniformLocation("sLightPos");
     spotLightColID = DSSpotLightShader->GetUniformLocation("sLightCol");
     spotLightDirID = DSSpotLightShader->GetUniformLocation("sLightDir");
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
-    // загружаем параметры света для источника 1
+    // load parameters for light 1
     auto la2 = glm::diagonal4x4(spotLight.color);
     glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
                 spotLight.position[2]);
     glUniformMatrix4fv(spotLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
                 spotLight.direction[2]);
-    glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
-
-    // включаем данные из буффера
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.cutoff_angle)));
 
     spotLight.SetMaterial(DSSpotLightMaterial);
     spotLight.Render(gGameCamera);
@@ -660,32 +634,28 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     vp_matrix1 = glm::transpose(vp_matrix1);
 
     DSDirectionalLightShader->Use();
-    // получаем адрес параметров камеры
+
     view_projection_id =
         DSDirectionalLightShader->GetUniformLocation("view_projection");
     rotation_id =
         DSDirectionalLightShader->GetUniformLocation("model_rotation");
     camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
-    // загружаем вращение камеры для спекуляра
+    // camera rot for specular
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
-    // загружаем матрицу камеры
     glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
                        glm::value_ptr(vp_matrix1));
 
-    // получаем адрес переменных света
     dirLightColID =
         DSDirectionalLightShader->GetUniformLocation("dirLightColor");
     dirLightDirID =
         DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
 
-    // загрузка параметров света
     auto la2 = glm::diagonal4x4(directionalLight.color);
     glUniformMatrix4fv(dirLightColID, 1, GL_TRUE, glm::value_ptr(la2));
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 
-    // загружаем текстуры в шейдер
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
                                            4);  // world pos
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),
@@ -697,15 +667,6 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
                                            8);  // specular
 
     directionalLight.SetMaterial(DSDirectionalLightMaterial);
-
-    /*printf("\n %f %f %f",directionalLight1->direction[0],
-                            directionalLight1->direction[1],
-                            directionalLight1->direction[2]);*/
-    // glUniform1f(pointLightIntID,pointLight1->power);
-
-    // включаем данные из буффера
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    // glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
     directionalLight.Render(gGameCamera);
     // glEnable(GL_DEPTH_TEST);
@@ -723,9 +684,9 @@ void InterfacePass() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // glDisable(GL_DEPTH_TEST);
-    xline->Render(gGameCamera);
-    yline->Render(gGameCamera);
-    zline->Render(gGameCamera);
+    x_line->Render(gGameCamera);
+    y_line->Render(gGameCamera);
+    z_line->Render(gGameCamera);
     std::string strCampos = std::to_string(gGameCamera.GetPos().x) + "; " +
                             std::to_string(gGameCamera.GetPos().y) + "; " +
                             std::to_string(gGameCamera.GetPos().z);
@@ -774,7 +735,7 @@ void InterfacePass() {
 void DSGeometryPass() {
     gBuffer1->BindForGeomPass();
     // gBuffer1->BindForWriting();
-    // Только геометрический проход обновляет тест глубины
+    // enable depth test for geometry part
     glDepthMask(GL_TRUE);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -814,22 +775,13 @@ void DSGeometryPass() {
 }
 
 void RenderScene(GLFWwindow* window) {
-    // ShadowPass();
-    // RenderPass();
-    // DSGeometryPass();
-    // DSBeginLightPasses();//вообще пока не нужно
-    // DSPointLightPass();
-    // DSLightingPass();
-    // обычный deffered shading
     switch (renderType) {
         case RenderType::Deferred:
             gBuffer1->StartFrame();
             DSGeometryPass();
-            // Для того, что бы обновился буфер трафарета нужно его
-            // активировать, так же он потребуется и в проходе света, так как
-            // свет рендерится только при успешном проходе трафарета.
+            // enable stencil for stencil buffer update. Also we need stencil
+            // for light, because it renders only after stencil pass
             glEnable(GL_STENCIL_TEST);
-            // DSBeginLightPasses();//уже устарело
             {
                 DSStencilPass(*pointLight1);
                 DSPointLightPass(*pointLight1);
@@ -840,14 +792,12 @@ void RenderScene(GLFWwindow* window) {
                 DSStencilPass(*spotLight1);
                 DSSpotLightPass(*spotLight1);
             }
-            // Направленному свету не требуется трафарет
-            // так как его действие не ограничено расстоянием.
+            // direct light doesn't need stencil
             glDisable(GL_STENCIL_TEST);
-
             DSDirectionalLightPass(*directionalLight1);
 
             DSFinalPass();
-            // DSEndLigtPasses();
+            // DSEndLightPasses();
             break;
         case RenderType::Position:
             [[fallthrough]];
@@ -872,7 +822,7 @@ void PreInitScene(GLFWwindow* window) {
     lastTime = glfwGetTime();
     frameCount = 0;
 
-    // шейдер текста
+    // text shader
     {
         std::ifstream vertex_shader_file("shaders/text2d.vs");
         std::string vertex_shader_text(
@@ -885,8 +835,8 @@ void PreInitScene(GLFWwindow* window) {
             (std::istreambuf_iterator<char>()));
 
         textShader = std::make_shared<Shader>();
-        textShader->AddShader(vertex_shader_text, VertexShader);
-        textShader->AddShader(fragment_shader_text, FragmnetShader);
+        textShader->AddShader(vertex_shader_text, kVertexShader);
+        textShader->AddShader(fragment_shader_text, kFragmentShader);
         textShader->Init();
     }
     fLine1 = new FontLine2d();
@@ -948,9 +898,7 @@ int InitScene(GLFWwindow* window) {
 
     gGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
 
-    // нормальный шейдер
-    // InitRender(window, "Normal shader loading...");
-
+    // regular shader
     {
         std::ifstream vertex_shader_file("shaders/vertexShader.vs");
         std::string vertex_shader_text(
@@ -963,8 +911,8 @@ int InitScene(GLFWwindow* window) {
             (std::istreambuf_iterator<char>()));
 
         meshShader = std::make_shared<Shader>();
-        meshShader->AddShader(vertex_shader_text, VertexShader);
-        meshShader->AddShader(fragment_shader_text, FragmnetShader);
+        meshShader->AddShader(vertex_shader_text, kVertexShader);
+        meshShader->AddShader(fragment_shader_text, kFragmentShader);
         meshShader->Init();
 
         view_projection_id = meshShader->GetUniformLocation("view_projection");
@@ -972,7 +920,7 @@ int InitScene(GLFWwindow* window) {
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
 
-    // основной материал
+    // main material
     {
         InitRender(window, "Main material loading...");
         mainMaterial = std::make_shared<Material>();
@@ -983,7 +931,7 @@ int InitScene(GLFWwindow* window) {
     TestMesh.Init(mainMaterial, "models/torus1.ho3d");
     // Plane.Init(mainMaterial, "models/plane.ho3d");
 
-    // шейдер тени
+    // shade shader
     {
         std::ifstream vertex_shader_file("shaders/fbo.vs");
         std::string vertex_shader_text(
@@ -997,19 +945,19 @@ int InitScene(GLFWwindow* window) {
 
         InitRender(window, "Shade shader loading...");
         shadowShader = std::make_shared<Shader>();
-        shadowShader->AddShader(vertex_shader_text, VertexShader);
-        shadowShader->AddShader(fragment_shader_text, FragmnetShader);
+        shadowShader->AddShader(vertex_shader_text, kVertexShader);
+        shadowShader->AddShader(fragment_shader_text, kFragmentShader);
         shadowShader->Init();
     }
 
-    // материал тени
+    // shade material
     {
         InitRender(window, "Shade Material loading...");
         shadowMaterial = std::make_shared<Material>();
         shadowMaterial->Init(shadowShader);
     }
 
-    // затенённый шейдер
+    // shaded shader
     {
         InitRender(window, "Shaded shader loading...");
 
@@ -1023,12 +971,12 @@ int InitScene(GLFWwindow* window) {
             (std::istreambuf_iterator<char>(fragment_shader_file)),
             (std::istreambuf_iterator<char>()));
         shadowMeshShader = std::make_shared<Shader>();
-        shadowMeshShader->AddShader(vertex_shader_text, VertexShader);
-        shadowMeshShader->AddShader(fragment_shader_text, FragmnetShader);
+        shadowMeshShader->AddShader(vertex_shader_text, kVertexShader);
+        shadowMeshShader->AddShader(fragment_shader_text, kFragmentShader);
         shadowMeshShader->Init();
     }
 
-    // затенённый материал
+    // shaded material
     {
         InitRender(window, "Shaded material loading...");
         shadowMeshMaterial = std::make_shared<Material>();
@@ -1040,32 +988,32 @@ int InitScene(GLFWwindow* window) {
         Plane.Init(shadowMeshMaterial, "models/normal_plane.ho3d");
     }
 
-    // шейдер StencilPass материал
+    // sheder StencilPass
     {
         InitRender(window, "StencilPass shader loading...");
-        // грузим шейдер
+        // load shader
         {
             std::ifstream vertex_shader_file("shaders/DSStencilPass.vs");
             std::string vertex_shader_text(
                 (std::istreambuf_iterator<char>(vertex_shader_file)),
                 (std::istreambuf_iterator<char>()));
             DSStencilPassShader = std::make_shared<Shader>();
-            DSStencilPassShader->AddShader(vertex_shader_text, VertexShader);
+            DSStencilPassShader->AddShader(vertex_shader_text, kVertexShader);
             DSStencilPassShader->Init();
         }
-        // грузим материал
+        // load material
         {
             DSStencilPassMaterial = std::make_shared<Material>();
             DSStencilPassMaterial->Init(DSStencilPassShader);
         }
     }
 
-    // шейдер GBufferа и сам буффер, материал
+    // GBuffer shader, material
     {
         InitRender(window, "Gbuffer shader loading...");
         gBuffer1 = new GBuffer;
         gBuffer1->Init(width, height);
-        // грузим шейдер
+        // load shader
         {
             std::ifstream vertex_shader_file("shaders/DSGeometryPass.vs");
             std::string vertex_shader_text(
@@ -1078,24 +1026,24 @@ int InitScene(GLFWwindow* window) {
                 (std::istreambuf_iterator<char>()));
 
             DSGeometryPassShader = std::make_shared<Shader>();
-            DSGeometryPassShader->AddShader(vertex_shader_text, VertexShader);
+            DSGeometryPassShader->AddShader(vertex_shader_text, kVertexShader);
             DSGeometryPassShader->AddShader(fragment_shader_text,
-                                            FragmnetShader);
+                                            kFragmentShader);
             DSGeometryPassShader->Init();
         }
-        // грузим материал
+        // load material
         {
             DSGeometryPassMaterial = std::make_shared<Material>();
             DSGeometryPassMaterial->Init(DSGeometryPassShader);
         }
     }
 
-    // шейдера света
+    // light shader
     {
         InitRender(window, "Light shader loading...");
-        // шейдер точечного света
-        // грузим шейдер
+        // point light shader
         {
+            // load shader
             std::ifstream vertex_shader_file("shaders/DSPointLight.vs");
             std::string vertex_shader_text(
                 (std::istreambuf_iterator<char>(vertex_shader_file)),
@@ -1107,17 +1055,18 @@ int InitScene(GLFWwindow* window) {
                 (std::istreambuf_iterator<char>()));
 
             DSPointLightShader = std::make_shared<Shader>();
-            DSPointLightShader->AddShader(vertex_shader_text, VertexShader);
-            DSPointLightShader->AddShader(fragment_shader_text, FragmnetShader);
+            DSPointLightShader->AddShader(vertex_shader_text, kVertexShader);
+            DSPointLightShader->AddShader(fragment_shader_text,
+                                          kFragmentShader);
             DSPointLightShader->Init();
 
-            // грузим материал
+            // load material
             DSPointLightMaterial = std::make_shared<Material>();
             DSPointLightMaterial->Init(DSPointLightShader);
         }
-        // шейдер направленного света
+        // direct light shader
         {
-            // грузим шейдер
+            // load shader
             std::ifstream vertex_shader_file("shaders/DSDirectionalLight.vs");
             std::string vertex_shader_text(
                 (std::istreambuf_iterator<char>(vertex_shader_file)),
@@ -1129,19 +1078,19 @@ int InitScene(GLFWwindow* window) {
                 (std::istreambuf_iterator<char>()));
             DSDirectionalLightShader = std::make_shared<Shader>();
             DSDirectionalLightShader->AddShader(vertex_shader_text,
-                                                VertexShader);
+                                                kVertexShader);
             DSDirectionalLightShader->AddShader(fragment_shader_text,
-                                                FragmnetShader);
+                                                kFragmentShader);
             DSDirectionalLightShader->Init();
 
-            // грузим материал
+            // load material
 
             DSDirectionalLightMaterial = std::make_shared<Material>();
             DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
         }
-        // шейдер прожектора света
+        // project light shader
         {
-            // грузим шейдер
+            // load shader
             std::ifstream vertex_shader_file("shaders/DSSpotLight.vs");
             std::string vertex_shader_text(
                 (std::istreambuf_iterator<char>(vertex_shader_file)),
@@ -1153,17 +1102,17 @@ int InitScene(GLFWwindow* window) {
                 (std::istreambuf_iterator<char>()));
 
             DSSpotLightShader = std::make_shared<Shader>();
-            DSSpotLightShader->AddShader(vertex_shader_text, VertexShader);
-            DSSpotLightShader->AddShader(fragment_shader_text, FragmnetShader);
+            DSSpotLightShader->AddShader(vertex_shader_text, kVertexShader);
+            DSSpotLightShader->AddShader(fragment_shader_text, kFragmentShader);
             DSSpotLightShader->Init();
 
-            // грузим материал
+            // load material
             DSSpotLightMaterial = std::make_shared<Material>();
             DSSpotLightMaterial->Init(DSSpotLightShader);
         }
     }
 
-    // шейдер скайбокса
+    // skybox shader
     {
         InitRender(window, "Skybox shader loading...");
         std::ifstream vertex_shader_file("shaders/skybox.vs");
@@ -1178,14 +1127,14 @@ int InitScene(GLFWwindow* window) {
 
         skyboxShader = std::make_shared<Shader>();
 
-        skyboxShader->AddShader(vertex_shader_text, VertexShader);
-        skyboxShader->AddShader(fragment_shader_text, FragmnetShader);
+        skyboxShader->AddShader(vertex_shader_text, kVertexShader);
+        skyboxShader->AddShader(fragment_shader_text, kFragmentShader);
         skyboxShader->Init();
     }
 
     skybox1 = new SkyBox(skyboxShader);
     skybox1->Init("textures/canyon1.jpg");
-    // настройка света и единичных векторов
+    // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
         dirLightDirID = meshShader->GetUniformLocation("dLightDir");
@@ -1220,14 +1169,14 @@ int InitScene(GLFWwindow* window) {
         glm::vec3 PZ(0, 0, 1);
         glm::vec3 P0(0, 0, 0);
 
-        xline = new Line(PX, P0, PX);
-        yline = new Line(PY, P0, PY, xline->GetShader());
-        zline = new Line(PZ, P0, PZ, xline->GetShader());
+        x_line = new Line(PX, P0, PX);
+        y_line = new Line(PY, P0, PY, x_line->GetShader());
+        z_line = new Line(PZ, P0, PZ, x_line->GetShader());
         dirLightLine = new Line(P0, directionalLight1->GetDir(),
                                 directionalLight1->GetCol());
     }
 
-    // прочее
+    // misc
     {
         InitRender(window, "Final steps...");
         bb1 = new Billboard();
@@ -1235,20 +1184,6 @@ int InitScene(GLFWwindow* window) {
         bb1->SetPos(glm::vec3(0, 0, 0));
 
         noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
-
-        tline1 = new TextLine2d();
-        tline2 = new TextLine2d();
-        tline1->Init(width, height, textShader);
-        tline2->Init(width, height, textShader);
-        // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
-        // fLine1->SetAspectRatio(width,height);
-
-        // *************Shadow MAP FBO**********/
-        // smfbo1 = new ShadowMapFBO();
-        // smfbo1->Init(width,height);
-        //************************************/
-        // gGameCamera = new
-        // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
     glFlush();
     initialized = true;
@@ -1266,7 +1201,6 @@ int main(int argc, char** argv) {
     // glewExperimental = true; // Needed for core profile
     if (!glfwInit()) exit(EXIT_FAILURE);
 
-    // заголовок
     std::string title("NEE");
 
     glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
@@ -1306,7 +1240,7 @@ int main(int argc, char** argv) {
     glCullFace(GL_FRONT);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
-    // включаем прозрачность
+    // enable transparency
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 

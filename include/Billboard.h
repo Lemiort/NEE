@@ -28,7 +28,7 @@ private:
     Texture2D colorMap;
     GLuint colSamplerID;
     GLuint position_id;
-    GLuint camViewID, camPosID;
+    GLuint mvp_id, camPosID;
 };
 
 #endif  // INCLUDE_BILLBOARD_H

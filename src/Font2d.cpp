@@ -10,30 +10,22 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
     mesh.Init(_mat, "models/quad2x2front.ho3d");
     this->mat = _mat;
 
-    // TODO сделать загрузку шрифта
+    /**
+     * @todo add font laoding
+     */
     fileName = _fileName;
 
-    // открываем файл шрифта на чтение
-    std::fstream fin;
-    fin.open(fileName.c_str(), std::ios::in);
-    // временная переменная для чтения
+    std::ifstream fin;
+    fin.open(fileName.c_str());
     std::string inStr;
-
-    // временная переменная для загрузки текстуры
     std::string imgFilename;
 
-    // флаг того, что пошли данные о кернинге
     bool kerning = false;
-    // флаг того, что пошли данные о символах
     bool data = false;
     while (1) {
-        // читаем построчно
         getline(fin, inStr);
-        // пока не достигнем конца файлв
         if (!fin.eof()) {
-            // чтение данных
             if (data) {
-                // поток для конвертации
                 std::stringstream sstr;
                 // ???
                 unsigned int t1[6];
@@ -44,14 +36,13 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
                 sstr >> code;
                 sstr >> t1[0] >> t1[1] >> t1[2] >> t1[3] >> t2[0] >> t2[1] >>
                     t1[4] >> t1[5];
-                // инициализируем данные о новой букве
+                // fill character data
                 FontCharacter temp2 = FontCharacter(t1[0], t1[1], t1[2], t1[3],
                                                     t2[0], t2[1], t1[4], t1[5]);
-                // сохраняем данные о букве в список
+                // save character
                 fontInfo.insert(
                     std::pair<unsigned int, FontCharacter>(code, temp2));
             }
-            // заполняем инфу о кернинге
             if (kerning) {
                 std::stringstream sstr;
                 sstr << inStr;
@@ -61,20 +52,18 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
                 float f1;
                 sstr >> code2 >> f1;
                 uint32_t code = ((uint32_t)code1 << 16) | ((uint32_t)code2);
-                // сохраняем данные о кернинге
                 kerningInfo.insert(std::pair<uint32_t, float>(code, f1));
             }
-            // ищем название текстуры
+            // find texture name
             int t = inStr.find("textures: ");
             std::string temp("textures: ");
-            // нашли название текстуры
             if (t == 0) {
                 imgFilename =
                     std::string("fonts/") + std::string(inStr, temp.length());
                 printf("\nFont image is %s", imgFilename.c_str());
             }
 
-            // ищем название шрифта
+            // find font name
             t = inStr.find("px");
             if (t >= 0) {
                 int t2 = inStr.find(" ");
@@ -84,73 +73,53 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
                 sstr << temp;
                 sstr >> fontHeight;
 
-                // флаг о том, что сейчас будут читаться данные
                 data = true;
                 printf("\nFont name is %s", fontName.c_str());
                 printf("\nFont height is %d", fontHeight);
             }
-            // ищем информацию о том, что сейчас будет кернинг
+            // kerning section
             t = inStr.find("kerning pairs:");
             if (t >= 0) {
-                // перестали читать данные
                 data = false;
-                // начали читать о парах кернинга
                 kerning = true;
             }
         } else {
             break;
         }
         inStr.clear();
-    }  // заполнили данные о шрифте
+    }
 
     GLuint texBufferID;
-    // создаём текстуру
     texBufferID = SOIL_load_OGL_texture(
         imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
         SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
             SOIL_FLAG_COMPRESS_TO_DXT);
-    // загружаем в материал
     std::shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
     _mat->SetColorTexture(temp);
 
-    // получаем размеры изображения
+    // read png header
     FILE* imageFile = fopen(imgFilename.c_str(), "rb");
     char buffer2[4];
 
-    // загружаем заголовочник
-    // TODO разобраться в этой хуите
+    // load header
     fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 0 %x",buffer);
-    // printf("\nBuffer 0 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
     fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 1 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
     fread(&buffer2, 1, 4, imageFile);
-    // printf("\nIHDR chank");
-    // printf("\nBuffer 2 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
     fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 3 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 4 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
 
-    // считаем собсно ширину
+    // parse width
+    fread(&buffer2, 1, 4, imageFile);
     imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n width=%d", imageWidth);
 
-    // считаем высоту
+    // parse height
     fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 5 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
     imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                   ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n height=%d", imageHeight);
 
-    // конверсия пикселя в относительные координаты
+    // pixel->uv conversion
     pkx = 1.0f / static_cast<float>(imageWidth);
     pky = 1.0f / static_cast<float>(imageHeight);
 
@@ -159,10 +128,10 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
     return true;
 }
 
-float Character2d::GetAspectRatio() { return aratio; }
+float Character2d::GetAspectRatio() { return aspect_ratio; }
 
 void Character2d::SetAspectRatio(int _width, int _height) {
-    aratio = static_cast<float>(_height) / static_cast<float>(_width);
+    aspect_ratio = static_cast<float>(_height) / static_cast<float>(_width);
     kx = static_cast<float>(imageWidth) / static_cast<float>(_width);
     ky = static_cast<float>(imageHeight) / static_cast<float>(_height);
 }
@@ -171,7 +140,7 @@ void Character2d::Render(const Camera& cam) {
     SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     this->mat->Use();
 
-    // TODO идея: редактировать текстурные координаты в шейдере
+    // @todo try to edit texture coordinates in shader
     /*float vertices[]={0.0f,(-2*dx)*realHeight*ky,
                                        0.0f,0.0f,
                                        (2*dx)*realWidth*kx,(-2*dx)*realHeight*ky,
@@ -214,10 +183,10 @@ int Character2d::GetFontHeight() { return fontHeight; }
 void Character2d::SetCharacter(unsigned int c) {
     currentCharacter = c;
 
-    // TODO масштабирование???
+    // @todo scaling??
     position[2] = position[2] / static_cast<float>(fontHeight);
     temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
-    // ищем инфу о текущем символе
+    // find currecnt character info
     try {
         temp = fontInfo.at(currentCharacter);
     } catch (const std::out_of_range& oor) {
@@ -225,18 +194,18 @@ void Character2d::SetCharacter(unsigned int c) {
         characterLength = glm::vec2(-1.0f, -1.0f);
         return;
     }
-    // ширина и высота в uv-координатах
+    // width and height in uv
     realWidth = static_cast<float>(temp.width) / static_cast<float>(imageWidth);
     realHeight =
         static_cast<float>(temp.height) / static_cast<float>(imageHeight);
     dx = 1.0f;
-    // позиции на текстуре
+    // positions in uv on texture
     xOffset = position[2] * (2 * dx) * kx * static_cast<float>(temp.xOffset) /
               static_cast<float>(imageWidth);
     yOffset = position[2] * (-2 * dx) * ky * static_cast<float>(temp.yOffset) /
               static_cast<float>(imageHeight);
 
-    // TODO считаем длину символа в текстурных координатах??
+    // calc character size in uv
     characterLength = glm::vec2((2 * dx) * realWidth * kx * position[2],
                                 (2 * dx) * realHeight * ky);
 }

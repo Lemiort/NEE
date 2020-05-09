@@ -4,7 +4,7 @@
 
 #include <string>
 
-enum ShaderType { VertexShader, GeometryShader, FragmnetShader };
+enum ShaderType { kVertexShader, kGeometryShader, kFragmentShader };
 
 class Shader {
 public:

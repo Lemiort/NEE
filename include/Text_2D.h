@@ -17,13 +17,13 @@
 
 struct FontCharacter {
     //    X pos   Y pos   Width   Height   Xoffset  Yoffset  Orig W   Orig H
-    unsigned int xpos, ypos, width, height, origW, origH;
+    unsigned int x_position, y_position, width, height, origW, origH;
     int xOffset, yOffset;
     FontCharacter(unsigned u1 = 0, unsigned u2 = 0, unsigned u3 = 0,
                   unsigned u4 = 0, int i1 = 0, int i2 = 0, unsigned u5 = 0,
                   unsigned u6 = 0) {
-        xpos = u1;
-        ypos = u2;
+        x_position = u1;
+        y_position = u2;
         width = u3;
         height = u4;
         origW = u5;
@@ -41,10 +41,9 @@ struct KerningPairs {
     }
 };
 
-// шрифт
 class Font2d : public RenderableObject, public PlaceableObject {
 private:
-    GLuint sverticesID, spositionID;
+    GLuint vertexes_id, positions_id;
     GLuint uv_id, suvID;
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
@@ -52,12 +51,16 @@ private:
     glm::vec4 color;
     std::string filename;
     unsigned int* indicies;
-    float aratio;
+    float aspect_ratio;
 
-    // отношение размеров картинки к экрану
+    /**
+     * @brief image to screen scaling
+     */
     float kx, ky;
 
-    // размер пикселя в uv
+    /**
+     * @brief pixel size in uv
+     */
     float pkx, pky;
     int fontHeight;
     uint32_t imageWidth, imageHeight;
@@ -88,18 +91,21 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
 
-    glm::vec2 GetLastCharacterLength();  // возвращает длину текущего символа
+    glm::vec2 GetLastCharacterLength();
     void Render(const Camera& cam) override;
     friend class FontLine2d;
 };
 
-// строчка шрифта
+/**
+ * @brief Line of the font
+ *
+ */
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
     std::shared_ptr<Shader> shaderProgram;
     float prevX, prevY;
-    float aratio;
+    float aspect_ratio;
     float spaceWidth;
     unsigned int prevChar;
     std::string text;
@@ -114,52 +120,4 @@ public:
     void Render(const Camera& cam) override;
 };
 
-// класс отрисовки побуквенно
-class Text2d : public RenderableObject, public PlaceableObject {
-private:
-    bool yourselfShader;
-    // GLuint shaderProgramID;
-    // shared_ptr<Shader> shaderProgram;
-    GLuint position_id, spositionID;
-    GLuint uv_id, suvID;
-    GLuint sizeID;
-    GLuint texSamplerID, texBufferID;
-    GLuint colorID;
-    glm::vec4 color;
-    unsigned int* indicies;
-    float aratio;
-
-    // номер символа в кодовой таблице
-    unsigned int character;
-
-public:
-    Text2d();
-    ~Text2d();
-    void Init(int width, int height, std::shared_ptr<Shader> _sh = nullptr);
-    void Init(std::shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
-    void SetAspectRatio(int width, int height);
-    void SetAspectRatio(float);
-    void SetCharacter(unsigned int c);
-    // void Render(unsigned int c, float x, float y, float size);
-    void Render(const Camera& cam) override;
-};
-
-// класс линии из отрисовки букв
-class TextLine2d : public RenderableObject, public PlaceableObject {
-private:
-    Text2d* symbol;
-    float aratio;
-    float pixelSize;
-    // shared_ptr<Shader> shaderProgram;
-    std::string text;
-
-public:
-    TextLine2d();
-    ~TextLine2d();
-    void Init(int width, int height, std::shared_ptr<Shader> _sh = NULL);
-    void SetAspectRatio(int width, int height);
-    void SetText(std::string _text);
-    // void Render(float x, float y,float size, char* input);
-    void Render(const Camera& cam) override;
-};
 #endif  // INCLUDE_TEXT_2D_H

@@ -75,7 +75,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     direction[1] = t2 - p2;
     direction[2] = t3 - p3;
     direction[3] = 1;
-    Cutoff = cut;
+    cutoff_angle = cut;
 
     mesh = std::make_shared<Mesh>();
     mesh->Init(_mat, "models/cone2.ho3d");
@@ -83,7 +83,6 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 }
 
 void SpotLight::Render(const Camera& cam) {
-    // ======Предыдущее решение задачи========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
     direction[2] = target[2] - position[2];
@@ -95,58 +94,58 @@ void SpotLight::Render(const Camera& cam) {
     glm::vec3 directionYZ(0, direction[1], direction[2]);
     glm::vec3 directionXZ(direction[0], 0, direction[2]);
 
-    float xrot = 0, yrot = 0, zrot = 0;
+    float x_rotation = 0, y_rotation = 0, z_rotation = 0;
 
     std::cout << "\rproj:(" << std::setprecision(1);
 
     // X axis
     {
-        // get the pojection
+        // get the projection
         glm::vec3 projYZ(0, proj.y, proj.z);
 
         // calc model_rotation
         if (glm::cross(projYZ, directionYZ).x > 0)
-            xrot = -glm::degrees(glm::angle(directionYZ, projYZ));
+            x_rotation = -glm::degrees(glm::angle(directionYZ, projYZ));
         else
-            xrot = glm::degrees(glm::angle(directionYZ, projYZ));
+            x_rotation = glm::degrees(glm::angle(directionYZ, projYZ));
 
         // update up vector
-        proj = glm::rotate(proj, -xrot, glm::vec3(1, 0, 0));
+        proj = glm::rotate(proj, -x_rotation, glm::vec3(1, 0, 0));
         std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
     }
 
     // Y axis
     if (proj != dir) {
-        // get the pojection
+        // get the projection
         glm::vec3 projXZ(proj.x, 0, proj.z);
 
         // calc the model_rotation
         if (glm::cross(projXZ, directionXZ).y > 0)
-            yrot = -glm::degrees(glm::angle(directionXZ, projXZ));
+            y_rotation = -glm::degrees(glm::angle(directionXZ, projXZ));
         else
-            yrot = glm::degrees(glm::angle(directionXZ, projXZ));
+            y_rotation = glm::degrees(glm::angle(directionXZ, projXZ));
 
         // update the up vector
-        proj = glm::rotate(proj, -yrot, glm::vec3(0, 1, 0));
+        proj = glm::rotate(proj, -y_rotation, glm::vec3(0, 1, 0));
         std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
 
         // Z axis
         if (proj != dir) {
-            // get the pojection
+            // get the projection
             glm::vec3 projXY(proj.x, proj.y, 0);
 
             // calc the model_rotation
             if (glm::cross(projXY, directionXY).z > 0)
-                zrot = glm::degrees(glm::angle(directionXY, projXY));
+                z_rotation = glm::degrees(glm::angle(directionXY, projXY));
             else
-                zrot = -glm::degrees(glm::angle(directionXY, projXY));
-            proj = glm::rotate(proj, -zrot, glm::vec3(0, 0, 1));
+                z_rotation = -glm::degrees(glm::angle(directionXY, projXY));
+            proj = glm::rotate(proj, -z_rotation, glm::vec3(0, 0, 1));
         }
     }
 
-    mesh->SetRotation(xrot, yrot, zrot);
+    mesh->SetRotation(x_rotation, y_rotation, z_rotation);
 
-    /*//==========решение на основе сферических координат=======
+    /*//==========spherical coordinates solution=======
     glm::vec3 sphericalDirection = ToSphericalCoordinates( dir );
     glm::vec3 sphericalUp = ToSphericalCoordinates( glm::vec3(0.0,
                                                             1.0,
@@ -156,7 +155,7 @@ void SpotLight::Render(const Camera& cam) {
                     sphericalDirection.z - sphericalUp.z);
     //=========================================================*/
 
-    // =====решение на основе поворота вокруг вектора============
+    // =====vector rotattion solution============
     // glm::vec3 rotateVector =  dir.Cross(proj);
     /*mesh->SetVectorRotate(rotateVector,
                           glm::angle(dir,proj));*/
@@ -164,11 +163,9 @@ void SpotLight::Render(const Camera& cam) {
     //                       -90.0f);
     //==========================================================
 
-    // TODO идея: использовать скалярное произведение векторов
-
-    mesh->SetScale(glm::length(dir) * cos(glm::radians(Cutoff)),
+    mesh->SetScale(glm::length(dir) * cos(glm::radians(cutoff_angle)),
                    glm::length(dir),
-                   glm::length(dir) * cos(glm::radians(Cutoff)));
+                   glm::length(dir) * cos(glm::radians(cutoff_angle)));
 
     mesh->SetPosition(position[0], position[1], position[2]);
     mesh->Render(cam);
@@ -197,7 +194,7 @@ void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
     position[0] = p1;
     position[1] = p2;
     position[2] = p3;
-    Cutoff = cut;
+    cutoff_angle = cut;
 }
 
 void SpotLight::SetPos(glm::vec3 pos) {
@@ -223,21 +220,6 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     temp[0] = 0;
     temp[1] = 0;
     temp[2] = 0;
-    /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vs");
-    char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fs");
-    shaderProgram=new Shader();
-    shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
-    shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
-    shaderProgram->Init();
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER,sizeof(temp),NULL, GL_STATIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER,0,sizeof(temp),temp);
-    position_id=	    shaderProgram->GetAttribLocation("position");
-    model_id=	    shaderProgram->GetUniformLocation("gWVCP");
-    PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
-    PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
     sphere = std::make_shared<Mesh>();
     sphere->Init(_mat, "models/normal_geosphere.ho3d");
@@ -246,25 +228,6 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
 }
 PointLight::~PointLight() {}
 void PointLight::Render(const Camera& cam) {
-    /*Assistant TM;
-    TM.WorldPos(position[0],position[1],position[2]);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam, Width, Height, zNear, zFar);*/
-
-    /*shaderProgram->Use();
-                    //glUseProgram(shaderProgramID);
-                    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                    glVertexAttribPointer(position_id,3,GL_FLOAT,GL_FALSE,0,0);
-
-
-                    glUniformMatrix4fv(model_id, 1, GL_TRUE, (const
-       GLfloat*)TM.GetTSRVC());
-                    glUniform4f(PixelColorID,color[0],color[1],color[2],1);
-                    glUniform1f(PointSizeID, 5.0);
-                    glEnableVertexAttribArray(position_id);
-                    glDrawArrays(GL_POINTS,0,1);
-                    glDisableVertexAttribArray(position_id);*/
-
     sphere->SetScale(radius, radius, radius);
     sphere->SetPosition(position[0], position[1], position[2]);
     sphere->Render(cam);
@@ -299,12 +262,9 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
         (std::istreambuf_iterator<char>()));
 
     shaderProgram = std::make_shared<Shader>();
-    shaderProgram->AddShader(vertex_shader_text, VertexShader);
-    shaderProgram->AddShader(fragment_shader_text, FragmnetShader);
+    shaderProgram->AddShader(vertex_shader_text, kVertexShader);
+    shaderProgram->AddShader(fragment_shader_text, kFragmentShader);
     shaderProgram->Init();
-    /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-    GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-    shaderProgramID=MakeShaderProgram(vertexShaderID, fragmentShaderID);*/
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -322,7 +282,7 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     col[2] = color.z;
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos);
     position_id = shaderProgram->GetAttribLocation("position");
-    model_id = shaderProgram->GetUniformLocation("gWVCP");
+    model_id = shaderProgram->GetUniformLocation("model");
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
@@ -346,7 +306,7 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
     col[2] = color.z;
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos);
     position_id = shaderProgram->GetAttribLocation("position");
-    model_id = shaderProgram->GetUniformLocation("gWVCP");
+    model_id = shaderProgram->GetUniformLocation("model");
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }

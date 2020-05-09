@@ -23,7 +23,7 @@ public:
     GLuint position_id;
     GLuint IBO;  // index buffer
     GLuint model_id, view_projection_id;
-    int spfaces, spverts;
+    int faces_count, vertices_count;
     int Scale;
     void Init(GLuint shader, const char* model);
 

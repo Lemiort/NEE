@@ -6,25 +6,25 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/rotate_vector.hpp>
 
-constexpr float STEP_SCALE = 0.1f;
-constexpr int MARGIN = 100;
+constexpr float kStepScale = 0.1F;
+constexpr int kMargin = 100;
 
-Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-               float zfar) {
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float z_near,
+               float z_far) {
     m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
     m_pos = glm::vec3(0.0f, 0.0f, 0.0f);
     m_target = glm::vec3(0.0f, 0.0f, -1.0f);
     m_up = glm::vec3(0.0f, 1.0f, 0.0f);
     FOV = fov;
-    zNear = znear;
-    zFar = zfar;
+    zNear = z_near;
+    zFar = z_far;
 
     Init();
 }
 
-Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-               float zfar, const glm::vec3& Pos, const glm::vec3& Target,
+Camera::Camera(int WindowWidth, int WindowHeight, float fov, float z_near,
+               float z_far, const glm::vec3& Pos, const glm::vec3& Target,
                const glm::vec3& Up) {
     m_windowWidth = WindowWidth;
     m_windowHeight = WindowHeight;
@@ -35,8 +35,8 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
     m_up = glm::normalize(Up);
 
     FOV = fov;
-    zNear = znear;
-    zFar = zfar;
+    zNear = z_near;
+    zFar = z_far;
 
     Init();
 }
@@ -76,19 +76,19 @@ bool Camera::OnKeyboard(char Key) {
 
     switch (Key) {
         case GLFW_KEY_W: {
-            m_pos += (m_target * STEP_SCALE);
+            m_pos += (m_target * kStepScale);
             Ret = true;
         } break;
 
         case GLFW_KEY_S: {
-            m_pos -= (m_target * STEP_SCALE);
+            m_pos -= (m_target * kStepScale);
             Ret = true;
         } break;
 
         case GLFW_KEY_A: {
             glm::vec3 Left = glm::cross(m_target, m_up);
             Left = glm::normalize(Left);
-            Left *= STEP_SCALE;
+            Left *= kStepScale;
             m_pos += Left;
             Ret = true;
         } break;
@@ -96,7 +96,7 @@ bool Camera::OnKeyboard(char Key) {
         case GLFW_KEY_D: {
             glm::vec3 Right = glm::cross(m_up, m_target);
             Right = glm::normalize(Right);
-            Right *= STEP_SCALE;
+            Right *= kStepScale;
             m_pos += Right;
             Ret = true;
         } break;
@@ -118,10 +118,10 @@ void Camera::OnMouse(int x, int y) {
     m_AngleV += static_cast<float>(DeltaY) / 20.0f;
 
     if (DeltaX == 0) {
-        if (x <= MARGIN) {
+        if (x <= kMargin) {
             // m_AngleH -= 1.0f;
             m_OnLeftEdge = true;
-        } else if (x >= (m_windowWidth - MARGIN)) {
+        } else if (x >= (m_windowWidth - kMargin)) {
             // m_AngleH += 1.0f;
             m_OnRightEdge = true;
         }
@@ -131,9 +131,9 @@ void Camera::OnMouse(int x, int y) {
     }
 
     if (DeltaY == 0) {
-        if (y <= MARGIN) {
+        if (y <= kMargin) {
             m_OnUpperEdge = true;
-        } else if (y >= (m_windowHeight - MARGIN)) {
+        } else if (y >= (m_windowHeight - kMargin)) {
             m_OnLowerEdge = true;
         }
     } else {
@@ -173,21 +173,21 @@ void Camera::OnRender() {
 }
 
 void Camera::Update() {
-    const glm::vec3 Vaxis(0.0f, 1.0f, 0.0f);
+    const glm::vec3 vertical_axis(0.0f, 1.0f, 0.0f);
 
     // Rotate the view vector by the horizontal angle around the vertical axis
     glm::vec3 View(1.0f, 0.0f, 0.0f);
-    View = glm::rotate(View, m_AngleH, Vaxis);
+    View = glm::rotate(View, m_AngleH, vertical_axis);
     View = glm::normalize(View);
 
     // Rotate the view vector by the vertical angle around the horizontal axis
-    glm::vec3 Haxis = glm::cross(Vaxis, View);
-    Haxis = glm::normalize(Haxis);
-    View = glm::rotate(View, m_AngleV, Haxis);
+    glm::vec3 horizontal_axis = glm::cross(vertical_axis, View);
+    horizontal_axis = glm::normalize(horizontal_axis);
+    View = glm::rotate(View, m_AngleV, horizontal_axis);
 
     m_target = glm::normalize(View);
 
-    m_up = glm::cross(m_target, Haxis);
+    m_up = glm::cross(m_target, horizontal_axis);
     m_up = glm::normalize(m_up);
 }
 
@@ -205,9 +205,9 @@ float Camera::GetZNear() const { return zNear; }
 
 float Camera::GetZFar() const { return zFar; }
 
-void Camera::SetZNear(float znear) { zNear = znear; }
+void Camera::SetZNear(float z_near) { zNear = z_near; }
 
-void Camera::SetZFar(float zfar) { zFar = zfar; }
+void Camera::SetZFar(float z_far) { zFar = z_far; }
 
 void Camera::OnViewportResize(int width, int height) {
     m_windowHeight = height;

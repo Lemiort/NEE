@@ -5,11 +5,11 @@
 
 class Camera {
 public:
-    Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-           float zfar);
+    Camera(int WindowWidth, int WindowHeight, float fov, float z_near,
+           float z_far);
 
-    Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-           float zfar, const glm::vec3& Pos, const glm::vec3& Target,
+    Camera(int WindowWidth, int WindowHeight, float fov, float z_near,
+           float z_far, const glm::vec3& Pos, const glm::vec3& Target,
            const glm::vec3& Up);
 
     bool OnKeyboard(char Key);
@@ -32,9 +32,9 @@ public:
 
     float GetZFar() const;
 
-    void SetZNear(float znear);
+    void SetZNear(float z_near);
 
-    void SetZFar(float zfar);
+    void SetZFar(float z_far);
 
     void OnViewportResize(int width, int height);
 

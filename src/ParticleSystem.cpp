@@ -137,7 +137,7 @@ void ParticleSystem::RenderParticles(Camera* cam) {
     vp_matrix = glm::transpose(vp_matrix);
 
     // матрица проекции камеры
-    // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    // glUniformMatrix4fv(mvp_id, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
     // позиция камеры
     // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 
