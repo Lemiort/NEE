@@ -1,14 +1,16 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
+#include <spdlog/spdlog.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <ctime>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+
 #define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/gtx/matrix_operation.hpp>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -157,7 +159,7 @@ void CalcFPS() {
 }
 
 void ErrorCallback(int error, const char* description) {
-    std::cerr << "Error " << error << ":" << description;
+    spdlog::error("Error {} : {} ", error, description);
 }
 void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                  int mods) {
@@ -189,7 +191,7 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
             int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_PNG, 0, 0,
                                               width, height);
             if (result != 0) {
-                std::cout << "\n Screenshot saved as " << buffer;
+                spdlog::debug("Screenshot saved as {}", buffer);
             }
         } else {
             gGameCamera.OnKeyboard(key);
@@ -886,10 +888,10 @@ int InitScene(GLFWwindow* window) {
     glfwMakeContextCurrent(window);
     GLenum res = glewInit();
     if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+        spdlog::error("GLEW error {}", glewGetErrorString(res));
         return 1;
     } else {
-        printf("\nGLEW status is %d \n", res);
+        spdlog::debug("GLEW status is {}", res);
     }
 
     // regular shader
@@ -1183,6 +1185,7 @@ int InitScene(GLFWwindow* window) {
 }
 
 int main(int argc, char** argv) {
+    spdlog::set_level(spdlog::level::level_enum::debug);
     glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
@@ -1220,10 +1223,10 @@ int main(int argc, char** argv) {
         window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
     GLenum res = glewInit();
     if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+        spdlog::error("GLEW error: {}", glewGetErrorString(res));
         return 1;
     } else {
-        printf("\nGLEW status is %d \n", res);
+        spdlog::debug("GLEW status is {}", res);
     }
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

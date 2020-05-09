@@ -1,8 +1,8 @@
 #include "ShadowMapFBO.h"
 
-#include <Texture.h>
+#include <spdlog/spdlog.h>
 
-#include <iostream>
+#include "Texture.h"
 
 ShadowMapFBO::ShadowMapFBO() {
     m_fbo = 0;
@@ -64,40 +64,32 @@ bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-            std::cout << "\nFramebuffer complete." << std::endl;
+            spdlog::debug("Framebuffer complete");
             return true;
 
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Attachment is NOT "
-                         "complete."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: attachment");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: No image is "
-                         "attached to FBO."
-                      << std::endl;
+            spdlog::error(
+                "Framebuffer incomplete: no image is attached to FBO");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Draw buffer."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: draw buffer");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Read buffer."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: read buffer");
             return false;
 
         case GL_FRAMEBUFFER_UNSUPPORTED:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unsupported by FBO "
-                         "implementation."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: unsupported");
             return false;
 
         default:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unknown error."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: unknown error");
             return false;
     }
 }

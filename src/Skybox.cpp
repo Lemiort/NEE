@@ -1,5 +1,7 @@
 #include "skybox.h"
 
+#include <spdlog/spdlog.h>
+
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 #define GLM_ENABLE_EXPERIMENTAL
@@ -52,7 +54,7 @@ bool SkyBox::Init(const std::string& filename) {
         }
         fclose(fp);
     } catch (const std::bad_alloc&) {
-        printf("\nError creating make_shared<Mesh> in Skybox");
+        spdlog::error("Error mem allocation");
         return false;
     }
     glGenBuffers(1, &VBO);
@@ -67,12 +69,7 @@ bool SkyBox::Init(const std::string& filename) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * indices.size(),
                  indices.data(), GL_STATIC_DRAW);
 
-    try {
-        cubemapTexture = CubemapTexture(filename);
-    } catch (const std::bad_alloc&) {
-        printf("\nError creating new Cubemap");
-        return false;
-    }
+    cubemapTexture = CubemapTexture(filename);
     cubemapTexture.Load();
 
     position_id = shaderProgram->GetAttribLocation("vertex_position");
@@ -117,7 +114,6 @@ void SkyBox::Render(const Camera& cam) {
 
     cubemapTexture.Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
-    // cout<<colTexID<<"\n"<<textureID<<"\n";
 
     glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
 

@@ -2,7 +2,6 @@
 
 #include <SOIL2/SOIL2.h>
 
-#include <iostream>
 #include <string>
 
 static const GLenum types[6] = {

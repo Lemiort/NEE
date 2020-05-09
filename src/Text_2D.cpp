@@ -1,9 +1,12 @@
 #include "Text_2D.h"
 
+#include <spdlog/spdlog.h>
+
 #include <array>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>  // std::out_of_range
+
 
 FontLine2d::FontLine2d() { shaderProgram = nullptr; }
 
@@ -159,7 +162,7 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
             if (t == 0) {
                 imgFilename =
                     std::string("fonts/") + std::string(in_s, temp.length());
-                printf("\nFont image is %s", imgFilename.c_str());
+                spdlog::debug("Font image: {}", imgFilename);
             }
 
             // find font name
@@ -172,8 +175,8 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
                 sstr << temp;
                 sstr >> fontHeight;
                 data = true;
-                printf("\nFont name is %s", fontName.c_str());
-                printf("\nFont height is %d", fontHeight);
+                spdlog::debug("Font name: {}", fontName);
+                spdlog::debug("Font height: {}", fontHeight);
             }
             // fin kerning section
             t = in_s.find("kerning pairs:");
@@ -210,13 +213,13 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     fread(&buffer2, 1, 4, imageFile);
     imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n width=%d", imageWidth);
+    spdlog::debug("Image width: {}", imageWidth);
 
     // parse height
     fread(&buffer2, 1, 4, imageFile);
     imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                   ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n height=%d", imageHeight);
+    spdlog::debug("Image height: {}", imageHeight);
 
     // pixels to uv
     pkx = 1.0f / static_cast<float>(imageWidth);

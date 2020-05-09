@@ -1,6 +1,9 @@
 #include "Shader.h"
 
+#include <spdlog/spdlog.h>
+
 #include "ShaderFunctions.h"
+
 Shader::Shader() {
     // ctor
     vShader = 0;
@@ -35,14 +38,9 @@ void Shader::AddShader(const std::string& source, ShaderType type) {
     }
 }
 void Shader::Init() {
-    FILE* flog;
-    // fopen_s(&flog,"shaderbuild.log","w");
-    flog = fopen("shaderbuild.log", "w");
     shaderProgramID = glCreateProgram();
     if (shaderProgramID == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        fprintf(flog, "Error creating shader program\n");
-        fclose(flog);
+        spdlog::error("Error creating  shader program");
         exit(1);
     }
     if (vShader != 0) glAttachShader(shaderProgramID, vShader);
@@ -52,34 +50,25 @@ void Shader::Init() {
 
     // check
     GLint Success = 0;
-    GLchar ErrorLog[1024] = {0};
+    GLchar errorLog[1024]{0};
     glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        fprintf(
-            flog,
-            "Error linking shader program: at files '%s', '%s', '%s', '%s'\n",
-            vShaderFileName.c_str(), gShaderFileName.c_str(),
-            fShaderFileName.c_str(), ErrorLog);
-        fclose(flog);
+        glGetProgramInfoLog(shaderProgramID, sizeof(errorLog), NULL, errorLog);
+        spdlog::error("Error linking shader program: at files {}, {}, {}: {}",
+                      vShaderFileName, gShaderFileName, fShaderFileName,
+                      errorLog);
         exit(1);
     }
 
     glValidateProgram(shaderProgramID);
     glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
     if (!Success) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        // fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
-        fprintf(flog,
-                "Invalid shader program: at files '%s', '%s', '%s', '%s'\n",
-                vShaderFileName.c_str(), gShaderFileName.c_str(),
-                fShaderFileName.c_str(), ErrorLog);
-        fclose(flog);
+        glGetProgramInfoLog(shaderProgramID, sizeof(errorLog), NULL, errorLog);
+        spdlog::error("Invalid shader program from files {}, {}, {}: {}",
+                      vShaderFileName, gShaderFileName, fShaderFileName,
+                      errorLog);
         exit(1);
     }
-    fclose(flog);
     // return shaderID;
     initialized = true;
 }

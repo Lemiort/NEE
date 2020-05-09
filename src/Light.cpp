@@ -1,9 +1,9 @@
 #include "Light.h"
 
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
-#include <iomanip>
-#include <iostream>
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
@@ -91,8 +91,6 @@ void SpotLight::Render(const Camera& cam) {
 
     float x_rotation = 0, y_rotation = 0, z_rotation = 0;
 
-    std::cout << "\rproj:(" << std::setprecision(1);
-
     // X axis
     {
         // get the projection
@@ -106,7 +104,7 @@ void SpotLight::Render(const Camera& cam) {
 
         // update up vector
         proj = glm::rotate(proj, -x_rotation, glm::vec3(1, 0, 0));
-        std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("proj x: ({}, {}, {})", proj.x, proj.y, proj.z);
     }
 
     // Y axis
@@ -122,7 +120,7 @@ void SpotLight::Render(const Camera& cam) {
 
         // update the up vector
         proj = glm::rotate(proj, -y_rotation, glm::vec3(0, 1, 0));
-        std::cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("proj y: ({}, {}, {})", proj.x, proj.y, proj.z);
 
         // Z axis
         if (proj != dir) {
@@ -135,6 +133,7 @@ void SpotLight::Render(const Camera& cam) {
             else
                 z_rotation = -glm::degrees(glm::angle(directionXY, projXY));
             proj = glm::rotate(proj, -z_rotation, glm::vec3(0, 0, 1));
+            spdlog::debug("proj z: ({}, {}, {})", proj.x, proj.y, proj.z);
         }
     }
 
@@ -218,7 +217,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     sphere = std::make_shared<Mesh>();
     sphere->Init(_mat, "models/normal_geosphere.ho3d");
     radius = CalcSphereSize() / 2;
-    std::cout << "\nLight radius is " << radius;
+    spdlog::debug("Light radius {}", radius);
 }
 
 void PointLight::Render(const Camera& cam) {

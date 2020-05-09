@@ -1,7 +1,5 @@
 #include "Material.h"
 
-#include <iostream>
-
 Material::Material() {
     // ctor
 
@@ -29,7 +27,6 @@ bool Material::Init(std::shared_ptr<Shader> _sh) {
     colorMap->Bind(GL_TEXTURE0);
     std::string colName("colTexSampler");
     colTexID = shaderProgram->GetUniformLocation(colName.c_str());
-    std::cout << "\n color sampler num is " << colTexID;
     glUniform1i(colTexID, 0);
 
     normalMap->Bind(GL_TEXTURE1);

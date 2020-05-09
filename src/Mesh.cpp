@@ -1,8 +1,11 @@
 #include "Mesh.h"
 
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
+
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
@@ -101,7 +104,7 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
         }
         fout.close();
     } catch (const std::bad_alloc&) {
-        printf("\nError creating make_shared<Mesh>");
+        spdlog::error("Error creating mesh ");
         return false;
     }
 

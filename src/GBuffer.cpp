@@ -1,8 +1,7 @@
 #include "GBuffer.h"
 
 #include <Texture.h>
-
-#include <iostream>
+#include <spdlog/spdlog.h>
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glGenFramebuffers(1, &m_fbo);
@@ -56,46 +55,37 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
                             GL_COLOR_ATTACHMENT4};
 
     glDrawBuffers(std::size(DrawBuffers), DrawBuffers);
-    std::cout << "\n draw buffers:" << std::size(DrawBuffers);
+    spdlog::debug("{} draw buffers", std::size(DrawBuffers));
 
     // check FBO status
     GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-            std::cout << "\nFramebuffer (GBuffer) complete." << std::endl;
+            spdlog::debug("Gbuffer complete");
             return true;
 
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Attachment is NOT "
-                         "complete."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: attachment");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: No image is "
-                         "attached to FBO."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: no image is attached to FBO");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Draw buffer."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: draw buffer");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Read buffer."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: read buffer");
             return false;
 
         case GL_FRAMEBUFFER_UNSUPPORTED:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unsupported by FBO "
-                         "implementation."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: unsupported");
             return false;
 
         default:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unknown error."
-                      << std::endl;
+            spdlog::error("Gbuffer incomplete: unknown error");
             return false;
     }
 
@@ -126,7 +116,7 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 void GBuffer::CheckTextures() {
     for (unsigned int i = 0; i < std::size(m_textures); i++) {
         Texture2D temp{m_textures[i], false};
-        std::cout << "\n" << temp.GetParameters();
+        spdlog::debug("Check gbuffer textures: {}", temp.GetParameters());
     }
 }
 

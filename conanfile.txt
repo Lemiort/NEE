@@ -4,6 +4,7 @@ glew/2.1.0@bincrafters/stable
 jsonformoderncpp/3.5.0@vthiery/stable
 glm/0.9.9.1@g-truc/stable
 soil2/1.20@bincrafters/stable
+spdlog/1.5.0
 
 [generators]
 cmake

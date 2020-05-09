@@ -1,5 +1,7 @@
 #include "Font2d.h"
 
+#include <spdlog/spdlog.h>
+
 #include <fstream>
 
 Character2d::Character2d() {}
@@ -60,7 +62,7 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
             if (t == 0) {
                 imgFilename =
                     std::string("fonts/") + std::string(inStr, temp.length());
-                printf("\nFont image is %s", imgFilename.c_str());
+                spdlog::debug("Font image is {}", imgFilename);
             }
 
             // find font name
@@ -74,8 +76,8 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
                 sstr >> fontHeight;
 
                 data = true;
-                printf("\nFont name is %s", fontName.c_str());
-                printf("\nFont height is %d", fontHeight);
+                spdlog::debug("Font name is {}", fontName);
+                spdlog::debug("Font height is {}", fontHeight);
             }
             // kerning section
             t = inStr.find("kerning pairs:");
@@ -111,13 +113,13 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
     fread(&buffer2, 1, 4, imageFile);
     imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n width=%d", imageWidth);
+    spdlog::debug("Image width = {}", imageWidth);
 
     // parse height
     fread(&buffer2, 1, 4, imageFile);
     imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                   ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n height=%d", imageHeight);
+    spdlog::debug("Image height - {}", imageHeight);
 
     // pixel->uv conversion
     pkx = 1.0f / static_cast<float>(imageWidth);
@@ -190,7 +192,7 @@ void Character2d::SetCharacter(unsigned int c) {
     try {
         temp = fontInfo.at(currentCharacter);
     } catch (const std::out_of_range& oor) {
-        // printf("\n char is out of range");
+        spdlog::error("Character is out of range");
         characterLength = glm::vec2(-1.0f, -1.0f);
         return;
     }
