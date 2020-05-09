@@ -79,23 +79,25 @@ void Billboard::SetPos(glm::vec3 _Pos) {
     position_id = shaderProgram->GetAttribLocation("vertex_position");
 }
 
-void Billboard::Render(Camera* cam) {
+void Billboard::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
 
     glm::mat4 model = glm::translate(pos) *
                       glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    model = glm::transpose(model);
 
     glm::mat4 projection = glm::perspectiveFov(
-        cam->GetFov(), static_cast<float>(cam->GetWidth()),
-        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
-    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    glm::mat4 mvp_matrix = projection * view * model;
+        cam.GetFov(), static_cast<float>(cam.GetWidth()),
+        static_cast<float>(cam.GetHeight()), cam.GetZNear(), cam.GetZFar());
+    glm::mat4 view = glm::lookAt(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    glm::mat4 vp_matrix = glm::transpose(projection * view);
+    glm::mat4 mvp_matrix = vp_matrix * model;
 
     // матрица проекции камеры
     glUniformMatrix4fv(camViewID, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
     // позиция камеры
-    glUniform3f(camPosID, cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
+    glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);

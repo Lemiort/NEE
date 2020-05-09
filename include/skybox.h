@@ -17,12 +17,12 @@ public:
 
     bool Init(const std::string& filename);
 
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     GLuint shaderProgramID;
     GLuint VBO;  // vertex buffer
     GLuint position_id;
     GLuint IBO;  // index buffer
-    GLuint model_id, gCamViewID;
+    GLuint model_id, view_projection_id;
     int spfaces, spverts;
     int Scale;
     void Init(GLuint shader, const char* model);

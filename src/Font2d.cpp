@@ -167,8 +167,8 @@ void Character2d::SetAspectRatio(int _width, int _height) {
     ky = static_cast<float>(imageHeight) / static_cast<float>(_height);
 }
 
-void Character2d::Render(Camera* cam) {
-    SetAspectRatio(cam->GetWidth(), cam->GetHeight());
+void Character2d::Render(const Camera& cam) {
+    SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     this->mat->Use();
 
     // TODO идея: редактировать текстурные координаты в шейдере

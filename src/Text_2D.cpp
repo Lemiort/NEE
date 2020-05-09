@@ -20,7 +20,7 @@ void FontLine2d::SetAspectRatio(int w, int h) {
 void FontLine2d::SetText(std::string _text) { text = _text; }
 
 // void FontLine2d::Render(string text, float startX, float startY,float size )
-void FontLine2d::Render(Camera* cam) {
+void FontLine2d::Render(const Camera& cam) {
     float dx = 0.0f;
     prevChar = 0;
     // float dy=0.0f;
@@ -294,8 +294,8 @@ glm::vec2 Font2d::GetLastCharacterLength() {
 }
 
 // glm::vec2 Font2d::Render(unsigned int c,float px,float py,float size)
-void Font2d::Render(Camera* cam) {
-    SetAspectRatio(cam->GetWidth(), cam->GetHeight());
+void Font2d::Render(const Camera& cam) {
+    SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     shaderProgram->Use();
     /*position[2]=position[2]/(float)fontHeight;
     FontCharacter temp(0,0,0,0,0,0,0,0);
@@ -502,7 +502,7 @@ void Text2d::Init(std::shared_ptr<Shader> shader, GLuint textureID,
 
 void Text2d::SetCharacter(unsigned int c) { character = c; }
 
-void Text2d::Render(Camera* cam) {
+void Text2d::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -567,7 +567,7 @@ void TextLine2d::Init(int width, int height, std::shared_ptr<Shader> _sh) {
 
 void TextLine2d::SetText(std::string _text) { text = _text; }
 
-void TextLine2d::Render(Camera* cam) {
+void TextLine2d::Render(const Camera& cam) {
     float delta = 0;
     for (unsigned int i = 0; i < strlen(text.c_str());
          i++, delta += position[2] * pixelSize * aratio * 2.0 / 32.0) {

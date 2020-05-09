@@ -1,4 +1,4 @@
-#version 330
+#version 460
 in vec2 Position;         //координата точки
 uniform vec2 s_Position;  //положение на экране
 uniform vec2 s_UV;

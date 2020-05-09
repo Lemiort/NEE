@@ -104,7 +104,7 @@ void CalcFPS();
 int width;
 int height;
 
-GLuint model_id, gCamViewID;
+GLuint model_id, view_projection_id;
 GLuint rotation_id;
 GLuint dirLightDirID, dirLightColID;
 GLuint pointLightColID, pointLightIntID, pointLightPosID;
@@ -114,11 +114,8 @@ GLuint camtransID, camPosID;
 DirectionalLight* directionalLight1;
 PointLight *pointLight1, *pointLight2;
 SpotLight* spotLight1;
-static Camera* pGameCamera =
-    new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, 45.0f, 0.1f, 1000.0f);
+Camera gGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f};
 float Scale;
-// GLfloat light[]= {0.0,1.0,-1.0,1.0};
-int spfaces;
 int spverts;
 Line* xline;
 Line* yline;
@@ -197,14 +194,14 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                 std::cout << "\n Screenshot saved as " << buffer;
             }
         } else {
-            pGameCamera->OnKeyboard(key);
+            gGameCamera.OnKeyboard(key);
         }
     }
 }
 void MousePosCallBack(GLFWwindow* window, double x, double y) {
     mouse.Update(x, y);
     if (mouse.rightButtonPressed || true)
-        pGameCamera->OnMouse(mouse.posX, mouse.posY);
+        gGameCamera.OnMouse(mouse.posX, mouse.posY);
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
@@ -224,7 +221,7 @@ void FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
     if (fLine1 != NULL) fLine1->SetAspectRatio(width, height);
     if (smfbo1 != NULL) smfbo1->Init(w, h);
     if (gBuffer1 != NULL) gBuffer1->Init(w, h);
-    pGameCamera->OnViewportResize(width, height);
+    gGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
 
@@ -238,30 +235,37 @@ void ShadowPass() {
     TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
     TestMesh.SetScale(0.02, 0.02, 0.02);
     TestMesh.SetPosition(0, -0.2, 0);
-    // light3->SetPos(pGameCamera->GetPos());
-    // light3->SetDir(pGameCamera->GetTarget()-pGameCamera->GetPos());
-    Camera* lightCam =
-        new Camera(width, height, 45, 1, 1000.0f, spotLight1->GetPos(),
-                   glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+    // light3->SetPos(gGameCamera.GetPos());
+    // light3->SetDir(gGameCamera.GetTarget()-gGameCamera.GetPos());
+    Camera lightCam{width,
+                    height,
+                    45,
+                    1,
+                    1000.0f,
+                    spotLight1->GetPos(),
+                    glm::vec3(-1.0, -1.0, -1.0),
+                    glm::vec3(0.0, 1.0, 0.0)};
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
     Plane.SetRotation(0.0, 0.0, 0.0);
 
     glm::mat4 projection = glm::perspectiveFov(
-        lightCam->GetFov(), static_cast<float>(lightCam->GetWidth()),
-        static_cast<float>(lightCam->GetHeight()), lightCam->GetZNear(),
-        lightCam->GetZFar());
-    glm::mat4 view = glm::lookAt(lightCam->GetPos(), lightCam->GetTarget(),
-                                 lightCam->GetUp());
+        lightCam.GetFov(), static_cast<float>(lightCam.GetWidth()),
+        static_cast<float>(lightCam.GetHeight()), lightCam.GetZNear(),
+        lightCam.GetZFar());
+    glm::mat4 view =
+        glm::lookAt(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
     glm::mat4 vp_matrix = projection * view;
+    vp_matrix = glm::transpose(vp_matrix);
 
     shadowShader->Use();
-    gCamViewID = shadowShader->GetUniformLocation("view_projection");
+    view_projection_id = shadowShader->GetUniformLocation("view_projection");
     rotation_id = shadowShader->GetUniformLocation("model_rotation");
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix));
     // освещение
     {
         // направленный свет
@@ -288,8 +292,8 @@ void ShadowPass() {
     }
 
     // вращение камеры для спекуляра
-    glUniform3f(camPosID, lightCam->GetPos().x, lightCam->GetPos().y,
-                lightCam->GetPos().z);
+    glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
+                lightCam.GetPos().z);
 
     Cube.SetMaterial(shadowMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)
@@ -297,18 +301,18 @@ void ShadowPass() {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
             Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-            Cube.Render(lightCam);
+            Cube.Render(gGameCamera);
         }
     Plane.SetMaterial(shadowMaterial);
-    Plane.Render(lightCam);
+    Plane.Render(gGameCamera);
 
-    delete lightCam;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderPass() {
     // этап рисовки
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glCullFace(GL_BACK);
     // CalcFPS();
     Scale += 0.021f;
     TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
@@ -319,38 +323,45 @@ void RenderPass() {
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
     Plane.SetRotation(0.0, 0.0, 0.0);
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
+    vp_matrix1 = glm::transpose(vp_matrix1);
 
-    Camera* lightCam = new Camera(
-        width, height, pGameCamera->GetFov(), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar(), spotLight1->GetPos(),
-        glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+    Camera lightCam{width,
+                    height,
+                    gGameCamera.GetFov(),
+                    gGameCamera.GetZNear(),
+                    gGameCamera.GetZFar(),
+                    spotLight1->GetPos(),
+                    glm::vec3(-1.0, -1.0, -1.0),
+                    glm::vec3(0.0, 1.0, 0.0)};
 
     glm::mat4 projection2 = glm::perspectiveFov(
-        lightCam->GetFov(), static_cast<float>(lightCam->GetWidth()),
-        static_cast<float>(lightCam->GetHeight()), lightCam->GetZNear(),
-        lightCam->GetZFar());
-    glm::mat4 view2 = glm::lookAt(lightCam->GetPos(), lightCam->GetTarget(),
-                                  lightCam->GetUp());
+        lightCam.GetFov(), static_cast<float>(lightCam.GetWidth()),
+        static_cast<float>(lightCam.GetHeight()), lightCam.GetZNear(),
+        lightCam.GetZFar());
+    glm::mat4 view2 =
+        glm::lookAt(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
     glm::mat4 vp_matrix2 = projection2 * view2;
+    vp_matrix2 = glm::transpose(vp_matrix2);
 
-    skybox1->Render(pGameCamera);
+    skybox1->Render(gGameCamera);
 
     Plane.SetMaterial(mainMaterial);
     // тупо копипаст
     {
         meshShader->Use();
         GLuint gLightCamViewID = meshShader->GetUniformLocation("gLightVC");
-        gCamViewID = meshShader->GetUniformLocation("view_projection");
+        view_projection_id = meshShader->GetUniformLocation("view_projection");
         rotation_id = meshShader->GetUniformLocation("model_rotation");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
 
-        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+        glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                           glm::value_ptr(vp_matrix1));
         glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
                            glm::value_ptr(vp_matrix2));
 
@@ -382,24 +393,22 @@ void RenderPass() {
         }
 
         // вращение камеры для спекуляра
-        glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                    pGameCamera->GetPos().z);
+        glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
+                    gGameCamera.GetPos().z);
     }
     // Plane.SetMaterial(mainMaterial);
-    Plane.Render(pGameCamera);
+    Plane.Render(gGameCamera);
     Cube.SetMaterial(mainMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)
         for (float j = -5.0f; j < 5.0f; j += 0.1f) {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
             Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-            Cube.Render(pGameCamera);
+            Cube.Render(gGameCamera);
         }
     // delete tempTexture;
 
-    bb1->Render(pGameCamera);
-
-    delete lightCam;
+    bb1->Render(gGameCamera);
 }
 
 void DSBeginLightPasses() {
@@ -471,23 +480,26 @@ void DSStencilPass(Light& light) {
                         GL_KEEP);  // TODO сделать наоборот
 
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
+    vp_matrix1 = glm::transpose(vp_matrix1);
 
     // определяем адрес переменных камеры
-    gCamViewID = DSStencilPassShader->GetUniformLocation("view_projection");
+    view_projection_id =
+        DSStencilPassShader->GetUniformLocation("view_projection");
     rotation_id = DSStencilPassShader->GetUniformLocation("model_rotation");
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix1));
 
     light.SetMaterial(DSStencilPassMaterial);
-    light.Render(pGameCamera);
+    light.Render(gGameCamera);
 }
 
 void DSPointLightPass(PointLight& pointLight) {
@@ -505,26 +517,29 @@ void DSPointLightPass(PointLight& pointLight) {
     glCullFace(GL_BACK);
 
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
+    vp_matrix1 = glm::transpose(vp_matrix1);
 
     // включаем шейдер
     DSPointLightShader->Use();
 
     // определяем адрес переменных камеры
-    gCamViewID = DSPointLightShader->GetUniformLocation("view_projection");
+    view_projection_id =
+        DSPointLightShader->GetUniformLocation("view_projection");
     rotation_id = DSPointLightShader->GetUniformLocation("model_rotation");
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix1));
     // взагружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
+                gGameCamera.GetPos().z);
 
     // загружаем текстуры в шейдер
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
@@ -552,7 +567,7 @@ void DSPointLightPass(PointLight& pointLight) {
     glUniform1f(pointLightIntID, pointLight.power);
 
     pointLight.SetMaterial(DSPointLightMaterial);
-    pointLight.Render(pGameCamera);
+    pointLight.Render(gGameCamera);
 
     glCullFace(GL_FRONT);
     glDisable(GL_BLEND);
@@ -572,26 +587,28 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glCullFace(GL_BACK);
 
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
 
     // включаем шейдер
     DSSpotLightShader->Use();
 
     // определяем адрес переменных камеры
-    gCamViewID = DSSpotLightShader->GetUniformLocation("view_projection");
+    view_projection_id =
+        DSSpotLightShader->GetUniformLocation("view_projection");
     rotation_id = DSSpotLightShader->GetUniformLocation("model_rotation");
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix1));
     // взагружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
+                gGameCamera.GetPos().z);
 
     // загружаем текстуры в шейдер
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
@@ -619,7 +636,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     spotLight.SetMaterial(DSSpotLightMaterial);
-    spotLight.Render(pGameCamera);
+    spotLight.Render(gGameCamera);
 
     glCullFace(GL_FRONT);
     glDisable(GL_BLEND);
@@ -634,25 +651,27 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glBlendFunc(GL_ONE, GL_ONE);
 
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
+    vp_matrix1 = glm::transpose(vp_matrix1);
 
     DSDirectionalLightShader->Use();
     // получаем адрес параметров камеры
-    gCamViewID =
+    view_projection_id =
         DSDirectionalLightShader->GetUniformLocation("view_projection");
     rotation_id =
         DSDirectionalLightShader->GetUniformLocation("model_rotation");
     camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
     // загружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
+                gGameCamera.GetPos().z);
     // загружаем матрицу камеры
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix1));
 
     // получаем адрес переменных света
     dirLightColID =
@@ -688,7 +707,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
     // glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
-    directionalLight.Render(pGameCamera);
+    directionalLight.Render(gGameCamera);
     // glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
@@ -704,22 +723,22 @@ void InterfacePass() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     // glDisable(GL_DEPTH_TEST);
-    xline->Render(pGameCamera);
-    yline->Render(pGameCamera);
-    zline->Render(pGameCamera);
-    std::string strCampos = std::to_string(pGameCamera->GetPos().x) + "; " +
-                            std::to_string(pGameCamera->GetPos().y) + "; " +
-                            std::to_string(pGameCamera->GetPos().z);
+    xline->Render(gGameCamera);
+    yline->Render(gGameCamera);
+    zline->Render(gGameCamera);
+    std::string strCampos = std::to_string(gGameCamera.GetPos().x) + "; " +
+                            std::to_string(gGameCamera.GetPos().y) + "; " +
+                            std::to_string(gGameCamera.GetPos().z);
     // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText((strCampos).c_str());
     fLine1->SetPosition(-1.0f, 0.0f, 24.0f);
-    fLine1->Render(pGameCamera);
+    fLine1->Render(gGameCamera);
     // gBuffer1->CheckTextures();
     CalcFPS();
     // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(std::to_string(fps));
     fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
-    fLine1->Render(pGameCamera);
+    fLine1->Render(gGameCamera);
 
     switch (renderType) {
         case RenderType::Deferred:
@@ -745,9 +764,9 @@ void InterfacePass() {
             break;
     }
     fLine1->SetPosition(-1.0f, -0.2f, 36.0f);
-    fLine1->Render(pGameCamera);
+    fLine1->Render(gGameCamera);
 
-    dirLightLine->Render(pGameCamera);
+    dirLightLine->Render(gGameCamera);
     // glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
 }
@@ -766,17 +785,20 @@ void DSGeometryPass() {
     CalcFPS();
 
     glm::mat4 projection1 = glm::perspectiveFov(
-        pGameCamera->GetFov(), static_cast<float>(pGameCamera->GetWidth()),
-        static_cast<float>(pGameCamera->GetHeight()), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar());
-    glm::mat4 view1 = glm::lookAt(
-        pGameCamera->GetPos(), pGameCamera->GetTarget(), pGameCamera->GetUp());
+        gGameCamera.GetFov(), static_cast<float>(gGameCamera.GetWidth()),
+        static_cast<float>(gGameCamera.GetHeight()), gGameCamera.GetZNear(),
+        gGameCamera.GetZFar());
+    glm::mat4 view1 = glm::lookAt(gGameCamera.GetPos(), gGameCamera.GetTarget(),
+                                  gGameCamera.GetUp());
     glm::mat4 vp_matrix1 = projection1 * view1;
+    vp_matrix1 = glm::transpose(vp_matrix1);
 
     DSGeometryPassShader->Use();
-    gCamViewID = DSGeometryPassShader->GetUniformLocation("view_projection");
+    view_projection_id =
+        DSGeometryPassShader->GetUniformLocation("view_projection");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, glm::value_ptr(vp_matrix1));
+    glUniformMatrix4fv(view_projection_id, 1, GL_TRUE,
+                       glm::value_ptr(vp_matrix1));
 
     Cube.SetMaterial(DSGeometryPassMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)
@@ -784,7 +806,7 @@ void DSGeometryPass() {
             Cube.SetScale(0.05f, 0.05f, 0.05f);
             Cube.SetRotation(0, 30 * sinf(Scale), 0);
             Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-            Cube.Render(pGameCamera);
+            Cube.Render(gGameCamera);
         }
 
     glDepthMask(GL_FALSE);
@@ -875,7 +897,7 @@ void PreInitScene(GLFWwindow* window) {
     // fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1->SetText("Loading...");
     fLine1->SetPosition(-1.0f, -0.1f, 72.0f);
-    fLine1->Render(pGameCamera);
+    fLine1->Render(gGameCamera);
     glfwSwapBuffers(window);
     initialized = false;
 }
@@ -893,12 +915,12 @@ void InitRender(GLFWwindow* window, std::string message) {
         // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
         fLine1->SetText(std::to_string(fps));
         fLine1->SetPosition(-1.0f, 0.9f, 24.0f);
-        fLine1->Render(pGameCamera);
+        fLine1->Render(gGameCamera);
 
         // fLine1->Render(message,-1.0f,-0.1f,36.0f);
         fLine1->SetText(message);
         fLine1->SetPosition(-1.0f, -0.1f, 36.0f);
-        fLine1->Render(pGameCamera);
+        fLine1->Render(gGameCamera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -924,7 +946,7 @@ int InitScene(GLFWwindow* window) {
     lastTime = glfwGetTime();
     frameCount=0;
 
-    pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
+    gGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
 
     // нормальный шейдер
     // InitRender(window, "Normal shader loading...");
@@ -945,7 +967,7 @@ int InitScene(GLFWwindow* window) {
         meshShader->AddShader(fragment_shader_text, FragmnetShader);
         meshShader->Init();
 
-        gCamViewID = meshShader->GetUniformLocation("view_projection");
+        view_projection_id = meshShader->GetUniformLocation("view_projection");
         rotation_id = meshShader->GetUniformLocation("model_rotation");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
@@ -1225,7 +1247,7 @@ int InitScene(GLFWwindow* window) {
         // smfbo1 = new ShadowMapFBO();
         // smfbo1->Init(width,height);
         //************************************/
-        // pGameCamera = new
+        // gGameCamera = new
         // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
     glFlush();

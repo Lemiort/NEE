@@ -24,13 +24,13 @@ public:
 
     const glm::vec3& GetUp() const;
 
-    float GetFov();
+    float GetFov() const;
 
     void SetFOV(float fov);
 
-    float GetZNear();
+    float GetZNear() const;
 
-    float GetZFar();
+    float GetZFar() const;
 
     void SetZNear(float znear);
 
@@ -38,9 +38,9 @@ public:
 
     void OnViewportResize(int width, int height);
 
-    int GetWidth();
+    int GetWidth() const;
 
-    int GetHeight();
+    int GetHeight() const;
 
 private:
     float FOV;

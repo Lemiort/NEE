@@ -1,4 +1,4 @@
-#version 330
+#version 460
 in vec2 UV1;
 uniform vec4 textColor;
 uniform sampler2D texSampler;
@@ -10,7 +10,7 @@ out vec4 FragColor;
 
 void main() {
     //маска из текстуры
-    float mask = texture2D(texSampler, UV1).a;
+    float mask = texture(texSampler, UV1).a;
 
     // use current drawing color
     vec4 clr = textColor;

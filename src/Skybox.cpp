@@ -129,7 +129,7 @@ bool SkyBox::Init(const std::string& filename) {
     return true;
 }
 
-void SkyBox::Render(Camera* cam) {
+void SkyBox::Render(const Camera& cam) {
     GLint OldCullFaceMode;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
     GLint OldDepthFuncMode;
@@ -138,14 +138,15 @@ void SkyBox::Render(Camera* cam) {
     glCullFace(GL_BACK);
     glDepthFunc(GL_LEQUAL);
 
-    glm::mat4 model = glm::translate(cam->GetPos()) *
+    glm::mat4 model = glm::translate(cam.GetPos()) *
                       glm::orientate4(glm::vec3{180, 180, 0}) *
                       glm::scale(glm::vec3{3});
     glm::mat4 projection = glm::perspectiveFov(
-        cam->GetFov(), static_cast<float>(cam->GetWidth()),
-        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
-    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    glm::mat4 mvp_matrix = projection * view * model;
+        cam.GetFov(), static_cast<float>(cam.GetWidth()),
+        static_cast<float>(cam.GetHeight()), cam.GetZNear(), cam.GetZFar());
+    glm::mat4 view = glm::lookAt(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    glm::mat4 vp_matrix = glm::transpose(projection * view);
+    glm::mat4 mvp_matrix = vp_matrix * model;
 
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();

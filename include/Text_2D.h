@@ -89,7 +89,7 @@ public:
     void SetCharacter(unsigned int c);
 
     glm::vec2 GetLastCharacterLength();  // возвращает длину текущего символа
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     friend class FontLine2d;
 };
 
@@ -111,7 +111,7 @@ public:
     void SetAspectRatio(int w, int h);
     void SetText(std::string _text);
     // void Render(string text,float x, float y, float size);
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
 };
 
 // класс отрисовки побуквенно
@@ -141,7 +141,7 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
     // void Render(unsigned int c, float x, float y, float size);
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
 };
 
 // класс линии из отрисовки букв
@@ -160,6 +160,6 @@ public:
     void SetAspectRatio(int width, int height);
     void SetText(std::string _text);
     // void Render(float x, float y,float size, char* input);
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
 };
 #endif  // INCLUDE_TEXT_2D_H

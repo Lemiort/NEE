@@ -30,7 +30,7 @@ public:
     void SetCol(glm::vec3 col);
     DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, std::shared_ptr<Material> _mat);
-    virtual void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     ~DirectionalLight();
 };
 class PointLight : public Light, public PlaceableObject {
@@ -39,7 +39,7 @@ public:
     PointLight(float d1, float d2, float d3, float r, float g, float b, float p,
                std::shared_ptr<Material> _mat);
     ~PointLight();
-    virtual void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     void SetPos(glm::vec3 pos);
     void SetCol(glm::vec3 col);
 
@@ -68,7 +68,7 @@ public:
     glm::vec3 GetPos();
     void SetPos(glm::vec3 pos);
     void SetTarget(glm::vec3 _target);
-    virtual void Render(Camera* cam);
+    void Render(const Camera& cam) override;
 
 private:
     void Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
@@ -91,7 +91,7 @@ public:
          std::shared_ptr<Shader> shader);
     ~Line();
     // void Render(Camera* pGameCamera, int width, int height);
-    virtual void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     std::shared_ptr<Shader> GetShader();
 
 private:

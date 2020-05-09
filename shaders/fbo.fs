@@ -1,4 +1,4 @@
-#version 330
+#version 460
 
 out float depth;
 layout(location = 0) out vec4 fColor0;

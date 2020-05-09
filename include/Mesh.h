@@ -35,7 +35,7 @@ class Mesh : public PlaceableObject,
 public:
 protected:
     GLuint position_id, uv_id, normal_id, tangent_id;
-    GLuint model_id, gCamViewID;
+    GLuint model_id, view_projection_id;
     GLuint rotation_id;
     GLuint dirLightDirID, dirLightColID;
     GLuint pointLightColID, pointLightIntID, pointLightPosID;
@@ -59,7 +59,7 @@ public:
     void SetMaterial(std::shared_ptr<Material> _mat);
     bool Init(std::shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     void SetVectorRotate(glm::vec3 v, float phi);
     void Rotate(float x, float y, float z);
 

@@ -191,7 +191,7 @@ void Camera::Update() {
     m_up = glm::normalize(m_up);
 }
 
-float Camera::GetFov() { return FOV; }
+float Camera::GetFov() const { return FOV; }
 
 void Camera::SetFOV(float fov) { FOV = fov; }
 
@@ -201,9 +201,9 @@ const glm::vec3& Camera::GetTarget() const { return m_target; }
 
 const glm::vec3& Camera::GetUp() const { return m_up; }
 
-float Camera::GetZNear() { return zNear; }
+float Camera::GetZNear() const { return zNear; }
 
-float Camera::GetZFar() { return zFar; }
+float Camera::GetZFar() const { return zFar; }
 
 void Camera::SetZNear(float znear) { zNear = znear; }
 
@@ -215,6 +215,6 @@ void Camera::OnViewportResize(int width, int height) {
     Init();
 }
 
-int Camera::GetWidth() { return m_windowWidth; }
+int Camera::GetWidth() const { return m_windowWidth; }
 
-int Camera::GetHeight() { return m_windowHeight; }
+int Camera::GetHeight() const { return m_windowHeight; }

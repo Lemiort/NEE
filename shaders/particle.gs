@@ -1,5 +1,5 @@
 
-#version 330
+#version 460
 
 layout(points) in;
 layout(points) out;

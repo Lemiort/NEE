@@ -153,9 +153,10 @@ bool Mesh::Init(std::shared_ptr<Material> _mat, const char* model) {
 
     return true;
 }
-void Mesh::Render(Camera* cam) {
+void Mesh::Render(const Camera& cam) {
     glm::mat4 model = glm::translate(position) *
                       glm::orientate4(model_rotation) * glm::scale(scale);
+    model = glm::transpose(model);
     auto rotate_matrix =
         glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));  // TODO fix
 

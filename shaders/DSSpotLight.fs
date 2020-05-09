@@ -1,4 +1,4 @@
-#version 330
+#version 460
 
 in vec3 fN;  //нормалька
 in vec2 UV;  //координаты текстуры
@@ -92,8 +92,8 @@ vec4 CalcSpotLight(mat4 color) {
 
         if (SpotFactor > sLightCutoff) {
             vec4 result =
-                color * (diffuse_intensity * texture2D(gSampler5, screenPosUV) +
-                         spec_intensity * texture2D(gSampler8, screenPosUV));
+                color * (diffuse_intensity * texture(gSampler5, screenPosUV) +
+                         spec_intensity * texture(gSampler8, screenPosUV));
             return result *
                    (1.0 - (1.0 - SpotFactor) * 1.0 / (1.0 - sLightCutoff));
         } else {

@@ -39,7 +39,7 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     mesh->Init(_mat, "models/cube2x2x2.ho3d");
 }
 
-void DirectionalLight::Render(Camera* cam) {
+void DirectionalLight::Render(const Camera& cam) {
     // mesh->SetScale(1.0,1.0,1.0);
     mesh->SetPosition(0, 0, 0);
     mesh->Render(cam);
@@ -82,7 +82,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     mesh->SetRotation(90, 0, 0);
 }
 
-void SpotLight::Render(Camera* cam) {
+void SpotLight::Render(const Camera& cam) {
     // ======Предыдущее решение задачи========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
@@ -245,7 +245,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     std::cout << "\nLight radius is " << radius;
 }
 PointLight::~PointLight() {}
-void PointLight::Render(Camera* cam) {
+void PointLight::Render(const Camera& cam) {
     /*Assistant TM;
     TM.WorldPos(position[0],position[1],position[2]);
     TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
@@ -352,21 +352,17 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
 }
 Line::~Line() {}
 // void Line::Render(Camera* pGameCamera, int width, int height)
-void Line::Render(Camera* cam) {
+void Line::Render(const Camera& cam) {
     glm::mat4 model =
         glm::mat4() * glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));
-    glm::mat4 projection = glm::perspectiveFov(
-        cam->GetFov(), static_cast<float>(cam->GetWidth()),
-        static_cast<float>(cam->GetHeight()), cam->GetZNear(), cam->GetZFar());
-    glm::mat4 view = glm::lookAt(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    glm::mat4 mvp_matrix = projection * view * model;
+    model = glm::transpose(model);
 
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(position_id, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(mvp_matrix));
+    glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(model));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(position_id);

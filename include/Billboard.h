@@ -16,7 +16,7 @@ public:
     explicit Billboard(std::shared_ptr<Shader> shader);
     ~Billboard();
     void Init(const char* TexFilename);
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
     void SetPos(glm::vec3 _Pos);
     // GLuint shaderProgramID;
 protected:

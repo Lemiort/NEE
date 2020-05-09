@@ -1,4 +1,4 @@
-#version 330
+#version 460
 
 in vec3 fN;  //направление нормали
 in vec3 fL;  //направление направленного света
@@ -74,8 +74,7 @@ void main() {
     vec4 pointLightColor = CalcBaseLight(pL, Normal, pLightCol) * power;
     //свет прожектора
     vec4 spotLightColor = CalcSpotLight(sLightDir, Normal, sLightCol);
-    // fColor = pointLightColor + /*+dirLightColor+*/ spotLightColor;
-    fColor = vec4(1.0, 0.01, 0.01, 0.5);
+    fColor = pointLightColor + /*+dirLightColor+*/ spotLightColor;
     fColor.a = 1.0;
     // fColor=vec4(Tangent,1.0);
     /*if(fColor.x==0 && fColor.y==0 && fColor.z==0)

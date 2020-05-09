@@ -85,7 +85,7 @@ public:
     // и шрифтом
     bool Init(std::shared_ptr<Material> _mat, std::string _fileName);
     ~Character2d();
-    void Render(Camera* cam);
+    void Render(const Camera& cam) override;
 
     // TODO возвращает длину текущего символа в экрнных координатах??
     glm::vec2 GetLastCharacterLength();

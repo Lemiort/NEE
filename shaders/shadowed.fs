@@ -1,4 +1,4 @@
-#version 330
+#version 460
 
 in vec3 fN;
 in vec3 fL;
@@ -31,7 +31,7 @@ mat4 CalcShadowFactor(in vec4 LightSP) {
     UVCoords.x = 0.5 * ProjCoords.x + 0.5;
     UVCoords.y = 0.5 * ProjCoords.y + 0.5;
     float z = 0.5 * ProjCoords.z + 0.5;
-    float Depth = texture2D(shadowTexSampler, UVCoords).x;
+    float Depth = texture(shadowTexSampler, UVCoords).x;
     float shadowFactor = 0.5;
     if (Depth < (z + 0.00001))
         shadowFactor = 1.0;
@@ -52,8 +52,8 @@ vec4 CalcBaseLight(vec3 dir, vec3 Normal, mat4 color) {
     vec3 H = normalize(E + L);
     float diffuse_intensity = max(dot(N, L), 0.0);
     float spec_intensity = pow(max(dot(N, H), 0.0), 3000);
-    vec4 result = color * (diffuse_intensity * texture2D(colTexSampler, UV) +
-                           spec_intensity * texture2D(specTexSampler, UV));
+    vec4 result = color * (diffuse_intensity * texture(colTexSampler, UV) +
+                           spec_intensity * texture(specTexSampler, UV));
     return result;
 }
 
@@ -67,8 +67,8 @@ vec4 CalcSpotLight(vec3 dir, vec3 Normal, mat4 color) {
     float spec_intensity = pow(max(dot(N, H), 0.0), 3000);
     float d = 1.0 / (1.0 - sLightCutoff);
     float SpotFactor = dot(R, -L);
-    vec4 result = color * (diffuse_intensity * texture2D(colTexSampler, UV) +
-                           spec_intensity * texture2D(specTexSampler, UV));
+    vec4 result = color * (diffuse_intensity * texture(colTexSampler, UV) +
+                           spec_intensity * texture(specTexSampler, UV));
     result = result * (1.0 - (1.0 - SpotFactor) * 1.0 / (1.0 - sLightCutoff));
     result.a = 1.0;
     return result;
