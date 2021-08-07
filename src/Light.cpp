@@ -244,15 +244,8 @@ float PointLight::CalcSphereSize() {
 }
 
 Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
-    std::ifstream vertex_shader_file("shaders/lightVS.vs");
-    std::string vertex_shader_text(
-        (std::istreambuf_iterator<char>(vertex_shader_file)),
-        (std::istreambuf_iterator<char>()));
-
-    std::ifstream fragment_shader_file("shaders/lightFS.fs");
-    std::string fragment_shader_text(
-        (std::istreambuf_iterator<char>(fragment_shader_file)),
-        (std::istreambuf_iterator<char>()));
+    std::string vertex_shader_text{ReadFromFile("shaders/lightVS.vs")};
+    std::string fragment_shader_text{ReadFromFile("shaders/lightFS.fs")};
 
     shaderProgram = std::make_shared<Shader>();
     shaderProgram->AddShader(vertex_shader_text, kVertexShader);

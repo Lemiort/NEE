@@ -1,10 +1,10 @@
 [requires]
-glfw/3.2.1.20180327@bincrafters/stable
-glew/2.1.0@bincrafters/stable
-jsonformoderncpp/3.5.0@vthiery/stable
-glm/0.9.9.1@g-truc/stable
+glfw/3.3.4
+glew/2.2.0
+nlohmann_json/3.9.1
+glm/0.9.9.8
 soil2/1.20@bincrafters/stable
-spdlog/1.5.0
+spdlog/1.8.5
 
 [generators]
 cmake
@@ -13,3 +13,4 @@ cmake
 glfw:shared=False
 glew:shared=False
 soil:shared=False
+spdlog:shared=False

@@ -26,21 +26,9 @@ bool ParticleSystem::Init(glm::vec3 Pos) {
         glBufferData(GL_ARRAY_BUFFER, sizeof(Particles), Particles,
                      GL_DYNAMIC_DRAW);
     }
-
-    std::ifstream vertex_shader_file("shaders/particle.vs");
-    std::string vertex_shader_text(
-        (std::istreambuf_iterator<char>(vertex_shader_file)),
-        (std::istreambuf_iterator<char>()));
-
-    std::ifstream fragment_shader_file("shaders/particle.fs");
-    std::string fragment_shader_text(
-        (std::istreambuf_iterator<char>(fragment_shader_file)),
-        (std::istreambuf_iterator<char>()));
-
-    std::ifstream geomentry_shader_file("shaders/particle.gs");
-    std::string geometry_shader_text(
-        (std::istreambuf_iterator<char>(geomentry_shader_file)),
-        (std::istreambuf_iterator<char>()));
+    std::string vertex_shader_text{ReadFromFile("shaders/particle.vs")};
+    std::string fragment_shader_text{ReadFromFile("shaders/particle.fs")};
+    std::string geometry_shader_text{ReadFromFile("shaders/particle.fs")};
 
     GLuint vertexShaderID = MakeVertexShader(vertex_shader_text);
     GLuint fragmentShaderID = MakeFragmentShader(fragment_shader_text);
@@ -136,9 +124,7 @@ void ParticleSystem::RenderParticles(Camera* cam) {
     glm::mat4 vp_matrix = projection * view;
     vp_matrix = glm::transpose(vp_matrix);
 
-    // матрица проекции камеры
     // glUniformMatrix4fv(mvp_id, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    // позиция камеры
     // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
 
     glUseProgram(shaderProgramID);

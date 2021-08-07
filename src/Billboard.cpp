@@ -7,6 +7,8 @@
 #include <glm/gtx/matrix_operation.hpp>
 #include <glm/gtx/transform.hpp>
 
+#include "ShaderFunctions.h"
+
 Billboard::Billboard() {
     pos = glm::vec3(1, 1, 1);
     shader = false;
@@ -32,20 +34,9 @@ Billboard::~Billboard() {
 
 void Billboard::Init(const char* TexFilename) {
     if (shader == false) {
-        std::ifstream vertex_shader_file("shaders/billboard.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/billboard.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream geomentry_shader_file("shaders/billboard.gs");
-        std::string geometry_shader_text(
-            (std::istreambuf_iterator<char>(geomentry_shader_file)),
-            (std::istreambuf_iterator<char>()));
+        std::string vertex_shader_text{ReadFromFile("shaders/billboard.vs")};
+        std::string fragment_shader_text{ReadFromFile("shaders/billboard.fs")};
+        std::string geometry_shader_text{ReadFromFile("shaders/billboard.gs")};
 
         shaderProgram = std::make_shared<Shader>();
         shaderProgram->AddShader(vertex_shader_text, kVertexShader);

@@ -2,6 +2,8 @@
 
 #include <spdlog/spdlog.h>
 
+#include <fstream>
+
 GLuint MakeVertexShader(const std::string& source) {
     GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     if (vertexShaderID == 0) {
@@ -98,4 +100,11 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
         exit(1);
     }
     return shaderID;
+}
+
+std::string ReadFromFile(const std::string& path) {
+    std::ifstream file(path);
+    std::string text((std::istreambuf_iterator<char>(file)),
+                     (std::istreambuf_iterator<char>()));
+    return text;
 }

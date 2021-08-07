@@ -14,21 +14,21 @@ Shader::Shader() {
 }
 void Shader::AddShader(const std::string& source, ShaderType type) {
     switch (type) {
-        case kVertexShader:
+        case ShaderType::kVertexShader:
             if (!source.empty())
                 vShaderFileName = source;
             else
                 vShaderFileName = "none";
             vShader = MakeVertexShader(source);
             break;
-        case kFragmentShader:
+        case ShaderType::kFragmentShader:
             if (!source.empty())
                 fShaderFileName = source;
             else
                 fShaderFileName = "none";
             fShader = MakeFragmentShader(source);
             break;
-        case kGeometryShader:
+        case ShaderType::kGeometryShader:
             if (!source.empty())
                 gShaderFileName = source;
             else

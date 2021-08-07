@@ -17,6 +17,7 @@
 #include <thread>
 
 #include "Billboard.h"
+#include "Font2d.h"
 #include "GBuffer.h"
 #include "Light.h"
 #include "Logger.h"
@@ -126,6 +127,7 @@ Line dirLightLine;
 Mesh TestMesh, Plane, Cube;
 SkyBox skybox1;
 FontLine2d fLine1;
+Character2d character;
 PerlinNoise noise1;
 Billboard bb1;
 ShadowMapFBO shadowmap_fbo;
@@ -166,38 +168,55 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GL_TRUE);
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_I) spotLight1.target[0] += 0.1;
-        if (key == GLFW_KEY_K) spotLight1.target[0] -= 0.1;
-        if (key == GLFW_KEY_O) spotLight1.target[1] += 0.1;
-        if (key == GLFW_KEY_L) spotLight1.target[1] -= 0.1;
-        if (key == GLFW_KEY_U) spotLight1.target[2] += 0.1;
-        if (key == GLFW_KEY_J) spotLight1.target[2] -= 0.1;
-        if (key == GLFW_KEY_F5) {
-            renderType =
-                static_cast<RenderType>(static_cast<uint8_t>(renderType) + 1);
-            renderType =
-                static_cast<RenderType>(static_cast<uint8_t>(renderType) % 6);
-        }
-        if (key == GLFW_KEY_PRINT_SCREEN) {
-            time_t rawtime;
-            struct tm* timeinfo;
-            char buffer[80];
+        switch (key) {
+            case GLFW_KEY_I:
+                spotLight1.target[0] += 0.1;
+                break;
+            case GLFW_KEY_K:
+                spotLight1.target[0] -= 0.1;
+                break;
+            case GLFW_KEY_O:
+                spotLight1.target[1] += 0.1;
+                break;
+            case GLFW_KEY_L:
+                spotLight1.target[1] -= 0.1;
+                break;
+            case GLFW_KEY_U:
+                spotLight1.target[2] += 0.1;
+                break;
+            case GLFW_KEY_J:
+                spotLight1.target[2] -= 0.1;
+                break;
+            case GLFW_KEY_F5:
+                renderType = static_cast<RenderType>(
+                    static_cast<uint8_t>(renderType) + 1);
+                renderType = static_cast<RenderType>(
+                    static_cast<uint8_t>(renderType) % 6);
+                break;
+            case GLFW_KEY_PRINT_SCREEN: {
+                time_t rawtime;
+                struct tm* timeinfo;
+                char buffer[80];
 
-            time(&rawtime);
-            timeinfo = localtime(&rawtime);
+                time(&rawtime);
+                timeinfo = localtime(&rawtime);
 
-            strftime(buffer, 80, "screenshots/Screenshot %d-%m-%Y %I.%M.%S.png",
-                     timeinfo);
-            int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_PNG, 0, 0,
-                                              width, height);
-            if (result != 0) {
-                spdlog::debug("Screenshot saved as {}", buffer);
-            }
-        } else {
-            gGameCamera.OnKeyboard(key);
+                strftime(buffer, 80,
+                         "screenshots/Screenshot %d-%m-%Y %I.%M.%S.png",
+                         timeinfo);
+                int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_PNG, 0,
+                                                  0, width, height);
+                if (result != 0) {
+                    spdlog::debug("Screenshot saved as {}", buffer);
+                }
+            } break;
+            default:
+                gGameCamera.OnKeyboard(key);
+                break;
         }
     }
 }
+
 void MousePosCallBack(GLFWwindow* window, double x, double y) {
     mouse.Update(x, y);
     if (mouse.rightButtonPressed || true)
@@ -532,11 +551,13 @@ void DSPointLightPass(PointLight& pointLight) {
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(0), 4);  // world pos
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(0),
+                                     4);                          // world pos
     DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(1), 5);  // diffuse
     DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(2), 6);  // normal
     DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
-    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(4), 8);  // specular
+    DSPointLightMaterial->SetTexture(gBuffer1.GetTexture(4),
+                                     8);  // specular
 
     pointLightPosID =
         DSPointLightShader->GetUniformLocation("s_vPointLightPos");
@@ -591,7 +612,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glUniform3f(camPosID, gGameCamera.GetPos().x, gGameCamera.GetPos().y,
                 gGameCamera.GetPos().z);
 
-    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(0), 4);  // world pos
+    DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(0),
+                                    4);                          // world pos
     DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(1), 5);  // diffuse
     DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(2), 6);  // normal
     DSSpotLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
@@ -664,7 +686,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
                                            5);  // diffuse
     DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(2),
                                            6);  // normal
-    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(3), 7);  // UV
+    DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(3),
+                                           7);  // UV
     DSDirectionalLightMaterial->SetTexture(gBuffer1.GetTexture(4),
                                            8);  // specular
 
@@ -781,8 +804,8 @@ void RenderScene(GLFWwindow* window) {
         case RenderType::Deferred:
             gBuffer1.StartFrame();
             DSGeometryPass();
-            // enable stencil for stencil buffer update. Also we need stencil
-            // for light, because it renders only after stencil pass
+            // enable stencil for stencil buffer update. Also we need
+            // stencil for light, because it renders only after stencil pass
             glEnable(GL_STENCIL_TEST);
             {
                 DSStencilPass(pointLight1);
@@ -826,15 +849,8 @@ void PreInitScene(GLFWwindow* window) {
 
     // text shader
     {
-        std::ifstream vertex_shader_file("shaders/text2d.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/text2d.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
+        std::string vertex_shader_text{ReadFromFile("shaders/text2d.vs")};
+        std::string fragment_shader_text{ReadFromFile("shaders/text2d.fs")};
 
         textShader = std::make_shared<Shader>();
         textShader->AddShader(vertex_shader_text, kVertexShader);
@@ -896,15 +912,9 @@ int InitScene(GLFWwindow* window) {
 
     // regular shader
     {
-        std::ifstream vertex_shader_file("shaders/vertexShader.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/fragmentShader.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
+        std::string vertex_shader_text{ReadFromFile("shaders/vertexShader.vs")};
+        std::string fragment_shader_text{
+            ReadFromFile("shaders/fragmentShader.fs")};
 
         meshShader = std::make_shared<Shader>();
         meshShader->AddShader(vertex_shader_text, kVertexShader);
@@ -929,15 +939,8 @@ int InitScene(GLFWwindow* window) {
 
     // shade shader
     {
-        std::ifstream vertex_shader_file("shaders/fbo.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/fbo.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
+        std::string vertex_shader_text{ReadFromFile("shaders/fbo.vs")};
+        std::string fragment_shader_text{ReadFromFile("shaders/fbo.fs")};
 
         InitRender(window, "Shade shader loading...");
         shadowShader = std::make_shared<Shader>();
@@ -956,16 +959,9 @@ int InitScene(GLFWwindow* window) {
     // shaded shader
     {
         InitRender(window, "Shaded shader loading...");
+        std::string vertex_shader_text{ReadFromFile("shaders/shadowed.vs")};
+        std::string fragment_shader_text{ReadFromFile("shaders/shadowed.fs")};
 
-        std::ifstream vertex_shader_file("shaders/shadowed.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/shadowed.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
         shadowMeshShader = std::make_shared<Shader>();
         shadowMeshShader->AddShader(vertex_shader_text, kVertexShader);
         shadowMeshShader->AddShader(fragment_shader_text, kFragmentShader);
@@ -989,10 +985,9 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "StencilPass shader loading...");
         // load shader
         {
-            std::ifstream vertex_shader_file("shaders/DSStencilPass.vs");
-            std::string vertex_shader_text(
-                (std::istreambuf_iterator<char>(vertex_shader_file)),
-                (std::istreambuf_iterator<char>()));
+            std::string vertex_shader_text{
+                ReadFromFile("shaders/DSStencilPass.vs")};
+
             DSStencilPassShader = std::make_shared<Shader>();
             DSStencilPassShader->AddShader(vertex_shader_text, kVertexShader);
             DSStencilPassShader->Init();
@@ -1010,15 +1005,10 @@ int InitScene(GLFWwindow* window) {
         gBuffer1.Init(width, height);
         // load shader
         {
-            std::ifstream vertex_shader_file("shaders/DSGeometryPass.vs");
-            std::string vertex_shader_text(
-                (std::istreambuf_iterator<char>(vertex_shader_file)),
-                (std::istreambuf_iterator<char>()));
-
-            std::ifstream fragment_shader_file("shaders/DSGeometryPass.fs");
-            std::string fragment_shader_text(
-                (std::istreambuf_iterator<char>(fragment_shader_file)),
-                (std::istreambuf_iterator<char>()));
+            std::string vertex_shader_text{
+                ReadFromFile("shaders/DSGeometryPass.vs")};
+            std::string fragment_shader_text{
+                ReadFromFile("shaders/DSGeometryPass.fs")};
 
             DSGeometryPassShader = std::make_shared<Shader>();
             DSGeometryPassShader->AddShader(vertex_shader_text, kVertexShader);
@@ -1039,15 +1029,10 @@ int InitScene(GLFWwindow* window) {
         // point light shader
         {
             // load shader
-            std::ifstream vertex_shader_file("shaders/DSPointLight.vs");
-            std::string vertex_shader_text(
-                (std::istreambuf_iterator<char>(vertex_shader_file)),
-                (std::istreambuf_iterator<char>()));
-
-            std::ifstream fragment_shader_file("shaders/DSPointLight.fs");
-            std::string fragment_shader_text(
-                (std::istreambuf_iterator<char>(fragment_shader_file)),
-                (std::istreambuf_iterator<char>()));
+            std::string vertex_shader_text{
+                ReadFromFile("shaders/DSPointLight.vs")};
+            std::string fragment_shader_text{
+                ReadFromFile("shaders/DSPointLight.fs")};
 
             DSPointLightShader = std::make_shared<Shader>();
             DSPointLightShader->AddShader(vertex_shader_text, kVertexShader);
@@ -1062,15 +1047,11 @@ int InitScene(GLFWwindow* window) {
         // direct light shader
         {
             // load shader
-            std::ifstream vertex_shader_file("shaders/DSDirectionalLight.vs");
-            std::string vertex_shader_text(
-                (std::istreambuf_iterator<char>(vertex_shader_file)),
-                (std::istreambuf_iterator<char>()));
+            std::string vertex_shader_text{
+                ReadFromFile("shaders/DSDirectionalLight.vs")};
+            std::string fragment_shader_text{
+                ReadFromFile("shaders/DSDirectionalLight.fs")};
 
-            std::ifstream fragment_shader_file("shaders/DSDirectionalLight.fs");
-            std::string fragment_shader_text(
-                (std::istreambuf_iterator<char>(fragment_shader_file)),
-                (std::istreambuf_iterator<char>()));
             DSDirectionalLightShader = std::make_shared<Shader>();
             DSDirectionalLightShader->AddShader(vertex_shader_text,
                                                 kVertexShader);
@@ -1086,15 +1067,10 @@ int InitScene(GLFWwindow* window) {
         // project light shader
         {
             // load shader
-            std::ifstream vertex_shader_file("shaders/DSSpotLight.vs");
-            std::string vertex_shader_text(
-                (std::istreambuf_iterator<char>(vertex_shader_file)),
-                (std::istreambuf_iterator<char>()));
-
-            std::ifstream fragment_shader_file("shaders/DSSpotLight.fs");
-            std::string fragment_shader_text(
-                (std::istreambuf_iterator<char>(fragment_shader_file)),
-                (std::istreambuf_iterator<char>()));
+            std::string vertex_shader_text{
+                ReadFromFile("shaders/DSSpotLight.vs")};
+            std::string fragment_shader_text{
+                ReadFromFile("shaders/DSSpotLight.fs")};
 
             DSSpotLightShader = std::make_shared<Shader>();
             DSSpotLightShader->AddShader(vertex_shader_text, kVertexShader);
@@ -1110,15 +1086,8 @@ int InitScene(GLFWwindow* window) {
     // skybox shader
     {
         InitRender(window, "Skybox shader loading...");
-        std::ifstream vertex_shader_file("shaders/skybox.vs");
-        std::string vertex_shader_text(
-            (std::istreambuf_iterator<char>(vertex_shader_file)),
-            (std::istreambuf_iterator<char>()));
-
-        std::ifstream fragment_shader_file("shaders/skybox.fs");
-        std::string fragment_shader_text(
-            (std::istreambuf_iterator<char>(fragment_shader_file)),
-            (std::istreambuf_iterator<char>()));
+        std::string vertex_shader_text{ReadFromFile("shaders/skybox.vs")};
+        std::string fragment_shader_text{ReadFromFile("shaders/skybox.fs")};
 
         skyboxShader = std::make_shared<Shader>();
 

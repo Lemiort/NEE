@@ -7,7 +7,6 @@
 #include "Camera.h"
 #include "RenderableObject.h"
 #include "Shader.h"
-#include "ShaderFunctions.h"
 #include "Texture.h"
 class Billboard : public RenderableObject {
 public:

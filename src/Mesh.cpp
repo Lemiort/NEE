@@ -6,7 +6,6 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <vector>
 
-
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/euler_angles.hpp>
 #include <glm/gtx/matrix_operation.hpp>
@@ -154,8 +153,7 @@ void Mesh::Render(const Camera& cam) {
     glm::mat4 model = glm::translate(position) *
                       glm::orientate4(model_rotation) * glm::scale(scale);
     model = glm::transpose(model);
-    auto rotate_matrix =
-        glm::diagonal4x4(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f));  // TODO fix
+    auto rotate_matrix = glm::orientate4(model_rotation);
 
     mat->Use();
 
@@ -173,9 +171,7 @@ void Mesh::Render(const Camera& cam) {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(model_id, 1, GL_TRUE, glm::value_ptr(model));
-    glUniformMatrix4fv(
-        rotation_id, 1, GL_TRUE,
-        glm::value_ptr(rotate_matrix));  // TODO add model model_rotation
+    glUniformMatrix4fv(rotation_id, 1, GL_TRUE, glm::value_ptr(rotate_matrix));
 
     glEnableVertexAttribArray(position_id);
     glEnableVertexAttribArray(normal_id);

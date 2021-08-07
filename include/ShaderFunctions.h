@@ -13,4 +13,6 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID);
 GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
                          GLuint fragmentShaderID);
 
+std::string ReadFromFile(const std::string& path);
+
 #endif  // INCLUDE_SHADERFUNCTIONS_H
