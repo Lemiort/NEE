@@ -24,6 +24,7 @@
 #include "Material.h"
 #include "Mesh.h"
 #include "PerlinNoise.h"
+#include "Shader/Shader.h"
 #include "ShadowMapFBO.h"
 #include "Text_2D.h"
 #include "skybox.h"
