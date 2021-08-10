@@ -6,10 +6,11 @@ include(build/conanbuildinfo.cmake)
 conan_basic_setup()
 
 message("Building ${PROJECT_NAME}")
+option(BUILD_TESTS "Build tests" ON)
 
 enable_testing()
 
-if(BUILD_TESTING)
+if(BUILD_TESTS)
   add_subdirectory(tests)
 endif()
 
