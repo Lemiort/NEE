@@ -1,9 +1,19 @@
 message("-- Conan libs: ${CONAN_LIBS}")
 
+file(GLOB_RECURSE TESTS_SRC ${CMAKE_CURRENT_SOURCE_DIR} *.cpp)
+message("-- Test sources: ${TESTS_SRC}")
+
 add_executable(
   UnitTests
-  UnitTests.cpp
+  ${TESTS_SRC}
 )
+
+target_include_directories(
+    UnitTests
+  PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+)
+
 target_link_libraries(
     UnitTests
     ${CONAN_LIBS}

@@ -16,13 +16,13 @@ uniform vec3 sLightPos;
 // uniform vec3 sLightDir;
 uniform float pLightInt;
 
-out vec3 fN;  //нормаль
-out vec3 fL;  //вектор направленного света
-out vec3 fE;  //вектор взгляда
+out vec3 fN;  // normal
+out vec3 fL;  // direct light vector
+out vec3 fE;  // view vector
 out vec2 UV;
-out vec3 pL;   //вектор точечного света
-out vec3 sR;   //вектор от источника до точки
-out vec3 sLD;  //вектор направления источника
+out vec3 pL;   // point light vector
+out vec3 sR;   // vector form source to point
+out vec3 sLD;  // vector of source direction
 
 out vec3 Tangent;
 out vec3 Bitangent;
@@ -37,7 +37,7 @@ void main() {
     fE = (view_projection * model * vec4(s_vCamPos, 1)).xyz;
     UV = vertex_uv;
 
-    //длина вектора от света до точки
+    // length of vector from light to the point
     float temp = length(-(model * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
     power = pLightInt * pow(temp, -2);
     pL = (-(model * vec4(1, 1, 1, 1.0)).xyz + pLightPos);
