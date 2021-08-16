@@ -20,7 +20,6 @@
 #include "Font2d.h"
 #include "GBuffer.h"
 #include "Light.h"
-#include "Logger.h"
 #include "Material.h"
 #include "Mesh.h"
 #include "PerlinNoise.h"
