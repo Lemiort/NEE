@@ -43,29 +43,29 @@ public:
     int GetHeight() const;
 
 private:
-    float FOV;
-    float zNear;
-    float zFar;
+    float fov_;
+    float zNear_;
+    float zFar_;
 
     void Init();
     void Update();
 
-    glm::vec3 m_pos;
-    glm::vec3 m_target;
-    glm::vec3 m_up;
+    glm::vec3 position_;
+    glm::vec3 target_;
+    glm::vec3 up_;
 
-    int m_windowWidth;
-    int m_windowHeight;
+    int windowWidth_;
+    int windowHeight_;
 
-    float m_AngleH;
-    float m_AngleV;
+    float angleHorizontal_;
+    float angleVertical_;
 
-    bool m_OnUpperEdge;
-    bool m_OnLowerEdge;
-    bool m_OnLeftEdge;
-    bool m_OnRightEdge;
+    bool onUpperEdge_{false};
+    bool onLowerEdge_{false};
+    bool onLeftEdge_{false};
+    bool onRightEdge_{false};
 
-    glm::vec2 m_mousePos;
+    glm::vec2 mousePosition_;
 };
 
 #endif  // INCLUDE_CAMERA_H
