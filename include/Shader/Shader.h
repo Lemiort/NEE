@@ -13,24 +13,24 @@ enum class ShaderType : GLenum {
     kGeometryShader = GL_GEOMETRY_SHADER
 };
 
-template <ShaderType shaderType>
+template <ShaderType shader_type>
 class Shader : public IShader {
 public:
     Shader(std::string const& source) {
-        shaderId = glCreateShader(static_cast<GLenum>(shaderType));
-        if (shaderId == 0) {
+        shader_id_ = glCreateShader(static_cast<GLenum>(shader_type));
+        if (shader_id_ == 0) {
             throw std::runtime_error("Error on glCreateShader");
         }
         const char* c_str{source.c_str()};
-        glShaderSource(shaderId, 1, static_cast<const GLchar**>(&c_str),
+        glShaderSource(shader_id_, 1, static_cast<const GLchar**>(&c_str),
                        nullptr);
-        glCompileShader(shaderId);
+        glCompileShader(shader_id_);
     }
-    ~Shader() override = default;
-    virtual GLuint GetShaderId() const { return shaderId; }
+    ~Shader() override { glDeleteShader(shader_id_); };
+    GLuint GetShaderId() const override { return shader_id_; }
 
 private:
-    GLuint shaderId{0};
+    GLuint shader_id_{0};
 };
 
 using VertexShader = Shader<ShaderType::kVertexShader>;

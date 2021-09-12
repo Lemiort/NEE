@@ -3,6 +3,10 @@
 
 #include "gtest/gtest.h"
 
+constexpr size_t kWindowWidth = 640;
+constexpr size_t kWindowHeight = 480;
+constexpr char kWindowTitle[] = "Test window";
+
 int main(int argc, char** argv) {
     ::testing::InitGoogleTest(&argc, argv);
     auto errorCallback = [](int error, const char* description) -> void {
@@ -22,7 +26,7 @@ int main(int argc, char** argv) {
 
     glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
     auto window =
-        glfwCreateWindow(640, 480, "test window",
+        glfwCreateWindow(kWindowWidth, kWindowHeight, kWindowTitle,
                          /*glfwGetPrimaryMonitor()*/ nullptr, nullptr);
     if (!window) {
         glfwTerminate();
@@ -31,5 +35,27 @@ int main(int argc, char** argv) {
     }
     glfwMakeContextCurrent(window);
 
-    return RUN_ALL_TESTS();
+    GLenum res = glewInit();
+    if (res != GLEW_OK) {
+        std::cout << "GLEW error:" << glewGetErrorString(res) << std::endl;
+        return -1;
+    }
+
+    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glCullFace(GL_FRONT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    // enable transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glViewport(0, 0, kWindowWidth, kWindowHeight);
+
+    auto result = RUN_ALL_TESTS();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+    return result;
 }
