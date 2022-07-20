@@ -3,7 +3,7 @@ set(PROJECT_NAME "NEE")
 project(${PROJECT_NAME})
 
 include(build/conanbuildinfo.cmake)
-conan_basic_setup()
+conan_basic_setup(TARGETS)
 
 message("Building ${PROJECT_NAME}")
 option(BUILD_TESTS "Build tests" ON)
@@ -15,17 +15,15 @@ if(BUILD_TESTS)
 endif()
 
 include_directories(include)
-file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
+add_subdirectory(src)
 
-add_executable(${PROJECT_NAME} ${SOURCES_LIST})
-
-set_target_properties(
-  ${PROJECT_NAME} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED YES
-                             CXX_EXTENSIONS NO)
+add_executable(${PROJECT_NAME} 
+     main.cpp
+)
 
 # link soil first to dismiss soil linking errors
 # target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} ${CONAN_LIBS})
+target_link_libraries(${PROJECT_NAME} neegine)
 
 # file(COPY ${CMAKE_SOURCE_DIR}/config
 #      DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

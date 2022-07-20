@@ -16,7 +16,8 @@ target_include_directories(
 
 target_link_libraries(
     UnitTests
-    ${CONAN_LIBS}
+    neegine
+    CONAN_PKG::gtest
 )
 # include(GoogleTest)
 # gtest_discover_tests(UnitTests)

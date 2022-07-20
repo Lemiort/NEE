@@ -3,7 +3,7 @@
 
 #include <stdexcept>
 
-#include "IShader.h"
+#include "IShader.hpp"
 
 namespace nee::shader {
 
@@ -16,7 +16,7 @@ enum class ShaderType : GLenum {
 template <ShaderType shader_type>
 class Shader : public IShader {
 public:
-    Shader(std::string const& source) {
+    explicit Shader(std::string const& source) {
         shader_id_ = glCreateShader(static_cast<GLenum>(shader_type));
         if (shader_id_ == 0) {
             throw std::runtime_error("Error on glCreateShader");
@@ -26,6 +26,8 @@ public:
                        nullptr);
         glCompileShader(shader_id_);
     }
+    Shader(const Shader&) = delete;             // non construction-copyable
+    Shader& operator=(const Shader&) = delete;  // non copyable
     ~Shader() override { glDeleteShader(shader_id_); };
     GLuint GetShaderId() const override { return shader_id_; }
 
