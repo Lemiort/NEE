@@ -2,14 +2,17 @@
 #define MAIN_H_INCLUDED
 #include <GBuffer.h>
 #include <GL/glew.h>
+#include <GLFW/glfw3.h>
 #include <Material.h>
 #include <string.h>
 #include <util.h>
 #include <version.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <thread>
+
 #include "Billboard.h"
 #include "Light.h"
 #include "Logger.h"
@@ -139,10 +142,10 @@ PerlinNoise* noise1;
 Billboard* bb1;
 ShadowMapFBO* smfbo1;
 
-//сигнал о том, что прогрузка шейдеров и пр. завершилась
+// сигнал о том, что прогрузка шейдеров и пр. завершилась
 bool initialized;
 
-//сообщение, передаваемое между двум потоками
+// сообщение, передаваемое между двум потоками
 string sharedMessage;
 shared_ptr<Material> mainMaterial, secondMaterial, shadowMaterial;
 shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;

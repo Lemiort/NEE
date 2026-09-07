@@ -3,11 +3,12 @@
 #include <GL/glew.h>
 #include <PlaceableObject.h>
 #include <RenderableObject.h>
-#include <SOIL/SOIL.h>
 #include <math_3d.h>
+
 #include <cstring>
 #include <map>
 #include <queue>
+
 #include "Shader.h"
 #include "ShaderFunctions.h"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
@@ -39,7 +40,7 @@ struct KerningPairs {
     }
 };
 
-//шрифт
+// шрифт
 class Font2d : public RenderableObject, public PlaceableObject {
 private:
     GLuint sverticesID, spositionID;
@@ -52,10 +53,10 @@ private:
     unsigned int* indicies;
     float aratio;
 
-    //отношение размеров картинки к экрану
+    // отношение размеров картинки к экрану
     float kx, ky;
 
-    //размер пикселя в uv
+    // размер пикселя в uv
     float pkx, pky;
     int fontHeight;
     uint32_t imageWidth, imageHeight;
@@ -86,12 +87,12 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
 
-    Vector2f GetLastCharacterLength();  //возвращает длину текущего символа
+    Vector2f GetLastCharacterLength();  // возвращает длину текущего символа
     void Render(Camera* cam);
     friend class FontLine2d;
 };
 
-//строчка шрифта
+// строчка шрифта
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
@@ -112,7 +113,7 @@ public:
     void Render(Camera* cam);
 };
 
-//класс отрисовки побуквенно
+// класс отрисовки побуквенно
 class Text2d : public RenderableObject, public PlaceableObject {
 private:
     bool yourselfShader;
@@ -127,7 +128,7 @@ private:
     unsigned int* indicies;
     float aratio;
 
-    //номер символа в кодовой таблице
+    // номер символа в кодовой таблице
     unsigned int character;
 
 public:
@@ -142,7 +143,7 @@ public:
     void Render(Camera* cam);
 };
 
-//класс линии из отрисовки букв
+// класс линии из отрисовки букв
 class TextLine2d : public RenderableObject, public PlaceableObject {
 private:
     Text2d* symbol;

@@ -1,7 +1,10 @@
 #include "Text_2D.h"
+
 #include <fstream>
 #include <sstream>
 #include <stdexcept>  // std::out_of_range
+
+#include "stb_image.h"
 
 FontLine2d::FontLine2d() { shaderProgram = nullptr; }
 
@@ -26,7 +29,7 @@ void FontLine2d::Render(Camera* cam) {
     Vector2f temp;
     spaceWidth = character.GetSpaceWidth() / ((float)character.GetFontHeight());
     for (unsigned int i = 0; i < text.length(); ++i) {
-        //ищем инфу об этом символе
+        // ищем инфу об этом символе
         uint32_t code = (((uint32_t)prevChar) << 16) | ((uint32_t)text.at(i));
         float kerning = 0;
         try {
@@ -36,24 +39,24 @@ void FontLine2d::Render(Camera* cam) {
         }
         dx += kerning;
 
-        //если нашли символ пробела рисуем его
+        // если нашли символ пробела рисуем его
         if ((unsigned int)text.at(i) == (unsigned int)' ') {
             dx += position[2] * spaceWidth;
         }
 
-        //собсно рисовка
+        // собсно рисовка
         character.SetPosition(position[0] + dx, position[1], position[2]);
         character.SetCharacter(text.at(i));
         temp = character.GetLastCharacterLength();
         character.Render(cam);
 
-        //если символ есть, рисуем его
+        // если символ есть, рисуем его
         if (temp.x > 0.0f)
-            //отсутп и разделитель между знаками
+            // отсутп и разделитель между знаками
             dx += temp.x + position[2] * spaceWidth / 4.0f;
         else
-            continue;  //нет символа - ничего не пишем
-        //запоминаем предыдущий символ
+            continue;  // нет символа - ничего не пишем
+        // запоминаем предыдущий символ
         prevChar = (unsigned int)text.at(i);
     }
 }
@@ -93,20 +96,20 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     filename = _filename;
     string fntFilemame = _filename;
     string imgFilename;
-    //сгенерируем вершинный буффер на будущее
+    // сгенерируем вершинный буффер на будущее
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //и индексный буффер
+    // и индексный буффер
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    //получаем значения шейдерных переменных
+    // получаем значения шейдерных переменных
     sverticesID = shaderProgram->GetAttribLocation("Position");
     uvID = shaderProgram->GetAttribLocation("UV");
     spositionID = shaderProgram->GetUniformLocation("s_Position");
     suvID = shaderProgram->GetUniformLocation("s_UV");
     colorID = shaderProgram->GetUniformLocation("textColor");
 
-    //ну и заполнение индексов
+    // ну и заполнение индексов
     indicies = new unsigned int[4];
     indicies[0] = 0;
     indicies[1] = 1;
@@ -119,14 +122,14 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     /*===========заполение информации о шрифте============*/
     fstream fin;
     fin.open(filename.c_str(), ios::in);
-    //временная переменная для чтения
+    // временная переменная для чтения
     string in_s;
     bool kerning = false;
     bool data = false;
     while (1) {
         getline(fin, in_s);
         if (!fin.eof()) {
-            //чтение данных
+            // чтение данных
             if (data) {
                 stringstream sstr;
                 unsigned int t1[6];
@@ -151,16 +154,16 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 uint32_t code = ((uint32_t)code1 << 16) | ((uint32_t)code2);
                 kerningInfo.insert(pair<uint32_t, float>(code, f1));
             }
-            //ищем название текстуры
+            // ищем название текстуры
             int t = in_s.find("textures: ");
             string temp("textures: ");
-            //нашли название текстуры
+            // нашли название текстуры
             if (t == 0) {
                 imgFilename = string("fonts/") + string(in_s, temp.length());
                 printf("\nFont image is %s", imgFilename.c_str());
             }
 
-            //ищем название шрифта
+            // ищем название шрифта
             t = in_s.find("px");
             if (t >= 0) {
                 int t2 = in_s.find(" ");
@@ -170,17 +173,17 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 sstr << temp;
                 sstr >> fontHeight;
                 // sscanf(in_s.c_str(),"%s %dpx",fontName,fontHeight);
-                //флаг о том, что сейчас будут читаться данные
+                // флаг о том, что сейчас будут читаться данные
                 data = true;
                 printf("\nFont name is %s", fontName.c_str());
                 printf("\nFont height is %d", fontHeight);
             }
-            //ищем информацию о том, что сейчас будет кернинг
+            // ищем информацию о том, что сейчас будет кернинг
             t = in_s.find("kerning pairs:");
             if (t >= 0) {
-                //перестали читать данные
+                // перестали читать данные
                 data = false;
-                //начали читать о парах кернинга
+                // начали читать о парах кернинга
                 kerning = true;
             }
 
@@ -190,22 +193,63 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     }
     /*================================================*/
 
-    //создаём текстуру
-    texBufferID = SOIL_load_OGL_texture(
-        (char*)imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
+    // создаём текстуру
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, nrChannels;
+    // Load PNG. Pass 4 to have RGBA
+    unsigned char* image_data =
+        stbi_load(imgFilename.c_str(), &width, &height, &nrChannels, 4);
+
+    if (image_data) {
+        // SOIL_FLAG_NTSC_SAFE_RGB -> Compress RGB values to the range [16, 235]
+        // while leaving alpha channel
+        for (int i = 0; i < width * height * 4; ++i) {
+            if (i % 4 != 3) {  // Compress R, G, B. Alpha channel (every 4th
+                               // byte) is left unchanged
+                image_data[i] = 16 + (image_data[i] * (235 - 16) / 255);
+            }
+        }
+
+        // SOIL_CREATE_NEW_ID -> Create a new texture ID and bind it
+        glGenTextures(1, &texBufferID);
+        glBindTexture(GL_TEXTURE_2D, texBufferID);
+
+        // Setting texture filtering parameters for mipmaps
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // Asking videocard to compress the txture
+        GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+        // Send pixels to Opengls
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+        // Generate mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // free data
+        stbi_image_free(image_data);
+    } else {
+        std::cerr << "[STB Error] Could not load file : " << imgFilename
+                  << " | Reason: " << stbi_failure_reason() << std::endl;
+    }
+
     // делаем активным текстурный юнит 0
     glActiveTexture(GL_TEXTURE0);
     // назначаем текстуру на активный текстурный юнит
     glBindTexture(GL_TEXTURE_2D, texBufferID);
     texSamplerID = shaderProgram->GetUniformLocation("texSampler");
 
-    //получаем размеры изображения
+    // получаем размеры изображения
     FILE* imageFile = fopen(imgFilename.c_str(), "rb");
     char buffer2[4];
 
-    //загружаем заголовочник
+    // загружаем заголовочник
     fread(&buffer2, 1, 4, imageFile);
     // printf("\nBuffer 0 %x",buffer);
     // printf("\nBuffer 0 %x %x %x
@@ -224,12 +268,12 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     // printf("\nBuffer 4 %x %x %x
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
 
-    //считаем собсно ширину
+    // считаем собсно ширину
     imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n width=%d", imageWidth);
 
-    //считаем высоту
+    // считаем высоту
     fread(&buffer2, 1, 4, imageFile);
     // printf("\nBuffer 5 %x %x %x
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
@@ -237,7 +281,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                   ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n height=%d", imageHeight);
 
-    //конверсия пикселя в относительные координаты
+    // конверсия пикселя в относительные координаты
     pkx = 1.0f / (float)imageWidth;
     pky = 1.0f / (float)imageHeight;
 
@@ -257,7 +301,7 @@ void Font2d::SetAspectRatio(float f) { aratio = f; }
 void Font2d::SetCharacter(unsigned int c) {
     character = c;
 
-    //ээ пиздец, установка координаты Y
+    // ээ пиздец, установка координаты Y
     position[2] = position[2] / (float)fontHeight;
     temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
     try {
@@ -340,15 +384,15 @@ void Font2d::Render(Camera* cam) {
     float u = (float)(temp.xpos) / (float)imageWidth;
     float v = 1.0f - (float)(temp.ypos) / (float)imageHeight;
     // printf("\nu=%f,  v=%f ",u,v);
-    //считаем смещение
+    // считаем смещение
     // px+=((float)temp.xOffset/(float)imageWidth)*kx*1.0f*size;
     // py-=((float)temp.yOffset/(float)imageHeight)*ky*1.0f*size;
 
-    //вектор положения в пространстве
+    // вектор положения в пространстве
     glUniform2f(spositionID, position[0] + xOffset, position[1] + yOffset);
-    //вектор смещения UV
+    // вектор смещения UV
     glUniform2f(suvID, u, v);
-    //размер
+    // размер
     glUniform1f(sizeID, position[2]);
 
     glVertexAttribPointer(sverticesID, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -360,7 +404,7 @@ void Font2d::Render(Camera* cam) {
     // назначаем текстуру на активный текстурный юнит
     glBindTexture(GL_TEXTURE_2D, texBufferID);
     glUniform1i(texSamplerID,
-                0);  //говорим шейдеру, чтобы использовал в качестве текстуры 0
+                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
     glUniform4f(colorID, color.r, color.g, color.b, color.a);
     glEnableVertexAttribArray(sverticesID);
     glEnableVertexAttribArray(uvID);
@@ -418,13 +462,53 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
                  GL_STATIC_DRAW);
 
-    //создаём текстуру
-    // texBufferID = TextureCreateFromTGA("Textures/Anonymus Bold 512x256.tga");
-    texBufferID = SOIL_load_OGL_texture(
-        "Textures/Anonymus 4096x2048.tga_sdf.png", SOIL_LOAD_AUTO,
-        SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
+    // создаём текстуру
+    //  texBufferID = TextureCreateFromTGA("Textures/Anonymus Bold
+    //  512x256.tga");
+
+    stbi_set_flip_vertically_on_load(true);
+
+    int nrChannels;
+    unsigned char* data = stbi_load("Textures/Anonymus 4096x2048.tga_sdf.png",
+                                    &width, &height, &nrChannels, 4);
+
+    if (data) {
+        // Compress 0-255 to "safe" 16-235
+        for (int i = 0; i < width * height * 4; ++i) {
+            if (i % 4 != 3) {  // Edit only RGB. Don't touch Alpha
+                data[i] = 16 + (data[i] * (235 - 16) / 255);
+            }
+        }
+
+        // Generate new textutre id
+        glGenTextures(1, &texBufferID);
+        glBindTexture(GL_TEXTURE_2D, texBufferID);
+
+        // setup mipmapping
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // compress to DXT5 on the fly
+        GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+        // send pixels to VRAM
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+        // genearete mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // free RAM
+        stbi_image_free(data);
+    } else {
+        std::cerr << "[STB Error] Could not load: Textures/Anonymus "
+                     "4096x2048.tga_sdf.png | Причина: "
+                  << stbi_failure_reason() << std::endl;
+    }
+
     // делаем активным текстурный юнит 0
     glActiveTexture(GL_TEXTURE0);
     // назначаем текстуру на активный текстурный юнит
@@ -475,7 +559,7 @@ void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
                  GL_STATIC_DRAW);
 
-    //создаём текстуру
+    // создаём текстуру
     texBufferID = texBuf;
     texSamplerID = textureID;
 }
@@ -500,9 +584,9 @@ void Text2d::Render(Camera* cam) {
     suvID = shaderProgram->GetUniformLocation("s_UV");
     sizeID = shaderProgram->GetUniformLocation("size");
     colorID = shaderProgram->GetUniformLocation("textColor");
-    //вектор положения в пространстве
+    // вектор положения в пространстве
     glUniform2f(spositionID, position[0], position[1]);
-    //вектор смещения UV
+    // вектор смещения UV
     glUniform2f(suvID, x, y);
     glUniform1f(sizeID, dx);
 
@@ -515,7 +599,7 @@ void Text2d::Render(Camera* cam) {
     // назначаем текстуру на активный текстурный юнит
     glBindTexture(GL_TEXTURE_2D, texBufferID);
     glUniform1i(texSamplerID,
-                0);  //говорим шейдеру, чтобы использовал в качестве текстуры 0
+                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
     glUniform4f(colorID, color.r, color.g, color.b, color.a);
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(uvID);

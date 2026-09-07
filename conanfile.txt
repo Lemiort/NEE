@@ -1,14 +1,13 @@
 [requires]
-glfw/3.2.1.20180327@bincrafters/stable
-glew/2.1.0@bincrafters/stable
-jsonformoderncpp/3.5.0@vthiery/stable
-glm/0.9.9.1@g-truc/stable
-soil/1.1.0@lemiort/development
+glfw/3.4
+glew/2.2.0
+nlohmann_json/3.12.0
+glm/1.0.3
+stb/cci.20240531
 
 [generators]
-cmake
+CMakeDeps
+CMakeToolchain
 
-[options]
-glfw:shared=False
-glew:shared=False
-soil:shared=False
+[layout]
+cmake_layout

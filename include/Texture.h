@@ -1,7 +1,7 @@
 #ifndef TEXTURE_H_INCLUDED
 #define TEXTURE_H_INCLUDED
 #include <GL/glew.h>
-#include <SOIL/SOIL.h>
+
 #include <sstream>
 #include <string>
 class Texture {
@@ -22,10 +22,10 @@ public:
 class Texture2D : public Texture {
 protected:
 public:
-    //конструктор абстрактной текстуры
+    // конструктор абстрактной текстуры
     Texture2D(GLuint texBufferID, bool _del = true);
 
-    //конструктор по умолчанию, удаляет текстуру после использования
+    // конструктор по умолчанию, удаляет текстуру после использования
     Texture2D() {}
     virtual ~Texture2D();
     virtual bool Load(const char* filename);

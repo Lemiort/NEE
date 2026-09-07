@@ -1,5 +1,7 @@
 #include "Font2d.h"
 
+#include "stb_image.h"
+
 Character2d::Character2d() {}
 
 Character2d::~Character2d() {}
@@ -11,27 +13,27 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
     // TODO сделать загрузку шрифта
     fileName = _fileName;
 
-    //открываем файл шрифта на чтение
+    // открываем файл шрифта на чтение
     fstream fin;
     fin.open(fileName.c_str(), ios::in);
-    //временная переменная для чтения
+    // временная переменная для чтения
     string inStr;
 
-    //временная переменная для загрузки текстуры
+    // временная переменная для загрузки текстуры
     string imgFilename;
 
-    //флаг того, что пошли данные о кернинге
+    // флаг того, что пошли данные о кернинге
     bool kerning = false;
-    //флаг того, что пошли данные о символах
+    // флаг того, что пошли данные о символах
     bool data = false;
     while (1) {
-        //читаем построчно
+        // читаем построчно
         getline(fin, inStr);
-        //пока не достигнем конца файлв
+        // пока не достигнем конца файлв
         if (!fin.eof()) {
-            //чтение данных
+            // чтение данных
             if (data) {
-                //поток для конвертации
+                // поток для конвертации
                 stringstream sstr;
                 //???
                 unsigned int t1[6];
@@ -42,13 +44,13 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                 sstr >> code;
                 sstr >> t1[0] >> t1[1] >> t1[2] >> t1[3] >> t2[0] >> t2[1] >>
                     t1[4] >> t1[5];
-                //инициализируем данные о новой букве
+                // инициализируем данные о новой букве
                 FontCharacter temp2 = FontCharacter(t1[0], t1[1], t1[2], t1[3],
                                                     t2[0], t2[1], t1[4], t1[5]);
-                //сохраняем данные о букве в список
+                // сохраняем данные о букве в список
                 fontInfo.insert(pair<unsigned int, FontCharacter>(code, temp2));
             }
-            //заполняем инфу о кернинге
+            // заполняем инфу о кернинге
             if (kerning) {
                 stringstream sstr;
                 sstr << inStr;
@@ -58,19 +60,19 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                 float f1;
                 sstr >> code2 >> f1;
                 uint32_t code = ((uint32_t)code1 << 16) | ((uint32_t)code2);
-                //сохраняем данные о кернинге
+                // сохраняем данные о кернинге
                 kerningInfo.insert(pair<uint32_t, float>(code, f1));
             }
-            //ищем название текстуры
+            // ищем название текстуры
             int t = inStr.find("textures: ");
             string temp("textures: ");
-            //нашли название текстуры
+            // нашли название текстуры
             if (t == 0) {
                 imgFilename = string("fonts/") + string(inStr, temp.length());
                 printf("\nFont image is %s", imgFilename.c_str());
             }
 
-            //ищем название шрифта
+            // ищем название шрифта
             t = inStr.find("px");
             if (t >= 0) {
                 int t2 = inStr.find(" ");
@@ -80,41 +82,82 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                 sstr << temp;
                 sstr >> fontHeight;
 
-                //флаг о том, что сейчас будут читаться данные
+                // флаг о том, что сейчас будут читаться данные
                 data = true;
                 printf("\nFont name is %s", fontName.c_str());
                 printf("\nFont height is %d", fontHeight);
             }
-            //ищем информацию о том, что сейчас будет кернинг
+            // ищем информацию о том, что сейчас будет кернинг
             t = inStr.find("kerning pairs:");
             if (t >= 0) {
-                //перестали читать данные
+                // перестали читать данные
                 data = false;
-                //начали читать о парах кернинга
+                // начали читать о парах кернинга
                 kerning = true;
             }
 
         } else
             break;
         inStr.clear();
-    }  //заполнили данные о шрифте
+    }  // заполнили данные о шрифте
 
-    GLuint texBufferID;
-    //создаём текстуру
-    texBufferID = SOIL_load_OGL_texture(
-        (char*)imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
-    //загружаем в материал
+    GLuint texBufferID = 0;
+
+    stbi_set_flip_vertically_on_load(true);
+
+    int width, height, nrChannels;
+    // Load PNG. Pass 4 to have RGBA
+    unsigned char* image_data =
+        stbi_load(imgFilename.c_str(), &width, &height, &nrChannels, 4);
+
+    if (image_data) {
+        // SOIL_FLAG_NTSC_SAFE_RGB -> Compress RGB values to the range [16, 235]
+        // while leaving alpha channel
+        for (int i = 0; i < width * height * 4; ++i) {
+            if (i % 4 != 3) {  // Compress R, G, B. Alpha channel (every 4th
+                               // byte) is left unchanged
+                image_data[i] = 16 + (image_data[i] * (235 - 16) / 255);
+            }
+        }
+
+        // SOIL_CREATE_NEW_ID -> Create a new texture ID and bind it
+        glGenTextures(1, &texBufferID);
+        glBindTexture(GL_TEXTURE_2D, texBufferID);
+
+        // Setting texture filtering parameters for mipmaps
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                        GL_LINEAR_MIPMAP_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+        // Asking videocard to compress the txture
+        GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+        // Send pixels to Opengls
+        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, image_data);
+
+        // Generate mipmaps
+        glGenerateMipmap(GL_TEXTURE_2D);
+
+        // free data
+        stbi_image_free(image_data);
+    } else {
+        std::cerr << "[STB Error] Could not load file : " << imgFilename
+                  << " | Reason: " << stbi_failure_reason() << std::endl;
+    }
+
+    // загружаем в материал
     shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
     _mat->SetColorTexture(temp);
 
-    //получаем размеры изображения
+    // получаем размеры изображения
     FILE* imageFile = fopen(imgFilename.c_str(), "rb");
     char buffer2[4];
 
-    //загружаем заголовочник
-    // TODO разобраться в этой хуите
+    // загружаем заголовочник
+    //  TODO разобраться в этой хуите
     fread(&buffer2, 1, 4, imageFile);
     // printf("\nBuffer 0 %x",buffer);
     // printf("\nBuffer 0 %x %x %x
@@ -133,12 +176,12 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
     // printf("\nBuffer 4 %x %x %x
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
 
-    //считаем собсно ширину
+    // считаем собсно ширину
     imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n width=%d", imageWidth);
 
-    //считаем высоту
+    // считаем высоту
     fread(&buffer2, 1, 4, imageFile);
     // printf("\nBuffer 5 %x %x %x
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
@@ -146,7 +189,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                   ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     printf("\n height=%d", imageHeight);
 
-    //конверсия пикселя в относительные координаты
+    // конверсия пикселя в относительные координаты
     pkx = 1.0f / (float)imageWidth;
     pky = 1.0f / (float)imageHeight;
 
@@ -210,7 +253,7 @@ void Character2d::SetCharacter(unsigned int c) {
     // TODO масштабирование???
     position[2] = position[2] / (float)fontHeight;
     temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
-    //ищем инфу о текущем символе
+    // ищем инфу о текущем символе
     try {
         temp = fontInfo.at(currentCharacter);
     } catch (const std::out_of_range& oor) {
@@ -218,11 +261,11 @@ void Character2d::SetCharacter(unsigned int c) {
         characterLength = Vector2f(-1.0f, -1.0f);
         return;
     }
-    //ширина и высота в uv-координатах
+    // ширина и высота в uv-координатах
     realWidth = (float)temp.width / (float)imageWidth;
     realHeight = (float)temp.height / (float)imageHeight;
     dx = 1.0f;
-    //позиции на текстуре
+    // позиции на текстуре
     xOffset =
         position[2] * (2 * dx) * kx * (float)temp.xOffset / (float)imageWidth;
     yOffset =

@@ -1,12 +1,12 @@
 #include "tga_loader.h"
 
-bool LoadFile(const char *fileName, bool binary, uint8_t **buffer,
-              uint32_t *size) {
+bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
+              uint32_t* size) {
     ASSERT(fileName);
     ASSERT(buffer);
     ASSERT(size);
 
-    FILE *input;
+    FILE* input;
     uint32_t fileSize, readed;
 
     const char mode[] = {'r', binary ? 'b' : 't', '\0'};
@@ -34,7 +34,7 @@ bool LoadFile(const char *fileName, bool binary, uint8_t **buffer,
 
     if (readed != fileSize) {
         LOG_ERROR("Reading file '%s'\n", fileName);
-        delete[] * buffer;
+        delete[] *buffer;
         return false;
     }
 
@@ -44,11 +44,11 @@ bool LoadFile(const char *fileName, bool binary, uint8_t **buffer,
 }
 
 // функция загрузки изображения из файла TGA и сздания текстуры
-GLuint TextureCreateFromTGA(const char *fileName) {
+GLuint TextureCreateFromTGA(const char* fileName) {
     ASSERT(fileName);
 
-    TGAHeader *header;
-    uint8_t *buffer;
+    TGAHeader* header;
+    uint8_t* buffer;
     uint32_t size;
     GLint format, internalFormat;
     GLuint texture;
@@ -63,7 +63,7 @@ GLuint TextureCreateFromTGA(const char *fileName) {
         return 0;
     }
 
-    header = (TGAHeader *)buffer;
+    header = (TGAHeader*)buffer;
 
     // проверим формат TGA-файла - несжатое RGB или RGBA изображение
     if (header->datatype != 2 ||
@@ -95,7 +95,7 @@ GLuint TextureCreateFromTGA(const char *fileName) {
     glTexImage2D(
         GL_TEXTURE_2D, 0, internalFormat, header->width, header->height, 0,
         format, GL_UNSIGNED_BYTE,
-        (const GLvoid *)(buffer + sizeof(TGAHeader) + header->idlength));
+        (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
 
     // после загрузки в текстуру данные о цвете в памяти нам больше не нужны
     delete[] buffer;

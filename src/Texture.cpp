@@ -1,5 +1,10 @@
 #include "Texture.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <iostream>
+
+#include "stb_image.h"
+
 Texture::Texture(bool _del) { del = _del; }
 
 Texture::~Texture() {
@@ -214,10 +219,53 @@ Texture2D::~Texture2D() {
 }
 
 bool Texture2D::Load(const char* filename) {
-    texBufferID = SOIL_load_OGL_texture(
-        filename, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
+    // stbi_set_flip_vertically_on_load(true);
+
+    int width, height, nrChannels;
+
+    // Load pixels with stb_image, forcing 4 channels (RGBA)
+    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 4);
+
+    if (!data) {
+        std::cerr << "[STB Error] Could not load: " << filename
+                  << " | Reason: " << stbi_failure_reason() << std::endl;
+        return 0;
+    }
+
+    // compress RGB values to the range [16, 235] while leaving alpha channel
+    // unchanged
+    for (int i = 0; i < width * height * 4; ++i) {
+        if (i % 4 != 3) {
+            data[i] = 16 + (data[i] * (235 - 16) / 255);
+        }
+    }
+
+    // Create a new texture ID and bind it
+    glGenTextures(1, &texBufferID);
+    glBindTexture(GL_TEXTURE_2D, texBufferID);
+
+    // Set texture parameters for filtering and wrapping
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    // Set the internal format to a compressed format (DXT5)
+    GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+    // Send the pixel data to OpenGL, specifying the internal format as
+    // compressed
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA,
+                 GL_UNSIGNED_BYTE, data);
+
+    // Note: If you want to use mipmaps, you can generate them after uploading
+    // the texture data
+    // glGenerateMipmap(GL_TEXTURE_2D);
+
+    // Free the pixel data after uploading to GPU
+    stbi_image_free(data);
+
     if (texBufferID)
         return true;
     else
