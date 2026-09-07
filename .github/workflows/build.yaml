@@ -1,0 +1,76 @@
+name: CMake and Conan 2 CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # You can add "windows-latest" or "macos-latest" to test cross-platform
+        os: [ubuntu-latest] 
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Install System Dependencies (Linux Only)
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt-get update
+        # GLFW3 on Linux requires X11/Wayland development headers
+        sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev build-essential
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-base-architecture: 'x64'
+        python-version: '3.x'
+
+    - name: Install Conan 2
+      run: |
+        pip install conan
+        conan --version
+
+    - name: Detect Conan Profile
+      run: |
+        # Creates a default profile based on the runner's compiler settings
+        conan profile detect --force
+
+    - name: Cache Conan Packages
+      uses: actions/cache@v4
+      with:
+        path: ~/.conan2/p
+        key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-conan-
+
+    - name: Install Dependencies via Conan
+      run: |
+        conan install . \
+          --output-folder=build \
+          --build=missing \
+          -s build_type=Release \
+          -c tools.system.package_manager:mode=install \
+          -c tools.system.package_manager:sudo=True
+
+
+    - name: Configure CMake
+      run: |
+        TOOLCHAIN_PATH=$(find build -name "conan_toolchain.cmake" | head -n 1)
+        if [ -z "$TOOLCHAIN_PATH" ]; then
+          echo "Error: conan_toolchain.cmake doesn't exist. Check logs 'Install Dependencies via Conan' above!"
+          exit 1
+        fi
+        echo "Using toolchain: $TOOLCHAIN_PATH"
+        cmake -B build -S . -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_PATH" -DCMAKE_BUILD_TYPE=Release
+
+    - name: Build Project
+      run: |
+        cmake --build build --config Release
