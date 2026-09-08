@@ -1,6 +1,7 @@
 #include "Font2d.h"
 
 #include <spdlog/spdlog.h>
+#include <stb_image.h>
 
 #include <fstream>
 
@@ -87,41 +88,38 @@ bool Character2d::Init(std::shared_ptr<Material> _mat, std::string _fileName) {
         inStr.clear();
     }
 
-    GLuint texBufferID;
-    texBufferID = SOIL_load_OGL_texture(
-        imgFilename.c_str(), SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
+    int texWidth = 0;
+    int texHeight = 0;
+    int texChannels = 0;
+    unsigned char* imageData =
+        stbi_load(imgFilename.c_str(), &texWidth, &texHeight, &texChannels, 0);
+    if (!imageData) {
+        spdlog::error("Unable to load font texture: {}", imgFilename);
+        return false;
+    }
+
+    glGenTextures(1, &texBufferID);
+    glBindTexture(GL_TEXTURE_2D, texBufferID);
+    GLenum texFormat = texChannels == 4 ? GL_RGBA : GL_RGB;
+    glTexImage2D(GL_TEXTURE_2D, 0, texFormat, texWidth, texHeight, 0, texFormat,
+                 GL_UNSIGNED_BYTE, imageData);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(imageData);
+
     std::shared_ptr<Texture2D> temp = std::make_shared<Texture2D>(texBufferID);
     _mat->SetColorTexture(temp);
 
-    // read png header
-    FILE* imageFile = fopen(imgFilename.c_str(), "rb");
-    char buffer2[4];
-
-    // load header
-    fread(&buffer2, 1, 4, imageFile);
-    fread(&buffer2, 1, 4, imageFile);
-    fread(&buffer2, 1, 4, imageFile);
-    fread(&buffer2, 1, 4, imageFile);
-
-    // parse width
-    fread(&buffer2, 1, 4, imageFile);
-    imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
-                 ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
+    imageWidth = static_cast<uint32_t>(texWidth);
+    imageHeight = static_cast<uint32_t>(texHeight);
     spdlog::debug("Image width = {}", imageWidth);
-
-    // parse height
-    fread(&buffer2, 1, 4, imageFile);
-    imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
-                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
     spdlog::debug("Image height - {}", imageHeight);
 
-    // pixel->uv conversion
     pkx = 1.0f / static_cast<float>(imageWidth);
     pky = 1.0f / static_cast<float>(imageHeight);
-
-    fclose(imageFile);
 
     return true;
 }

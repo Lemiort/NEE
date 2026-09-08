@@ -17,17 +17,15 @@ This is realization of Openg3.3+ graphics engine.
 
 ## Building
 
-Setup conan:
+Setup Conan 2:
 ```bash
-conan profile new default --detect
-conan profile update settings.compiler.libcxx=libstdc++11 default
-conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
-conan config set general.revisions_enabled=1
+conan profile detect --force
+conan install . --output-folder=build --build=missing -s compiler.cppstd=17
 ```
 
-Install conan packages:
+Configure and build:
 
 ```console
-mkdir build && cd build
-conan install .. --build=missing
+cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=build/build/generators/conan_toolchain.cmake -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --config Debug
 ```

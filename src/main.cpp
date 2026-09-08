@@ -1,12 +1,15 @@
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <spdlog/spdlog.h>
+#include <stb_image_write.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <ctime>
 #include <fstream>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
 
 #define GLM_ENABLE_EXPERIMENTAL
 
@@ -204,8 +207,15 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
                 strftime(buffer, 80,
                          "screenshots/Screenshot %d-%m-%Y %I.%M.%S.png",
                          timeinfo);
-                int result = SOIL_save_screenshot(buffer, SOIL_SAVE_TYPE_PNG, 0,
-                                                  0, width, height);
+
+                std::vector<unsigned char> pixels(static_cast<size_t>(width) *
+                                                  static_cast<size_t>(height) *
+                                                  3);
+                glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
+                             pixels.data());
+
+                int result = stbi_write_png(buffer, width, height, 3,
+                                            pixels.data(), width * 3);
                 if (result != 0) {
                     spdlog::debug("Screenshot saved as {}", buffer);
                 }
@@ -904,7 +914,8 @@ int InitScene(GLFWwindow* window) {
     glfwMakeContextCurrent(window);
     GLenum res = glewInit();
     if (res != GLEW_OK) {
-        spdlog::error("GLEW error {}", glewGetErrorString(res));
+        spdlog::error("GLEW error {}",
+                      reinterpret_cast<const char*>(glewGetErrorString(res)));
         return 1;
     } else {
         spdlog::debug("GLEW status is {}", res);
@@ -1192,7 +1203,8 @@ int main(int argc, char** argv) {
         window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
     GLenum res = glewInit();
     if (res != GLEW_OK) {
-        spdlog::error("GLEW error: {}", glewGetErrorString(res));
+        spdlog::error("GLEW error: {}",
+                      reinterpret_cast<const char*>(glewGetErrorString(res)));
         return 1;
     } else {
         spdlog::debug("GLEW status is {}", res);

@@ -34,13 +34,8 @@ jobs:
     - name: Install conan packages
       shell: bash
       run: |
-        mkdir ${{github.workspace}}/build && cd ${{github.workspace}}/build
-        conan profile new default --detect
-        conan profile update settings.compiler.libcxx=libstdc++11 default
-        conan remote add bincrafters https://bincrafters.jfrog.io/artifactory/api/conan/public-conan
-        conan config set general.revisions_enabled=1
-        conan install .. --build=missing
-        cd ${{github.workspace}}
+        conan profile detect --force
+        conan install ${{github.workspace}} --output-folder=${{github.workspace}}/build --build=missing -s compiler.cppstd=17
 
     - name: Configure CMake
       # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

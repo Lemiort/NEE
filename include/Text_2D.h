@@ -2,7 +2,6 @@
 #define INCLUDE_TEXT_2D_H
 
 #include <GL/glew.h>
-#include <SOIL2/SOIL2.h>
 
 #include <glm/glm.hpp>
 #include <map>

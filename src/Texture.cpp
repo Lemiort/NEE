@@ -1,5 +1,8 @@
 #include "Texture.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
+
 Texture::Texture(bool _del) { del = _del; }
 
 Texture::~Texture() {
@@ -214,14 +217,44 @@ Texture2D::~Texture2D() {
 }
 
 bool Texture2D::Load(const char* filename) {
-    texBufferID = SOIL_load_OGL_texture(
-        filename, SOIL_LOAD_AUTO, SOIL_CREATE_NEW_ID,
-        SOIL_FLAG_MIPMAPS | SOIL_FLAG_INVERT_Y | SOIL_FLAG_NTSC_SAFE_RGB |
-            SOIL_FLAG_COMPRESS_TO_DXT);
-    if (texBufferID)
-        return true;
-    else
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    unsigned char* data = stbi_load(filename, &width, &height, &channels, 0);
+    if (!data) {
         return false;
+    }
+
+    GLenum internalFormat = GL_RGB;
+    GLenum dataFormat = GL_RGB;
+    if (channels == 1) {
+        internalFormat = GL_RED;
+        dataFormat = GL_RED;
+    } else if (channels == 2) {
+        internalFormat = GL_RG;
+        dataFormat = GL_RG;
+    } else if (channels == 3) {
+        internalFormat = GL_RGB;
+        dataFormat = GL_RGB;
+    } else if (channels == 4) {
+        internalFormat = GL_RGBA;
+        dataFormat = GL_RGBA;
+    }
+
+    glGenTextures(1, &texBufferID);
+    glBindTexture(GL_TEXTURE_2D, texBufferID);
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, dataFormat,
+                 GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    stbi_image_free(data);
+
+    return texBufferID != 0;
 }
 
 void AbstractTexture::SetTexture(GLuint _texID) { texBufferID = _texID; }

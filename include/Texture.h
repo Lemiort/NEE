@@ -1,7 +1,6 @@
 #ifndef INCLUDE_TEXTURE_H
 #define INCLUDE_TEXTURE_H
 #include <GL/glew.h>
-#include <SOIL2/SOIL2.h>
 
 #include <sstream>
 #include <string>

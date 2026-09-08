@@ -14,6 +14,8 @@ class Character2d : public MaterialObject, public PlaceableObject {
 private:
     Mesh mesh;
 
+    GLuint texBufferID;
+
     std::string fontName;
 
     std::string fileName;

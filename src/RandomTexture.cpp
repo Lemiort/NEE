@@ -1,6 +1,7 @@
 #include "RandomTexture.h"
 
 #include <glm/gtc/random.hpp>
+#include <vector>
 
 RandomTexture::RandomTexture() {
     // ctor
@@ -15,7 +16,7 @@ RandomTexture::~RandomTexture() {
 }
 
 bool RandomTexture::InitRandomTexture(unsigned int size) {
-    glm::vec3 pRandomData[size];
+    std::vector<glm::vec3> pRandomData(size);
     for (unsigned int i = 0; i < size; i++) {
         pRandomData[i].x = glm::linearRand(0, 1);
         pRandomData[i].y = glm::linearRand(0, 1);
@@ -25,7 +26,7 @@ bool RandomTexture::InitRandomTexture(unsigned int size) {
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_1D, textureID);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0.0f, GL_RGB, GL_FLOAT,
-                 pRandomData);
+                 pRandomData.data());
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
