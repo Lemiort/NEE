@@ -1,6 +1,8 @@
 #ifndef CAMERA_H_INCLUDED
 #define CAMERA_H_INCLUDED
 
+#include <memory>
+
 #include "math_3d.h"
 
 class Camera {
@@ -24,13 +26,13 @@ public:
 
     const Vector3f& GetUp() const;
 
-    float GetFov();
+    float GetFov() const;
 
     void SetFOV(float fov);
 
-    float GetZNear();
+    float GetZNear() const;
 
-    float GetZFar();
+    float GetZFar() const;
 
     void SetZNear(float znear);
 
@@ -38,9 +40,9 @@ public:
 
     void OnViewportResize(int width, int height);
 
-    int GetWidth();
+    int GetWidth() const;
 
-    int GetHeight();
+    int GetHeight() const;
 
 private:
     float FOV;

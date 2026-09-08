@@ -51,7 +51,7 @@ void Billboard::Init(const char* TexFilename) {
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     float coords[3] = {Pos.x, Pos.y, Pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
@@ -63,32 +63,32 @@ void Billboard::SetPos(Vector3f _Pos) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     float coords[3] = {Pos.x, Pos.y, Pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
 }
 
-void Billboard::Render(Camera* cam) {
+void Billboard::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
 
-    //матрица проекции камеры
+    // матрица проекции камеры
     glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //позиция камеры
-    glUniform3f(camPosID, cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
+    // позиция камеры
+    glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     colorMap.Bind(GL_TEXTURE0);
     glUniform1i(colSamplerID,
-                0);  //говорим шейдеру, чтобы использовал в качестве текстуры 0
+                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);

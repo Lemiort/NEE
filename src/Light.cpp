@@ -1,5 +1,7 @@
 #include "Light.h"
+
 #include <iomanip>
+#include <memory>
 
 void DirectionalLight::SetCol(Vector3f col) {
     color[0] = col.x;
@@ -29,7 +31,7 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     mesh->Init(_mat, "models/cube2x2x2.ho3d");
 }
 
-void DirectionalLight::Render(Camera* cam) {
+void DirectionalLight::Render(const Camera& cam) {
     // mesh->SetScale(1.0,1.0,1.0);
     mesh->SetPosition(0, 0, 0);
     mesh->Render(cam);
@@ -74,7 +76,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     mesh->SetRotation(90, 0, 0);
 }
 
-void SpotLight::Render(Camera* cam) {
+void SpotLight::Render(const Camera& cam) {
     /* Vector3f HTarget(direction[0], 0.0, direction[2]);
 HTarget.Normalize();
 
@@ -268,7 +270,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     temp[2] = 0;
     /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vsh");
     char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fsh");
-    shaderProgram=new Shader();
+    shaderProgram = std::make_unique<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
     shaderProgram->Init();
@@ -288,10 +290,10 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     std::cout << "\nLight radius is " << radius;
 }
 PointLight::~PointLight() {}
-void PointLight::Render(Camera* cam) {
+void PointLight::Render(const Camera& cam) {
     /*Assistant TM;
     TM.WorldPos(position[0],position[1],position[2]);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
     TM.SetPerspectiveProj(cam, Width, Height, zNear, zFar);*/
 
     /*shaderProgram->Use();
@@ -388,13 +390,13 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
 Line::~Line() {}
-// void Line::Render(Camera* pGameCamera, int width, int height)
-void Line::Render(Camera* cam) {
+// void Line::Render(const Camera& pGameCamera, int width, int height)
+void Line::Render(const Camera& cam) {
     Assistant TM;
     TM.WorldPos(0, 0, 0);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
 
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);

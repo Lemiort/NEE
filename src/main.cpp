@@ -1,21 +1,21 @@
+#include "main.h"
+
 #include <GL/glew.h>
-#include <main.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <ctime>
 #include <iostream>
+#include <memory>
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
-
-using namespace std;
 
 void CalcFPS() {
     double currentTime = glfwGetTime();
     ++frameCount;
     if (currentTime - lastTime >= 1.0) {
-        fps = (double)frameCount / (currentTime - lastTime);
+        fps = static_cast<double>(frameCount) / (currentTime - lastTime);
         lastTime += 1.0;
         frameCount = 0;
     }
@@ -75,13 +75,13 @@ void KeyCallback(GLFWwindow* window, int key, int scancode, int action,
             } else
                 std::cout << "\n Screenshot saved as " << buffer;
         } else
-            pGameCamera->OnKeyboard(key);
+            pGameCamera.OnKeyboard(key);
     }
 }
 void MousePosCallBack(GLFWwindow* window, double x, double y) {
     mouse.Update(x, y);
     if (mouse.rightButtonPressed || true)
-        pGameCamera->OnMouse(mouse.posX, mouse.posY);
+        pGameCamera.OnMouse(mouse.posX, mouse.posY);
 }
 
 void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
@@ -98,11 +98,11 @@ void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
 void FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
     width = w;
     height = h;
-    if (tline1 != NULL) tline1->SetAspectRatio(width, height);
-    if (fLine1 != NULL) fLine1->SetAspectRatio(width, height);
+    if (tline1) tline1->SetAspectRatio(width, height);
+    if (fLine1) fLine1->SetAspectRatio(width, height);
     if (smfbo1 != NULL) smfbo1->Init(w, h);
     if (gBuffer1 != NULL) gBuffer1->Init(w, h);
-    pGameCamera->OnViewportResize(width, height);
+    pGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
 
@@ -116,18 +116,17 @@ void ShadowPass() {
     TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
     TestMesh.SetScale(0.02, 0.02, 0.02);
     TestMesh.SetPosition(0, -0.2, 0);
-    // light3->SetPos(pGameCamera->GetPos());
-    // light3->SetDir(pGameCamera->GetTarget()-pGameCamera->GetPos());
-    Camera* lightCam =
-        new Camera(width, height, 45, 1, 1000.0f, spotLight1->GetPos(),
-                   Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+    // light3->SetPos(pGameCamera.GetPos());
+    // light3->SetDir(pGameCamera.GetTarget()-pGameCamera.GetPos());
+    Camera lightCam(width, height, 45, 1, 1000.0f, spotLight1->GetPos(),
+                    Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
 
     Plane.SetScale(30.0f, 30.0f, 30.0f);
     Plane.SetPosition(0.0f, -3.0f, 0.0f);
     Plane.SetRotation(0.0, 0.0, 0.0);
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
+    TM.SetCamera(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     shadowShader->Use();
@@ -171,8 +170,8 @@ void ShadowPass() {
     }
 
     // вращение камеры для спекуляра
-    glUniform3f(camPosID, lightCam->GetPos().x, lightCam->GetPos().y,
-                lightCam->GetPos().z);
+    glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
+                lightCam.GetPos().z);
 
     Cube.SetMaterial(shadowMaterial);
     for (float i = -5.0f; i < 5.0f; i += 0.1f)
@@ -185,7 +184,6 @@ void ShadowPass() {
     Plane.SetMaterial(shadowMaterial);
     Plane.Render(lightCam);
 
-    delete lightCam;
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -203,16 +201,15 @@ void RenderPass() {
     Plane.SetRotation(0.0, 0.0, 0.0);
     Assistant TM, TM2;  // TM - Для объекта, 2- для нормали объекта, 3 - для
                         // позиции камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
-    Camera* lightCam = new Camera(
-        width, height, pGameCamera->GetFov(), pGameCamera->GetZNear(),
-        pGameCamera->GetZFar(), spotLight1->GetPos(),
-        Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+    Camera lightCam(width, height, pGameCamera.GetFov(), pGameCamera.GetZNear(),
+                    pGameCamera.GetZFar(), spotLight1->GetPos(),
+                    Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
 
-    TM2.SetCamera(lightCam->GetPos(), lightCam->GetTarget(), lightCam->GetUp());
+    TM2.SetCamera(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
     TM2.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     /*meshShader->Use();
@@ -249,7 +246,7 @@ void RenderPass() {
     }
 
     //вращение камеры для спекуляра
-    glUniform3f(camPosID,pGameCamera->GetPos().x,pGameCamera->GetPos().y,pGameCamera->GetPos().z);*/
+    glUniform3f(camPosID,pGameCamera.GetPos().x,pGameCamera.GetPos().y,pGameCamera.GetPos().z);*/
 
     /*Cube.SetMaterial(mainMaterial);
     for(float i=-5.0f;i<5.0f;i+=0.1f)
@@ -318,8 +315,8 @@ void RenderPass() {
         }
 
         // вращение камеры для спекуляра
-        glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                    pGameCamera->GetPos().z);
+        glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
+                    pGameCamera.GetPos().z);
     }
     // Plane.SetMaterial(mainMaterial);
     Plane.Render(pGameCamera);
@@ -347,7 +344,6 @@ void RenderPass() {
      spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
      fLine1->Render((ConvertToString(spfaces)+"
     faces").c_str(),-1.0f,0.0f,45.0f);*/
-    delete lightCam;
 }
 
 void DSBeginLightPasses() {
@@ -443,8 +439,8 @@ void DSStencilPass(Light& light) {
 
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     // определяем адрес переменных камеры
@@ -475,8 +471,8 @@ void DSPointLightPass(PointLight& pointLight) {
 
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     // включаем шейдер
@@ -490,8 +486,8 @@ void DSPointLightPass(PointLight& pointLight) {
     // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
     // взагружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
+                pGameCamera.GetPos().z);
 
     // загружаем текстуры в шейдер
     DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
@@ -542,8 +538,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
 
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     // включаем шейдер
@@ -557,8 +553,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
     // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
     // взагружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
+                pGameCamera.GetPos().z);
 
     // загружаем текстуры в шейдер
     DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
@@ -604,8 +600,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
 
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     DSDirectionalLightShader->Use();
@@ -614,8 +610,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     rotateID = DSDirectionalLightShader->GetUniformLocation("mRotate");
     camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
     // загружаем вращение камеры для спекуляра
-    glUniform3f(camPosID, pGameCamera->GetPos().x, pGameCamera->GetPos().y,
-                pGameCamera->GetPos().z);
+    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
+                pGameCamera.GetPos().z);
     // загружаем матрицу камеры
     glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
 
@@ -675,9 +671,9 @@ void InterfacePass() {
     xline->Render(pGameCamera);
     yline->Render(pGameCamera);
     zline->Render(pGameCamera);
-    std::string strCampos = ConvertToString(pGameCamera->GetPos().x) + "; " +
-                            ConvertToString(pGameCamera->GetPos().y) + "; " +
-                            ConvertToString(pGameCamera->GetPos().z);
+    std::string strCampos = ConvertToString(pGameCamera.GetPos().x) + "; " +
+                            ConvertToString(pGameCamera.GetPos().y) + "; " +
+                            ConvertToString(pGameCamera.GetPos().z);
     // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText((strCampos).c_str());
     fLine1->SetPosition(-1.0f, 0.0f, 24.0f);
@@ -717,8 +713,8 @@ void DSGeometryPass() {
 
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(pGameCamera->GetPos(), pGameCamera->GetTarget(),
-                 pGameCamera->GetUp());
+    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
+                 pGameCamera.GetUp());
     TM.SetPerspectiveProj(30.0f, width, height, 1.0f, 1000.0f);
 
     DSGeometryPassShader->Use();
@@ -795,14 +791,15 @@ void PreInitScene(GLFWwindow* window) {
         char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
         char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
 
-        textShader = make_shared<Shader>();
+        textShader = std::make_unique<Shader>();
         textShader->AddShader(vertexShaderSorceCode, VertexShader);
         textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
         textShader->Init();
         delete[] vertexShaderSorceCode;
         delete[] fragmentShaderSourceCode;
     }
-    fLine1 = new FontLine2d();
+    // Use smart pointer for automatic lifetime management
+    fLine1 = std::make_unique<FontLine2d>();
     fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"), textShader);
     fLine1->SetAspectRatio(width, height);
 
@@ -965,7 +962,7 @@ int InitScene(GLFWwindow* window) {
     // шейдер GBufferа и сам буффер, материал
     {
         InitRender(window, "Gbuffer shader loading...");
-        gBuffer1 = new GBuffer;
+        gBuffer1 = std::make_unique<GBuffer>();
         gBuffer1->Init(width, height);
         // грузим шейдер
         {
@@ -1090,7 +1087,7 @@ int InitScene(GLFWwindow* window) {
     delete[] fragmentShaderSourceCode;
     }*/
 
-    skybox1 = new SkyBox(skyboxShader);
+    skybox1 = std::make_unique<SkyBox>(skyboxShader);
     skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
                   "sp3bot.tga", "sp3front.tga", "sp3back.tga");
     // настройка света и единичных векторов
@@ -1107,45 +1104,45 @@ int InitScene(GLFWwindow* window) {
         pointLightColID = meshShader->GetUniformLocation("pLightCol");
         pointLightPosID = meshShader->GetUniformLocation("pLightPos");
 
-        directionalLight1 =
-            new DirectionalLight(-1.5f, -1.0f, -1.5f,  // direction
-                                 0.5f, 0.5f, 0.5f,     // color
-                                 DSDirectionalLightMaterial);
-        pointLight1 = new PointLight(0, 1, -0.2,     // position
-                                     1.0, 1.0, 1.0,  // color
-                                     1.0, DSPointLightMaterial);
-        pointLight2 = new PointLight(1.5, 0.4, 0.0,  // position
-                                     0.3, 0.3, 1.0,  // color
-                                     1.1,            // power
-                                     DSPointLightMaterial);
-        spotLight1 = new SpotLight(1.5f, 0.0f, 0.5f,  // target
-                                   1.0f, 0.4f, 0.4f,  // color
-                                   0.0f, 1.0f, 0.0f,  // position
-                                   35.0f,             // cutoff in degrees
-                                   DSSpotLightMaterial);
+        directionalLight1 = std::make_unique<DirectionalLight>(
+            -1.5f, -1.0f, -1.5f,  // direction
+            0.5f, 0.5f, 0.5f,     // color
+            DSDirectionalLightMaterial);
+        pointLight1 = std::make_unique<PointLight>(0, 1, -0.2,     // position
+                                                   1.0, 1.0, 1.0,  // color
+                                                   1.0, DSPointLightMaterial);
+        pointLight2 = std::make_unique<PointLight>(1.5, 0.4, 0.0,  // position
+                                                   0.3, 0.3, 1.0,  // color
+                                                   1.1,            // power
+                                                   DSPointLightMaterial);
+        spotLight1 = std::make_unique<SpotLight>(1.5f, 0.0f, 0.5f,  // target
+                                                 1.0f, 0.4f, 0.4f,  // color
+                                                 0.0f, 1.0f, 0.0f,  // position
+                                                 35.0f,  // cutoff in degrees
+                                                 DSSpotLightMaterial);
         Vector3f PX(1, 0, 0);
         Vector3f PY(0, 1, 0);
         Vector3f PZ(0, 0, 1);
         Vector3f P0(0, 0, 0);
 
-        xline = new Line(PX, P0, PX);
-        yline = new Line(PY, P0, PY, xline->GetShader());
-        zline = new Line(PZ, P0, PZ, xline->GetShader());
-        dirLightLine = new Line(P0, directionalLight1->GetDir(),
-                                directionalLight1->GetCol());
+        xline = std::make_unique<Line>(PX, P0, PX);
+        yline = std::make_unique<Line>(PY, P0, PY, xline->GetShader());
+        zline = std::make_unique<Line>(PZ, P0, PZ, xline->GetShader());
+        dirLightLine = std::make_unique<Line>(P0, directionalLight1->GetDir(),
+                                              directionalLight1->GetCol());
     }
 
     // прочее
     {
         InitRender(window, "Final steps...");
-        bb1 = new Billboard();
+        bb1 = std::make_unique<Billboard>();
         bb1->Init("Textures/monster_hellknight.png");
         bb1->SetPos(Vector3f(0, 0, 0));
 
-        noise1 = new PerlinNoise(1, 10.3, 0.5, 2, 42);
+        noise1 = std::make_unique<PerlinNoise>(1, 10.3, 0.5, 2, 42);
 
-        tline1 = new TextLine2d();
-        tline2 = new TextLine2d();
+        tline1 = std::make_unique<TextLine2d>();
+        tline2 = std::make_unique<TextLine2d>();
         tline1->Init(width, height, textShader);
         tline2->Init(width, height, textShader);
         // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);

@@ -14,7 +14,9 @@ public:
     Billboard(shared_ptr<Shader> shader);
     ~Billboard();
     void Init(const char* TexFilename);
-    void Render(Camera* cam);
+    // Render using a reference instead of a raw pointer for safety.
+    // Render using a reference instead of a raw pointer for safety.
+    void Render(const Camera& cam);
     void SetPos(Vector3f _Pos);
     // GLuint shaderProgramID;
 protected:

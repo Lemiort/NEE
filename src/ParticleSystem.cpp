@@ -57,7 +57,7 @@ bool ParticleSystem::Init(Vector3f Pos) {
     return GLCheckError();
 }
 
-void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam) {
+void ParticleSystem::Render(int DeltaTimeMillis, const Camera& cam) {
     m_time += DeltaTimeMillis;
 
     UpdateParticles(DeltaTimeMillis);
@@ -113,21 +113,21 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     glDisableVertexAttribArray(3);
 }
 
-void ParticleSystem::RenderParticles(Camera* cam) {
+void ParticleSystem::RenderParticles(const Camera& cam) {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
-    //матрица проекции камеры
-    // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //позиция камеры
-    // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
+    // матрица проекции камеры
+    //  glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    // позиция камеры
+    //  glUniform3f(camPosID,cam.GetPos().x,cam.GetPos().y,cam.GetPos().z);
 
     glUseProgram(shaderProgramID);
-    m_billboardAssistant.SetCameraPosition(cam->GetPos());
+    m_billboardAssistant.SetCameraPosition(cam.GetPos());
     m_billboardAssistant.SetVP((const GLfloat*)TM.GetVC());
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 

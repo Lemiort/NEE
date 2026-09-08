@@ -88,7 +88,7 @@ public:
     void SetCharacter(unsigned int c);
 
     Vector2f GetLastCharacterLength();  // возвращает длину текущего символа
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
     friend class FontLine2d;
 };
 
@@ -110,7 +110,7 @@ public:
     void SetAspectRatio(int w, int h);
     void SetText(string _text);
     // void Render(string text,float x, float y, float size);
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
 };
 
 // класс отрисовки побуквенно
@@ -140,13 +140,13 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
     // void Render(unsigned int c, float x, float y, float size);
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
 };
 
 // класс линии из отрисовки букв
 class TextLine2d : public RenderableObject, public PlaceableObject {
 private:
-    Text2d* symbol;
+    std::unique_ptr<Text2d> symbol;
     float aratio;
     float pixelSize;
     // shared_ptr<Shader> shaderProgram;
@@ -159,6 +159,6 @@ public:
     void SetAspectRatio(int width, int height);
     void SetText(string _text);
     // void Render(float x, float y,float size, char* input);
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
 };
 #endif  // TEXT_2D_H_INCLUDED

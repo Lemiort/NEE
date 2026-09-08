@@ -2,6 +2,7 @@
 #define LIGHT_H_INCLUDED
 #include <MaterialObject.h>
 #include <PlaceableObject.h>
+
 #include "Assistant.h"
 #include "Camera.h"
 #include "Mesh.h"
@@ -30,7 +31,7 @@ public:
     void SetCol(Vector3f col);
     DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, shared_ptr<Material> _mat);
-    virtual void Render(Camera* cam);
+    virtual void Render(const Camera& cam);
     ~DirectionalLight();
 };
 class PointLight : public Light, public PlaceableObject {
@@ -41,7 +42,7 @@ public:
     PointLight(float d1, float d2, float d3, float r, float g, float b, float p,
                shared_ptr<Material> _mat);
     ~PointLight();
-    virtual void Render(Camera* cam);
+    virtual void Render(const Camera& cam);
     void SetPos(Vector3f pos);
     void SetCol(Vector3f col);
 
@@ -59,8 +60,8 @@ protected:
 };
 class SpotLight : public DirectionalLight, public PlaceableObject {
 public:
-    float Cutoff;  //угол отсечения в радианах
-                   // float position[3];
+    float Cutoff;  // угол отсечения в радианах
+                   //  float position[3];
     float target[3];
     SpotLight();
     SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
@@ -70,7 +71,7 @@ public:
     Vector3f GetPos();
     void SetPos(Vector3f pos);
     void SetTarget(Vector3f _target);
-    virtual void Render(Camera* cam);
+    virtual void Render(const Camera& cam);
 
 private:
     void Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
@@ -92,8 +93,8 @@ public:
     Line(Vector3f pos1, Vector3f pos2, Vector3f color,
          shared_ptr<Shader> shader);
     ~Line();
-    // void Render(Camera* pGameCamera, int width, int height);
-    virtual void Render(Camera* cam);
+    // void Render(const Camera& pGameCamera, int width, int height);
+    virtual void Render(const Camera& cam);
     shared_ptr<Shader> GetShader();
 
 private:

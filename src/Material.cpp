@@ -1,5 +1,7 @@
 #include "Material.h"
+
 #include <util.h>
+
 #include <cstdlib>
 #include <iostream>
 
@@ -19,10 +21,10 @@ Material::Material() {
     shadowMap = make_shared<Texture2D>();
     shadowMap->Load("Textures/white.png");
 
-    //абстрактная текстура
+    // абстрактная текстура
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
-    texturesID = new GLuint[max_texture_units];
-    abstractSamplersID = new GLuint[max_texture_units];
+    texturesID.resize(max_texture_units);
+    abstractSamplersID.resize(max_texture_units);
 
     abstractMap = make_shared<AbstractTexture>();
 
@@ -33,42 +35,38 @@ Material::Material() {
     // std::cout<<"\n Max texture units is "<<max_texture_units;
 }
 
-Material::~Material() {
-    // dtor
-    delete[] texturesID;
-    delete[] abstractSamplersID;
-}
+Material::~Material() = default;
 
 bool Material::Init(shared_ptr<Shader> _sh) {
     if (_sh == nullptr) return false;
     shaderProgram = _sh;
     shaderProgram->Use();
 
-    //установка значение по умолчанию
+    // установка значение по умолчанию
 
-    //загружем это в шейдер
+    // загружем это в шейдер
 
     // делаем активным текстурный юнит 0
     colorMap->Bind(GL_TEXTURE0);
     std::string colName("colTexSampler");
     colTexID = shaderProgram->GetUniformLocation(colName.c_str());
     std::cout << "\n color sampler num is " << colTexID;
-    //говорим шейдеру, чтоб использовал в качестве текстуры №0
+    // говорим шейдеру, чтоб использовал в качестве текстуры №0
     glUniform1i(colTexID, 0);
 
     normalMap->Bind(GL_TEXTURE1);
     normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №1
+    // говорим шейдеру, чтоб использовал в качестве текстуры №1
     glUniform1i(normSamplerID, 1);
 
     specularMap->Bind(GL_TEXTURE2);
     specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №2
+    // говорим шейдеру, чтоб использовал в качестве текстуры №2
     glUniform1i(specSamplerID, 2);
 
     shadowMap->Bind(GL_TEXTURE3);
     shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
-    //говорим шейдеру, чтоб использовал в качестве текстуры №3
+    // говорим шейдеру, чтоб использовал в качестве текстуры №3
     glUniform1i(shadowSamplerID, 3);
 
     std::string abstractSamplerName("gSampler");
@@ -86,24 +84,24 @@ void Material::Use() {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
     glUniform1i(colTexID,
-                0);  //говорим шейдеру, чтобы использовал в качестве текстуры 0
+                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
 
     normalMap->Bind(GL_TEXTURE1);
     // назначаем текстуру на активный текстурный юнит
     glUniform1i(normSamplerID,
-                1);  //говорим шейдеру, чтобы использовал в качестве текстуры 1
+                1);  // говорим шейдеру, чтобы использовал в качестве текстуры 1
 
     specularMap->Bind(GL_TEXTURE2);
     // назначаем текстуру на активный текстурный юнит
     glUniform1i(specSamplerID,
-                2);  //говорим шейдеру, чтобы использовал в качестве текстуры 2
+                2);  // говорим шейдеру, чтобы использовал в качестве текстуры 2
 
     shadowMap->Bind(GL_TEXTURE3);
     // назначаем текстуру на активный текстурный юнит
     glUniform1i(shadowSamplerID,
-                3);  //говорим шейдеру, чтобы использовал в качестве текстуры 3
+                3);  // говорим шейдеру, чтобы использовал в качестве текстуры 3
 
-    //начиная с 4го, лежат кастомные текстурные юниты
+    // начиная с 4го, лежат кастомные текстурные юниты
     for (GLint i = 4; i < max_texture_units; i++) {
         if (texturesID[i] != 0) {
             abstractMap->SetTexture(texturesID[i]);
@@ -116,7 +114,7 @@ void Material::Use() {
             // назначаем текстуру на активный текстурный юнит
             glUniform1i(
                 abstractSamplersID[i],
-                i);  //говорим шейдеру, чтобы использовал в качестве текстуры i
+                i);  // говорим шейдеру, чтобы использовал в качестве текстуры i
         }
     }
 }

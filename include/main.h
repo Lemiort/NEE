@@ -10,6 +10,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <memory>
 #include <sstream>
 #include <thread>
 
@@ -57,7 +58,7 @@ shared_ptr<Material> DSDirectionalLightMaterial;
 shared_ptr<Material> DSSpotLightMaterial;
 shared_ptr<Material> DSStencilPassMaterial;
 
-GBuffer* gBuffer1;
+std::unique_ptr<GBuffer> gBuffer1;
 GLFWwindow* hiddenWindow;
 
 struct Mouse {
@@ -121,26 +122,25 @@ GLuint pointLightColID, pointLightIntID, pointLightPosID;
 GLuint spotLightColID, spotLightDirID, spotLightCutoffID, spotLightPosID;
 GLuint camtransID, camPosID;
 
-DirectionalLight* directionalLight1;
-PointLight *pointLight1, *pointLight2;
-SpotLight* spotLight1;
-static Camera* pGameCamera =
-    new Camera(WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f);
+std::unique_ptr<DirectionalLight> directionalLight1;
+std::unique_ptr<PointLight> pointLight1, pointLight2;
+std::unique_ptr<SpotLight> spotLight1;
+static Camera pGameCamera(WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f);
 float Scale;
 // GLfloat light[]= {0.0,1.0,-1.0,1.0};
 int spfaces;
 int spverts;
-Line* xline;
-Line* yline;
-Line* zline;
-Line* dirLightLine;
+std::unique_ptr<Line> xline;
+std::unique_ptr<Line> yline;
+std::unique_ptr<Line> zline;
+std::unique_ptr<Line> dirLightLine;
 Mesh TestMesh, Plane, Cube;
-SkyBox* skybox1;
-TextLine2d *tline1, *tline2;
-FontLine2d* fLine1;
-PerlinNoise* noise1;
-Billboard* bb1;
-ShadowMapFBO* smfbo1;
+std::unique_ptr<SkyBox> skybox1;
+std::unique_ptr<TextLine2d> tline1, tline2;
+std::unique_ptr<FontLine2d> fLine1;
+std::unique_ptr<PerlinNoise> noise1;
+std::unique_ptr<Billboard> bb1;
+std::unique_ptr<ShadowMapFBO> smfbo1;
 
 // сигнал о том, что прогрузка шейдеров и пр. завершилась
 bool initialized;

@@ -1,9 +1,13 @@
 #include "ShadowMapFBO.h"
+
 #include <Texture.h>
 #include <stdio.h>
 #include <util.h>
+
 #include <iostream>
 
+// For smart pointers
+#include <memory>
 ShadowMapFBO::ShadowMapFBO() {
     m_fbo = 0;
     m_shadowMap = 0;
@@ -111,9 +115,9 @@ GLuint ShadowMapFBO::GetTexture() { return m_shadowMap; }
 GLuint ShadowMapFBO::GetTexture(unsigned num) { return m_textures[num]; }
 
 std::string ShadowMapFBO::CheckShadowTexture() {
-    Texture2D* tempTexture = new Texture2D(m_shadowMap, false);
-    return tempTexture->GetParameters();
-    delete tempTexture;
+    // Create a temporary object on the stack – no dynamic allocation needed
+    Texture2D tempTexture(m_shadowMap, false);
+    return tempTexture.GetParameters();
 }
 
 void ShadowMapFBO::BindForReading(GLenum TextureUnit) {

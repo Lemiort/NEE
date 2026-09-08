@@ -4,6 +4,7 @@
 #include <Camera.h>
 #include <Object.h>
 #include <Shader.h>
+
 #include <memory>
 
 // Renderable Objects can be rendered, needs Shader to render
@@ -11,7 +12,7 @@ class RenderableObject : public Object {
 public:
     RenderableObject();
     virtual ~RenderableObject();
-    virtual void Render(Camera* cam);
+    virtual void Render(const Camera& cam);
     virtual shared_ptr<Shader> GetShader();
     virtual void SetShader(shared_ptr<Shader> shader);
 

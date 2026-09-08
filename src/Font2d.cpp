@@ -149,7 +149,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
     }
 
     // загружаем в материал
-    shared_ptr<Texture2D> temp(new Texture2D(texBufferID));
+    auto temp = std::make_shared<Texture2D>(texBufferID);
     _mat->SetColorTexture(temp);
 
     // получаем размеры изображения
@@ -206,8 +206,8 @@ void Character2d::SetAspectRatio(int _width, int _height) {
     ky = (float)imageHeight / (float)_height;
 }
 
-void Character2d::Render(Camera* cam) {
-    SetAspectRatio(cam->GetWidth(), cam->GetHeight());
+void Character2d::Render(const Camera& cam) {
+    SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     this->mat->Use();
 
     // TODO идея: редактировать текстурные координаты в шейдере

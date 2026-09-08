@@ -1,9 +1,13 @@
 #ifndef SKYBOX_H_INCLUDED
 #define SKYBOX_H_INCLUDED
+
+#include <memory>
+
 #include "cubemap_texture.h"
-//#include "ShaderFunctions.h"
+// #include "ShaderFunctions.h"
 #include <PlaceableObject.h>
 #include <RenderableObject.h>
+
 #include "Assistant.h"
 #include "Camera.h"
 #include "Shader.h"
@@ -19,9 +23,9 @@ public:
               const string& NegYFilename, const string& PosZFilename,
               const string& NegZFilename);
 
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
     GLuint shaderProgramID;
-    GLuint VBO;  // vertex buffer, ˜˜˜˜˜˜ ˜˜˜˜˜˜˜ ˜˜˜ ˜˜˜˜˜˜˜˜˜
+    GLuint VBO;  // vertex buffer, ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     GLuint positionID;
     GLuint IBO;  // index buffer
     GLuint gWorldID, gCamViewID;
@@ -30,8 +34,7 @@ public:
     void Init(GLuint shader, const char* model);
 
 private:
-    const Camera* pCamera;
-    CubemapTexture* pCubemapTex;
+    std::unique_ptr<CubemapTexture> pCubemapTex;
     GLuint WVPID;
     GLuint textureID;
     // shared_ptr<Shader> shaderProgram;

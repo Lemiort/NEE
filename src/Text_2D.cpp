@@ -1,12 +1,15 @@
 #include "Text_2D.h"
 
+#include <array>
 #include <fstream>
+#include <memory>
 #include <sstream>
-#include <stdexcept>  // std::out_of_range
+#include <stdexcept>  // std::out_of_range]
 
 #include "stb_image.h"
 
-FontLine2d::FontLine2d() { shaderProgram = nullptr; }
+// The shader program is managed via a shared_ptr. Initialize it to nullptr.
+FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
 
 FontLine2d::~FontLine2d() {}
 
@@ -22,7 +25,7 @@ void FontLine2d::SetAspectRatio(int w, int h) {
 void FontLine2d::SetText(string _text) { text = _text; }
 
 // void FontLine2d::Render(string text, float startX, float startY,float size )
-void FontLine2d::Render(Camera* cam) {
+void FontLine2d::Render(const Camera& cam) {
     float dx = 0.0f;
     prevChar = 0;
     // float dy=0.0f;
@@ -110,13 +113,9 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     colorID = shaderProgram->GetUniformLocation("textColor");
 
     // ну и заполнение индексов
-    indicies = new unsigned int[4];
-    indicies[0] = 0;
-    indicies[1] = 1;
-    indicies[2] = 2;
-    indicies[3] = 3;
+    std::array<unsigned int, 4> indicies = {0, 1, 2, 3};
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
                  GL_STATIC_DRAW);
 
     /*===========заполение информации о шрифте============*/
@@ -329,8 +328,8 @@ Vector2f Font2d::GetLastCharacterLength() {
 }
 
 // Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
-void Font2d::Render(Camera* cam) {
-    SetAspectRatio(cam->GetWidth(), cam->GetHeight());
+void Font2d::Render(const Camera& cam) {
+    SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     shaderProgram->Use();
     /*position[2]=position[2]/(float)fontHeight;
     FontCharacter temp(0,0,0,0,0,0,0,0);
@@ -421,7 +420,7 @@ Text2d::Text2d() {
 
 Text2d::~Text2d() {}
 void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
-    if (_sh == nullptr) {
+    if (!_sh) {
         yourselfShader = true;
         aratio = (float)height / (float)width;
         char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
@@ -434,7 +433,7 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
         shaderProgram = _sh;
         yourselfShader = false;
     }
-    indicies = new unsigned int[6];
+    std::array<unsigned int, 4> indicies = {0, 1, 2, 3};
     indicies[0] = 0;
     indicies[1] = 1;
     indicies[2] = 2;
@@ -459,7 +458,7 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
 
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
                  GL_STATIC_DRAW);
 
     // создаём текстуру
@@ -536,7 +535,8 @@ void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
     // shaderProgramID=shader;
     shaderProgram = shader;
     yourselfShader = false;
-    indicies = new unsigned int[6];
+
+    std::array<unsigned int, 4> indicies;
     indicies[0] = 0;
     indicies[1] = 1;
     indicies[2] = 2;
@@ -556,7 +556,7 @@ void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
 
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 4, indicies,
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
                  GL_STATIC_DRAW);
 
     // создаём текстуру
@@ -566,7 +566,7 @@ void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
 
 void Text2d::SetCharacter(unsigned int c) { character = c; }
 
-void Text2d::Render(Camera* cam) {
+void Text2d::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -618,7 +618,7 @@ void TextLine2d::SetAspectRatio(int width, int height) {
 }
 
 void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh) {
-    symbol = new Text2d;
+    symbol = std::make_unique<Text2d>();
     pixelSize =
         (float)(512) /
         ((float)width * (float)16);  // 512 размер текстуры, 16 квадратов в ней
@@ -628,7 +628,7 @@ void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh) {
 
 void TextLine2d::SetText(string _text) { text = _text; }
 
-void TextLine2d::Render(Camera* cam) {
+void TextLine2d::Render(const Camera& cam) {
     float delta = 0;
     for (unsigned int i = 0; i < strlen(text.c_str());
          i++, delta += position[2] * pixelSize * aratio * 2.0 /

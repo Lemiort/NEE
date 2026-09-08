@@ -1,5 +1,8 @@
 #include "tga_loader.h"
 
+#include <memory>
+#include <vector>
+
 bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
               uint32_t* size) {
     ASSERT(fileName);
@@ -25,21 +28,23 @@ bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
         return false;
     }
 
-    *buffer = new uint8_t[fileSize];
-    ASSERT(*buffer);
+    std::vector<uint8_t> tempBuf(fileSize);
+    ASSERT(tempBuf.get());
 
-    readed = fread(*buffer, 1, fileSize, input);
+    readed = fread(tempBuf.data(), 1, fileSize, input);
 
     fclose(input);
 
     if (readed != fileSize) {
         LOG_ERROR("Reading file '%s'\n", fileName);
-        delete[] *buffer;
         return false;
     }
 
-    *size = fileSize;
+    // Allocate output buffer and copy data
+    *buffer = new uint8_t[fileSize];
+    std::memcpy(*buffer, tempBuf.data(), fileSize);
 
+    *size = fileSize;
     return true;
 }
 

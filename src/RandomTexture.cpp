@@ -1,5 +1,7 @@
 #include "RandomTexture.h"
 
+#include <vector>
+
 RandomTexture::RandomTexture() {
     // ctor
     textureID = 0;
@@ -13,7 +15,7 @@ RandomTexture::~RandomTexture() {
 }
 
 bool RandomTexture::InitRandomTexture(unsigned int Size) {
-    Vector3f* pRandomData = new Vector3f[Size];
+    std::vector<Vector3f> pRandomData(Size);
     for (unsigned int i = 0; i < Size; i++) {
         pRandomData[i].x = RandomFloat();
         pRandomData[i].y = RandomFloat();
@@ -23,12 +25,12 @@ bool RandomTexture::InitRandomTexture(unsigned int Size) {
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_1D, textureID);
     glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, Size, 0.0f, GL_RGB, GL_FLOAT,
-                 pRandomData);
+                 pRandomData.data());
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 
-    delete[] pRandomData;
+    // vector cleans up automatically
 
     return GLCheckError();
 }

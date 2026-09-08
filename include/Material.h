@@ -3,7 +3,9 @@
 #include <GL/glew.h>
 #include <Shader.h>
 #include <Texture.h>
+
 #include <memory>
+#include <vector>
 
 class Material {
 public:
@@ -26,11 +28,11 @@ protected:
     shared_ptr<AbstractTexture> abstractMap;
     GLuint colTexID, texBufferID, normBufferID, normSamplerID;
     GLuint specBufferID, specSamplerID;
-    GLuint* abstractSamplersID;
+    std::vector<GLuint> abstractSamplersID;
     // GLuint colSamplerUI, normSamplerUI;
     GLuint shadowSamplerID;
     GLint max_texture_units;
-    GLuint* texturesID;
+    std::vector<GLuint> texturesID;
 };
 
 #endif  // MATERIAL_H

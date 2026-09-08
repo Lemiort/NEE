@@ -22,7 +22,7 @@ public:
     Line(Vector3f pos1, Vector3f pos2, Vector3f color);
     Line(Vector3f pos1, Vector3f pos2, Vector3f color, GLuint shader);
     ~Line();
-    void Render(Camera* pGameCamera);
+    void Render(const Camera& pGameCamera);
 
 private:
     shared_ptr<Shader> shaderProgram;

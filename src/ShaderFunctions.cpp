@@ -1,5 +1,7 @@
 #include "ShaderFunctions.h"
 
+#include <vector>
+
 char* ReadFile(const char* filename) {
     FILE* fp;
     // fopen_s(&fp, filename, "r");
@@ -13,13 +15,11 @@ char* ReadFile(const char* filename) {
     fseek(fp, 0, SEEK_END);
     long file_length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    char* contents = new char[file_length + 1];
-    for (int i = 0; i < file_length + 1; i++) {
-        contents[i] = 0;
-    }
-
-    fread(contents, 1, file_length, fp);
-    contents[file_length] = '\0';
+    std::vector<char> buffer(file_length + 1, 0);
+    fread(buffer.data(), 1, file_length, fp);
+    buffer[file_length] = '\0';
+    char* contents = new char[buffer.size()];
+    std::memcpy(contents, buffer.data(), buffer.size());
     fclose(fp);
     return contents;
 }
@@ -71,7 +71,7 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID) {
     glAttachShader(shaderID, vertexShaderID);
     glAttachShader(shaderID, fragmentShaderID);
     glLinkProgram(shaderID);
-    //��������
+    // ��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};
@@ -112,7 +112,7 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
     glAttachShader(shaderID, fragmentShaderID);
     glAttachShader(shaderID, geometryShaderID);
     glLinkProgram(shaderID);
-    //��������
+    // ��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};

@@ -1,5 +1,7 @@
 #include "skybox.h"
 
+#include <vector>
+
 SkyBox::SkyBox(shared_ptr<Shader> shader) {
     shaderProgram = shader;
     shaderProgramID = shader->shaderProgramID;
@@ -10,49 +12,22 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
                   const string& NegYFilename, const string& PosZFilename,
                   const string& NegZFilename) {
     Scale = 0;
-    int* spindices = NULL;
-    float* spvertices = NULL;
-    float* spnormals = NULL;
-    float* spuvs = NULL;
-    float* sptangent = NULL;
+    std::vector<int> spindices;
+    std::vector<float> spvertices;
+    std::vector<float> spnormals;
+    std::vector<float> spuvs;
+    std::vector<float> sptangent;
     spfaces = 0;
     spverts = 0;
     try {
-        /*FILE* fp;
-                fp=fopen("models/sphere.ho3d","r+b");
-                if(!fp) return false;
-                fread(&spverts,sizeof(int),1,fp);
-                spvertices=new float[spverts*3];
-                spuvs=new float[spverts*2];
-                spnormals=new float[spverts*3];
-                for(int i=0;i<spverts;i++)
-                        {
-                        fread(&spvertices[3*i],sizeof(float),1,fp);
-                        fread(&spvertices[3*i+1],sizeof(float),1,fp);
-                        fread(&spvertices[3*i+2],sizeof(float),1,fp);
-                        fread(&spuvs[2*i],sizeof(float),1,fp);
-                        fread(&spuvs[2*i+1],sizeof(float),1,fp);
-                        fread(&spnormals[3*i],sizeof(float),1,fp);
-                        fread(&spnormals[3*i+1],sizeof(float),1,fp);
-                        fread(&spnormals[3*i+2],sizeof(float),1,fp);
-                        }
-                fread(&spfaces,sizeof(int),1,fp);
-                spindices=new int[spfaces*3];
-                for(int i=0;i<spfaces;i++)
-                        {
-                                fread(&spindices[3*i],sizeof(int),1,fp);
-                                fread(&spindices[3*i+1],sizeof(int),1,fp);
-                                fread(&spindices[3*i+2],sizeof(int),1,fp);
-                        }
-                fclose(fp);*/
         FILE* fp;
         fp = fopen("models/sphere.ho3d", "r+b");
         if (!fp) return false;
         fread(&spverts, sizeof(int), 1, fp);
-        spvertices = new float[spverts * 3];
-        spuvs = new float[spverts * 2];
-        spnormals = new float[spverts * 3];
-        sptangent = new float;
+        spvertices.resize(spverts * 3);
+        spuvs.resize(spverts * 2);
+        spnormals.resize(spverts * 3);
+        sptangent.resize(1);  // placeholder size
         for (int i = 0; i < spverts; i++) {
             fread(&spvertices[3 * i], sizeof(float), 1, fp);
             fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
@@ -63,11 +38,11 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
             fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
             fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
         }
-        for (int i = 0; i < spverts * 3; i++) {
-            fread(sptangent, sizeof(float), 1, fp);
+        for (size_t i = 0; i < sptangent.size(); ++i) {
+            fread(&sptangent[i], sizeof(float), 1, fp);
         }
         fread(&spfaces, sizeof(int), 1, fp);
-        spindices = new int[spfaces * 3];
+        spindices.resize(spfaces * 3);
         for (int i = 0; i < spfaces; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
             fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
@@ -78,26 +53,26 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         printf("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
-    //создаём буффер, в котором будем хранить всё
+    // создаём буффер, в котором будем хранить всё
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    //создаём буффер
+    // создаём буффер
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (spverts), nullptr,
                  GL_STATIC_DRAW);
-    //загружаем вершины в буффер
+    // загружаем вершины в буффер
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
-                    spvertices);
+                    spvertices.data());
 
-    //привязываем индексы к буфферу
+    // привязываем индексы к буфферу
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces, spindices,
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces,
+                 spindices.data(), GL_STATIC_DRAW);
 
     try {
-        pCubemapTex = new CubemapTexture(Directory, PosXFilename, NegXFilename,
-                                         PosYFilename, NegYFilename,
-                                         PosZFilename, NegZFilename);
+        pCubemapTex = std::make_unique<CubemapTexture>(
+            Directory, PosXFilename, NegXFilename, PosYFilename, NegYFilename,
+            PosZFilename, NegZFilename);
     } catch (const std::bad_alloc&) {
         printf("\nError creating new Cubemap");
         return false;
@@ -105,10 +80,10 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     pCubemapTex->Load();
 
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    //находим позиции uniform-переменных
+    // находим позиции uniform-переменных
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
 
-    //делаем то же самое
+    // делаем то же самое
     pCubemapTex->Bind(GL_TEXTURE2);
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
@@ -119,15 +94,11 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         scale[i] = 1;
     }
 
-    //чистим память
-    delete[] spindices;
-    delete[] spvertices;
-    delete[] spnormals;
-    delete[] spuvs;
-    delete sptangent;
+    // чистим память
+    // vectors automatically cleaned up
     return true;
 }
-void SkyBox::Render(Camera* cam) {
+void SkyBox::Render(const Camera& cam) {
     GLint OldCullFaceMode;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
     GLint OldDepthFuncMode;
@@ -139,11 +110,11 @@ void SkyBox::Render(Camera* cam) {
     Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
                    // камера для спекуляра
     TM.Scale(3, 3, 3);
-    TM.WorldPos(cam->GetPos().x, cam->GetPos().y, cam->GetPos().z);
+    TM.WorldPos(cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
     TM.Rotate(180, 180, 0);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
 
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();

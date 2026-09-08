@@ -26,10 +26,20 @@ file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
 add_executable(${PROJECT_NAME} ${SOURCES_LIST})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
-    CXX_STANDARD 20
+    CXX_STANDARD 23
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
+
+# # Enable compiler warnings and treat them as errors for CI safety
+# if(MSVC)
+#     target_compile_options(${PROJECT_NAME} PRIVATE /W4 /WX)
+# else()
+#     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# endif()
+
+# Export compile commands for clang-tidy and other tooling
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # link soil first to dismiss soil linking errors
 # target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})

@@ -1,11 +1,12 @@
 #ifndef PARTICLESYSTEM_H_INCLUDED
 #define PARTICLESYSTEM_H_INCLUDED
 #define MAX_PARTICLES 1000
-//#include "Billboard.h"
+// #include "Billboard.h"
 #include <BillboardAssistant.h>
 #include <Camera.h>
 #include <Texture.h>
 #include <util.h>
+
 #include "Assistant.h"
 #include "ParticleUpdateAssistant.h"
 #include "RandomTexture.h"
@@ -22,7 +23,7 @@ public:
     ParticleSystem();
     ~ParticleSystem();
     bool Init(Vector3f Pos);
-    void Render(int DeltaTimeMillis, Camera* cam);
+    void Render(int DeltaTimeMillis, const Camera& cam);
 
 private:
     bool m_isFirst;
@@ -37,7 +38,7 @@ private:
     GLuint shaderProgramID;
     BillboardAssistant m_billboardAssistant;
     int m_time;
-    void RenderParticles(Camera* cam);
+    void RenderParticles(const Camera& cam);
     void UpdateParticles(int DeltaTimeMillis);
     struct Particle {
         float Type;

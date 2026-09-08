@@ -2,18 +2,20 @@
 #define MESH_H_INCLUDED
 #include "Assistant.h"
 #include "Camera.h"
-//#include "ShaderFunctions.h"
+// #include "ShaderFunctions.h"
 #include <MaterialObject.h>
 #include <PlaceableObject.h>
 #include <RotatableObject.h>
 #include <ScaleableObject.h>
+
 #include <fstream>
 #include <iostream>
+
 #include "Material.h"
 #include "Shader.h"
 #include "Texture.h"
 #include "math_3d.h"
-//#include "Light.h"
+// #include "Light.h"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;
 
@@ -49,9 +51,9 @@ protected:
     int spfaces, spverts;
     int Scale;
 
-    //угол вращения вокруг вектора
+    // угол вращения вокруг вектора
     float rPhi;
-    //вектор вращения
+    // вектор вращения
     Vector3f rv;
 
 public:
@@ -62,7 +64,7 @@ public:
     void SetMaterial(shared_ptr<Material> _mat);
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
-    void Render(Camera* cam);
+    void Render(const Camera& cam);
     void SetVectorRotate(Vector3f v, float phi);
     void Rotate(float x, float y, float z);
 
