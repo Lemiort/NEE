@@ -1,10 +1,10 @@
-#include "cubemap_texture.h"
+#include "CubemapTexture.hpp"
 
 #include <cstring>
 #include <iostream>
 
-#include "tga_loader.h"
-#include "util.h"
+#include "TgaLoader.hpp"
+#include "Util.hpp"
 
 static const GLenum types[6] = {
     GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,

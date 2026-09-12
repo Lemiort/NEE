@@ -1,4 +1,4 @@
-#include "RenderableObject.h"
+#include "RenderableObject.hpp"
 
 RenderableObject::RenderableObject() {
     // ctor

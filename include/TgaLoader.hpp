@@ -1,14 +1,14 @@
 #ifndef TGA_LOADER_H_INCLUDED
 #define TGA_LOADER_H_INCLUDED
 
-// #include "main.h"
+// #include "main.hpp"
 
 #include <GL/glew.h>
 
 #include <cassert>
 #include <cstdint>
 
-#include "Logger.h"
+#include "Logger.hpp"
 
 #define ASSERT(x) assert(x)
 /*typedef __int8           int8_t;

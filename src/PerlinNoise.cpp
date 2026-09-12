@@ -1,4 +1,4 @@
-#include "PerlinNoise.h"
+#include "PerlinNoise.hpp"
 
 PerlinNoise::PerlinNoise() {
     persistence = 0;

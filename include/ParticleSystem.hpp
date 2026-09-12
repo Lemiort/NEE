@@ -1,16 +1,15 @@
 #ifndef PARTICLESYSTEM_H_INCLUDED
 #define PARTICLESYSTEM_H_INCLUDED
 #define MAX_PARTICLES 1000
-// #include "Billboard.h"
-#include <BillboardAssistant.h>
-#include <Camera.h>
-#include <Texture.h>
-#include <util.h>
-
-#include "Assistant.h"
-#include "ParticleUpdateAssistant.h"
-#include "RandomTexture.h"
-#include "ShaderFunctions.h"
+// #include "Billboard.hpp"
+#include "Assistant.hpp"
+#include "BillboardAssistant.hpp"
+#include "Camera.hpp"
+#include "ParticleUpdateAssistant.hpp"
+#include "RandomTexture.hpp"
+#include "ShaderFunctions.hpp"
+#include "Texture.hpp"
+#include "Util.hpp"
 
 #define PARTICLE_LIFETIME 10.0f
 

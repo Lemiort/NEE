@@ -1,4 +1,4 @@
-#include "Billboard.h"
+#include "Billboard.hpp"
 
 Billboard::Billboard() {
     Pos = Vector3f(1, 1, 1);

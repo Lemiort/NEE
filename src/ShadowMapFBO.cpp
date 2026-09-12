@@ -1,10 +1,11 @@
-#include "ShadowMapFBO.h"
+#include "ShadowMapFBO.hpp"
 
-#include <Texture.h>
 #include <stdio.h>
-#include <util.h>
 
 #include <iostream>
+
+#include "Texture.hpp"
+#include "Util.hpp"
 
 // For smart pointers
 #include <memory>

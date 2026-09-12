@@ -1,4 +1,4 @@
-#include "ScaleableObject.h"
+#include "ScaleableObject.hpp"
 
 ScaleableObject::ScaleableObject() {
     // ctor

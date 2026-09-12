@@ -1,9 +1,9 @@
-#include "Material.h"
-
-#include <util.h>
+#include "Material.hpp"
 
 #include <cstdlib>
 #include <iostream>
+
+#include "Util.hpp"
 
 Material::Material() {
     // ctor
@@ -84,22 +84,22 @@ void Material::Use() {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
     glUniform1i(colTexID,
-                 0);  // tell shader to use texture unit 0
+                0);  // tell shader to use texture unit 0
 
     normalMap->Bind(GL_TEXTURE1);
     // Assign texture to active texture unit
     glUniform1i(normSamplerID,
-                 1);  // tell shader to use texture unit 1
+                1);  // tell shader to use texture unit 1
 
     specularMap->Bind(GL_TEXTURE2);
     // assign texture to active texture unit
     glUniform1i(specSamplerID,
-                 2);  // tell shader to use texture unit 2
+                2);  // tell shader to use texture unit 2
 
     shadowMap->Bind(GL_TEXTURE3);
     // assign texture to active texture unit
     glUniform1i(shadowSamplerID,
-                 3);  // tell shader to use texture unit 3
+                3);  // tell shader to use texture unit 3
 
     // starting from 4th, are custom texture units
     for (GLint i = 4; i < max_texture_units; i++) {
@@ -111,10 +111,9 @@ void Material::Use() {
             // color sampler num is "<<colTexID; std::cout<<"\n norm sampler num
             // is "<<normSamplerID;
 
-    // assign texture to active texture unit
-            glUniform1i(
-                abstractSamplersID[i],
-                i);  // tell shader to use texture i
+            // assign texture to active texture unit
+            glUniform1i(abstractSamplersID[i],
+                        i);  // tell shader to use texture i
         }
     }
 }

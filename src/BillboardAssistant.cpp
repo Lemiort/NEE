@@ -1,4 +1,4 @@
-#include "BillboardAssistant.h"
+#include "BillboardAssistant.hpp"
 
 BillboardAssistant::BillboardAssistant() {
     // ctor

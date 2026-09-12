@@ -1,4 +1,4 @@
-#include "RotatableObject.h"
+#include "RotatableObject.hpp"
 
 RotatableObject::RotatableObject() {
     // ctor

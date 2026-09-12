@@ -1,4 +1,5 @@
-#include "Assistant.h"
+#include "Assistant.hpp"
+
 #include <fstream>
 
 void Assistant::InitScaleTransform(Matrix4f& m) const {

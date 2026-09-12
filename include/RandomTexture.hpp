@@ -1,9 +1,9 @@
 #ifndef RANDOMTEXTURE_H
 #define RANDOMTEXTURE_H
-#include <EngineCommon.h>
-#include <util.h>
+#include "EngineCommon.hpp"
 #include "GL/glew.h"
-#include "math_3d.h"
+#include "Math3d.hpp"
+#include "Util.hpp"
 class RandomTexture {
 public:
     RandomTexture();

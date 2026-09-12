@@ -1,4 +1,4 @@
-#include "tga_loader.h"
+#include "TgaLoader.hpp"
 
 #include <memory>
 #include <vector>

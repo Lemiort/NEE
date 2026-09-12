@@ -1,10 +1,10 @@
 #ifndef LINE_H_INCLUDED
 #define LINE_H_INCLUDED
-#include "Assistant.h"
-#include "Camera.h"
-#include "Shader.h"
-#include "ShaderFunctions.h"
-#include "math_3d.h"
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "Math3d.hpp"
+#include "Shader.hpp"
+#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Line {

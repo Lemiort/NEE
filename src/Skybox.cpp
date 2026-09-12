@@ -1,4 +1,4 @@
-#include "skybox.h"
+#include "Skybox.hpp"
 
 #include <vector>
 
@@ -107,7 +107,8 @@ void SkyBox::Render(const Camera& cam) {
     glCullFace(GL_BACK);
     glDepthFunc(GL_LEQUAL);
 
-    Assistant TM;  // TM - For object, 2- for object's normal, 3 - for camera position
+    Assistant
+        TM;  // TM - For object, 2- for object's normal, 3 - for camera position
     TM.Scale(3, 3, 3);
     TM.WorldPos(cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
     TM.Rotate(180, 180, 0);

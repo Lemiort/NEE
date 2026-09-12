@@ -1,12 +1,13 @@
 #ifndef SHADERFUNCTIONS_H_INCLUDED
 #define SHADERFUNCTIONS_H_INCLUDED
-#include <EngineCommon.h>
 #include <GL/glew.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include <fstream>
 #include <iostream>
+
+#include "EngineCommon.hpp"
 char* ReadFile(const char* filename);
 GLuint MakeVertexShader(const char* source);
 GLuint MakeFragmentShader(const char* source);

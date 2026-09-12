@@ -1,4 +1,4 @@
-#include "ShaderFunctions.h"
+#include "ShaderFunctions.hpp"
 
 #include <vector>
 

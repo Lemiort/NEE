@@ -5,11 +5,10 @@
 
 #include "CubemapTexture.hpp"
 // #include "ShaderFunctions.hpp"
-#include <PlaceableObject.hpp>
-#include <RenderableObject.hpp>
-
 #include "Assistant.hpp"
 #include "Camera.hpp"
+#include "PlaceableObject.hpp"
+#include "RenderableObject.hpp"
 #include "Shader.hpp"
 #include "TgaLoader.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))

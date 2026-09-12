@@ -1,4 +1,4 @@
-#include "Mesh.h"
+#include "Mesh.hpp"
 
 Mesh::Mesh() {
     // mat=NULL;
@@ -141,7 +141,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-    Assistant TM, TM2;  // TM - For object, 2- for object's normal, 3 - for camera position for specular
+    Assistant TM, TM2;  // TM - For object, 2- for object's normal, 3 - for
+                        // camera position for specular
     TM.Scale(scale[0], scale[1], scale[2]);
     TM.WorldPos(position[0], position[1], position[2]);
     TM.Rotate(rotation[0], rotation[1], rotation[2]);

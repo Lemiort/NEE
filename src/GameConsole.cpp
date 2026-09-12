@@ -1,4 +1,4 @@
-#include "GameConsole.h"
+#include "GameConsole.hpp"
 
 GameConsole::GameConsole() {
     // ctor

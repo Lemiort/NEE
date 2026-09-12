@@ -1,7 +1,7 @@
 #ifndef RECTANGLE2D_H
 #define RECTANGLE2D_H
-#include <PlaceableObject.h>
-#include <RenderableObject.h>
+#include "PlaceableObject.hpp"
+#include "RenderableObject.hpp"
 
 class Rectangle2D : public RenderableObject, public PlaceableObject {
 public:

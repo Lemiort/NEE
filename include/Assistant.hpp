@@ -1,7 +1,7 @@
 #ifndef ASSISTANT_H_INCLUDED
 #define ASSISTANT_H_INCLUDED
 #define _USE_MATH_DEFINES  // for C++
-#include "math_3d.h"
+#include "Math3d.hpp"
 class Assistant {
 public:
     Matrix4f transformation;

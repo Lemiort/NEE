@@ -1,4 +1,4 @@
-#include "RandomTexture.h"
+#include "RandomTexture.hpp"
 
 #include <vector>
 

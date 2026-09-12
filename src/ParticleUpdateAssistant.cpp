@@ -1,4 +1,4 @@
-#include "ParticleUpdateAssistant.h"
+#include "ParticleUpdateAssistant.hpp"
 
 ParticleUpdateAssistant::ParticleUpdateAssistant() {
     // ctor

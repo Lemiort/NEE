@@ -1,12 +1,8 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
-#include <GBuffer.h>
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
-#include <Material.h>
 #include <string.h>
-#include <util.h>
-#include <version.h>
 
 #include <fstream>
 #include <iostream>
@@ -14,15 +10,19 @@
 #include <sstream>
 #include <thread>
 
-#include "Billboard.h"
-#include "Light.h"
-#include "Logger.h"
-#include "Mesh.h"
-#include "PerlinNoise.h"
-#include "ShadowMapFBO.h"
-#include "Text_2D.h"
-#include "skybox.h"
-#include "tga_loader.h"
+#include "Billboard.hpp"
+#include "GBuffer.hpp"
+#include "Light.hpp"
+#include "Logger.hpp"
+#include "Material.hpp"
+#include "Mesh.hpp"
+#include "PerlinNoise.hpp"
+#include "ShadowMapFBO.hpp"
+#include "Skybox.hpp"
+#include "Text2D.hpp"
+#include "TgaLoader.hpp"
+#include "Util.hpp"
+#include "version.hpp"
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 #define WINDOW_WIDTH 1366

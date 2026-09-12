@@ -1,6 +1,6 @@
 #ifndef SCALEABLEOBJECT_H
 #define SCALEABLEOBJECT_H
-#include <math_3d.h>
+#include "Math3d.hpp"
 
 class ScaleableObject {
 public:

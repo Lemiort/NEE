@@ -1,4 +1,4 @@
-#include "main.h"
+#include "Main.hpp"
 
 #include <GL/glew.h>
 #include <stdio.h>

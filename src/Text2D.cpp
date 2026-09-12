@@ -1,4 +1,4 @@
-#include "Text_2D.h"
+#include "Text2D.hpp"
 
 #include <array>
 #include <fstream>
@@ -177,7 +177,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 printf("\nFont name is %s", fontName.c_str());
                 printf("\nFont height is %d", fontHeight);
             }
-                // find information about upcoming kerning
+            // find information about upcoming kerning
             t = in_s.find("kerning pairs:");
             if (t >= 0) {
                 // stopped reading data

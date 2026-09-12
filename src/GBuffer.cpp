@@ -1,10 +1,9 @@
-#include "GBuffer.h"
-
-#include <Texture.h>
+#include "GBuffer.hpp"
 
 #include <iostream>
 
-#include "util.h"
+#include "Texture.hpp"
+#include "Util.hpp"
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     // Create FBO

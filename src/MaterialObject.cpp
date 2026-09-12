@@ -1,4 +1,4 @@
-#include "MaterialObject.h"
+#include "MaterialObject.hpp"
 
 MaterialObject::MaterialObject() {
     // ctor

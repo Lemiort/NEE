@@ -1,4 +1,4 @@
-#include "Rectangle2D.h"
+#include "Rectangle2D.hpp"
 
 Rectangle2D::Rectangle2D() {
     // ctor

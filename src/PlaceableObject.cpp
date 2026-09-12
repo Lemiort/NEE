@@ -1,4 +1,4 @@
-#include "PlaceableObject.h"
+#include "PlaceableObject.hpp"
 
 PlaceableObject::PlaceableObject() {
     // ctor

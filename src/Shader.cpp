@@ -1,5 +1,6 @@
-#include "Shader.h"
-#include "ShaderFunctions.h"
+#include "Shader.hpp"
+
+#include "ShaderFunctions.hpp"
 Shader::Shader() {
     // ctor
     vShader = 0;

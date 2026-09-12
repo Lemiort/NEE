@@ -1,16 +1,16 @@
 #ifndef TEXT_2D_H_INCLUDED
 #define TEXT_2D_H_INCLUDED
 #include <GL/glew.h>
-#include <PlaceableObject.h>
-#include <RenderableObject.h>
-#include <math_3d.h>
 
 #include <cstring>
 #include <map>
 #include <queue>
 
-#include "Shader.h"
-#include "ShaderFunctions.h"
+#include "Math3d.hpp"
+#include "PlaceableObject.hpp"
+#include "RenderableObject.hpp"
+#include "Shader.hpp"
+#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;
 

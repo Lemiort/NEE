@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "math_3d.h"
+#include "Math3d.hpp"
 
 class Camera {
 public:

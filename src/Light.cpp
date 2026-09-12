@@ -1,4 +1,4 @@
-#include "Light.h"
+#include "Light.hpp"
 
 #include <iomanip>
 #include <memory>

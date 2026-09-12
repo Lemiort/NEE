@@ -1,13 +1,12 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
-#include <MaterialObject.h>
-#include <PlaceableObject.h>
-
-#include "Assistant.h"
-#include "Camera.h"
-#include "Mesh.h"
-#include "Shader.h"
-#include "ShaderFunctions.h"
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "MaterialObject.hpp"
+#include "Mesh.hpp"
+#include "PlaceableObject.hpp"
+#include "Shader.hpp"
+#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Light : public MaterialObject {

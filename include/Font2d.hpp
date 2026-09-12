@@ -1,9 +1,9 @@
 #ifndef FONT2D_H
 #define FONT2D_H
-#include <Mesh.h>
-#include <Text_2D.h>
-
 #include <map>
+
+#include "Mesh.hpp"
+#include "Text2D.hpp"
 
 using namespace std;
 

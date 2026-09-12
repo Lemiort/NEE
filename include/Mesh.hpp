@@ -1,21 +1,20 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
-#include "Assistant.h"
-#include "Camera.h"
-// #include "ShaderFunctions.h"
-#include <MaterialObject.h>
-#include <PlaceableObject.h>
-#include <RotatableObject.h>
-#include <ScaleableObject.h>
-
+#include "Assistant.hpp"
+#include "Camera.hpp"
+// #include "ShaderFunctions.hpp"
 #include <fstream>
 #include <iostream>
 
-#include "Material.h"
-#include "Shader.h"
-#include "Texture.h"
-#include "math_3d.h"
-// #include "Light.h"
+#include "Material.hpp"
+#include "MaterialObject.hpp"
+#include "Math3d.hpp"
+#include "PlaceableObject.hpp"
+#include "RotatableObject.hpp"
+#include "ScaleableObject.hpp"
+#include "Shader.hpp"
+#include "Texture.hpp"
+// #include "Light.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;
 

@@ -1,8 +1,8 @@
 #ifndef MATERIALOBJECT_H
 #define MATERIALOBJECT_H
 
-#include <Material.h>
-#include <RenderableObject.h>
+#include "Material.hpp"
+#include "RenderableObject.hpp"
 
 // renderable object, using materials
 class MaterialObject : public RenderableObject {
