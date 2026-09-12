@@ -1,95 +1,101 @@
-#include "ShaderFunctions.h"
+#include "ShaderFunctions.hpp"
+
+#include <glad/gl.h>
+
+#include <cstdlib>
+#include <cstring>
+#include <vector>
+
+#include "spdlog/spdlog.h"
 
 char* ReadFile(const char* filename) {
-    FILE* fp;
+    FILE* fp = nullptr;
     // fopen_s(&fp, filename, "r");
     fp = fopen(filename, "r");
-    if (fp == NULL) {
+    if (fp == nullptr) {
         // MessageBox( NULL, "Cannot open shader file!", "ERROR",
         //    MB_OK | MB_ICONEXCLAMATION )
-        printf("Cant open shader file!");
-        return 0;
+        spdlog::error("Cant open shader file!");
+        return nullptr;
     }
     fseek(fp, 0, SEEK_END);
-    long file_length = ftell(fp);
+    long const file_length = ftell(fp);
     fseek(fp, 0, SEEK_SET);
-    char* contents = new char[file_length + 1];
-    for (int i = 0; i < file_length + 1; i++) {
-        contents[i] = 0;
-    }
-
-    fread(contents, 1, file_length, fp);
-    contents[file_length] = '\0';
+    std::vector<char> buffer(file_length + 1, 0);
+    fread(buffer.data(), 1, file_length, fp);
+    buffer[file_length] = '\0';
+    char* contents = new char[buffer.size()];
+    std::memcpy(contents, buffer.data(), buffer.size());
     fclose(fp);
     return contents;
 }
 
 GLuint MakeVertexShader(const char* source) {
-    GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+    GLuint const vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
     if (vertexShaderID == 0) {
-        fprintf(stderr, "\nError creating vertex shader\n");
+        spdlog::error("Error creating vertex shader");
         exit(1);
     }
-    glShaderSource(vertexShaderID, 1, (const GLchar**)&source, NULL);
+    glShaderSource(vertexShaderID, 1, static_cast<const GLchar**>(&source),
+                   nullptr);
     glCompileShader(vertexShaderID);
     return vertexShaderID;
 }
 
 GLuint MakeFragmentShader(const char* source) {
-    GLuint fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
+    GLuint const fragmentShaderID = glCreateShader(GL_FRAGMENT_SHADER);
     if (fragmentShaderID == 0) {
-        fprintf(stderr, "Error creating fragment shader\n");
+        spdlog::error("Error creating fragment shader");
         exit(1);
     }
-    glShaderSource(fragmentShaderID, 1, (const GLchar**)&source, NULL);
+    glShaderSource(fragmentShaderID, 1, static_cast<const GLchar**>(&source),
+                   nullptr);
     glCompileShader(fragmentShaderID);
     return fragmentShaderID;
 }
 
 GLuint MakeGeometryShader(const char* source) {
-    GLuint geometryShaderID = glCreateShader(GL_GEOMETRY_SHADER);
+    GLuint const geometryShaderID = glCreateShader(GL_GEOMETRY_SHADER);
     if (geometryShaderID == 0) {
-        fprintf(stderr, "Error creating fragment shader\n");
+        spdlog::error("Error creating fragment shader");
         exit(1);
     }
-    glShaderSource(geometryShaderID, 1, (const GLchar**)&source, NULL);
+    glShaderSource(geometryShaderID, 1, static_cast<const GLchar**>(&source),
+                   nullptr);
     glCompileShader(geometryShaderID);
     return geometryShaderID;
 }
 
 GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID) {
-    FILE* flog;
+    FILE* flog = nullptr;
     // fopen_s(&flog,"shaderbuild.log","w");
     flog = fopen("shaderbuild.log", "w");
-    GLuint shaderID = glCreateProgram();
+    GLuint const shaderID = glCreateProgram();
     if (shaderID == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        fprintf(flog, "Error creating shader program\n");
+        spdlog::error("Error creating shader program");
         fclose(flog);
         exit(1);
     }
     glAttachShader(shaderID, vertexShaderID);
     glAttachShader(shaderID, fragmentShaderID);
     glLinkProgram(shaderID);
-    //��������
+    // ��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};
     glGetProgramiv(shaderID, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        fprintf(flog, "Error linking shader program: '%s'\n", ErrorLog);
+        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), nullptr, ErrorLog);
+        spdlog::error("Error linking shader program: '{}'", ErrorLog);
         fclose(flog);
         exit(1);
     }
 
     glValidateProgram(shaderID);
     glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
+    if (Success == 0) {
+        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), nullptr, ErrorLog);
+        spdlog::error("Invalid shader program: '{}'", ErrorLog);
         fclose(flog);
         exit(1);
     }
@@ -98,13 +104,12 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint fragmentShaderID) {
 }
 GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
                          GLuint fragmentShaderID) {
-    FILE* flog;
+    FILE* flog = nullptr;
     // fopen_s(&flog,"shaderbuild.log","w");
     flog = fopen("shaderbuild.log", "w");
-    GLuint shaderID = glCreateProgram();
+    GLuint const shaderID = glCreateProgram();
     if (shaderID == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        fprintf(flog, "Error creating shader program\n");
+        spdlog::error("Error creating shader program");
         fclose(flog);
         exit(1);
     }
@@ -112,25 +117,23 @@ GLuint MakeShaderProgram(GLuint vertexShaderID, GLuint geometryShaderID,
     glAttachShader(shaderID, fragmentShaderID);
     glAttachShader(shaderID, geometryShaderID);
     glLinkProgram(shaderID);
-    //��������
+    // ��������
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};
     glGetProgramiv(shaderID, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        fprintf(flog, "Error linking shader program: '%s'\n", ErrorLog);
+        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), nullptr, ErrorLog);
+        spdlog::error("Error linking shader program: '{}'", ErrorLog);
         fclose(flog);
         exit(1);
     }
 
     glValidateProgram(shaderID);
     glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-        fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
+    if (Success == 0) {
+        glGetProgramInfoLog(shaderID, sizeof(ErrorLog), nullptr, ErrorLog);
+        spdlog::error("Invalid shader program: '{}'", ErrorLog);
         fclose(flog);
         exit(1);
     }

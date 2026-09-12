@@ -1,5 +1,8 @@
-#include "Light.h"
-#include <iomanip>
+#include "Light.hpp"
+
+#include <memory>
+
+#include "spdlog/spdlog.h"
 
 void DirectionalLight::SetCol(Vector3f col) {
     color[0] = col.x;
@@ -29,7 +32,7 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     mesh->Init(_mat, "models/cube2x2x2.ho3d");
 }
 
-void DirectionalLight::Render(Camera* cam) {
+void DirectionalLight::Render(const Camera& cam) {
     // mesh->SetScale(1.0,1.0,1.0);
     mesh->SetPosition(0, 0, 0);
     mesh->Render(cam);
@@ -74,7 +77,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     mesh->SetRotation(90, 0, 0);
 }
 
-void SpotLight::Render(Camera* cam) {
+void SpotLight::Render(const Camera& cam) {
     /* Vector3f HTarget(direction[0], 0.0, direction[2]);
 HTarget.Normalize();
 
@@ -113,15 +116,14 @@ m_AngleV = -ToDegree(asin(direction[1]));
 //Vector3f View(1.0f, 0.0f, 0.0f);
 //View.Rotate(m_AngleH, Vaxis);
 //View.Normalize();
-mesh->SetRotate(0,0,m_AngleH);
-cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
+mesh->SetRotate(0,0,m_AngleH);*/
 
     /*// Rotate the view vector by the vertical angle around the horizontal axis
     Vector3f Haxis = Vaxis.Cross(View);
     Haxis.Normalize();
     View.Rotate(m_AngleV, Haxis);*/
 
-    //======Предыдущее решение задачи========
+    //======Previous solution to the problem========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
     direction[2] = target[2] - position[2];
@@ -134,8 +136,6 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
     Vector3f directionXZ(direction[0], 0, direction[2]);
 
     float xrot = 0, yrot = 0, zrot = 0;
-
-    cout << "\rproj:(" << setprecision(1);
 
     // X axis
     {
@@ -150,7 +150,8 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
 
         // update up vector
         proj.Rotate(-xrot, Vector3f(1, 0, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("proj: ({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y,
+                      proj.z);
     }
 
     // Y axis
@@ -166,7 +167,7 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
 
         // update the up vector
         proj.Rotate(-yrot, Vector3f(0, 1, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("({},{},{});", proj.x, proj.y, proj.z);
 
         // Z axis
         if (proj != dir) {
@@ -181,11 +182,10 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
             proj.Rotate(-zrot, Vector3f(0, 0, 1));
         }
     }
-    cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
+    spdlog::debug("({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y, proj.z);
 
-    cout << setprecision(1) << (int)xrot << " " << (int)yrot << " " << (int)zrot
-         << ", dir:(" << direction[0] << ", " << direction[1] << ","
-         << direction[2] << ")";
+    spdlog::debug("rot: ({:.1f} {:.1f} {:.1f}, dir:({:.3f}, {:.3f}, {:.3f})",
+                  xrot, yrot, zrot, direction[0], direction[1], direction[2]);
 
     mesh->SetRotation(xrot, yrot, zrot);
     //=======================================================
@@ -208,7 +208,7 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
     //                       -90.0f);
     //==========================================================
 
-    // TODO идея: использовать скалярное произведение векторов
+    // TODO idea: use vector dot product
 
     mesh->SetScale(dir.Lenght() * cos(ToRadian(Cutoff)), dir.Lenght(),
                    dir.Lenght() * cos(ToRadian(Cutoff)));
@@ -268,7 +268,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     temp[2] = 0;
     /*char* vertexShaderSorceCode=ReadFile("shaders/lightVS.vsh");
     char* fragmentShaderSourceCode=ReadFile("shaders/lightFS.fsh");
-    shaderProgram=new Shader();
+    shaderProgram = std::make_unique<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
     shaderProgram->Init();
@@ -285,13 +285,13 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     sphere = make_shared<Mesh>();
     sphere->Init(_mat, "models/normal_geosphere.ho3d");
     radius = CalcSphereSize() / 2;
-    std::cout << "\nLight radius is " << radius;
+    spdlog::info("Light radius is {}", radius);
 }
 PointLight::~PointLight() {}
-void PointLight::Render(Camera* cam) {
+void PointLight::Render(const Camera& cam) {
     /*Assistant TM;
     TM.WorldPos(position[0],position[1],position[2]);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
     TM.SetPerspectiveProj(cam, Width, Height, zNear, zFar);*/
 
     /*shaderProgram->Use();
@@ -388,13 +388,13 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
 Line::~Line() {}
-// void Line::Render(Camera* pGameCamera, int width, int height)
-void Line::Render(Camera* cam) {
+// void Line::Render(const Camera& pGameCamera, int width, int height)
+void Line::Render(const Camera& cam) {
     Assistant TM;
     TM.WorldPos(0, 0, 0);
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
 
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);

@@ -1,7 +1,16 @@
-#include "ParticleSystem.h"
-ParticleSystem::ParticleSystem() {}
+#include "ParticleSystem.hpp"
 
-ParticleSystem::~ParticleSystem() {}
+#include <glad/gl.h>
+
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "EngineCommon.hpp"
+#include "Math3d.hpp"
+#include "ShaderFunctions.hpp"
+#include "Util.hpp"
+ParticleSystem::ParticleSystem() = default;
+
+ParticleSystem::~ParticleSystem() = default;
 
 bool ParticleSystem::Init(Vector3f Pos) {
     Particle Particles[MAX_PARTICLES];
@@ -9,8 +18,8 @@ bool ParticleSystem::Init(Vector3f Pos) {
 
     Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
     Particles[0].Pos = Pos;
-    Particles[0].Vel = Vector3f(0.0f, 0.0001f, 0.0f);
-    Particles[0].LifetimeMillis = 0.0f;
+    Particles[0].Vel = Vector3f(0.0F, 0.0001F, 0.0F);
+    Particles[0].LifetimeMillis = 0.0F;
 
     glGenTransformFeedbacks(2, m_transformFeedback);
     glGenBuffers(2, m_particleBuffer);
@@ -24,12 +33,14 @@ bool ParticleSystem::Init(Vector3f Pos) {
                      GL_DYNAMIC_DRAW);
     }
 
-    char* vertexShaderSorceCode = ReadFile("shaders/particle.vsh");
-    char* fragmentShaderSourceCode = ReadFile("shaders/particle.fsh");
-    char* geometryShaderSourceCode = ReadFile("shaders/particle.gsh");
-    GLuint vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
-    GLuint fragmentShaderID = MakeFragmentShader(fragmentShaderSourceCode);
-    GLuint geometryShaderID = MakeGeometryShader(geometryShaderSourceCode);
+    char const* vertexShaderSorceCode = ReadFile("shaders/particle.vsh");
+    char const* fragmentShaderSourceCode = ReadFile("shaders/particle.fsh");
+    char const* geometryShaderSourceCode = ReadFile("shaders/particle.gsh");
+    GLuint const vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
+    GLuint const fragmentShaderID =
+        MakeFragmentShader(fragmentShaderSourceCode);
+    GLuint const geometryShaderID =
+        MakeGeometryShader(geometryShaderSourceCode);
     shaderProgramID =
         MakeShaderProgram(vertexShaderID, geometryShaderID, fragmentShaderID);
     delete[] vertexShaderSorceCode;
@@ -43,9 +54,9 @@ bool ParticleSystem::Init(Vector3f Pos) {
     m_updateAssistant.Enable();
 
     m_updateAssistant.SetRandomTextureUnit(RANDOM_TEXTURE_UNIT_INDEX);
-    m_updateAssistant.SetLauncherLifetime(100.0f);
-    m_updateAssistant.SetShellLifetime(10000.0f);
-    m_updateAssistant.SetSecondaryShellLifetime(2500.0f);
+    m_updateAssistant.SetLauncherLifetime(100.0F);
+    m_updateAssistant.SetShellLifetime(10000.0F);
+    m_updateAssistant.SetSecondaryShellLifetime(2500.0F);
 
     if (!m_randomTexture.InitRandomTexture(1000)) {
         return false;
@@ -57,7 +68,7 @@ bool ParticleSystem::Init(Vector3f Pos) {
     return GLCheckError();
 }
 
-void ParticleSystem::Render(int DeltaTimeMillis, Camera* cam) {
+void ParticleSystem::Render(int DeltaTimeMillis, const Camera& cam) {
     m_time += DeltaTimeMillis;
 
     UpdateParticles(DeltaTimeMillis);
@@ -87,7 +98,7 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     glEnableVertexAttribArray(3);
 
     glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
-                          0);  // type
+                          nullptr);  // type
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
                           (const GLvoid*)4);  // position
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
@@ -113,22 +124,24 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     glDisableVertexAttribArray(3);
 }
 
-void ParticleSystem::RenderParticles(Camera* cam) {
+void ParticleSystem::RenderParticles(const Camera& cam) {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
-    TM.SetCamera(cam->GetPos(), cam->GetTarget(), cam->GetUp());
-    TM.SetPerspectiveProj(cam->GetFov(), cam->GetWidth(), cam->GetHeight(),
-                          cam->GetZNear(), cam->GetZFar());
-    //матрица проекции камеры
-    // glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    //позиция камеры
-    // glUniform3f(camPosID,cam->GetPos().x,cam->GetPos().y,cam->GetPos().z);
+    Assistant
+        TM;  // TM - For object, 2 - for normal of the object, 3 - for position
+
+    // camera for specular
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
+    // Projection matrix of the camera
+    //  glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    // Camera position
+    //  glUniform3f(camPosID,cam.GetPos().x,cam.GetPos().y,cam.GetPos().z);
 
     glUseProgram(shaderProgramID);
-    m_billboardAssistant.SetCameraPosition(cam->GetPos());
-    m_billboardAssistant.SetVP((const GLfloat*)TM.GetVC());
+    m_billboardAssistant.SetCameraPosition(cam.GetPos());
+    m_billboardAssistant.SetVP(reinterpret_cast<const GLfloat*>(TM.GetVC()));
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 
     glDisable(GL_RASTERIZER_DISCARD);

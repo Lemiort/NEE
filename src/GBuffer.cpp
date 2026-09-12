@@ -1,14 +1,19 @@
-#include "GBuffer.h"
-#include <Texture.h>
-#include <iostream>
-#include "util.h"
+#include "GBuffer.hpp"
+
+#include <glad/gl.h>
+
+#include <memory>
+
+#include "Texture.hpp"
+#include "Util.hpp"
+#include "spdlog/spdlog.h"
 
 bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
-    // Создаем FBO
+    // Create FBO
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    //создаём и инициализируем карты цвета и пр.
+    // create and initialize color maps and others
     glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
         glBindTexture(GL_TEXTURE_2D, m_textures[i]);
@@ -24,25 +29,26 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
                                GL_TEXTURE_2D, m_textures[i], 0);
     }
 
-    // создаём текстуру глубины
+    // create depth texture
     glGenTextures(1, &m_depthTexture);
-    //инициализируем карту глубины
+    // initialize depth map
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth,
     // WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, WindowWidth,
                  WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    /*//TODO расставить правильно эти параметры
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);*/
+    // TODO set these parameters correctly
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
     // glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
     // GL_TEXTURE_2D, m_depthTexture, 0);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                            GL_TEXTURE_2D, m_depthTexture, 0);
 
-    // создаём и инциализируем финальную карту цвета
+    // create and initialize final color buffer
     glGenTextures(1, &m_finalTexture);
     glBindTexture(GL_TEXTURE_2D, m_finalTexture);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0,
@@ -57,50 +63,44 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
                             GL_COLOR_ATTACHMENT4};
 
     glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
-    std::cout << "\n draw buffers:" << ARRAY_SIZE_IN_ELEMENTS(DrawBuffers);
+    spdlog::info("draw buffers: {}", ARRAY_SIZE_IN_ELEMENTS(DrawBuffers));
 
     // check FBO status
-    GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-            std::cout << "\nFramebuffer (GBuffer) complete." << std::endl;
+            spdlog::info("Framebuffer (GBuffer) complete.");
             return true;
 
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Attachment is NOT "
-                         "complete."
-                      << std::endl;
+            spdlog::error(
+                "Framebuffer incomplete: Attachment is NOT complete.");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-            std::cout << "\n[ERROR] Framebuffer incomplete: No image is "
-                         "attached to FBO."
-                      << std::endl;
+            spdlog::error(
+                "Framebuffer incomplete: No image is attached to FBO.");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Draw buffer."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: Draw buffer.");
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Read buffer."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: Read buffer.");
             return false;
 
         case GL_FRAMEBUFFER_UNSUPPORTED:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unsupported by FBO "
-                         "implementation."
-                      << std::endl;
+            spdlog::error(
+                "Framebuffer incomplete: Unsupported by FBO implementation.");
             return false;
 
         default:
-            std::cout << "\n[ERROR] Framebuffer incomplete: Unknown error."
-                      << std::endl;
+            spdlog::error("Framebuffer incomplete: Unknown error.");
             return false;
     }
 
-    // возвращаем стандартный FBO
+    // returning standard FBO
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     return true;
@@ -125,16 +125,15 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 }
 
 void GBuffer::CheckTextures() {
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        Texture2D* temp = new Texture2D(m_textures[i], false);
-        std::cout << "\n" << temp->GetParameters();
-        delete temp;
+    for (unsigned int& m_texture : m_textures) {
+        auto temp = std::make_unique<Texture2D>(m_texture, false);
+        spdlog::info("{}", temp->GetParameters());
     }
 }
 
 GLuint GBuffer::GetTexture(unsigned num) { return m_textures[num]; }
 
-GLuint GBuffer::GetDepthTexture() { return m_depthTexture; }
+GLuint GBuffer::GetDepthTexture() const { return m_depthTexture; }
 
 void GBuffer::StartFrame() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
@@ -153,7 +152,7 @@ void GBuffer::BindForGeomPass() {
 }
 
 void GBuffer::BindForStencilPass() {
-    // должны отключить буфер цвета
+    // should disable color buffer
     glDrawBuffer(GL_NONE);
 }
 
