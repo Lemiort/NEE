@@ -1,6 +1,6 @@
 #include "ShadowMapFBO.hpp"
 
-#include <stdio.h>
+#include <glad/gl.h>
 
 #include <iostream>
 
@@ -8,12 +8,8 @@
 #include "Util.hpp"
 
 // For smart pointers
-#include <memory>
-ShadowMapFBO::ShadowMapFBO() {
-    m_fbo = 0;
-    m_shadowMap = 0;
-    m_rbo = 0;
-}
+#include <string>
+ShadowMapFBO::ShadowMapFBO() : m_fbo(0), m_shadowMap(0), m_rbo(0) {}
 
 ShadowMapFBO::~ShadowMapFBO() {
     if (m_fbo != 0) {
@@ -66,62 +62,62 @@ bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
 
     // check FBO status
-    GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-            std::cout << "\nFramebuffer complete." << std::endl;
+            std::cout << "\nFramebuffer complete." << '\n';
             return true;
 
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
             std::cout << "\n[ERROR] Framebuffer incomplete: Attachment is NOT "
                          "complete."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
             std::cout << "\n[ERROR] Framebuffer incomplete: No image is "
                          "attached to FBO."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
             std::cout << "\n[ERROR] Framebuffer incomplete: Draw buffer."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
             std::cout << "\n[ERROR] Framebuffer incomplete: Read buffer."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_UNSUPPORTED:
             std::cout << "\n[ERROR] Framebuffer incomplete: Unsupported by FBO "
                          "implementation."
-                      << std::endl;
+                      << '\n';
             return false;
 
         default:
             std::cout << "\n[ERROR] Framebuffer incomplete: Unknown error."
-                      << std::endl;
+                      << '\n';
             return false;
     }
 }
 
-void ShadowMapFBO::BindForWriting() {
+void ShadowMapFBO::BindForWriting() const {
     glBindFramebuffer(GL_FRAMEBUFFER, m_fbo);
 }
 
-GLuint ShadowMapFBO::GetTexture() { return m_shadowMap; }
+GLuint ShadowMapFBO::GetTexture() const { return m_shadowMap; }
 
 GLuint ShadowMapFBO::GetTexture(unsigned num) { return m_textures[num]; }
 
-std::string ShadowMapFBO::CheckShadowTexture() {
+std::string ShadowMapFBO::CheckShadowTexture() const {
     // Create a temporary object on the stack – no dynamic allocation needed
     Texture2D tempTexture(m_shadowMap, false);
     return tempTexture.GetParameters();
 }
 
-void ShadowMapFBO::BindForReading(GLenum TextureUnit) {
+void ShadowMapFBO::BindForReading(GLenum TextureUnit) const {
     glActiveTexture(TextureUnit);
     glBindTexture(GL_TEXTURE_2D, m_shadowMap);
 }

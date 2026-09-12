@@ -11,11 +11,11 @@ public:
     virtual ~ShadowMapFBO();
     bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 
-    GLuint GetTexture();
+    GLuint GetTexture() const;
 
-    void BindForWriting();
+    void BindForWriting() const;
 
-    void BindForReading(GLenum TextureUnit);
+    void BindForReading(GLenum TextureUnit) const;
 
     enum GBUFFER_TEXTURE_TYPE {
         GBUFFER_TEXTURE_TYPE_POSITION,
@@ -27,14 +27,14 @@ public:
 
     GLuint GetTexture(unsigned num);
 
-    std::string CheckShadowTexture();
+    std::string CheckShadowTexture() const;
 
-private:
+   private:
     GLuint m_fbo;
     GLuint m_rbo;
     GLuint m_shadowMap;
 
-    GLuint m_textures[GBUFFER_NUM_TEXTURES];
+    GLuint m_textures[GBUFFER_NUM_TEXTURES]{};
 };
 
 #endif  // SHADOWMAPFBO_H

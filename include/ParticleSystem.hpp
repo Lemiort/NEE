@@ -1,15 +1,15 @@
 #ifndef PARTICLESYSTEM_H_INCLUDED
 #define PARTICLESYSTEM_H_INCLUDED
+#include <glad/gl.h>
+
+#include "Math3d.hpp"
 #define MAX_PARTICLES 1000
 // #include "Billboard.hpp"
-#include "Assistant.hpp"
 #include "BillboardAssistant.hpp"
 #include "Camera.hpp"
 #include "ParticleUpdateAssistant.hpp"
 #include "RandomTexture.hpp"
-#include "ShaderFunctions.hpp"
 #include "Texture.hpp"
-#include "Util.hpp"
 
 #define PARTICLE_LIFETIME 10.0f
 
@@ -40,10 +40,10 @@ private:
     void RenderParticles(const Camera& cam);
     void UpdateParticles(int DeltaTimeMillis);
     struct Particle {
-        float Type;
+        float Type{};
         Vector3f Pos;
         Vector3f Vel;
-        float LifetimeMillis;
+        float LifetimeMillis{};
     };
 };
 

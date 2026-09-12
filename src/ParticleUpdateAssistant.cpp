@@ -1,5 +1,9 @@
 #include "ParticleUpdateAssistant.hpp"
 
+#include <glad/gl.h>
+
+#include "EngineCommon.hpp"
+
 ParticleUpdateAssistant::ParticleUpdateAssistant() {
     // ctor
 }
@@ -45,16 +49,12 @@ bool ParticleUpdateAssistant::Init(GLuint shader) {
     m_secondaryShellLifetimeLocation =
         glGetUniformLocation(shaderProgramID, "gSecondaryShellLifetime");
 
-    if (m_deltaTimeMillisLocation == INVALID_UNIFORM_LOCATION ||
-        m_timeLocation == INVALID_UNIFORM_LOCATION ||
-        m_randomTextureLocation == INVALID_UNIFORM_LOCATION ||
-        m_launcherLifetimeLocation == INVALID_UNIFORM_LOCATION ||
-        m_shellLifetimeLocation == INVALID_UNIFORM_LOCATION ||
-        m_secondaryShellLifetimeLocation == INVALID_UNIFORM_LOCATION) {
-        return false;
-    }
-
-    return true;
+    return !(m_deltaTimeMillisLocation == INVALID_UNIFORM_LOCATION ||
+             m_timeLocation == INVALID_UNIFORM_LOCATION ||
+             m_randomTextureLocation == INVALID_UNIFORM_LOCATION ||
+             m_launcherLifetimeLocation == INVALID_UNIFORM_LOCATION ||
+             m_shellLifetimeLocation == INVALID_UNIFORM_LOCATION ||
+             m_secondaryShellLifetimeLocation == INVALID_UNIFORM_LOCATION);
 }
 
 void ParticleUpdateAssistant::Enable() { glUseProgram(shaderProgramID); }

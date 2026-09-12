@@ -1,5 +1,7 @@
 #include "ScaleableObject.hpp"
 
+#include "Math3d.hpp"
+
 ScaleableObject::ScaleableObject() {
     // ctor
 }
@@ -20,6 +22,4 @@ void ScaleableObject::SetScale(float x, float y, float z) {
     scale[2] = z;
 }
 
-Vector3f ScaleableObject::GetScale() {
-    return Vector3f(scale[0], scale[1], scale[2]);
-}
+Vector3f ScaleableObject::GetScale() { return {scale[0], scale[1], scale[2]}; }

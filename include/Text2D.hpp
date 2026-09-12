@@ -79,10 +79,10 @@ public:
     Font2d();
     ~Font2d();
     bool Init(string filename, shared_ptr<Shader> _sh);
-    int GetFontHeight();
-    float GetWidth(unsigned int c);
-    float GetHeight(unsigned int c);
-    float GetSpaceWidth();
+    int GetFontHeight() const;
+    float GetWidth(unsigned int c) const;
+    float GetHeight(unsigned int c) const;
+    float GetSpaceWidth() const;
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);

@@ -1,9 +1,16 @@
 #include "Billboard.hpp"
 
-Billboard::Billboard() {
-    Pos = Vector3f(1, 1, 1);
-    shader = false;
-}
+#include <glad/gl.h>
+
+#include <memory>
+#include <utility>
+
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "Shader.hpp"
+#include "ShaderFunctions.hpp"
+
+Billboard::Billboard() : shader(false) { Pos = Vector3f(1, 1, 1); }
 
 /*Billboard::Billboard(GLuint _shader)
 {
@@ -12,11 +19,10 @@ Billboard::Billboard() {
     shader=true;
 }*/
 
-Billboard::Billboard(shared_ptr<Shader> _shader) {
+Billboard::Billboard(shared_ptr<Shader> _shader) : shader(true) {
     Pos = Vector3f(0, 0, 0);
-    shaderProgram = _shader;
+    shaderProgram = std::move(_shader);
     // shaderProgramID=_shader->shaderProgramID;
-    shader = true;
 }
 
 Billboard::~Billboard() {
@@ -24,10 +30,12 @@ Billboard::~Billboard() {
 }
 
 void Billboard::Init(const char* TexFilename) {
-    if (shader == false) {
-        char* vertexShaderSorceCode = ReadFile("shaders/billboard.vsh");
-        char* fragmentShaderSourceCode = ReadFile("shaders/billboard.fsh");
-        char* geometryShaderSourceCode = ReadFile("shaders/billboard.gsh");
+    if (!shader) {
+        char const* vertexShaderSorceCode = ReadFile("shaders/billboard.vsh");
+        char const* fragmentShaderSourceCode =
+            ReadFile("shaders/billboard.fsh");
+        char const* geometryShaderSourceCode =
+            ReadFile("shaders/billboard.gsh");
         shaderProgram = make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
@@ -53,19 +61,19 @@ void Billboard::Init(const char* TexFilename) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // creating a buffer
     float coords[3] = {Pos.x, Pos.y, Pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
-void Billboard::SetPos(Vector3f _Pos) {
-    Pos = _Pos;
+void Billboard::SetPos(Vector3f Pos) {
+    Pos = Pos;
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // creating a buffer
     float coords[3] = {Pos.x, Pos.y, Pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3), coords, GL_DYNAMIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, coords, GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
 }
 
@@ -79,7 +87,8 @@ void Billboard::Render(const Camera& cam) {
                           cam.GetZNear(), cam.GetZFar());
 
     // camera projection matrix
-    glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    glUniformMatrix4fv(camViewID, 1, GL_TRUE,
+                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
     // camera position
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 

@@ -58,8 +58,8 @@ protected:
 public:
     Mesh();
     virtual ~Mesh();
-    int GetNumFaces();
-    int GetNumVerts();
+    int GetNumFaces() const;
+    int GetNumVerts() const;
     void SetMaterial(shared_ptr<Material> _mat);
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);

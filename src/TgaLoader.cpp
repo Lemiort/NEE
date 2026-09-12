@@ -1,7 +1,13 @@
 #include "TgaLoader.hpp"
 
-#include <memory>
+#include <glad/gl.h>
+
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <vector>
+
+#include "Logger.hpp"
 
 bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
               uint32_t* size) {
@@ -9,17 +15,18 @@ bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
     ASSERT(buffer);
     ASSERT(size);
 
-    FILE* input;
-    uint32_t fileSize, readed;
+    FILE* input = nullptr;
+    uint32_t fileSize = 0;
+    uint32_t readed = 0;
 
     const char mode[] = {'r', binary ? 'b' : 't', '\0'};
-    if ((input = fopen(fileName, mode)) == NULL) {
+    if ((input = fopen(fileName, mode)) == nullptr) {
         LOG_ERROR("Opening file '%s'\n", fileName);
         return false;
     }
 
     fseek(input, 0, SEEK_END);
-    fileSize = (uint32_t)ftell(input);
+    fileSize = static_cast<uint32_t>(ftell(input));
     rewind(input);
 
     if (fileSize == 0) {
@@ -52,14 +59,17 @@ bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
 GLuint TextureCreateFromTGA(const char* fileName) {
     ASSERT(fileName);
 
-    TGAHeader* header;
-    uint8_t* buffer;
-    uint32_t size;
-    GLint format, internalFormat;
-    GLuint texture;
+    TGAHeader const* header = nullptr;
+    uint8_t* buffer = nullptr;
+    uint32_t size = 0;
+    GLint format = 0;
+    GLint internalFormat = 0;
+    GLuint texture = 0;
 
     // Try to load image from file
-    if (!LoadFile(fileName, true, &buffer, &size)) return 0;
+    if (!LoadFile(fileName, true, &buffer, &size)) {
+        return 0;
+    }
 
     // If file size is less than TGA header size
     if (size <= sizeof(TGAHeader)) {
@@ -68,7 +78,7 @@ GLuint TextureCreateFromTGA(const char* fileName) {
         return 0;
     }
 
-    header = (TGAHeader*)buffer;
+    header = reinterpret_cast<TGAHeader*>(buffer);
 
     // Check TGA file format - uncompressed RGB or RGBA image
     if (header->datatype != 2 ||
@@ -97,10 +107,10 @@ GLuint TextureCreateFromTGA(const char* fileName) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
     // Load color data into the current active texture
-    glTexImage2D(
-        GL_TEXTURE_2D, 0, internalFormat, header->width, header->height, 0,
-        format, GL_UNSIGNED_BYTE,
-        (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
+    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, header->width,
+                 header->height, 0, format, GL_UNSIGNED_BYTE,
+                 reinterpret_cast<const GLvoid*>(buffer + sizeof(TGAHeader) +
+                                                 header->idlength));
 
     // Color data is no longer needed in memory after loading into the texture
     delete[] buffer;

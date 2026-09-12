@@ -1,6 +1,9 @@
 #include "GBuffer.hpp"
 
+#include <glad/gl.h>
+
 #include <iostream>
+#include <memory>
 
 #include "Texture.hpp"
 #include "Util.hpp"
@@ -63,43 +66,43 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     std::cout << "\n draw buffers:" << ARRAY_SIZE_IN_ELEMENTS(DrawBuffers);
 
     // check FBO status
-    GLenum status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
-            std::cout << "\nFramebuffer (GBuffer) complete." << std::endl;
+            std::cout << "\nFramebuffer (GBuffer) complete." << '\n';
             return true;
 
         case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
             std::cout << "\n[ERROR] Framebuffer incomplete: Attachment is NOT "
                          "complete."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
             std::cout << "\n[ERROR] Framebuffer incomplete: No image is "
                          "attached to FBO."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
             std::cout << "\n[ERROR] Framebuffer incomplete: Draw buffer."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
             std::cout << "\n[ERROR] Framebuffer incomplete: Read buffer."
-                      << std::endl;
+                      << '\n';
             return false;
 
         case GL_FRAMEBUFFER_UNSUPPORTED:
             std::cout << "\n[ERROR] Framebuffer incomplete: Unsupported by FBO "
                          "implementation."
-                      << std::endl;
+                      << '\n';
             return false;
 
         default:
             std::cout << "\n[ERROR] Framebuffer incomplete: Unknown error."
-                      << std::endl;
+                      << '\n';
             return false;
     }
 
@@ -128,15 +131,15 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 }
 
 void GBuffer::CheckTextures() {
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        auto temp = std::make_unique<Texture2D>(m_textures[i], false);
+    for (unsigned int& m_texture : m_textures) {
+        auto temp = std::make_unique<Texture2D>(m_texture, false);
         std::cout << "\n" << temp->GetParameters();
     }
 }
 
 GLuint GBuffer::GetTexture(unsigned num) { return m_textures[num]; }
 
-GLuint GBuffer::GetDepthTexture() { return m_depthTexture; }
+GLuint GBuffer::GetDepthTexture() const { return m_depthTexture; }
 
 void GBuffer::StartFrame() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);

@@ -1,11 +1,16 @@
 #include "Texture.hpp"
 
+#include <glad/gl.h>
+
+#include <sstream>
+#include <string>
+
 #define STB_IMAGE_IMPLEMENTATION
 #include <iostream>
 
 #include "stb_image.h"
 
-Texture::Texture(bool _del) { del = _del; }
+Texture::Texture(bool _del) : del(_del) {}
 
 Texture::~Texture() {
     if (del) {
@@ -14,7 +19,7 @@ Texture::~Texture() {
     }
 }
 
-GLuint Texture::GetTextureID() { return texBufferID; }
+GLuint Texture::GetTextureID() const { return texBufferID; }
 
 ///////////////////////////////////////////////////////////////////////////////
 // convert OpenGL internal format enum to string
@@ -183,10 +188,14 @@ std::string Texture::ConvertInternalFormatToString(GLenum format) {
 // return texture parameters as string using glGetTexLevelParameteriv()
 ///////////////////////////////////////////////////////////////////////////////
 std::string Texture::GetParameters() {
-    GLuint id = texBufferID;
-    if (glIsTexture(id) == GL_FALSE) return "Not texture object";
+    GLuint const id = texBufferID;
+    if (glIsTexture(id) == GL_FALSE) {
+        return "Not texture object";
+    }
 
-    int width, height, format;
+    int width = 0;
+    int height = 0;
+    int format = 0;
     std::string formatName;
     glBindTexture(GL_TEXTURE_2D, id);
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,
@@ -221,14 +230,16 @@ Texture2D::~Texture2D() {
 bool Texture2D::Load(const char* filename) {
     // stbi_set_flip_vertically_on_load(true);
 
-    int width, height, nrChannels;
+    int width = 0;
+    int height = 0;
+    int nrChannels = 0;
 
     // Load pixels with stb_image, forcing 4 channels (RGBA)
     unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 4);
 
-    if (!data) {
+    if (data == nullptr) {
         std::cerr << "[STB Error] Could not load: " << filename
-                  << " | Reason: " << stbi_failure_reason() << std::endl;
+                  << " | Reason: " << stbi_failure_reason() << '\n';
         return 0;
     }
 
@@ -252,7 +263,7 @@ bool Texture2D::Load(const char* filename) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     // Set the internal format to a compressed format (DXT5)
-    GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+    GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
     // Send the pixel data to OpenGL, specifying the internal format as
     // compressed
@@ -266,10 +277,7 @@ bool Texture2D::Load(const char* filename) {
     // Free the pixel data after uploading to GPU
     stbi_image_free(data);
 
-    if (texBufferID)
-        return true;
-    else
-        return false;
+    return texBufferID != 0;
 }
 
 void AbstractTexture::SetTexture(GLuint _texID) { texBufferID = _texID; }

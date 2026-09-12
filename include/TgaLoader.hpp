@@ -8,8 +8,6 @@
 #include <cassert>
 #include <cstdint>
 
-#include "Logger.hpp"
-
 #define ASSERT(x) assert(x)
 /*typedef __int8           int8_t;
 typedef unsigned __int8  uint8_t;

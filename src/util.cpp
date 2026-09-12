@@ -1,5 +1,9 @@
 #include "Util.hpp"
 
+#include <ios>
+#include <sstream>
+#include <string>
+
 std::string ConvertToString(float number) {
     std::ostringstream buff;
     buff.precision(3);

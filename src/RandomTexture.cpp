@@ -1,10 +1,14 @@
 #include "RandomTexture.hpp"
 
+#include <glad/gl.h>
+
 #include <vector>
 
-RandomTexture::RandomTexture() {
+#include "Math3d.hpp"
+#include "Util.hpp"
+
+RandomTexture::RandomTexture() : textureID(0) {
     // ctor
-    textureID = 0;
 }
 
 RandomTexture::~RandomTexture() {
@@ -24,7 +28,7 @@ bool RandomTexture::InitRandomTexture(unsigned int Size) {
 
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_1D, textureID);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, Size, 0.0f, GL_RGB, GL_FLOAT,
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, Size, 0.0F, GL_RGB, GL_FLOAT,
                  pRandomData.data());
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
