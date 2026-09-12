@@ -6,7 +6,7 @@
 class Rectangle2D : public RenderableObject, public PlaceableObject {
 public:
     Rectangle2D();
-    virtual ~Rectangle2D();
+    ~Rectangle2D() override;
 
 protected:
 private:

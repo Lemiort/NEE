@@ -1,16 +1,15 @@
 #ifndef ASSISTANT_H_INCLUDED
 #define ASSISTANT_H_INCLUDED
-#define _USE_MATH_DEFINES  // for C++
+#define USE_MATH_DEFINES  // for C++
 #include "Math3d.hpp"
 class Assistant {
 public:
     Matrix4f transformation;
     Matrix4f temp;
-    Assistant() {
-        scale = Vector3f(1.0f, 1.0f, 1.0f);
-        worldPos = Vector3f(0.0f, 0.0f, 0.0f);
-        rotate = Vector3f(0.0f, 0.0f, 0.0f);
-        phi = 0;
+    Assistant() : phi(0) {
+        scale = Vector3f(1.0F, 1.0F, 1.0F);
+        worldPos = Vector3f(0.0F, 0.0F, 0.0F);
+        rotate = Vector3f(0.0F, 0.0F, 0.0F);
     }
     void Scale(float ScaleX, float ScaleY, float ScaleZ) {
         scale.x = ScaleX;

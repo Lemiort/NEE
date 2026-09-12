@@ -2,8 +2,6 @@
 #define PARTICLEUPDATEASSISTANT_H
 #include <glad/gl.h>
 
-#include "EngineCommon.hpp"
-
 class ParticleUpdateAssistant {
 public:
     ParticleUpdateAssistant();

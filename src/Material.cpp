@@ -1,8 +1,14 @@
 #include "Material.hpp"
 
-#include <cstdlib>
-#include <iostream>
+#include <glad/gl.h>
 
+#include <iostream>
+#include <memory>
+#include <string>
+#include <utility>
+
+#include "Shader.hpp"
+#include "Texture.hpp"
 #include "Util.hpp"
 
 Material::Material() {
@@ -37,47 +43,49 @@ Material::Material() {
 
 Material::~Material() = default;
 
-bool Material::Init(shared_ptr<Shader> _sh) {
-    if (_sh == nullptr) return false;
-    shaderProgram = _sh;
-    shaderProgram->Use();
+bool Material::Init(const shared_ptr<Shader>& _sh) {
+  if (_sh == nullptr) {
+    return false;
+  }
+  shaderProgram = _sh;
+  shaderProgram->Use();
 
-    // set default value
+  // set default value
 
-    // load into shader
+  // load into shader
 
-    // activate texture unit 0
-    colorMap->Bind(GL_TEXTURE0);
-    std::string colName("colTexSampler");
-    colTexID = shaderProgram->GetUniformLocation(colName.c_str());
-    std::cout << "\n color sampler num is " << colTexID;
-    // tell shader to use as texture 0
-    glUniform1i(colTexID, 0);
+  // activate texture unit 0
+  colorMap->Bind(GL_TEXTURE0);
+  std::string const colName("colTexSampler");
+  colTexID = shaderProgram->GetUniformLocation(colName.c_str());
+  std::cout << "\n color sampler num is " << colTexID;
+  // tell shader to use as texture 0
+  glUniform1i(colTexID, 0);
 
-    normalMap->Bind(GL_TEXTURE1);
-    normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
-    // tell shader to use as texture #1
-    glUniform1i(normSamplerID, 1);
+  normalMap->Bind(GL_TEXTURE1);
+  normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
+  // tell shader to use as texture #1
+  glUniform1i(normSamplerID, 1);
 
-    specularMap->Bind(GL_TEXTURE2);
-    specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
-    // tell shader to use texture unit 2 for specular map
-    glUniform1i(specSamplerID, 2);
+  specularMap->Bind(GL_TEXTURE2);
+  specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
+  // tell shader to use texture unit 2 for specular map
+  glUniform1i(specSamplerID, 2);
 
-    shadowMap->Bind(GL_TEXTURE3);
-    shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
-    // tell shader to use texture unit 3 for shadow map
-    glUniform1i(shadowSamplerID, 3);
+  shadowMap->Bind(GL_TEXTURE3);
+  shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
+  // tell shader to use texture unit 3 for shadow map
+  glUniform1i(shadowSamplerID, 3);
 
-    std::string abstractSamplerName("gSampler");
-    for (GLint i = 4; i < max_texture_units; i++) {
-        abstractSamplersID[i] = shaderProgram->GetUniformLocation(
-            (abstractSamplerName + ConvertToString(i)).c_str());
-        // std::cout<<"\nSampler name is
-        // "<<(abstractSamplerName+ConvertToString(i)).c_str();
-    }
+  std::string const abstractSamplerName("gSampler");
+  for (GLint i = 4; i < max_texture_units; i++) {
+    abstractSamplersID[i] = shaderProgram->GetUniformLocation(
+        (abstractSamplerName + ConvertToString(i)).c_str());
+    // std::cout<<"\nSampler name is
+    // "<<(abstractSamplerName+ConvertToString(i)).c_str();
+  }
 
-    return true;
+  return true;
 }
 
 void Material::Use() {
@@ -119,27 +127,31 @@ void Material::Use() {
 }
 
 void Material::SetColorTexture(shared_ptr<Texture2D> _colorMap) {
-    colorMap = _colorMap;
+  colorMap = std::move(_colorMap);
 }
 
 void Material::SetNormalTexture(shared_ptr<Texture2D> _normalMap) {
-    normalMap = _normalMap;
+  normalMap = std::move(_normalMap);
 }
 
 void Material::SetSpecularTexture(shared_ptr<Texture2D> _specularMap) {
-    specularMap = _specularMap;
+  specularMap = std::move(_specularMap);
 }
 
 void Material::SetShadowTexture(shared_ptr<Texture2D> _shadowMap) {
-    shadowMap = _shadowMap;
+  shadowMap = std::move(_shadowMap);
 }
 
-void Material::SetTexture(shared_ptr<Texture2D> _map, GLuint num) {
-    if (num <= 3) return;
-    texturesID[num] = _map->GetTextureID();
+void Material::SetTexture(const shared_ptr<Texture2D>& _map, GLuint num) {
+  if (num <= 3) {
+    return;
+  }
+  texturesID[num] = _map->GetTextureID();
 }
 
 void Material::SetTexture(GLuint _map, GLuint num) {
-    if (num <= 3) return;
+  if (num <= 3) {
+    return;
+  }
     texturesID[num] = _map;
 }

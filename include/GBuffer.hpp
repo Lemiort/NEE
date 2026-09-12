@@ -14,9 +14,9 @@ public:
         GBUFFER_NUM_TEXTURES
     };
 
-    GBuffer() {}
+    GBuffer() = default;
 
-    ~GBuffer() {}
+    ~GBuffer() = default;
 
     bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 
@@ -34,7 +34,7 @@ public:
 
     GLuint GetTexture(unsigned num);
 
-    GLuint GetDepthTexture();
+    GLuint GetDepthTexture() const;
 
 private:
     GLuint m_fbo;

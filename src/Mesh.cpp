@@ -1,9 +1,23 @@
 #include "Mesh.hpp"
 
+#include <glad/gl.h>
+
+#include <cstdio>
+#include <fstream>
+#include <ios>
+#include <memory>
+#include <new>
+#include <ostream>
+#include <print>
+#include <utility>
+#include <vector>
+
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "Material.hpp"
+
 Mesh::Mesh() {
-    // mat=NULL;
-    shadowMap = 0;
-    rPhi = 0;
+  // mat=NULL;
 }
 
 Mesh::~Mesh() {
@@ -27,11 +41,13 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
 }
 
 bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
-    mat = _mat;
-    shaderProgram = mat->GetShader();
-    // mat->Use();
+  mat = std::move(_mat);
+  shaderProgram = mat->GetShader();
+  // mat->Use();
 
-    if (shaderProgram == NULL) return false;
+  if (shaderProgram == nullptr) {
+    return false;
+  }
 
     Scale = 0;
     std::vector<int> spindices;
@@ -42,26 +58,28 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     spfaces = 0;
     spverts = 0;
     try {
-        FILE* fp;
-        fstream fout("ImporObj.log", ios::out);
-        // fopen_s(&fp,model,"r+b");
-        fp = fopen(model, "r+b");
-        if (!fp) return false;
+      FILE* fp = nullptr;
+      fstream fout("ImporObj.log", ios::out);
+      // fopen_s(&fp,model,"r+b");
+      fp = fopen(model, "r+b");
+      if (fp == nullptr) {
+        return false;
+      }
         fread(&spverts, sizeof(int), 1, fp);
-        fout << spverts << endl;
+        fout << spverts << '\n';
         spvertices.resize(spverts * 3);
         spuvs.resize(spverts * 2);
         spnormals.resize(spverts * 3);
         sptangent.resize(spverts * 3);
         for (int i = 0; i < spverts; i++) {
             fread(&spvertices[3 * i], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 2], sizeof(float), 1, fp);
+            fread(&spvertices[(3 * i) + 1], sizeof(float), 1, fp);
+            fread(&spvertices[(3 * i) + 2], sizeof(float), 1, fp);
             fread(&spuvs[2 * i], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i + 1], sizeof(float), 1, fp);
+            fread(&spuvs[(2 * i) + 1], sizeof(float), 1, fp);
             fread(&spnormals[3 * i], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
+            fread(&spnormals[(3 * i) + 1], sizeof(float), 1, fp);
+            fread(&spnormals[(3 * i) + 2], sizeof(float), 1, fp);
         }
         for (int i = 0; i < spverts * 3; i++) {
             fread(&sptangent[i], sizeof(float), 1, fp);
@@ -69,32 +87,33 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         for (int i = 0; i < spverts; i++) {
             fout << i << " ";
             fout << spvertices[3 * i] << ",";
-            fout << spvertices[3 * i + 1] << ",";
-            fout << spvertices[3 * i + 2] << ",";
-            fout << spuvs[2 * i + 0] << ",";
-            fout << spuvs[2 * i + 1] << ",";
-            fout << spnormals[3 * i + 0] << ",";
-            fout << spnormals[3 * i + 1] << ",";
-            fout << spnormals[3 * i + 2] << ",\n";
+            fout << spvertices[(3 * i) + 1] << ",";
+            fout << spvertices[(3 * i) + 2] << ",";
+            fout << spuvs[(2 * i) + 0] << ",";
+            fout << spuvs[(2 * i) + 1] << ",";
+            fout << spnormals[(3 * i) + 0] << ",";
+            fout << spnormals[(3 * i) + 1] << ",";
+            fout << spnormals[(3 * i) + 2] << ",\n";
         }
         // vertices[0]=f;
         fread(&spfaces, sizeof(int), 1, fp);
-        fout << "\n" << spfaces << endl;
+        fout << "\n" << spfaces << '\n';
         spindices.resize(spfaces * 3);
         for (int i = 0; i < spfaces; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
+            fread(&spindices[(3 * i) + 1], sizeof(int), 1, fp);
+            fread(&spindices[(3 * i) + 2], sizeof(int), 1, fp);
         }
         fclose(fp);
         for (int i = 0; i < spfaces; i++) {
             fout << spindices[3 * i] << ",";
-            fout << spindices[3 * i + 1] << "," << spindices[3 * i + 2] << endl;
+            fout << spindices[(3 * i) + 1] << "," << spindices[(3 * i) + 2]
+                 << '\n';
         }
         fout.close();
     } catch (const std::bad_alloc&) {
-        printf("\nError creating make_shared<Mesh>");
-        return false;
+      std::print("\nError creating make_shared<Mesh>");
+      return false;
     }
 
     // create buffer to store everything
@@ -141,44 +160,47 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-    Assistant TM, TM2;  // TM - For object, 2- for object's normal, 3 - for
-                        // camera position for specular
-    TM.Scale(scale[0], scale[1], scale[2]);
-    TM.WorldPos(position[0], position[1], position[2]);
-    TM.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM2.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM.RotateOverVector(rv, rPhi);
-    TM2.RotateOverVector(rv, rPhi);
+  Assistant TM;
+  Assistant TM2;  // TM - For object, 2- for object's normal, 3 - for
+                  // camera position for specular
+  TM.Scale(scale[0], scale[1], scale[2]);
+  TM.WorldPos(position[0], position[1], position[2]);
+  TM.Rotate(rotation[0], rotation[1], rotation[2]);
+  TM2.Rotate(rotation[0], rotation[1], rotation[2]);
+  TM.RotateOverVector(rv, rPhi);
+  TM2.RotateOverVector(rv, rPhi);
 
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
+  TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+  TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                        cam.GetZNear(), cam.GetZFar());
 
-    mat->Use();
+  mat->Use();
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 3 * spverts));
-    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 6 * spverts));
-    glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
-                          BUFFER_OFFSET(sizeof(float) * 8 * spverts));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+  glBindBuffer(GL_ARRAY_BUFFER, VBO);
+  glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+  glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
+                        BUFFER_OFFSET(sizeof(float) * 3 * spverts));
+  glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
+                        BUFFER_OFFSET(sizeof(float) * 6 * spverts));
+  glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+                        BUFFER_OFFSET(sizeof(float) * 8 * spverts));
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSR());
-    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       (const GLfloat*)TM2.GetRotate());  // rotation of model
+  glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
+                     reinterpret_cast<const GLfloat*>(TM.GetTSR()));
+  glUniformMatrix4fv(
+      rotateID, 1, GL_TRUE,
+      reinterpret_cast<const GLfloat*>(TM2.GetRotate()));  // rotation of model
 
-    glEnableVertexAttribArray(positionID);
-    glEnableVertexAttribArray(normalID);
-    glEnableVertexAttribArray(uvID);
-    glEnableVertexAttribArray(tangentID);
-    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
-    glDisableVertexAttribArray(normalID);
-    glDisableVertexAttribArray(uvID);
-    glDisableVertexAttribArray(tangentID);
+  glEnableVertexAttribArray(positionID);
+  glEnableVertexAttribArray(normalID);
+  glEnableVertexAttribArray(uvID);
+  glEnableVertexAttribArray(tangentID);
+  glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
+  glDisableVertexAttribArray(positionID);
+  glDisableVertexAttribArray(normalID);
+  glDisableVertexAttribArray(uvID);
+  glDisableVertexAttribArray(tangentID);
 }
 
 void Mesh::SetVectorRotate(Vector3f v, float phi) {
@@ -186,9 +208,9 @@ void Mesh::SetVectorRotate(Vector3f v, float phi) {
     rv = v;
 }
 
-int Mesh::GetNumFaces() { return spfaces; }
+int Mesh::GetNumFaces() const { return spfaces; }
 
-int Mesh::GetNumVerts() { return spverts; }
+int Mesh::GetNumVerts() const { return spverts; }
 
 void Mesh::SetTexture(GLuint textureUnit) { shadowMap = textureUnit; }
 

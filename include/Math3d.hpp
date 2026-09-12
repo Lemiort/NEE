@@ -9,8 +9,8 @@
 #define M_PI (3.14159265358979323846)
 #endif  // M_PI
 
-#define ToRadian(x) ((x)*M_PI / 180.0f)
-#define ToDegree(x) ((x)*180.0f / M_PI)
+#define ToRadian(x) ((x) * M_PI / 180.0f)
+#define ToDegree(x) ((x) * 180.0f / M_PI)
 
 float RandomFloat();
 
@@ -106,7 +106,7 @@ struct Vector3f {
 
     void Print() const { printf("(%.02f, %.02f, %.02f", x, y, z); }
 
-    float Lenght();
+    float Lenght() const;
 };
 
 inline Vector3f operator+(const Vector3f& l, const Vector3f& r) {
@@ -213,7 +213,7 @@ struct Quaternion {
 
     void Normalize();
 
-    Quaternion Conjugate();
+    Quaternion Conjugate() const;
 };
 
 Quaternion operator*(const Quaternion& l, const Quaternion& r);

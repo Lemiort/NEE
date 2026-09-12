@@ -11,7 +11,7 @@ public:
     Vector3f GetScale();
 
 protected:
-    float scale[3];
+ float scale[3]{};
 
 private:
 };

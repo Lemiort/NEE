@@ -11,7 +11,7 @@ public:
     Vector3f GetRotation();
 
 protected:
-    float rotation[3];
+    float rotation[3]{};
 
 private:
 };

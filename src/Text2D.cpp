@@ -1,39 +1,58 @@
 #include "Text2D.hpp"
 
+#include <glad/gl.h>
+#include <math.h>
+
 #include <array>
+#include <cstddef>
+#include <cstdint>
+#include <cstdio>
+#include <cstring>
 #include <fstream>
+#include <ios>
+#include <iostream>
 #include <memory>
+#include <ostream>
+#include <print>
 #include <sstream>
 #include <stdexcept>  // std::out_of_range]
+#include <string>
+#include <utility>
 
+#include "Camera.hpp"
+#include "Math3d.hpp"
+#include "Shader.hpp"
+#include "ShaderFunctions.hpp"
 #include "stb_image.h"
 
 // The shader program is managed via a shared_ptr. Initialize it to nullptr.
 FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
 
-FontLine2d::~FontLine2d() {}
+FontLine2d::~FontLine2d() = default;
 
 bool FontLine2d::Init(string filename, shared_ptr<Shader> _sh) {
-    return character.Init(filename, _sh);
+    return character.Init(std::move(filename), std::move(_sh));
 }
 
 void FontLine2d::SetAspectRatio(int w, int h) {
     character.SetAspectRatio(w, h);
-    aratio = (float)h / (float)w;
+    aratio = static_cast<float>(h) / static_cast<float>(w);
 }
 
-void FontLine2d::SetText(string _text) { text = _text; }
+void FontLine2d::SetText(string _text) { text = std::move(_text); }
 
 // void FontLine2d::Render(string text, float startX, float startY,float size )
 void FontLine2d::Render(const Camera& cam) {
-    float dx = 0.0f;
+    float dx = 0.0F;
     prevChar = 0;
     // float dy=0.0f;
     Vector2f temp;
-    spaceWidth = character.GetSpaceWidth() / ((float)character.GetFontHeight());
+    spaceWidth = character.GetSpaceWidth() /
+                 (static_cast<float>(character.GetFontHeight()));
     for (unsigned int i = 0; i < text.length(); ++i) {
         // look up info about this character
-        uint32_t code = (((uint32_t)prevChar) << 16) | ((uint32_t)text.at(i));
+        uint32_t const code = ((static_cast<uint32_t>(prevChar)) << 16) |
+                              (static_cast<uint32_t>(text.at(i)));
         float kerning = 0;
         try {
             kerning = character.kerningInfo.at(code);
@@ -43,7 +62,8 @@ void FontLine2d::Render(const Camera& cam) {
         dx += kerning;
 
         // if we found a space character, draw it
-        if ((unsigned int)text.at(i) == (unsigned int)' ') {
+        if (static_cast<unsigned int>(text.at(i)) ==
+            static_cast<unsigned int>(' ')) {
             dx += position[2] * spaceWidth;
         }
 
@@ -54,50 +74,50 @@ void FontLine2d::Render(const Camera& cam) {
         character.Render(cam);
 
         // if the character exists, draw it
-        if (temp.x > 0.0f)
+        if (temp.x > 0.0F) {
             // space and separator between characters
-            dx += temp.x + position[2] * spaceWidth / 4.0f;
-        else
+            dx += temp.x + (position[2] * spaceWidth / 4.0F);
+        } else {
             continue;  // no character - do not write anything
+        }
         // remember the previous character
-        prevChar = (unsigned int)text.at(i);
+        prevChar = static_cast<unsigned int>(text.at(i));
     }
 }
 
-Font2d::Font2d() {
-    color = Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
-    aratio = 1;
-}
+Font2d::Font2d() : aratio(1) { color = Vector4f(1.0F, 1.0F, 1.0F, 1.0F); }
 
-Font2d::~Font2d() {}
+Font2d::~Font2d() = default;
 
-float Font2d::GetHeight(unsigned int c) {
-    FontCharacter temp = fontInfo.at(c);
-    float realHeight = (float)temp.height / (float)imageHeight;
-    float dx = 1.0f;
+float Font2d::GetHeight(unsigned int c) const {
+    FontCharacter const temp = fontInfo.at(c);
+    float const realHeight =
+        static_cast<float>(temp.height) / static_cast<float>(imageHeight);
+    float const dx = 1.0F;
     return (2 * dx) * realHeight * ky;
 }
 
-float Font2d::GetWidth(unsigned int c) {
-    FontCharacter temp = fontInfo.at(c);
-    float realWidth = (float)temp.width / (float)imageWidth;
-    float dx = 1.0f;
+float Font2d::GetWidth(unsigned int c) const {
+    FontCharacter const temp = fontInfo.at(c);
+    float const realWidth =
+        static_cast<float>(temp.width) / static_cast<float>(imageWidth);
+    float const dx = 1.0F;
     return (2 * dx) * realWidth * kx;
 }
 
-float Font2d::GetSpaceWidth() {
-    FontCharacter temp = fontInfo.at(34);
-    float realWidth = (float)temp.origW / (float)imageWidth;
-    float dx = 1.0f;
+float Font2d::GetSpaceWidth() const {
+    FontCharacter const temp = fontInfo.at(34);
+    float const realWidth =
+        static_cast<float>(temp.origW) / static_cast<float>(imageWidth);
+    float const dx = 1.0F;
     return (2 * dx) * realWidth * kx;
 }
 
-int Font2d::GetFontHeight() { return fontHeight; }
+int Font2d::GetFontHeight() const { return fontHeight; }
 
 bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     shaderProgram = _sh;
     filename = _filename;
-    string fntFilemame = _filename;
     string imgFilename;
     // generate vertex buffer for future use
     glGenBuffers(1, &VBO);
@@ -134,23 +154,24 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 unsigned int t1[6];
                 int t2[2];
                 sstr << in_s;
-                unsigned int code;
+                unsigned int code = 0;
                 sstr >> code;
                 sstr >> t1[0] >> t1[1] >> t1[2] >> t1[3] >> t2[0] >> t2[1] >>
                     t1[4] >> t1[5];
-                FontCharacter temp2 = FontCharacter(t1[0], t1[1], t1[2], t1[3],
-                                                    t2[0], t2[1], t1[4], t1[5]);
+                FontCharacter const temp2 = FontCharacter(
+                    t1[0], t1[1], t1[2], t1[3], t2[0], t2[1], t1[4], t1[5]);
                 fontInfo.insert(pair<unsigned int, FontCharacter>(code, temp2));
             }
             if (kerning) {
                 stringstream sstr;
                 sstr << in_s;
-                uint16_t code1;
+                uint16_t code1 = 0;
                 sstr >> code1;
-                uint16_t code2;
-                float f1;
+                uint16_t code2 = 0;
+                float f1 = NAN;
                 sstr >> code2 >> f1;
-                uint32_t code = ((uint32_t)code1 << 16) | ((uint32_t)code2);
+                uint32_t const code = (static_cast<uint32_t>(code1) << 16) |
+                                      (static_cast<uint32_t>(code2));
                 kerningInfo.insert(pair<uint32_t, float>(code, f1));
             }
             // find texture name
@@ -159,13 +180,13 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
             // found texture name
             if (t == 0) {
                 imgFilename = string("fonts/") + string(in_s, temp.length());
-                printf("\nFont image is %s", imgFilename.c_str());
+                std::print("\nFont image is {}", imgFilename);
             }
 
             // find font name
             t = in_s.find("px");
             if (t >= 0) {
-                int t2 = in_s.find(" ");
+                int const t2 = in_s.find(' ');
                 fontName = string(in_s, 0, t2);
                 stringstream sstr;
                 temp = string(in_s, t2, t - t2);
@@ -174,8 +195,8 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 // sscanf(in_s.c_str(),"%s %dpx",fontName,fontHeight);
                 // flag that data is now being read
                 data = true;
-                printf("\nFont name is %s", fontName.c_str());
-                printf("\nFont height is %d", fontHeight);
+                std::print("\nFont name is {}", fontName);
+                std::print("\nFont height is {}", fontHeight);
             }
             // find information about upcoming kerning
             t = in_s.find("kerning pairs:");
@@ -186,21 +207,26 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 kerning = true;
             }
 
-        } else
-            break;
+        } else {
+            {
+                break;
+            }
+        }
         in_s.clear();
     }
     /*================================================*/
 
     // create texture
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(1);
 
-    int width, height, nrChannels;
+    int width;
+    int height;
+    int nrChannels;
     // Load PNG. Pass 4 to have RGBA
     unsigned char* image_data =
         stbi_load(imgFilename.c_str(), &width, &height, &nrChannels, 4);
 
-    if (image_data) {
+    if (image_data != nullptr) {
         // SOIL_FLAG_NTSC_SAFE_RGB -> Compress RGB values to the range [16, 235]
         // while leaving alpha channel
         for (int i = 0; i < width * height * 4; ++i) {
@@ -222,7 +248,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // Asking videocard to compress the txture
-        GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
         // Send pixels to Opengls
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
@@ -235,7 +261,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
         stbi_image_free(image_data);
     } else {
         std::cerr << "[STB Error] Could not load file : " << imgFilename
-                  << " | Reason: " << stbi_failure_reason() << std::endl;
+                  << " | Reason: " << stbi_failure_reason() << '\n';
     }
 
     // activate texture unit 0
@@ -268,21 +294,25 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
 
     // Calculate width
-    imageWidth = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
-                 ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n width=%d", imageWidth);
+    imageWidth = (static_cast<uint32_t>(buffer2[3]) << 0) |
+                 (static_cast<uint32_t>(buffer2[2]) << 8) |
+                 (static_cast<uint32_t>(buffer2[1]) << 16) |
+                 (static_cast<uint32_t>(buffer2[0]) << 24);
+    std::print("\n width={}", imageWidth);
 
     // Calculate height
     fread(&buffer2, 1, 4, imageFile);
     // printf("\nBuffer 5 %x %x %x
     // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    imageHeight = ((uint32_t)buffer2[3] << 0) | ((uint32_t)buffer2[2] << 8) |
-                  ((uint32_t)buffer2[1] << 16) | ((uint32_t)buffer2[0] << 24);
-    printf("\n height=%d", imageHeight);
+    imageHeight = (static_cast<uint32_t>(buffer2[3]) << 0) |
+                  (static_cast<uint32_t>(buffer2[2]) << 8) |
+                  (static_cast<uint32_t>(buffer2[1]) << 16) |
+                  (static_cast<uint32_t>(buffer2[0]) << 24);
+    std::print("\n height={}", imageHeight);
 
     // Convert pixel to relative coordinates
-    pkx = 1.0f / (float)imageWidth;
-    pky = 1.0f / (float)imageHeight;
+    pkx = 1.0F / static_cast<float>(imageWidth);
+    pky = 1.0F / static_cast<float>(imageHeight);
 
     fclose(imageFile);
 
@@ -290,9 +320,9 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
 }
 
 void Font2d::SetAspectRatio(int _width, int _height) {
-    aratio = (float)_height / (float)_width;
-    kx = (float)imageWidth / (float)_width;
-    ky = (float)imageHeight / (float)_height;
+    aratio = static_cast<float>(_height) / static_cast<float>(_width);
+    kx = static_cast<float>(imageWidth) / static_cast<float>(_width);
+    ky = static_cast<float>(imageHeight) / static_cast<float>(_height);
 }
 
 void Font2d::SetAspectRatio(float f) { aratio = f; }
@@ -301,22 +331,23 @@ void Font2d::SetCharacter(unsigned int c) {
     character = c;
 
     // this is a mess, setting the Y coordinate
-    position[2] = position[2] / (float)fontHeight;
+    position[2] = position[2] / static_cast<float>(fontHeight);
     temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
     try {
         temp = fontInfo.at(character);
     } catch (const std::out_of_range& oor) {
         // printf("\n char is out of range");
-        characterLength = Vector2f(-1.0f, -1.0f);
+        characterLength = Vector2f(-1.0F, -1.0F);
         return;
     }
-    realWidth = (float)temp.width / (float)imageWidth;
-    realHeight = (float)temp.height / (float)imageHeight;
-    dx = 1.0f;
-    xOffset =
-        position[2] * (2 * dx) * kx * (float)temp.xOffset / (float)imageWidth;
-    yOffset =
-        position[2] * (-2 * dx) * ky * (float)temp.yOffset / (float)imageHeight;
+    realWidth = static_cast<float>(temp.width) / static_cast<float>(imageWidth);
+    realHeight =
+        static_cast<float>(temp.height) / static_cast<float>(imageHeight);
+    dx = 1.0F;
+    xOffset = position[2] * (2 * dx) * kx * static_cast<float>(temp.xOffset) /
+              static_cast<float>(imageWidth);
+    yOffset = position[2] * (-2 * dx) * ky * static_cast<float>(temp.yOffset) /
+              static_cast<float>(imageHeight);
 
     characterLength = Vector2f((2 * dx) * realWidth * kx * position[2],
                                (2 * dx) * realHeight * ky);
@@ -349,21 +380,21 @@ void Font2d::Render(const Camera& cam) {
     float
     yOffset=position[2]*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;*/
 
-    float vertices[] = {0.0f,
+    float vertices[] = {0.0F,
                         (-2 * dx) * realHeight * ky,
-                        0.0f,
-                        0.0f,
+                        0.0F,
+                        0.0F,
                         (2 * dx) * realWidth * kx,
                         (-2 * dx) * realHeight * ky,
                         (2 * dx) * realWidth * kx,
-                        0.0f};
+                        0.0F};
     /*float vertices[]={0.0f,0.0f,
                         0.0f,1.0f,
                         1.0f,0.0f,
                         1.0f,1.0f
                             };*/
-    float uvs[] = {0.0f,      -realHeight, 0.0f,      0.0f,
-                   realWidth, -realHeight, realWidth, 0.0f};
+    float uvs[] = {0.0F,      -realHeight, 0.0F,      0.0F,
+                   realWidth, -realHeight, realWidth, 0.0F};
     /*  float uvs[]={0.0f,0.0f,
                         0.0f,0.0f,
                         0.0f,0.0f,
@@ -380,8 +411,10 @@ void Font2d::Render(const Camera& cam) {
     suvID = shaderProgram->GetUniformLocation("s_UV");
     sizeID = shaderProgram->GetUniformLocation("size");
     colorID = shaderProgram->GetUniformLocation("textColor");
-    float u = (float)(temp.xpos) / (float)imageWidth;
-    float v = 1.0f - (float)(temp.ypos) / (float)imageHeight;
+    float const u =
+        static_cast<float>(temp.xpos) / static_cast<float>(imageWidth);
+    float const v = 1.0F - (static_cast<float>(temp.ypos) /
+                            static_cast<float>(imageHeight));
     // printf("\nu=%f,  v=%f ",u,v);
     // Calculate offset
     // px+=((float)temp.xOffset/(float)imageWidth)*kx*1.0f*size;
@@ -413,18 +446,15 @@ void Font2d::Render(const Camera& cam) {
     // return Vector2f((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
 }
 
-Text2d::Text2d() {
-    color = Vector4f(1.0f, 1.0f, 1.0f, 1.0f);
-    aratio = 1;
-}
+Text2d::Text2d() : aratio(1) { color = Vector4f(1.0F, 1.0F, 1.0F, 1.0F); }
 
-Text2d::~Text2d() {}
+Text2d::~Text2d() = default;
 void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     if (!_sh) {
         yourselfShader = true;
-        aratio = (float)height / (float)width;
-        char* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
-        char* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
+        aratio = static_cast<float>(height) / static_cast<float>(width);
+        char const* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
+        char const* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
         shaderProgram = make_shared<Shader>();
         shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
         shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
@@ -438,11 +468,18 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     indicies[1] = 1;
     indicies[2] = 2;
     indicies[3] = 3;
-    float dx = 1;
-    float vertices[] = {0,          0 - dx * 2,        0, 0, 0 + dx * aratio,
-                        0 - dx * 2, (0 + dx * aratio), 0};
-    float dy = 0.0625;  //==1/16, высота одного квадрата
-    float uvs[] = {0, 0 - 2 * dy, 0, 0, 0 + dy / 2, 0 - 2 * dy, 0 + dy / 2, 0};
+    float const dx = 1;
+    float vertices[] = {0,
+                        0 - (dx * 2),
+                        0,
+                        0,
+                        0 + (dx * aratio),
+                        0 - (dx * 2),
+                        (0 + (dx * aratio)),
+                        0};
+    float const dy = 0.0625;  //==1/16, высота одного квадрата
+    float uvs[] = {
+        0, 0 - (2 * dy), 0, 0, 0 + (dy / 2), 0 - (2 * dy), 0 + (dy / 2), 0};
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -465,13 +502,13 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     //  texBufferID = TextureCreateFromTGA("Textures/Anonymus Bold
     //  512x256.tga");
 
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(1);
 
-    int nrChannels;
+    int nrChannels = 0;
     unsigned char* data = stbi_load("Textures/Anonymus 4096x2048.tga_sdf.png",
                                     &width, &height, &nrChannels, 4);
 
-    if (data) {
+    if (data != nullptr) {
         // Compress 0-255 to "safe" 16-235
         for (int i = 0; i < width * height * 4; ++i) {
             if (i % 4 != 3) {  // Edit only RGB. Don't touch Alpha
@@ -491,7 +528,7 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
         // compress to DXT5 on the fly
-        GLint internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+        GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
         // send pixels to VRAM
         glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
@@ -505,7 +542,7 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     } else {
         std::cerr << "[STB Error] Could not load: Textures/Anonymus "
                      "4096x2048.tga_sdf.png | Причина: "
-                  << stbi_failure_reason() << std::endl;
+                  << stbi_failure_reason() << '\n';
     }
 
     // make texture unit 0 active
@@ -516,33 +553,45 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
 }
 
 void Text2d::SetAspectRatio(int width, int height) {
-    aratio = (float)height / (float)width;
-    float dx = 1.0f;
-    float vertices[] = {0,          0 - dx * 2,        0, 0, 0 + dx * aratio,
-                        0 - dx * 2, (0 + dx * aratio), 0};
+    aratio = static_cast<float>(height) / static_cast<float>(width);
+    float const dx = 1.0F;
+    float vertices[] = {0,
+                        0 - (dx * 2),
+                        0,
+                        0,
+                        0 + (dx * aratio),
+                        0 - (dx * 2),
+                        (0 + (dx * aratio)),
+                        0};
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
 }
 
 void Text2d::SetAspectRatio(float f) {
     aratio = f;
-    float dx = 1.0f;
-    float vertices[] = {0,          0 - dx * 2,        0, 0, 0 + dx * aratio,
-                        0 - dx * 2, (0 + dx * aratio), 0};
+    float const dx = 1.0F;
+    float vertices[] = {0,
+                        0 - (dx * 2),
+                        0,
+                        0,
+                        0 + (dx * aratio),
+                        0 - (dx * 2),
+                        (0 + (dx * aratio)),
+                        0};
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
 }
 
 void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
     // shaderProgramID=shader;
-    shaderProgram = shader;
+    shaderProgram = std::move(shader);
     yourselfShader = false;
 
-    std::array<unsigned int, 4> indicies;
+    std::array<unsigned int, 4> indicies{};
     indicies[0] = 0;
     indicies[1] = 1;
     indicies[2] = 2;
     indicies[3] = 1;  // indicies[4]=2;indicies[5]=3;
     float vertices[] = {0, 0 - 1, 0, 0, 0 + 1, 0 - 1, (0 + 1), 0};
-    float dy = 0.0625;  // 1/16, высота одного квадрата
+    float const dy = 0.0625;  // 1/16, высота одного квадрата
     float uvs[] = {0, 0 - dy, 0, 0, 0 + dy, 0 - dy, 0 + dy, 0};
 
     glGenBuffers(1, &VBO);
@@ -566,12 +615,12 @@ void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
 
 void Text2d::SetCharacter(unsigned int c) { character = c; }
 
-void Text2d::Render(const Camera& cam) {
+void Text2d::Render(const Camera& /*cam*/) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    float dx = position[2] * 2;
-    float dy = 0.0625;  // 1/16, the height of one square
+    float const dx = position[2] * 2;
+    float const dy = 0.0625;  // 1/16, the height of one square
     // Compute index into the font texture atlas
     const unsigned int CYRILLIC_START = 0x0410;  // 'А'
     unsigned int num =
@@ -581,8 +630,8 @@ void Text2d::Render(const Camera& cam) {
         num = character + 224;
     }
     // 16 строк и 16 столбцов
-    float x = ((double)(num % 32)) / 32;
-    float y = 1 - ((float)((unsigned)num / 32) / 8);
+    float const x = (static_cast<double>(num % 32)) / 32;
+    float const y = 1 - (static_cast<float>((unsigned)num / 32) / 8);
     positionID = shaderProgram->GetAttribLocation("Position");
     uvID = shaderProgram->GetAttribLocation("UV");
     positionID = shaderProgram->GetUniformLocation("s_Position");
@@ -613,25 +662,28 @@ void Text2d::Render(const Camera& cam) {
     glDisableVertexAttribArray(uvID);
 }
 
-TextLine2d::TextLine2d() { aratio = 1; }
+TextLine2d::TextLine2d() : aratio(1) {}
 
-TextLine2d::~TextLine2d() {}
+TextLine2d::~TextLine2d() = default;
 
 void TextLine2d::SetAspectRatio(int width, int height) {
-    aratio = (float)height / (float)width;
-    if (symbol != NULL) symbol->SetAspectRatio(aratio);
+    aratio = static_cast<float>(height) / static_cast<float>(width);
+    if (symbol != nullptr) {
+        symbol->SetAspectRatio(aratio);
+    }
 }
 
 void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     symbol = std::make_unique<Text2d>();
     pixelSize =
-        (float)(512) /
-        ((float)width * (float)16);  // 512 размер текстуры, 16 квадратов в ней
+        static_cast<float>(512) /
+        (static_cast<float>(width) *
+         static_cast<float>(16));  // 512 размер текстуры, 16 квадратов в ней
     // symbol->SetAspectRatio(aratio);
-    symbol->Init(width, height, _sh);
+    symbol->Init(width, height, std::move(_sh));
 }
 
-void TextLine2d::SetText(string _text) { text = _text; }
+void TextLine2d::SetText(string _text) { text = std::move(_text); }
 
 void TextLine2d::Render(const Camera& cam) {
     float delta = 0;
@@ -641,7 +693,7 @@ void TextLine2d::Render(const Camera& cam) {
     {
         // symbol->Render((unsigned
         // char)input[i],x+delta,y,size*pixelSize/32.0);
-        symbol->SetCharacter((unsigned char)text[i]);
+        symbol->SetCharacter(static_cast<unsigned char>(text[i]));
         symbol->SetPosition(position[0] + delta, position[1],
                             position[2] * pixelSize / 32.0);
         symbol->Render(cam);

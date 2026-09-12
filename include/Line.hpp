@@ -1,10 +1,13 @@
 #ifndef LINE_H_INCLUDED
 #define LINE_H_INCLUDED
-#include "Assistant.hpp"
+#include <glad/gl.h>
+
+#include <cstddef>
+#include <memory>
+
 #include "Camera.hpp"
 #include "Math3d.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Line {

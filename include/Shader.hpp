@@ -13,20 +13,20 @@ public:
     virtual ~Shader();
     void Init();  // compiles and links the shader
     void AddShader(const char* source, ShaderType type);
-    GLuint shaderProgramID;
+    GLuint shaderProgramID{0};
     void Use();
-    GLuint GetAttribLocation(const char* Attribute);
-    GLuint GetUniformLocation(const char* Attribute);
+    GLuint GetAttribLocation(const char* Attribute) const;
+    GLuint GetUniformLocation(const char* Attribute) const;
 
-protected:
-private:
+   protected:
+   private:
     string vShaderFileName;
     string fShaderFileName;
     string gShaderFileName;
-    GLuint vShader;
-    GLuint gShader;
-    GLuint fShader;
-    bool initialized;
+    GLuint vShader{0};
+    GLuint gShader{0};
+    GLuint fShader{0};
+    bool initialized{false};
 };
 
 #endif  // SHADER_H

@@ -7,8 +7,8 @@
 class PlaceableObject : public Object {
 public:
     PlaceableObject();
-    virtual ~PlaceableObject();
-    float position[3];
+    ~PlaceableObject() override;
+    float position[3]{};
 
     void SetPosition(float x, float y, float z);
     void SetPosition(Vector3f _pos);

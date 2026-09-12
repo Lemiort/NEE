@@ -1,12 +1,25 @@
 #include "Skybox.hpp"
 
+#include <glad/gl.h>
+
+#include <cstddef>
+#include <cstdio>
+#include <memory>
+#include <new>
+#include <print>
+#include <string>
 #include <vector>
 
-SkyBox::SkyBox(shared_ptr<Shader> shader) {
+#include "Assistant.hpp"
+#include "Camera.hpp"
+#include "CubemapTexture.hpp"
+#include "Shader.hpp"
+
+SkyBox::SkyBox(shared_ptr<Shader> shader)
+    : shaderProgramID(shader->shaderProgramID) {
     shaderProgram = shader;
-    shaderProgramID = shader->shaderProgramID;
 }
-SkyBox::~SkyBox() {}
+SkyBox::~SkyBox() = default;
 bool SkyBox::Init(const string& Directory, const string& PosXFilename,
                   const string& NegXFilename, const string& PosYFilename,
                   const string& NegYFilename, const string& PosZFilename,
@@ -20,9 +33,11 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     spfaces = 0;
     spverts = 0;
     try {
-        FILE* fp;
+        FILE* fp = nullptr;
         fp = fopen("models/sphere.ho3d", "r+b");
-        if (!fp) return false;
+        if (fp == nullptr) {
+            return false;
+        }
         fread(&spverts, sizeof(int), 1, fp);
         spvertices.resize(spverts * 3);
         spuvs.resize(spverts * 2);
@@ -30,27 +45,27 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         sptangent.resize(1);  // placeholder size
         for (int i = 0; i < spverts; i++) {
             fread(&spvertices[3 * i], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spvertices[3 * i + 2], sizeof(float), 1, fp);
+            fread(&spvertices[(3 * i) + 1], sizeof(float), 1, fp);
+            fread(&spvertices[(3 * i) + 2], sizeof(float), 1, fp);
             fread(&spuvs[2 * i], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i + 1], sizeof(float), 1, fp);
+            fread(&spuvs[(2 * i) + 1], sizeof(float), 1, fp);
             fread(&spnormals[3 * i], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i + 2], sizeof(float), 1, fp);
+            fread(&spnormals[(3 * i) + 1], sizeof(float), 1, fp);
+            fread(&spnormals[(3 * i) + 2], sizeof(float), 1, fp);
         }
-        for (size_t i = 0; i < sptangent.size(); ++i) {
-            fread(&sptangent[i], sizeof(float), 1, fp);
+        for (float& i : sptangent) {
+            fread(&i, sizeof(float), 1, fp);
         }
         fread(&spfaces, sizeof(int), 1, fp);
         spindices.resize(spfaces * 3);
         for (int i = 0; i < spfaces; i++) {
             fread(&spindices[3 * i], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 1], sizeof(int), 1, fp);
-            fread(&spindices[3 * i + 2], sizeof(int), 1, fp);
+            fread(&spindices[(3 * i) + 1], sizeof(int), 1, fp);
+            fread(&spindices[(3 * i) + 2], sizeof(int), 1, fp);
         }
         fclose(fp);
     } catch (const std::bad_alloc&) {
-        printf("\nError creating make_shared<Mesh> in Skybox");
+        std::print("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
     // create buffer to store everything
@@ -74,7 +89,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
             Directory, PosXFilename, NegXFilename, PosYFilename, NegYFilename,
             PosZFilename, NegZFilename);
     } catch (const std::bad_alloc&) {
-        printf("\nError creating new Cubemap");
+        std::print("\nError creating new Cubemap");
         return false;
     }
     pCubemapTex->Load();
@@ -99,9 +114,9 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     return true;
 }
 void SkyBox::Render(const Camera& cam) {
-    GLint OldCullFaceMode;
+    GLint OldCullFaceMode = 0;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
-    GLint OldDepthFuncMode;
+    GLint OldDepthFuncMode = 0;
     glGetIntegerv(GL_DEPTH_FUNC, &OldDepthFuncMode);
 
     glCullFace(GL_BACK);
@@ -119,14 +134,15 @@ void SkyBox::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, NULL);
+    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     pCubemapTex->Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
     // cout<<colTexID<<"\n"<<textureID<<"\n";
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSRVC());
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
+                       reinterpret_cast<const GLfloat*>(TM.GetTSRVC()));
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);

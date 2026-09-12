@@ -1,8 +1,16 @@
 #ifndef FONT2D_H
 #define FONT2D_H
+#include <cstdint>
 #include <map>
+#include <memory>
+#include <string>
 
+#include "Camera.hpp"
+#include "Material.hpp"
+#include "MaterialObject.hpp"
+#include "Math3d.hpp"
 #include "Mesh.hpp"
+#include "PlaceableObject.hpp"
 #include "Text2D.hpp"
 
 using namespace std;
@@ -59,24 +67,24 @@ protected:
 public:
     Character2d();
 
-    float GetAspectRatio();
+    float GetAspectRatio() const;
     // setting the ratio + adjusting coefficients
     // texture scaling
     void SetAspectRatio(int _width, int _height);
 
     // returns font height (in pixels)
-    int GetFontHeight();
+    int GetFontHeight() const;
 
     // returns width in screen coordinates
     // of current character
-    float GetWidth(unsigned int c);
+    float GetWidth(unsigned int c) const;
 
     // returns height in screen coordinates
     // of current character
-    float GetHeight(unsigned int c);
+    float GetHeight(unsigned int c) const;
 
     // returns space width in screen coordinates
-    float GetSpaceWidth();
+    float GetSpaceWidth() const;
 
     // sets the current character
     void SetCharacter(unsigned int c);
@@ -84,8 +92,8 @@ public:
     // initialize with material and model quad2x2front.ho3d
     // and font
     bool Init(shared_ptr<Material> _mat, string _fileName);
-    ~Character2d();
-    void Render(const Camera& cam);
+    ~Character2d() override;
+    void Render(const Camera& cam) override;
 
     // TODO returns length of current character in screen coordinates??
     Vector2f GetLastCharacterLength();

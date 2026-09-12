@@ -1,10 +1,12 @@
 #include "PlaceableObject.hpp"
 
+#include "Math3d.hpp"
+
 PlaceableObject::PlaceableObject() {
     // ctor
-    position[0] = 0.0f;
-    position[1] = 0.0f;
-    position[2] = 0.0f;
+    position[0] = 0.0F;
+    position[1] = 0.0F;
+    position[2] = 0.0F;
 }
 
 PlaceableObject::~PlaceableObject() {
@@ -23,5 +25,5 @@ void PlaceableObject::SetPosition(Vector3f _pos) {
 }
 
 Vector3f PlaceableObject::GetPosition() {
-    return Vector3f(position[0], position[1], position[2]);
+    return {position[0], position[1], position[2]};
 }

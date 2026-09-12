@@ -2,7 +2,6 @@
 #define TEXTURE_H_INCLUDED
 #include <glad/gl.h>
 
-#include <sstream>
 #include <string>
 class Texture {
 protected:
@@ -11,8 +10,8 @@ protected:
     std::string ConvertInternalFormatToString(GLenum format);
 
 public:
-    GLuint GetTextureID();
-    Texture(bool _del = true);
+    GLuint GetTextureID() const;
+    explicit Texture(bool _del = true);
     virtual ~Texture();
     // virtual ~Texture(bool del=true);
     std::string GetParameters();
@@ -23,11 +22,12 @@ class Texture2D : public Texture {
 protected:
 public:
     // abstract texture constructor
-    Texture2D(GLuint texBufferID, bool _del = true);
+    explicit Texture2D(GLuint texBufferID, bool _del = true);
 
     // default constructor, deletes the texture after use
-    Texture2D() {}
-    virtual ~Texture2D();
+    Texture2D() = default;
+
+    ~Texture2D() override;
     virtual bool Load(const char* filename);
 };
 
@@ -35,14 +35,15 @@ class ShadowTexture : public Texture2D {
 private:
 public:
     ShadowTexture();
-    virtual ~ShadowTexture();
+    ~ShadowTexture() override;
     bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 };
 
 class AbstractTexture : public Texture {
 public:
     AbstractTexture() { texBufferID = 0; }
-    ~AbstractTexture() {}
+    ~AbstractTexture() override = default;
+
     void SetTexture(GLuint _texID);
 
 protected:

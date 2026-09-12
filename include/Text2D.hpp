@@ -4,15 +4,12 @@
 
 #include <cstring>
 #include <map>
-#include <queue>
 
 #include "Math3d.hpp"
 #include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
-using namespace std;
 
 struct FontCharacter {
     //    X pos   Y pos   Width   Height   Xoffset  Yoffset  Orig W   Orig H
@@ -79,10 +76,10 @@ public:
     Font2d();
     ~Font2d();
     bool Init(string filename, shared_ptr<Shader> _sh);
-    int GetFontHeight();
-    float GetWidth(unsigned int c);
-    float GetHeight(unsigned int c);
-    float GetSpaceWidth();
+    int GetFontHeight() const;
+    float GetWidth(unsigned int c) const;
+    float GetHeight(unsigned int c) const;
+    float GetSpaceWidth() const;
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);

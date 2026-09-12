@@ -1,28 +1,30 @@
 #ifndef SKYBOX_H_INCLUDED
 #define SKYBOX_H_INCLUDED
 
+#include <glad/gl.h>
+
+#include <cstddef>
 #include <memory>
+#include <string>
 
 #include "CubemapTexture.hpp"
 // #include "ShaderFunctions.hpp"
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
-#include "TgaLoader.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 class SkyBox : public RenderableObject, public PlaceableObject {
 public:
-    SkyBox(shared_ptr<Shader> shader);
-    ~SkyBox();
+    explicit SkyBox(shared_ptr<Shader> shader);
+    ~SkyBox() override;
 
     bool Init(const string& Directory, const string& PosXFilename,
               const string& NegXFilename, const string& PosYFilename,
               const string& NegYFilename, const string& PosZFilename,
               const string& NegZFilename);
 
-    void Render(const Camera& cam);
+    void Render(const Camera& cam) override;
     GLuint shaderProgramID;
     GLuint VBO;  // vertex buffer, ������ ������� ��� ���������
     GLuint positionID;

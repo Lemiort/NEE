@@ -1,83 +1,87 @@
 #include "Assistant.hpp"
 
-#include <fstream>
+#include <cmath>
+
+#include "Math3d.hpp"
 
 void Assistant::InitScaleTransform(Matrix4f& m) const {
     m.m[0][0] = scale.x;
-    m.m[0][1] = 0.0f;
-    m.m[0][2] = 0.0f;
-    m.m[0][3] = 0.0f;
-    m.m[1][0] = 0.0f;
+    m.m[0][1] = 0.0F;
+    m.m[0][2] = 0.0F;
+    m.m[0][3] = 0.0F;
+    m.m[1][0] = 0.0F;
     m.m[1][1] = scale.y;
-    m.m[1][2] = 0.0f;
-    m.m[1][3] = 0.0f;
-    m.m[2][0] = 0.0f;
-    m.m[2][1] = 0.0f;
+    m.m[1][2] = 0.0F;
+    m.m[1][3] = 0.0F;
+    m.m[2][0] = 0.0F;
+    m.m[2][1] = 0.0F;
     m.m[2][2] = scale.z;
-    m.m[2][3] = 0.0f;
-    m.m[3][0] = 0.0f;
-    m.m[3][1] = 0.0f;
-    m.m[3][2] = 0.0f;
-    m.m[3][3] = 1.0f;
+    m.m[2][3] = 0.0F;
+    m.m[3][0] = 0.0F;
+    m.m[3][1] = 0.0F;
+    m.m[3][2] = 0.0F;
+    m.m[3][3] = 1.0F;
 }
 
 void Assistant::InitRotateTransform(Matrix4f& m) const {
-    Matrix4f rx, ry, rz;
+    Matrix4f rx;
+    Matrix4f ry;
+    Matrix4f rz;
 
     const float x = ToRadian(rotate.x);
     const float y = ToRadian(rotate.y);
     const float z = ToRadian(rotate.z);
 
-    rx.m[0][0] = 1.0f;
-    rx.m[0][1] = 0.0f;
-    rx.m[0][2] = 0.0f;
-    rx.m[0][3] = 0.0f;
-    rx.m[1][0] = 0.0f;
+    rx.m[0][0] = 1.0F;
+    rx.m[0][1] = 0.0F;
+    rx.m[0][2] = 0.0F;
+    rx.m[0][3] = 0.0F;
+    rx.m[1][0] = 0.0F;
     rx.m[1][1] = cosf(x);
     rx.m[1][2] = -sinf(x);
-    rx.m[1][3] = 0.0f;
-    rx.m[2][0] = 0.0f;
+    rx.m[1][3] = 0.0F;
+    rx.m[2][0] = 0.0F;
     rx.m[2][1] = sinf(x);
     rx.m[2][2] = cosf(x);
-    rx.m[2][3] = 0.0f;
-    rx.m[3][0] = 0.0f;
-    rx.m[3][1] = 0.0f;
-    rx.m[3][2] = 0.0f;
-    rx.m[3][3] = 1.0f;
+    rx.m[2][3] = 0.0F;
+    rx.m[3][0] = 0.0F;
+    rx.m[3][1] = 0.0F;
+    rx.m[3][2] = 0.0F;
+    rx.m[3][3] = 1.0F;
 
     ry.m[0][0] = cosf(y);
-    ry.m[0][1] = 0.0f;
+    ry.m[0][1] = 0.0F;
     ry.m[0][2] = -sinf(y);
-    ry.m[0][3] = 0.0f;
-    ry.m[1][0] = 0.0f;
-    ry.m[1][1] = 1.0f;
-    ry.m[1][2] = 0.0f;
-    ry.m[1][3] = 0.0f;
+    ry.m[0][3] = 0.0F;
+    ry.m[1][0] = 0.0F;
+    ry.m[1][1] = 1.0F;
+    ry.m[1][2] = 0.0F;
+    ry.m[1][3] = 0.0F;
     ry.m[2][0] = sinf(y);
-    ry.m[2][1] = 0.0f;
+    ry.m[2][1] = 0.0F;
     ry.m[2][2] = cosf(y);
-    ry.m[2][3] = 0.0f;
-    ry.m[3][0] = 0.0f;
-    ry.m[3][1] = 0.0f;
-    ry.m[3][2] = 0.0f;
-    ry.m[3][3] = 1.0f;
+    ry.m[2][3] = 0.0F;
+    ry.m[3][0] = 0.0F;
+    ry.m[3][1] = 0.0F;
+    ry.m[3][2] = 0.0F;
+    ry.m[3][3] = 1.0F;
 
     rz.m[0][0] = cosf(z);
     rz.m[0][1] = -sinf(z);
-    rz.m[0][2] = 0.0f;
-    rz.m[0][3] = 0.0f;
+    rz.m[0][2] = 0.0F;
+    rz.m[0][3] = 0.0F;
     rz.m[1][0] = sinf(z);
     rz.m[1][1] = cosf(z);
-    rz.m[1][2] = 0.0f;
-    rz.m[1][3] = 0.0f;
-    rz.m[2][0] = 0.0f;
-    rz.m[2][1] = 0.0f;
-    rz.m[2][2] = 1.0f;
-    rz.m[2][3] = 0.0f;
-    rz.m[3][0] = 0.0f;
-    rz.m[3][1] = 0.0f;
-    rz.m[3][2] = 0.0f;
-    rz.m[3][3] = 1.0f;
+    rz.m[1][2] = 0.0F;
+    rz.m[1][3] = 0.0F;
+    rz.m[2][0] = 0.0F;
+    rz.m[2][1] = 0.0F;
+    rz.m[2][2] = 1.0F;
+    rz.m[2][3] = 0.0F;
+    rz.m[3][0] = 0.0F;
+    rz.m[3][1] = 0.0F;
+    rz.m[3][2] = 0.0F;
+    rz.m[3][3] = 1.0F;
 
     m = rz * ry * rx;
 
@@ -111,22 +115,22 @@ void Assistant::InitRotateTransform(Matrix4f& m) const {
 }
 
 void Assistant::InitTranslationTransform(Matrix4f& m) const {
-    m.m[0][0] = 1.0f;
-    m.m[0][1] = 0.0f;
-    m.m[0][2] = 0.0f;
+    m.m[0][0] = 1.0F;
+    m.m[0][1] = 0.0F;
+    m.m[0][2] = 0.0F;
     m.m[0][3] = worldPos.x;
-    m.m[1][0] = 0.0f;
-    m.m[1][1] = 1.0f;
-    m.m[1][2] = 0.0f;
+    m.m[1][0] = 0.0F;
+    m.m[1][1] = 1.0F;
+    m.m[1][2] = 0.0F;
     m.m[1][3] = worldPos.y;
-    m.m[2][0] = 0.0f;
-    m.m[2][1] = 0.0f;
-    m.m[2][2] = 1.0f;
+    m.m[2][0] = 0.0F;
+    m.m[2][1] = 0.0F;
+    m.m[2][2] = 1.0F;
     m.m[2][3] = worldPos.z;
-    m.m[3][0] = 0.0f;
-    m.m[3][1] = 0.0f;
-    m.m[3][2] = 0.0f;
-    m.m[3][3] = 1.0f;
+    m.m[3][0] = 0.0F;
+    m.m[3][1] = 0.0F;
+    m.m[3][2] = 0.0F;
+    m.m[3][3] = 1.0F;
 }
 
 void Assistant::InitPerspectiveProj(Matrix4f& m) const {
@@ -134,29 +138,33 @@ void Assistant::InitPerspectiveProj(Matrix4f& m) const {
     const float zNear = persProj.zNear;
     const float zFar = persProj.zFar;
     const float zRange = zNear - zFar;
-    const float tanHalfFOV = tanf(ToRadian(persProj.FOV / 2.0f));
+    const float tanHalfFOV = tanf(ToRadian(persProj.FOV / 2.0F));
 
-    m.m[0][0] = 1.0f / (tanHalfFOV * ar);
-    m.m[0][1] = 0.0f;
-    m.m[0][2] = 0.0f;
+    m.m[0][0] = 1.0F / (tanHalfFOV * ar);
+    m.m[0][1] = 0.0F;
+    m.m[0][2] = 0.0F;
     m.m[0][3] = 0.0;
-    m.m[1][0] = 0.0f;
-    m.m[1][1] = 1.0f / tanHalfFOV;
-    m.m[1][2] = 0.0f;
+    m.m[1][0] = 0.0F;
+    m.m[1][1] = 1.0F / tanHalfFOV;
+    m.m[1][2] = 0.0F;
     m.m[1][3] = 0.0;
-    m.m[2][0] = 0.0f;
-    m.m[2][1] = 0.0f;
+    m.m[2][0] = 0.0F;
+    m.m[2][1] = 0.0F;
     m.m[2][2] = (-zNear - zFar) / zRange;
-    m.m[2][3] = 2.0f * zFar * zNear / zRange;
-    m.m[3][0] = 0.0f;
-    m.m[3][1] = 0.0f;
-    m.m[3][2] = 1.0f;
+    m.m[2][3] = 2.0F * zFar * zNear / zRange;
+    m.m[3][0] = 0.0F;
+    m.m[3][1] = 0.0F;
+    m.m[3][2] = 1.0F;
     m.m[3][3] = 0.0;
 }
 
 const Matrix4f* Assistant::GetTSRVC() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
-        CameraTranslationTrans, CameraRotateTrans;
+    Matrix4f ScaleTrans;
+    Matrix4f RotateTrans;
+    Matrix4f TranslationTrans;
+    Matrix4f PersProjTrans;
+    Matrix4f CameraTranslationTrans;
+    Matrix4f CameraRotateTrans;
 
     ScaleTrans.InitScaleTransform(scale.x, scale.y, scale.z);
     RotateTrans.InitRotateTransform(rotate.x, rotate.y, rotate.z);
@@ -176,7 +184,9 @@ const Matrix4f* Assistant::GetTSRVC() {
 }
 
 const Matrix4f* Assistant::GetTSR() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans;
+    Matrix4f ScaleTrans;
+    Matrix4f RotateTrans;
+    Matrix4f TranslationTrans;
 
     ScaleTrans.InitScaleTransform(scale.x, scale.y, scale.z);
     RotateTrans.InitRotateTransform(rotate.x, rotate.y, rotate.z);
@@ -187,7 +197,9 @@ const Matrix4f* Assistant::GetTSR() {
 }
 
 const Matrix4f* Assistant::GetVC() {
-    Matrix4f PersProjTrans, CameraTranslationTrans, CameraRotateTrans;
+    Matrix4f PersProjTrans;
+    Matrix4f CameraTranslationTrans;
+    Matrix4f CameraRotateTrans;
 
     CameraTranslationTrans.InitTranslationTransform(
         -camera.Pos.x, -camera.Pos.y, -camera.Pos.z);
@@ -201,7 +213,9 @@ const Matrix4f* Assistant::GetVC() {
 }
 
 const Matrix4f* Assistant::GetRotate() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans;
+    Matrix4f ScaleTrans;
+    Matrix4f RotateTrans;
+    Matrix4f TranslationTrans;
     ScaleTrans.InitScaleTransform(scale.x, scale.y, scale.z);
     RotateTrans.InitRotateTransform(rotate.x, rotate.y, rotate.z);
     TranslationTrans.InitTranslationTransform(worldPos.x, worldPos.y,
@@ -229,12 +243,16 @@ const Matrix4f* Assistant::GetScaleTrans() {
     return &transformation;
 }
 const Matrix4f* Assistant::GetCameraTrans() {
-    Matrix4f ScaleTrans, RotateTrans, TranslationTrans, PersProjTrans,
-        CameraTranslationTrans, CameraRotateTrans;
-    CameraTranslationTrans.InitTranslationTransform(
-        -camera.Pos.x, -camera.Pos.y, -camera.Pos.z);
-    // PersProjTrans.InitPersProjTransform(persProj.FOV, persProj.Width,
-    // persProj.Height, persProj.zNear, persProj.zFar);
-    transformation = CameraTranslationTrans;
-    return &transformation;
+  Matrix4f const ScaleTrans;
+  Matrix4f const RotateTrans;
+  Matrix4f const TranslationTrans;
+  Matrix4f const PersProjTrans;
+  Matrix4f CameraTranslationTrans;
+  Matrix4f const CameraRotateTrans;
+  CameraTranslationTrans.InitTranslationTransform(-camera.Pos.x, -camera.Pos.y,
+                                                  -camera.Pos.z);
+  // PersProjTrans.InitPersProjTransform(persProj.FOV, persProj.Width,
+  // persProj.Height, persProj.zNear, persProj.zFar);
+  transformation = CameraTranslationTrans;
+  return &transformation;
 }

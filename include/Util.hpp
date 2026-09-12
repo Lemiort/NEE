@@ -1,11 +1,9 @@
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
-#include <stdio.h>
-#include <stdlib.h>
-
+#include <cstdio>
+#include <cstdlib>
 #include <cstring>
-#include <sstream>
 #include <string>
 
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))

@@ -1,7 +1,9 @@
 #include "CubemapTexture.hpp"
 
-#include <cstring>
-#include <iostream>
+#include <glad/gl.h>
+
+#include <cstdint>
+#include <string>
 
 #include "TgaLoader.hpp"
 #include "Util.hpp"
@@ -19,7 +21,7 @@ CubemapTexture::CubemapTexture(const string& Directory,
                                const string& NegZFilename) {
     string::const_iterator it = Directory.end();
     it--;
-    string BaseDir = (*it == '/') ? Directory : Directory + "/";
+    string const BaseDir = (*it == '/') ? Directory : Directory + "/";
 
     m_fileNames[0] = BaseDir + PosXFilename;
     m_fileNames[1] = BaseDir + NegXFilename;
@@ -27,8 +29,6 @@ CubemapTexture::CubemapTexture(const string& Directory,
     m_fileNames[3] = BaseDir + NegYFilename;
     m_fileNames[4] = BaseDir + PosZFilename;
     m_fileNames[5] = BaseDir + NegZFilename;
-
-    m_textureObj = 0;
 }
 
 CubemapTexture::~CubemapTexture() {
@@ -47,13 +47,16 @@ bool CubemapTexture::Load() {
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(types); i++) {
         ASSERT(m_fileNames[i].c_str());
 
-        TGAHeader* header;
-        uint8_t* buffer;
-        uint32_t size;
-        GLint format, internalFormat;
+        TGAHeader const* header = nullptr;
+        uint8_t* buffer = nullptr;
+        uint32_t size = 0;
+        GLint format = 0;
+        GLint internalFormat = 0;
         //  GLuint    texture;
         // try to load image from file
-        if (!LoadFile(m_fileNames[i].c_str(), true, &buffer, &size)) return 0;
+        if (!LoadFile(m_fileNames[i].c_str(), true, &buffer, &size)) {
+            return 0;
+        }
 
         // if the file size is obviously smaller than the TGA header
         if (size <= sizeof(TGAHeader)) {
@@ -62,7 +65,7 @@ bool CubemapTexture::Load() {
             return 0;
         }
 
-        header = (TGAHeader*)buffer;
+        header = reinterpret_cast<TGAHeader*>(buffer);
 
         // check the format of the TGA file - uncompressed RGB or RGBA image
         if (header->datatype != 2 ||
@@ -76,10 +79,10 @@ bool CubemapTexture::Load() {
         format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
         internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
 
-        glTexImage2D(
-            types[i], 0, internalFormat, header->width, header->height, 0,
-            format, GL_UNSIGNED_BYTE,
-            (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
+        glTexImage2D(types[i], 0, internalFormat, header->width, header->height,
+                     0, format, GL_UNSIGNED_BYTE,
+                     reinterpret_cast<const GLvoid*>(
+                         buffer + sizeof(TGAHeader) + header->idlength));
 
         delete[] buffer;
     }

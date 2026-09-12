@@ -1,9 +1,5 @@
 #include "Object.hpp"
 
-Object::Object() {
-    // ctor
-}
+Object::Object() = default;
 
-Object::~Object() {
-    // dtor
-}
+Object::~Object() = default;

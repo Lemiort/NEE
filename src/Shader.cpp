@@ -1,53 +1,65 @@
 #include "Shader.hpp"
 
+#include <glad/gl.h>
+
+#include <cstdio>
+#include <cstdlib>
+#include <print>
+
 #include "ShaderFunctions.hpp"
-Shader::Shader() {
-    // ctor
-    vShader = 0;
-    fShader = 0;
-    gShader = 0;
-    shaderProgramID = 0;
-    initialized = false;
+Shader::Shader()
+
+{
+  // ctor
 }
 void Shader::AddShader(const char* source, ShaderType type) {
     switch (type) {
         case VertexShader:
-            if (source != 0)
+            if (source != nullptr) {
                 vShaderFileName = source;
-            else
+            } else {
                 vShaderFileName = "none";
+            }
             vShader = MakeVertexShader(source);
             break;
         case FragmnetShader:
-            if (source != 0)
+            if (source != nullptr) {
                 fShaderFileName = source;
-            else
+            } else {
                 fShaderFileName = "none";
+            }
             fShader = MakeFragmentShader(source);
             break;
         case GeometryShader:
-            if (source != 0)
+            if (source != nullptr) {
                 gShaderFileName = source;
-            else
+            } else {
                 gShaderFileName = "none";
+            }
             gShader = MakeGeometryShader(source);
             break;
     }
 }
 void Shader::Init() {
-    FILE* flog;
+    FILE* flog = nullptr;
     // fopen_s(&flog,"shaderbuild.log","w");
     flog = fopen("shaderbuild.log", "w");
     shaderProgramID = glCreateProgram();
     if (shaderProgramID == 0) {
-        fprintf(stderr, "Error creating shader program\n");
-        fprintf(flog, "Error creating shader program\n");
+        std::println(stderr, "Error creating shader program");
+        std::println(flog, "Error creating shader program");
         fclose(flog);
         exit(1);
     }
-    if (vShader != 0) glAttachShader(shaderProgramID, vShader);
-    if (fShader != 0) glAttachShader(shaderProgramID, fShader);
-    if (gShader != 0) glAttachShader(shaderProgramID, gShader);
+    if (vShader != 0) {
+        glAttachShader(shaderProgramID, vShader);
+    }
+    if (fShader != 0) {
+        glAttachShader(shaderProgramID, fShader);
+    }
+    if (gShader != 0) {
+        glAttachShader(shaderProgramID, gShader);
+    }
     glLinkProgram(shaderProgramID);
     // check
 
@@ -55,27 +67,27 @@ void Shader::Init() {
     GLchar ErrorLog[1024] = {0};
     glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-        fprintf(
+        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
+                            ErrorLog);
+        std::println(stderr, "Error linking shader program: '{}'", ErrorLog);
+        std::println(
             flog,
-            "Error linking shader program: at files '%s', '%s', '%s', '%s'\n",
-            vShaderFileName.c_str(), gShaderFileName.c_str(),
-            fShaderFileName.c_str(), ErrorLog);
+            "Error linking shader program: at files '{}', '{}', '{}', '{}'",
+            vShaderFileName, gShaderFileName, fShaderFileName, ErrorLog);
         fclose(flog);
         exit(1);
     }
 
     glValidateProgram(shaderProgramID);
     glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
-    if (!Success) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-        fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
+    if (Success == 0) {
+        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
+                            ErrorLog);
+        std::println(stderr, "Invalid shader program: '{}'", ErrorLog);
         // fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
-        fprintf(flog,
-                "Invalid shader program: at files '%s', '%s', '%s', '%s'\n",
-                vShaderFileName.c_str(), gShaderFileName.c_str(),
-                fShaderFileName.c_str(), ErrorLog);
+        std::println(
+            flog, "Invalid shader program: at files '{}', '{}', '{}', '{}'",
+            vShaderFileName, gShaderFileName, fShaderFileName, ErrorLog);
         fclose(flog);
         exit(1);
     }
@@ -85,22 +97,32 @@ void Shader::Init() {
 }
 
 void Shader::Use() {
-    if (!initialized) Init();
+    if (!initialized) {
+        Init();
+    }
     glUseProgram(shaderProgramID);
 }
 
-GLuint Shader::GetAttribLocation(const char* attribute) {
+GLuint Shader::GetAttribLocation(const char* attribute) const {
     return glGetAttribLocation(shaderProgramID, attribute);
 }
 
-GLuint Shader::GetUniformLocation(const char* attribute) {
+GLuint Shader::GetUniformLocation(const char* attribute) const {
     return glGetUniformLocation(shaderProgramID, attribute);
 }
 
 Shader::~Shader() {
     // dtor
-    if (vShader != 0) glDeleteShader(vShader);
-    if (fShader != 0) glDeleteShader(fShader);
-    if (gShader != 0) glDeleteShader(gShader);
-    if (shaderProgramID != 0) glDeleteProgram(shaderProgramID);
+    if (vShader != 0) {
+        glDeleteShader(vShader);
+    }
+    if (fShader != 0) {
+        glDeleteShader(fShader);
+    }
+    if (gShader != 0) {
+        glDeleteShader(gShader);
+    }
+    if (shaderProgramID != 0) {
+        glDeleteProgram(shaderProgramID);
+    }
 }

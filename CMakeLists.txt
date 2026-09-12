@@ -22,6 +22,7 @@ endif()
 include_directories(include)
 # include_directories(src)
 file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
+file(GLOB_RECURSE HEADERS_LIST "include/*.hpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES_LIST})
 
@@ -38,8 +39,30 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 #     target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic -Werror)
 # endif()
 
-# Export compile commands for clang-tidy and other tooling
+# --- Clang-format target ---------------------------------------------
+add_custom_target(clang_format
+    COMMENT "Formatting code with clang-format"
+)
+foreach(src_file IN LISTS SOURCES_LIST)
+    add_custom_command(
+        TARGET clang_format PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E echo "Formatting ${src_file}..."
+        COMMAND clang-format -i "${src_file}"
+    )
+endforeach()
+
+
+# --- Clang‑tidy target -----------------------------------------------
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+add_custom_target(clang_tidy
+    COMMAND ${CMAKE_COMMAND} -E echo "Running clang-tidy..."
+    # Run clang‑tidy with parallelism (use all cores)
+    # The compile_commands.json is generated in the Release sub‑directory
+    # by Ninja. Point clang‑tidy to that directory.
+    COMMAND clang-tidy -p ${CMAKE_CURRENT_BINARY_DIR}/Release
+        --header-filter=.
+        ${SOURCES_LIST} ${HEADERS_LIST}
+)
 
 # link soil first to dismiss soil linking errors
 # target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})

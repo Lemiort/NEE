@@ -1,10 +1,12 @@
 #include "RotatableObject.hpp"
 
+#include "Math3d.hpp"
+
 RotatableObject::RotatableObject() {
     // ctor
-    rotation[0] = 0.0f;
-    rotation[1] = 0.0f;
-    rotation[2] = 0.0f;
+    rotation[0] = 0.0F;
+    rotation[1] = 0.0F;
+    rotation[2] = 0.0F;
 }
 
 RotatableObject::~RotatableObject() {
@@ -23,5 +25,5 @@ void RotatableObject::SetRotation(Vector3f rot) {
     rotation[2] = rot.z;
 }
 Vector3f RotatableObject::GetRotation() {
-    return Vector3f(rotation[0], rotation[1], rotation[2]);
+    return {rotation[0], rotation[1], rotation[2]};
 }
