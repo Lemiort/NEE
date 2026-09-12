@@ -2,13 +2,98 @@
 
 #include <glad/gl.h>
 
+#include <array>
+#include <cstdio>  // for fprintf and stderr
+#include <iostream>
 #include <sstream>
 #include <string>
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <iostream>
 
 #include "stb_image.h"
+
+/**
+ * Load an image file using stb_image and create an OpenGL 2D texture.
+ * The function generates mipmaps, flips the image vertically (OpenGL
+ * expects top‑left origin) and compresses to DXT if supported.
+ *
+ * @param path Path to the image file.
+ * @return GLuint texture ID or 0 on failure.
+ */
+GLuint loadTexture(const std::string& path) {
+    int width, height, channels;
+    // stbi_set_flip_vertically_on_load flips vertically if requested; we
+    // want Y inverted
+    stbi_set_flip_vertically_on_load(1);
+    unsigned char* data =
+        stbi_load(path.c_str(), &width, &height, &channels, 0);
+    if (!data) {
+        fprintf(stderr, "Failed to load texture '%s': %s\n", path.c_str(),
+                stbi_failure_reason());
+        return 0;
+    }
+
+    GLuint texID;
+    glGenTextures(1, &texID);
+    glBindTexture(GL_TEXTURE_2D, texID);
+    // Determine internal format
+    GLenum format = GL_RGB;
+    if (channels == 1)
+        format = GL_RED;
+    else if (channels == 3)
+        format = GL_RGB;
+    else if (channels == 4)
+        format = GL_RGBA;
+
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
+                 GL_UNSIGNED_BYTE, data);
+    // Generate mipmaps
+    glGenerateMipmap(GL_TEXTURE_2D);
+    // Set texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                    GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    stbi_image_free(data);
+    return texID;
+}
+
+// ---------------------------------------------------------------------
+// Cubemap loader – uses the same stb_image routine as 2‑D textures.
+// The function creates a new texture object, uploads six faces and
+// returns its ID.  It also sets common parameters (linear filtering,
+// clamp‑to‑edge).
+GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
+    GLuint tex = 0;
+    glGenTextures(1, &tex);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
+
+    for (size_t i = 0; i < faces.size(); ++i) {
+        int w, h, ch;
+        unsigned char* data = stbi_load(faces[i].c_str(), &w, &h, &ch, 0);
+        if (!data) {
+            glDeleteTextures(1, &tex);
+            return 0;  // failure
+        }
+
+        GLenum format = (ch == 4 ? GL_RGBA : GL_RGB);
+        GLenum internal = (ch == 4 ? GL_RGBA8 : GL_RGB8);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i), 0,
+                     internal, w, h, 0, format, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
+
+    // common parameters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+
+    return tex;
+}
 
 Texture::Texture(bool _del) : del(_del) {}
 
@@ -222,61 +307,10 @@ Texture2D::Texture2D(GLuint _texBufferID, bool _del) {
     texBufferID = _texBufferID;
     del = _del;
 }
-Texture2D::~Texture2D() {
-    /*if(del && texBufferID!=0)
-        glDeleteTextures(1,&texBufferID);*/
-}
+Texture2D::~Texture2D() = default;
 
-bool Texture2D::Load(const char* filename) {
-    // stbi_set_flip_vertically_on_load(true);
-
-    int width = 0;
-    int height = 0;
-    int nrChannels = 0;
-
-    // Load pixels with stb_image, forcing 4 channels (RGBA)
-    unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, 4);
-
-    if (data == nullptr) {
-        std::cerr << "[STB Error] Could not load: " << filename
-                  << " | Reason: " << stbi_failure_reason() << '\n';
-        return 0;
-    }
-
-    // compress RGB values to the range [16, 235] while leaving alpha channel
-    // unchanged
-    for (int i = 0; i < width * height * 4; ++i) {
-        if (i % 4 != 3) {
-            data[i] = 16 + (data[i] * (235 - 16) / 255);
-        }
-    }
-
-    // Create a new texture ID and bind it
-    glGenTextures(1, &texBufferID);
-    glBindTexture(GL_TEXTURE_2D, texBufferID);
-
-    // Set texture parameters for filtering and wrapping
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    // Set the internal format to a compressed format (DXT5)
-    GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-
-    // Send the pixel data to OpenGL, specifying the internal format as
-    // compressed
-    glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0, GL_RGBA,
-                 GL_UNSIGNED_BYTE, data);
-
-    // Note: If you want to use mipmaps, you can generate them after uploading
-    // the texture data
-    // glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Free the pixel data after uploading to GPU
-    stbi_image_free(data);
-
+bool Texture2D::Load(const std::string& path) {
+    texBufferID = loadTexture(path);
     return texBufferID != 0;
 }
 

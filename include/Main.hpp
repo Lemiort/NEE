@@ -22,7 +22,6 @@
 #include "ShadowMapFBO.hpp"
 #include "Skybox.hpp"
 #include "Text2D.hpp"
-#include "TgaLoader.hpp"
 #include "Util.hpp"
 #include "Version.hpp"
 

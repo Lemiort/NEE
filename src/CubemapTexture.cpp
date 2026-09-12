@@ -2,12 +2,12 @@
 
 #include <glad/gl.h>
 
+#include <array>
 #include <cstdint>
 #include <string>
 
-#include "TgaLoader.hpp"
+#include "Texture.hpp"
 #include "Util.hpp"
-
 static const GLenum types[6] = {
     GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
     GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
@@ -44,47 +44,14 @@ bool CubemapTexture::Load() {
     // Magick::Image* pImage = NULL;
     // Magick::Blob blob;
 
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(types); i++) {
-        ASSERT(m_fileNames[i].c_str());
+    // Load the cubemap using the helper from Texture.cpp
+    std::array<std::string, 6> faces = {m_fileNames[0], m_fileNames[1],
+                                        m_fileNames[2], m_fileNames[3],
+                                        m_fileNames[4], m_fileNames[5]};
 
-        TGAHeader const* header = nullptr;
-        uint8_t* buffer = nullptr;
-        uint32_t size = 0;
-        GLint format = 0;
-        GLint internalFormat = 0;
-        //  GLuint    texture;
-        // try to load image from file
-        if (!LoadFile(m_fileNames[i].c_str(), true, &buffer, &size)) {
-            return 0;
-        }
-
-        // if the file size is obviously smaller than the TGA header
-        if (size <= sizeof(TGAHeader)) {
-            // LOG_ERROR("Too small file \n", m_fileNames[i]);
-            delete[] buffer;
-            return 0;
-        }
-
-        header = reinterpret_cast<TGAHeader*>(buffer);
-
-        // check the format of the TGA file - uncompressed RGB or RGBA image
-        if (header->datatype != 2 ||
-            (header->bitperpel != 24 && header->bitperpel != 32)) {
-            // LOG_ERROR("Wrong TGA format '%s'\n", m_fileNames[i]);
-            delete[] buffer;
-            return 0;
-        }
-
-        // get the texture format
-        format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
-        internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
-
-        glTexImage2D(types[i], 0, internalFormat, header->width, header->height,
-                     0, format, GL_UNSIGNED_BYTE,
-                     reinterpret_cast<const GLvoid*>(
-                         buffer + sizeof(TGAHeader) + header->idlength));
-
-        delete[] buffer;
+    m_textureObj = loadCubeMap(faces);
+    if (m_textureObj == 0) {
+        return false;
     }
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

@@ -3,6 +3,20 @@
 #include <glad/gl.h>
 
 #include <string>
+
+/**
+ * Load an image file using stb_image and create an OpenGL 2D texture.
+ * @param path Path to the image file.
+ * @return GLuint texture ID or 0 on failure.
+ */
+GLuint loadTexture(const std::string& path);
+/**
+ * Load a cubemap from six image files.
+ * The order of the paths must match the enum values in `types[]`:
+ *  POSITIVE_X, NEGATIVE_X, POSITIVE_Y, NEGATIVE_Y, POSITIVE_Z, NEGATIVE_Z
+ */
+GLuint loadCubeMap(const std::array<std::string, 6>& faces);
+
 class Texture {
 protected:
     GLuint texBufferID;
@@ -28,7 +42,7 @@ public:
     Texture2D() = default;
 
     ~Texture2D() override;
-    virtual bool Load(const char* filename);
+    virtual bool Load(const std::string& path);
 };
 
 class ShadowTexture : public Texture2D {

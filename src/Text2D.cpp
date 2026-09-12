@@ -23,7 +23,7 @@
 #include "Math3d.hpp"
 #include "Shader.hpp"
 #include "ShaderFunctions.hpp"
-#include "stb_image.h"
+#include "Texture.hpp"
 
 // The shader program is managed via a shared_ptr. Initialize it to nullptr.
 FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
@@ -217,52 +217,8 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
     /*================================================*/
 
     // create texture
-    stbi_set_flip_vertically_on_load(1);
-
-    int width;
-    int height;
-    int nrChannels;
     // Load PNG. Pass 4 to have RGBA
-    unsigned char* image_data =
-        stbi_load(imgFilename.c_str(), &width, &height, &nrChannels, 4);
-
-    if (image_data != nullptr) {
-        // SOIL_FLAG_NTSC_SAFE_RGB -> Compress RGB values to the range [16, 235]
-        // while leaving alpha channel
-        for (int i = 0; i < width * height * 4; ++i) {
-            if (i % 4 != 3) {  // Compress R, G, B. Alpha channel (every 4th
-                               // byte) is left unchanged
-                image_data[i] = 16 + (image_data[i] * (235 - 16) / 255);
-            }
-        }
-
-        // SOIL_CREATE_NEW_ID -> Create a new texture ID and bind it
-        glGenTextures(1, &texBufferID);
-        glBindTexture(GL_TEXTURE_2D, texBufferID);
-
-        // Setting texture filtering parameters for mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Asking videocard to compress the txture
-        GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-
-        // Send pixels to Opengls
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
-        // Generate mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // free data
-        stbi_image_free(image_data);
-    } else {
-        std::cerr << "[STB Error] Could not load file : " << imgFilename
-                  << " | Reason: " << stbi_failure_reason() << '\n';
-    }
+    texBufferID = loadTexture(imgFilename);
 
     // activate texture unit 0
     glActiveTexture(GL_TEXTURE0);
@@ -502,48 +458,7 @@ void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     //  texBufferID = TextureCreateFromTGA("Textures/Anonymus Bold
     //  512x256.tga");
 
-    stbi_set_flip_vertically_on_load(1);
-
-    int nrChannels = 0;
-    unsigned char* data = stbi_load("Textures/Anonymus 4096x2048.tga_sdf.png",
-                                    &width, &height, &nrChannels, 4);
-
-    if (data != nullptr) {
-        // Compress 0-255 to "safe" 16-235
-        for (int i = 0; i < width * height * 4; ++i) {
-            if (i % 4 != 3) {  // Edit only RGB. Don't touch Alpha
-                data[i] = 16 + (data[i] * (235 - 16) / 255);
-            }
-        }
-
-        // Generate new textutre id
-        glGenTextures(1, &texBufferID);
-        glBindTexture(GL_TEXTURE_2D, texBufferID);
-
-        // setup mipmapping
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // compress to DXT5 on the fly
-        GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-
-        // send pixels to VRAM
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-        // genearete mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // free RAM
-        stbi_image_free(data);
-    } else {
-        std::cerr << "[STB Error] Could not load: Textures/Anonymus "
-                     "4096x2048.tga_sdf.png | Причина: "
-                  << stbi_failure_reason() << '\n';
-    }
+    texBufferID = loadTexture("Textures/Anonymus 4096x2048.tga_sdf.png");
 
     // make texture unit 0 active
     glActiveTexture(GL_TEXTURE0);

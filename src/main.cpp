@@ -27,13 +27,13 @@
 #include "stb_image_write.h"
 
 void CalcFPS() {
-  double const currentTime = glfwGetTime();
-  ++frameCount;
-  if (currentTime - lastTime >= 1.0) {
-    fps = static_cast<double>(frameCount) / (currentTime - lastTime);
-    lastTime += 1.0;
-    frameCount = 0;
-  }
+    double const currentTime = glfwGetTime();
+    ++frameCount;
+    if (currentTime - lastTime >= 1.0) {
+        fps = static_cast<double>(frameCount) / (currentTime - lastTime);
+        lastTime += 1.0;
+        frameCount = 0;
+    }
 }
 
 void ErrorCallback(int error, const char* description) {
@@ -41,107 +41,112 @@ void ErrorCallback(int error, const char* description) {
 }
 void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
                  int /*mods*/) {
-  if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, GL_TRUE);
-  }
-  if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-    if (key == GLFW_KEY_I) {
-      spotLight1->target[0] += 0.1;
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
+        glfwSetWindowShouldClose(window, GL_TRUE);
     }
-    if (key == GLFW_KEY_K) {
-      spotLight1->target[0] -= 0.1;
-    }
-    if (key == GLFW_KEY_O) {
-      spotLight1->target[1] += 0.1;
-    }
-    if (key == GLFW_KEY_L) {
-      spotLight1->target[1] -= 0.1;
-    }
-    if (key == GLFW_KEY_U) {
-      spotLight1->target[2] += 0.1;
-    }
-    if (key == GLFW_KEY_J) {
-      spotLight1->target[2] -= 0.1;
-    }
-    if (key == GLFW_KEY_F5) {
-      renderType += 1;
-      renderType %= 6;
-    }
-    if (key == GLFW_KEY_PRINT_SCREEN) {
-      time_t rawtime = 0;
-      struct tm* timeinfo = nullptr;
-      char buffer[80];
-
-      time(&rawtime);
-      timeinfo = localtime(&rawtime);
-
-      strftime(buffer, 80, "screenshots/Screenshot %d-%m-%Y %I.%M.%S.tga",
-               timeinfo);
-
-      int result = 0;
-
-      // alllocate RAM for screen pixels (RGB)
-      int const channels = 3;
-      std::vector<unsigned char> pixels(width * height * channels);
-
-      // read ppixeks from current buffer into RAM
-      glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
-                   pixels.data());
-
-      //  tell stb to flip y
-      stbi_flip_vertically_on_write(1);
-
-      // sae as tga
-      result = stbi_write_tga(buffer, width, height, channels, pixels.data());
-
-      // stbi_write_tga returns 1 on success and 0 on error
-      if (result == 0) {
-        std::cerr << "[STB Write Error] Could not save save screenshot to: "
-                  << buffer << '\n';
-      } else {
-        {
-          std::cout << "\n Screenshot saved as " << buffer;
+    if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+        if (key == GLFW_KEY_I) {
+            spotLight1->target[0] += 0.1;
         }
-      }
-    } else {
-      {
-        pGameCamera.OnKeyboard(key);
-      }
+        if (key == GLFW_KEY_K) {
+            spotLight1->target[0] -= 0.1;
+        }
+        if (key == GLFW_KEY_O) {
+            spotLight1->target[1] += 0.1;
+        }
+        if (key == GLFW_KEY_L) {
+            spotLight1->target[1] -= 0.1;
+        }
+        if (key == GLFW_KEY_U) {
+            spotLight1->target[2] += 0.1;
+        }
+        if (key == GLFW_KEY_J) {
+            spotLight1->target[2] -= 0.1;
+        }
+        if (key == GLFW_KEY_F5) {
+            renderType += 1;
+            renderType %= 6;
+        }
+        if (key == GLFW_KEY_F12) {
+            time_t rawtime = 0;
+            struct tm* timeinfo = nullptr;
+            char buffer[80];
+
+            time(&rawtime);
+            timeinfo = localtime(&rawtime);
+
+            strftime(buffer, 80, "screenshots/Screenshot %Y-%m-%d %I.%M.%S.jpg",
+                     timeinfo);
+
+            int result = 0;
+
+            // allocate RAM for screen pixels (RGB)
+            int const channels = 3;
+            std::vector<uint8_t> pixels(width * height * channels);
+
+            // Ensure pixel data is tightly packed to avoid row padding
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+
+            // read pixels from current buffer into RAM
+            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
+                         pixels.data());
+
+            //  tell stb to flip y
+            stbi_flip_vertically_on_write(1);
+
+            // sae as tga
+            result =
+                stbi_write_jpg(buffer, width, height, 3, pixels.data(), 100);
+
+            // stbi_write_tga returns 1 on success and 0 on error
+            if (result == 0) {
+                std::cerr
+                    << "[STB Write Error] Could not save save screenshot to: "
+                    << buffer << '\n';
+            } else {
+                {
+                    std::cout << "\n Screenshot saved as " << buffer;
+                }
+            }
+        } else {
+            {
+                pGameCamera.OnKeyboard(key);
+            }
+        }
     }
-  }
 }
 void MousePosCallBack(GLFWwindow* /*window*/, double x, double y) {
-  mouse.Update(x, y);
-  if (true) {
-    pGameCamera.OnMouse(mouse.posX, mouse.posY);
-  }
+    mouse.Update(x, y);
+    if (true) {
+        pGameCamera.OnMouse(mouse.posX, mouse.posY);
+    }
 }
 
 void MouseButtonCallback(GLFWwindow* /*window*/, int button, int action,
                          int /*mods*/) {
-  if (button == GLFW_MOUSE_BUTTON_2)  // right button
-  {
-    mouse.rightButtonPressed = action == GLFW_PRESS;
-  }
+    if (button == GLFW_MOUSE_BUTTON_2)  // right button
+    {
+        mouse.rightButtonPressed = action == GLFW_PRESS;
+    }
 }
 
 void FrameBufferSizeCallback(GLFWwindow* /*window*/, int w, int h) {
-  width = w;
-  height = h;
-  if (tline1) {
-    tline1->SetAspectRatio(width, height);
-  }
-  if (fLine1) {
-    fLine1->SetAspectRatio(width, height);
-  }
-  if (smfbo1 != nullptr) {
-    smfbo1->Init(w, h);
-  }
-  if (gBuffer1 != nullptr) {
-    gBuffer1->Init(w, h);
-  }
-  pGameCamera.OnViewportResize(width, height);
-  glViewport(0, 0, width, height);
+    width = w;
+    height = h;
+    if (tline1) {
+        tline1->SetAspectRatio(width, height);
+    }
+    if (fLine1) {
+        fLine1->SetAspectRatio(width, height);
+    }
+    if (smfbo1 != nullptr) {
+        smfbo1->Init(w, h);
+    }
+    if (gBuffer1 != nullptr) {
+        gBuffer1->Init(w, h);
+    }
+    pGameCamera.OnViewportResize(width, height);
+    glViewport(0, 0, width, height);
 }
 
 void ShadowPass() {
@@ -218,12 +223,12 @@ void ShadowPass() {
 
     Cube.SetMaterial(shadowMaterial);
     for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-      for (float j = -5.0F; j < 5.0F; j += 0.1F) {
-        Cube.SetScale(0.05F, 0.05F, 0.05F);
-        Cube.SetRotation(0, 30 * sinf(Scale), 0);
-        Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-        Cube.Render(lightCam);
-      }
+        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+            Cube.SetScale(0.05F, 0.05F, 0.05F);
+            Cube.SetRotation(0, 30 * sinf(Scale), 0);
+            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.Render(lightCam);
+        }
     }
     Plane.SetMaterial(shadowMaterial);
     Plane.Render(lightCam);
@@ -373,12 +378,12 @@ void RenderPass() {
     Plane.Render(pGameCamera);
     Cube.SetMaterial(mainMaterial);
     for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-      for (float j = -5.0F; j < 5.0F; j += 0.1F) {
-        Cube.SetScale(0.05F, 0.05F, 0.05F);
-        Cube.SetRotation(0, 30 * sinf(Scale), 0);
-        Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-        Cube.Render(pGameCamera);
-      }
+        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+            Cube.SetScale(0.05F, 0.05F, 0.05F);
+            Cube.SetRotation(0, 30 * sinf(Scale), 0);
+            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.Render(pGameCamera);
+        }
     }
     // delete tempTexture;
 
@@ -783,12 +788,12 @@ void DSGeometryPass() {
 
     Cube.SetMaterial(DSGeometryPassMaterial);
     for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-      for (float j = -5.0F; j < 5.0F; j += 0.1F) {
-        Cube.SetScale(0.05F, 0.05F, 0.05F);
-        Cube.SetRotation(0, 30 * sinf(Scale), 0);
-        Cube.SetPosition(i, noise1->GetHeight(i, j), j);
-        Cube.Render(pGameCamera);
-      }
+        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+            Cube.SetScale(0.05F, 0.05F, 0.05F);
+            Cube.SetRotation(0, 30 * sinf(Scale), 0);
+            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.Render(pGameCamera);
+        }
     }
 
     // glBindFramebuffer(GL_FRAMEBUFFER,0);
@@ -798,48 +803,48 @@ void DSGeometryPass() {
 }
 
 void RenderScene(GLFWwindow* /*window*/) {
-  // ShadowPass();
-  // RenderPass();
-  // DSGeometryPass();
-  // DSBeginLightPasses(); // not needed yet
-  // DSPointLightPass();
-  // DSLightingPass();
-  // normal deferred shading
-  if (renderType == 0) {
-    gBuffer1->StartFrame();
-    DSGeometryPass();
-    // To update the stencil buffer, it must be activated,
-    // and it is also required during lighting passes because light
-    // renders only when the stencil pass succeeds.
-    glEnable(GL_STENCIL_TEST);
-    // DSBeginLightPasses(); // already deprecated
-    {
-      DSStencilPass(*pointLight1);
-      DSPointLightPass(*pointLight1);
+    // ShadowPass();
+    // RenderPass();
+    // DSGeometryPass();
+    // DSBeginLightPasses(); // not needed yet
+    // DSPointLightPass();
+    // DSLightingPass();
+    // normal deferred shading
+    if (renderType == 0) {
+        gBuffer1->StartFrame();
+        DSGeometryPass();
+        // To update the stencil buffer, it must be activated,
+        // and it is also required during lighting passes because light
+        // renders only when the stencil pass succeeds.
+        glEnable(GL_STENCIL_TEST);
+        // DSBeginLightPasses(); // already deprecated
+        {
+            DSStencilPass(*pointLight1);
+            DSPointLightPass(*pointLight1);
 
-      DSStencilPass(*pointLight2);
-      DSPointLightPass(*pointLight2);
+            DSStencilPass(*pointLight2);
+            DSPointLightPass(*pointLight2);
 
-      DSStencilPass(*spotLight1);
-      DSSpotLightPass(*spotLight1);
+            DSStencilPass(*spotLight1);
+            DSSpotLightPass(*spotLight1);
+        }
+        // Directed light does not require a stencil
+        // as its effect is not distance limited.
+        glDisable(GL_STENCIL_TEST);
+
+        DSDirectionalLightPass(*directionalLight1);
+
+        DSFinalPass();
+        // DSEndLightPasses();
     }
-    // Directed light does not require a stencil
-    // as its effect is not distance limited.
-    glDisable(GL_STENCIL_TEST);
-
-    DSDirectionalLightPass(*directionalLight1);
-
-    DSFinalPass();
-    // DSEndLightPasses();
-  }
-  // debugging view
-  else if (renderType <= 4) {
-    DSGeometryPass();
-    DSLightingPass();
-  } else {
-    RenderPass();
-  }
-  InterfacePass();
+    // debugging view
+    else if (renderType <= 4) {
+        DSGeometryPass();
+        DSLightingPass();
+    } else {
+        RenderPass();
+    }
+    InterfacePass();
 }
 void PreInitScene(GLFWwindow* window) {
     Scale = 0;
@@ -848,15 +853,15 @@ void PreInitScene(GLFWwindow* window) {
 
     // text shader
     {
-      char const* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
-      char const* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
+        char const* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
+        char const* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
 
-      textShader = std::make_unique<Shader>();
-      textShader->AddShader(vertexShaderSorceCode, VertexShader);
-      textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
-      textShader->Init();
-      delete[] vertexShaderSorceCode;
-      delete[] fragmentShaderSourceCode;
+        textShader = std::make_unique<Shader>();
+        textShader->AddShader(vertexShaderSorceCode, VertexShader);
+        textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        textShader->Init();
+        delete[] vertexShaderSorceCode;
+        delete[] fragmentShaderSourceCode;
     }
     // Use smart pointer for automatic lifetime management
     fLine1 = std::make_unique<FontLine2d>();
@@ -880,20 +885,20 @@ void InitRender(GLFWwindow* window, string message) {
 
     // while(!glfwWindowShouldClose(window) && initialized == false)
     if (!initialized) {
-      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      CalcFPS();
-      // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
-      fLine1->SetText(ConvertToString(fps));
-      fLine1->SetPosition(-1.0F, 0.9F, 24.0F);
-      fLine1->Render(pGameCamera);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        CalcFPS();
+        // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
+        fLine1->SetText(ConvertToString(fps));
+        fLine1->SetPosition(-1.0F, 0.9F, 24.0F);
+        fLine1->Render(pGameCamera);
 
-      // fLine1->Render(message,-1.0f,-0.1f,36.0f);
-      fLine1->SetText(std::move(message));
-      fLine1->SetPosition(-1.0F, -0.1F, 36.0F);
-      fLine1->Render(pGameCamera);
+        // fLine1->Render(message,-1.0f,-0.1f,36.0f);
+        fLine1->SetText(std::move(message));
+        fLine1->SetPosition(-1.0F, -0.1F, 36.0F);
+        fLine1->Render(pGameCamera);
 
-      glfwSwapBuffers(window);
-      glfwPollEvents();
+        glfwSwapBuffers(window);
+        glfwPollEvents();
     }
     // thr.join();
 }
@@ -907,7 +912,7 @@ int InitScene(GLFWwindow* window) {
     glfwMakeContextCurrent(window);
     // Pass the address loading function from GLFW
     if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
-      return 1;
+        return 1;
     }
 
     /*Scale=0;
@@ -1220,82 +1225,82 @@ int InitScene(GLFWwindow* window) {
 }
 
 int main(int /*argc*/, char** /*argv*/) {
-  renderType = 0;
-  glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
-  glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-  glfwWindowHint(GLFW_OPENGL_PROFILE,
-                 GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
-  GLFWwindow* window = nullptr;
-  glfwSetErrorCallback(reinterpret_cast<GLFWerrorfun>(&ErrorCallback));
-  // glewExperimental = true; // Needed for core profile
-  if (glfwInit() == 0) {
-    exit(EXIT_FAILURE);
-  }
+    renderType = 0;
+    glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
+    glfwWindowHint(GLFW_OPENGL_PROFILE,
+                   GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
+    GLFWwindow* window = nullptr;
+    glfwSetErrorCallback(reinterpret_cast<GLFWerrorfun>(&ErrorCallback));
+    // glewExperimental = true; // Needed for core profile
+    if (glfwInit() == 0) {
+        exit(EXIT_FAILURE);
+    }
 
-  // title
-  string title("HOGL ");
-  title += AutoVersion::STATUS;
-  title += " ";
-  title += AutoVersion::FULLVERSION_STRING;
-  title += " build ";
-  title += ConvertToString(AutoVersion::BUILDS_COUNT);
+    // title
+    string title("HOGL ");
+    title += AutoVersion::STATUS;
+    title += " ";
+    title += AutoVersion::FULLVERSION_STRING;
+    title += " build ";
+    title += ConvertToString(AutoVersion::BUILDS_COUNT);
 
-  glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-  window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
-                            /*glfwGetPrimaryMonitor()*/ nullptr, nullptr);
-  if (window == nullptr) {
+    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
+                              /*glfwGetPrimaryMonitor()*/ nullptr, nullptr);
+    if (window == nullptr) {
+        glfwTerminate();
+        exit(EXIT_FAILURE);
+    }
+
+    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+    hiddenWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
+                                    nullptr, window);
+
+    glfwSetFramebufferSizeCallback(
+        window,
+        reinterpret_cast<GLFWframebuffersizefun>(&FrameBufferSizeCallback));
+    width = WINDOW_WIDTH;
+    height = WINDOW_HEIGHT;
+    glfwMakeContextCurrent(window);
+    glfwSetKeyCallback(window, reinterpret_cast<GLFWkeyfun>(&KeyCallback));
+    glfwSetCursorPosCallback(
+        window, reinterpret_cast<GLFWcursorposfun>(&MousePosCallBack));
+    glfwSetMouseButtonCallback(
+        window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
+
+    if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
+        std::println(stderr, "Failed to initialize GLAD");
+        return 1;
+    }
+
+    glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+    glEnable(GL_CULL_FACE);
+    glEnable(GL_PROGRAM_POINT_SIZE);
+    glCullFace(GL_FRONT);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    // enable transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+    PreInitScene(window);
+    // InitRender(window,"test");
+    if (InitScene(window) != 0) {
+        return -1;
+    }
+
+    while (glfwWindowShouldClose(window) == 0) {
+        RenderScene(window);
+
+        glfwSwapBuffers(window);
+        glfwPollEvents();
+    }
+    glfwDestroyWindow(window);
+    glfwDestroyWindow(hiddenWindow);
     glfwTerminate();
-    exit(EXIT_FAILURE);
-  }
-
-  glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-  hiddenWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
-                                  nullptr, window);
-
-  glfwSetFramebufferSizeCallback(
-      window,
-      reinterpret_cast<GLFWframebuffersizefun>(&FrameBufferSizeCallback));
-  width = WINDOW_WIDTH;
-  height = WINDOW_HEIGHT;
-  glfwMakeContextCurrent(window);
-  glfwSetKeyCallback(window, reinterpret_cast<GLFWkeyfun>(&KeyCallback));
-  glfwSetCursorPosCallback(
-      window, reinterpret_cast<GLFWcursorposfun>(&MousePosCallBack));
-  glfwSetMouseButtonCallback(
-      window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
-
-  if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
-    std::println(stderr, "Failed to initialize GLAD");
-    return 1;
-  }
-
-  glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-  glEnable(GL_CULL_FACE);
-  glEnable(GL_PROGRAM_POINT_SIZE);
-  glCullFace(GL_FRONT);
-  glEnable(GL_DEPTH_TEST);
-  glDepthFunc(GL_LESS);
-  // enable transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-  glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-  PreInitScene(window);
-  // InitRender(window,"test");
-  if (InitScene(window) != 0) {
-    return -1;
-  }
-
-  while (glfwWindowShouldClose(window) == 0) {
-    RenderScene(window);
-
-    glfwSwapBuffers(window);
-    glfwPollEvents();
-  }
-  glfwDestroyWindow(window);
-  glfwDestroyWindow(hiddenWindow);
-  glfwTerminate();
-  exit(EXIT_SUCCESS);
+    exit(EXIT_SUCCESS);
 }

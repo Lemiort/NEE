@@ -19,7 +19,6 @@
 #include "Material.hpp"
 #include "Text2D.hpp"
 #include "Texture.hpp"
-#include "stb_image.h"
 
 Character2d::Character2d() = default;
 
@@ -124,54 +123,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
         inStr.clear();
     }  // filled font data
 
-    GLuint texBufferID = 0;
-
-    stbi_set_flip_vertically_on_load(1);
-
-    int width = 0;
-    int height = 0;
-    int nrChannels = 0;
-    // Load PNG. Pass 4 to have RGBA
-    unsigned char* image_data =
-        stbi_load(imgFilename.c_str(), &width, &height, &nrChannels, 4);
-
-    if (image_data != nullptr) {
-        // SOIL_FLAG_NTSC_SAFE_RGB -> Compress RGB values to the range [16, 235]
-        // while leaving alpha channel
-        for (int i = 0; i < width * height * 4; ++i) {
-            if (i % 4 != 3) {  // Compress R, G, B. Alpha channel (every 4th
-                               // byte) is left unchanged
-                image_data[i] = 16 + (image_data[i] * (235 - 16) / 255);
-            }
-        }
-
-        // SOIL_CREATE_NEW_ID -> Create a new texture ID and bind it
-        glGenTextures(1, &texBufferID);
-        glBindTexture(GL_TEXTURE_2D, texBufferID);
-
-        // Setting texture filtering parameters for mipmaps
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                        GL_LINEAR_MIPMAP_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-        // Asking videocard to compress the txture
-        GLint const internalFormat = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-
-        // Send pixels to Opengls
-        glTexImage2D(GL_TEXTURE_2D, 0, internalFormat, width, height, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, image_data);
-
-        // Generate mipmaps
-        glGenerateMipmap(GL_TEXTURE_2D);
-
-        // free data
-        stbi_image_free(image_data);
-    } else {
-        std::cerr << "[STB Error] Could not load file : " << imgFilename
-                  << " | Reason: " << stbi_failure_reason() << '\n';
-    }
+    GLuint texBufferID = loadTexture(imgFilename);
 
     // load into material
     auto temp = std::make_shared<Texture2D>(texBufferID);
