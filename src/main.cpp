@@ -1,6 +1,6 @@
 #include "Main.hpp"
 
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -847,13 +847,11 @@ int InitScene(GLFWwindow* window) {
 
     initialized = false;
     glfwMakeContextCurrent(window);
-    GLenum res = glewInit();
-    if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+    // Pass the address loading function from GLFW
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
         return 1;
-    } else {
-        printf("\nGLEW status is %d \n", res);
     }
+
     /*Scale=0;
     lastTime = glfwGetTime();
     frameCount=0;
@@ -1205,12 +1203,10 @@ int main(int argc, char** argv) {
         window, reinterpret_cast<GLFWcursorposfun>(&MousePosCallBack));
     glfwSetMouseButtonCallback(
         window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
-    GLenum res = glewInit();
-    if (res != GLEW_OK) {
-        fprintf(stderr, "Error: '%s'\n", glewGetErrorString(res));
+
+    if (!gladLoadGL((GLADloadfunc)glfwGetProcAddress)) {
+        fprintf(stderr, "Failed to initialize GLAD\n");
         return 1;
-    } else {
-        printf("\nGLEW status is %d \n", res);
     }
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);

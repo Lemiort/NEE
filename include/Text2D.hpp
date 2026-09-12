@@ -1,6 +1,6 @@
 #ifndef TEXT_2D_H_INCLUDED
 #define TEXT_2D_H_INCLUDED
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include <cstring>
 #include <map>

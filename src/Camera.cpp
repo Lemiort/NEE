@@ -1,6 +1,7 @@
 #include "Camera.hpp"
 
-#include <GL/glew.h>
+#include <glad/gl.h>
+// load glfw after glad
 #include <GLFW/glfw3.h>
 
 const static float STEP_SCALE = 0.1f;

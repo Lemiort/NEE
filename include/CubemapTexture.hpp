@@ -1,6 +1,6 @@
 #ifndef CUBEMAP_TEXTURE_H_INCLUDED
 #define CUBEMAP_TEXTURE_H_INCLUDED
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include <string>
 using namespace std;

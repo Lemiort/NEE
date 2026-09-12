@@ -1,6 +1,6 @@
 #ifndef TEXTURE_H_INCLUDED
 #define TEXTURE_H_INCLUDED
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include <sstream>
 #include <string>

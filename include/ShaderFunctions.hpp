@@ -1,6 +1,6 @@
 #ifndef SHADERFUNCTIONS_H_INCLUDED
 #define SHADERFUNCTIONS_H_INCLUDED
-#include <GL/glew.h>
+#include <glad/gl.h>
 #include <stdio.h>
 #include <stdlib.h>
 

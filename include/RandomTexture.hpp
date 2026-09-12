@@ -1,7 +1,8 @@
 #ifndef RANDOMTEXTURE_H
 #define RANDOMTEXTURE_H
+#include <glad/gl.h>
+
 #include "EngineCommon.hpp"
-#include "GL/glew.h"
 #include "Math3d.hpp"
 #include "Util.hpp"
 class RandomTexture {

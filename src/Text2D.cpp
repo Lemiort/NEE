@@ -571,10 +571,15 @@ void Text2d::Render(const Camera& cam) {
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     float dx = position[2] * 2;
-    // float dy=0.0625; //1/16, высота одного квадрата
+    float dy = 0.0625;  // 1/16, the height of one square
+    // Compute index into the font texture atlas
+    const unsigned int CYRILLIC_START = 0x0410;  // 'А'
     unsigned int num =
-        character - 32;  // 32 символа пропущено при генерировании текстуры
-    if (character > (unsigned char)'А') num = character + 224;
+        character -
+        32;  // 32 characters were missed while generating the texture.
+    if (character > CYRILLIC_START) {
+        num = character + 224;
+    }
     // 16 строк и 16 столбцов
     float x = ((double)(num % 32)) / 32;
     float y = 1 - ((float)((unsigned)num / 32) / 8);

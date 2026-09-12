@@ -7,7 +7,7 @@ message("Building ${PROJECT_NAME}")
 
 
 find_package(glfw3 REQUIRED)
-find_package(glew REQUIRED)
+find_package(glad REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
@@ -46,9 +46,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 target_link_libraries(${PROJECT_NAME} 
 PRIVATE 
-    GLEW::GLEW
+    glad::glad
     glfw
     stb::stb
+    nlohmann_json::nlohmann_json
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

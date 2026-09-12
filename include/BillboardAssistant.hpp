@@ -1,6 +1,6 @@
 #ifndef BILLBOARDASSISTANT_H
 #define BILLBOARDASSISTANT_H
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include "Math3d.hpp"
 #include "ShaderFunctions.hpp"

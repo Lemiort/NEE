@@ -1,6 +1,8 @@
 #ifndef MAIN_H_INCLUDED
 #define MAIN_H_INCLUDED
-#include <GL/glew.h>
+
+#include <glad/gl.h>
+// load glfw after glad
 #include <GLFW/glfw3.h>
 #include <string.h>
 
@@ -22,7 +24,7 @@
 #include "Text2D.hpp"
 #include "TgaLoader.hpp"
 #include "Util.hpp"
-#include "version.hpp"
+#include "Version.hpp"
 
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 #define WINDOW_WIDTH 1366

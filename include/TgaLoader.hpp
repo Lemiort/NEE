@@ -3,7 +3,7 @@
 
 // #include "main.hpp"
 
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include <cassert>
 #include <cstdint>

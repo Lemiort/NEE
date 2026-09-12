@@ -1,6 +1,6 @@
 #ifndef MATERIAL_H
 #define MATERIAL_H
-#include <GL/glew.h>
+#include <glad/gl.h>
 
 #include <memory>
 #include <vector>
