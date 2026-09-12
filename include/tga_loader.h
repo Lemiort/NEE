@@ -17,7 +17,7 @@ typedef __int16          int16_t;
 typedef unsigned __int16 uint16_t;
 typedef __int32          int32_t;
 typedef unsigned __int32 uint32_t;*/
-// формат заголовков TGA
+// TGA header format
 struct TGAHeader {
     uint8_t idlength;
     uint8_t colormap;

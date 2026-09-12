@@ -10,7 +10,7 @@ public:
     //  enum ShaderType {Vertex, Geometry, Fragmnet};
     Shader();
     virtual ~Shader();
-    void Init();  //собирает и компилирует шейдер
+    void Init();  // compiles and links the shader
     void AddShader(const char* source, ShaderType type);
     GLuint shaderProgramID;
     void Use();

@@ -53,17 +53,17 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         printf("\nError creating make_shared<Mesh> in Skybox");
         return false;
     }
-    // создаём буффер, в котором будем хранить всё
+    // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
+    // create buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (spverts), nullptr,
                  GL_STATIC_DRAW);
-    // загружаем вершины в буффер
+    // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
                     spvertices.data());
 
-    // привязываем индексы к буфферу
+    // bind indices to buffer
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces,
@@ -80,10 +80,10 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     pCubemapTex->Load();
 
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    // находим позиции uniform-переменных
+    // find uniform variable addresses
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
 
-    // делаем то же самое
+    // do the same thing
     pCubemapTex->Bind(GL_TEXTURE2);
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
@@ -94,7 +94,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         scale[i] = 1;
     }
 
-    // чистим память
+    // clean up memory
     // vectors automatically cleaned up
     return true;
 }
@@ -107,8 +107,7 @@ void SkyBox::Render(const Camera& cam) {
     glCullFace(GL_BACK);
     glDepthFunc(GL_LEQUAL);
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // камера для спекуляра
+    Assistant TM;  // TM - For object, 2- for object's normal, 3 - for camera position
     TM.Scale(3, 3, 3);
     TM.WorldPos(cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
     TM.Rotate(180, 180, 0);

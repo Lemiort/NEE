@@ -1,6 +1,8 @@
 #include "cubemap_texture.h"
+
 #include <cstring>
 #include <iostream>
+
 #include "tga_loader.h"
 #include "util.h"
 
@@ -50,10 +52,10 @@ bool CubemapTexture::Load() {
         uint32_t size;
         GLint format, internalFormat;
         //  GLuint    texture;
-        // попытаемся загрузить изображение из файла
+        // try to load image from file
         if (!LoadFile(m_fileNames[i].c_str(), true, &buffer, &size)) return 0;
 
-        // если размер файла заведомо меньше заголовка TGA
+        // if the file size is obviously smaller than the TGA header
         if (size <= sizeof(TGAHeader)) {
             // LOG_ERROR("Too small file \n", m_fileNames[i]);
             delete[] buffer;
@@ -62,7 +64,7 @@ bool CubemapTexture::Load() {
 
         header = (TGAHeader*)buffer;
 
-        // проверим формат TGA-файла - несжатое RGB или RGBA изображение
+        // check the format of the TGA file - uncompressed RGB or RGBA image
         if (header->datatype != 2 ||
             (header->bitperpel != 24 && header->bitperpel != 32)) {
             // LOG_ERROR("Wrong TGA format '%s'\n", m_fileNames[i]);
@@ -70,7 +72,7 @@ bool CubemapTexture::Load() {
             return 0;
         }
 
-        // получим формат текстуры
+        // get the texture format
         format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
         internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
 

@@ -51,9 +51,9 @@ protected:
     int spfaces, spverts;
     int Scale;
 
-    // угол вращения вокруг вектора
+    // rotation angle around the vector
     float rPhi;
-    // вектор вращения
+    // rotation vector
     Vector3f rv;
 
 public:

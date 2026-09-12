@@ -11,83 +11,83 @@ class Character2d : public MaterialObject, public PlaceableObject {
 private:
     Mesh mesh;
 
-    // название шрифта
+    // font name
     string fontName;
-    // ссылка на файл
+    // file reference
     string fileName;
 
-    // отношение размеров картинки к экрану
+    // image size ratio to screen
     float kx, ky;
 
-    // соотношение сторон экрана
+    // screen aspect ratio
     float aratio;
 
-    // размер пикселя в uv
+    // pixel size in UV
     float pkx, pky;
-    // размер шрифта в пикселях
+    // font size in pixels
     int fontHeight;
-    // размеры текстуры шрифта
+    // font texture dimensions
     uint32_t imageWidth, imageHeight;
-    // информация о шрифте, вернее обо всех буквах
+    // font information, more accurately about all letters
     map<unsigned int, FontCharacter> fontInfo;
 
-    // ширина символа в UV-координатах
+    // width in UV coordinates
     float realWidth;
-    // высота символа в UV-координатах
+    // height in UV coordinates
     float realHeight;
 
-    // какой-то коэффициент масштабирования
-    //  TODO подписать более подробно
+    // some scaling factor
+    //  TODO sign more detailed
     float dx;
-    // смещение по х на текстуре в UV
+    // x offset on the texture in UV
     float xOffset;
-    // смещение по y на текстуре в UV
+    // y offset on the texture in UV
     float yOffset;
 
     FontCharacter temp;
 
 protected:
-    // информация о кернинге
+    // kerning information
     map<uint32_t, float> kerningInfo;
 
-    // TODO длина символа в текстурных координатах??
+    // TODO length of character in texture coordinates??
     Vector2f characterLength;
 
-    // текущий символ
+    // current character
     unsigned int currentCharacter;
 
 public:
     Character2d();
 
     float GetAspectRatio();
-    // установка отношения + корректировка коээффициентов
-    // машстабирования текстуры
+    // setting the ratio + adjusting coefficients
+    // texture scaling
     void SetAspectRatio(int _width, int _height);
 
-    // возвращает высоту шрифта(в пикселях)
+    // returns font height (in pixels)
     int GetFontHeight();
 
-    // возвращает  ширину в экранных координатах
-    // текущего символа
+    // returns width in screen coordinates
+    // of current character
     float GetWidth(unsigned int c);
 
-    // возвращает высоту в экранных координатах
-    // текущего символа
+    // returns height in screen coordinates
+    // of current character
     float GetHeight(unsigned int c);
 
-    // возвращает ширину пробела в экранных координатах
+    // returns space width in screen coordinates
     float GetSpaceWidth();
 
-    // устанавливает текущий символ
+    // sets the current character
     void SetCharacter(unsigned int c);
 
-    // инициализируем материалом и моделью quad2x2front.ho3d
-    // и шрифтом
+    // initialize with material and model quad2x2front.ho3d
+    // and font
     bool Init(shared_ptr<Material> _mat, string _fileName);
     ~Character2d();
     void Render(const Camera& cam);
 
-    // TODO возвращает длину текущего символа в экрнных координатах??
+    // TODO returns length of current character in screen coordinates??
     Vector2f GetLastCharacterLength();
 };
 #endif  // FONT2D_H

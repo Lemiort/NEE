@@ -48,7 +48,7 @@ bool LoadFile(const char* fileName, bool binary, uint8_t** buffer,
     return true;
 }
 
-// функция загрузки изображения из файла TGA и сздания текстуры
+// Function to load image from TGA file and create texture
 GLuint TextureCreateFromTGA(const char* fileName) {
     ASSERT(fileName);
 
@@ -58,10 +58,10 @@ GLuint TextureCreateFromTGA(const char* fileName) {
     GLint format, internalFormat;
     GLuint texture;
 
-    // попытаемся загрузить изображение из файла
+    // Try to load image from file
     if (!LoadFile(fileName, true, &buffer, &size)) return 0;
 
-    // если размер файла заведомо меньше заголовка TGA
+    // If file size is less than TGA header size
     if (size <= sizeof(TGAHeader)) {
         LOG_ERROR("Too small file '%s'\n", fileName);
         delete[] buffer;
@@ -70,7 +70,7 @@ GLuint TextureCreateFromTGA(const char* fileName) {
 
     header = (TGAHeader*)buffer;
 
-    // проверим формат TGA-файла - несжатое RGB или RGBA изображение
+    // Check TGA file format - uncompressed RGB or RGBA image
     if (header->datatype != 2 ||
         (header->bitperpel != 24 && header->bitperpel != 32)) {
         LOG_ERROR("Wrong TGA format '%s'\n", fileName);
@@ -78,34 +78,34 @@ GLuint TextureCreateFromTGA(const char* fileName) {
         return 0;
     }
 
-    // получим формат текстуры
+    // Get texture format
     format = (header->bitperpel == 24 ? GL_BGR : GL_BGRA);
     internalFormat = (format == GL_BGR ? GL_RGB8 : GL_RGBA8);
 
-    // запросим у OpenGL свободный индекс текстуры
+    // Request free texture index from OpenGL
     glGenTextures(1, &texture);
 
-    // сделаем текстуру активной
+    // Make texture active
     glBindTexture(GL_TEXTURE_2D, texture);
 
-    // установим параметры фильтрации текстуры - линейная фильтрация
+    // Set texture filtering parameters - linear filtering
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    // установим параметры "оборачивания" текстуры - отсутствие оборачивания
+    // Set the "wrapping" parameters for the texture - no wrapping
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    // загрузим данные о цвете в текущую автивную текстуру
+    // Load color data into the current active texture
     glTexImage2D(
         GL_TEXTURE_2D, 0, internalFormat, header->width, header->height, 0,
         format, GL_UNSIGNED_BYTE,
         (const GLvoid*)(buffer + sizeof(TGAHeader) + header->idlength));
 
-    // после загрузки в текстуру данные о цвете в памяти нам больше не нужны
+    // Color data is no longer needed in memory after loading into the texture
     delete[] buffer;
 
-    // проверим на наличие ошибок
+    // Check for errors
     // OPENGL_CHECK_FOR_ERRORS();
 
     return texture;

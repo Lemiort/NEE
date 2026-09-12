@@ -142,10 +142,10 @@ std::unique_ptr<PerlinNoise> noise1;
 std::unique_ptr<Billboard> bb1;
 std::unique_ptr<ShadowMapFBO> smfbo1;
 
-// сигнал о том, что прогрузка шейдеров и пр. завершилась
+// signal that shader loading and other tasks are complete
 bool initialized;
 
-// сообщение, передаваемое между двум потоками
+// message passed between two threads
 string sharedMessage;
 shared_ptr<Material> mainMaterial, secondMaterial, shadowMaterial;
 shared_ptr<Texture2D> colorMap1, colorMap2, whiteTexture;

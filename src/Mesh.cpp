@@ -20,10 +20,10 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
     normalID = shaderProgram->GetAttribLocation("s_vNormal");
     uvID = shaderProgram->GetAttribLocation("s_vUV");
     tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-    // находим позиции uniform-переменных
+    // find uniform variable positions
     gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID = shaderProgram->GetUniformLocation("mRotate");  // вращение
-                                                              // объекта
+    rotateID =
+        shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 }
 
 bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
@@ -97,26 +97,26 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         return false;
     }
 
-    // создаём буффер, в котором будем хранить всё
+    // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // создаём буффер
+    // create buffer
     glBufferData(GL_ARRAY_BUFFER, sizeof(float) * (3 + 3 + 2 + 3) * (spverts),
                  nullptr, GL_STATIC_DRAW);
-    // загружаем вершины в буффер
+    // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
                     spvertices.data());
-    // нормали
+    // normals
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 3 * spverts,
                     sizeof(float) * 3 * spverts, spnormals.data());
-    // текстурные координаты
+    // texture coordinates
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 6 * spverts,
                     sizeof(float) * 2 * spverts, spuvs.data());
-    // тангент
+    // tangent
     glBufferSubData(GL_ARRAY_BUFFER, sizeof(float) * 8 * spverts,
                     sizeof(float) * 3 * spverts, sptangent.data());
 
-    // привязываем индексы к буфферу
+    // bind indices to buffer
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces,
@@ -126,10 +126,11 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     normalID = shaderProgram->GetAttribLocation("s_vNormal");
     uvID = shaderProgram->GetAttribLocation("s_vUV");
     tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-    // находим позиции uniform-переменных
+
+    // find uniform variable positions
     gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID = shaderProgram->GetUniformLocation("mRotate");  // вращение
-                                                              // объекта
+    rotateID =
+        shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 
     for (int i = 0; i < 3; i++) {
         position[i] = 0;
@@ -137,14 +138,10 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         scale[i] = 1;
     }
 
-    // убираем за собой
-    //  vectors automatically cleaned up
-
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-    Assistant TM, TM2;  // TM - Для объекта, 2- для нормали объекта, 3 - для
-                        // позиции камера для спекуляра
+    Assistant TM, TM2;  // TM - For object, 2- for object's normal, 3 - for camera position for specular
     TM.Scale(scale[0], scale[1], scale[2]);
     TM.WorldPos(position[0], position[1], position[2]);
     TM.Rotate(rotation[0], rotation[1], rotation[2]);
@@ -170,7 +167,7 @@ void Mesh::Render(const Camera& cam) {
 
     glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSR());
     glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       (const GLfloat*)TM2.GetRotate());  // вращение модели
+                       (const GLfloat*)TM2.GetRotate());  // rotation of model
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);

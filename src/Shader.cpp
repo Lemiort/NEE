@@ -48,7 +48,7 @@ void Shader::Init() {
     if (fShader != 0) glAttachShader(shaderProgramID, fShader);
     if (gShader != 0) glAttachShader(shaderProgramID, gShader);
     glLinkProgram(shaderProgramID);
-    //проверка
+    // check
 
     GLint Success = 0;
     GLchar ErrorLog[1024] = {0};

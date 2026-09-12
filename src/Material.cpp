@@ -21,7 +21,7 @@ Material::Material() {
     shadowMap = make_shared<Texture2D>();
     shadowMap->Load("Textures/white.png");
 
-    // абстрактная текстура
+    // abstract texture
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
     texturesID.resize(max_texture_units);
     abstractSamplersID.resize(max_texture_units);
@@ -42,31 +42,31 @@ bool Material::Init(shared_ptr<Shader> _sh) {
     shaderProgram = _sh;
     shaderProgram->Use();
 
-    // установка значение по умолчанию
+    // set default value
 
-    // загружем это в шейдер
+    // load into shader
 
-    // делаем активным текстурный юнит 0
+    // activate texture unit 0
     colorMap->Bind(GL_TEXTURE0);
     std::string colName("colTexSampler");
     colTexID = shaderProgram->GetUniformLocation(colName.c_str());
     std::cout << "\n color sampler num is " << colTexID;
-    // говорим шейдеру, чтоб использовал в качестве текстуры №0
+    // tell shader to use as texture 0
     glUniform1i(colTexID, 0);
 
     normalMap->Bind(GL_TEXTURE1);
     normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
-    // говорим шейдеру, чтоб использовал в качестве текстуры №1
+    // tell shader to use as texture #1
     glUniform1i(normSamplerID, 1);
 
     specularMap->Bind(GL_TEXTURE2);
     specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
-    // говорим шейдеру, чтоб использовал в качестве текстуры №2
+    // tell shader to use texture unit 2 for specular map
     glUniform1i(specSamplerID, 2);
 
     shadowMap->Bind(GL_TEXTURE3);
     shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
-    // говорим шейдеру, чтоб использовал в качестве текстуры №3
+    // tell shader to use texture unit 3 for shadow map
     glUniform1i(shadowSamplerID, 3);
 
     std::string abstractSamplerName("gSampler");
@@ -84,24 +84,24 @@ void Material::Use() {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
     glUniform1i(colTexID,
-                0);  // говорим шейдеру, чтобы использовал в качестве текстуры 0
+                 0);  // tell shader to use texture unit 0
 
     normalMap->Bind(GL_TEXTURE1);
-    // назначаем текстуру на активный текстурный юнит
+    // Assign texture to active texture unit
     glUniform1i(normSamplerID,
-                1);  // говорим шейдеру, чтобы использовал в качестве текстуры 1
+                 1);  // tell shader to use texture unit 1
 
     specularMap->Bind(GL_TEXTURE2);
-    // назначаем текстуру на активный текстурный юнит
+    // assign texture to active texture unit
     glUniform1i(specSamplerID,
-                2);  // говорим шейдеру, чтобы использовал в качестве текстуры 2
+                 2);  // tell shader to use texture unit 2
 
     shadowMap->Bind(GL_TEXTURE3);
-    // назначаем текстуру на активный текстурный юнит
+    // assign texture to active texture unit
     glUniform1i(shadowSamplerID,
-                3);  // говорим шейдеру, чтобы использовал в качестве текстуры 3
+                 3);  // tell shader to use texture unit 3
 
-    // начиная с 4го, лежат кастомные текстурные юниты
+    // starting from 4th, are custom texture units
     for (GLint i = 4; i < max_texture_units; i++) {
         if (texturesID[i] != 0) {
             abstractMap->SetTexture(texturesID[i]);
@@ -111,10 +111,10 @@ void Material::Use() {
             // color sampler num is "<<colTexID; std::cout<<"\n norm sampler num
             // is "<<normSamplerID;
 
-            // назначаем текстуру на активный текстурный юнит
+    // assign texture to active texture unit
             glUniform1i(
                 abstractSamplersID[i],
-                i);  // говорим шейдеру, чтобы использовал в качестве текстуры i
+                i);  // tell shader to use texture i
         }
     }
 }

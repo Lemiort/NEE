@@ -12,7 +12,7 @@
 
 class Light : public MaterialObject {
 public:
-    // TODO сделать его protected
+    // TODO make it protected
     GLfloat color[3];
 };
 
@@ -60,7 +60,7 @@ protected:
 };
 class SpotLight : public DirectionalLight, public PlaceableObject {
 public:
-    float Cutoff;  // угол отсечения в радианах
+    float Cutoff;  // cutoff angle in radians
                    //  float position[3];
     float target[3];
     SpotLight();

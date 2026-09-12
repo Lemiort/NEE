@@ -123,7 +123,7 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
     Haxis.Normalize();
     View.Rotate(m_AngleV, Haxis);*/
 
-    //======Предыдущее решение задачи========
+    //======Previous solution to the problem========
     direction[0] = target[0] - position[0];
     direction[1] = target[1] - position[1];
     direction[2] = target[2] - position[2];
@@ -210,7 +210,7 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
     //                       -90.0f);
     //==========================================================
 
-    // TODO идея: использовать скалярное произведение векторов
+    // TODO idea: use vector dot product
 
     mesh->SetScale(dir.Lenght() * cos(ToRadian(Cutoff)), dir.Lenght(),
                    dir.Lenght() * cos(ToRadian(Cutoff)));

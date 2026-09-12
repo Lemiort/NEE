@@ -40,7 +40,7 @@ struct KerningPairs {
     }
 };
 
-// шрифт
+// font
 class Font2d : public RenderableObject, public PlaceableObject {
 private:
     GLuint sverticesID, spositionID;
@@ -53,10 +53,10 @@ private:
     unsigned int* indicies;
     float aratio;
 
-    // отношение размеров картинки к экрану
+    // ratio of image sizes to screen
     float kx, ky;
 
-    // размер пикселя в uv
+    // pixel size in UV coordinates
     float pkx, pky;
     int fontHeight;
     uint32_t imageWidth, imageHeight;
@@ -87,12 +87,13 @@ public:
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
 
-    Vector2f GetLastCharacterLength();  // возвращает длину текущего символа
+    // returns the length of the current character
+    Vector2f GetLastCharacterLength();
     void Render(const Camera& cam);
     friend class FontLine2d;
 };
 
-// строчка шрифта
+// font line
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
@@ -113,7 +114,7 @@ public:
     void Render(const Camera& cam);
 };
 
-// класс отрисовки побуквенно
+// character-by-character rendering class
 class Text2d : public RenderableObject, public PlaceableObject {
 private:
     bool yourselfShader;
@@ -128,7 +129,7 @@ private:
     unsigned int* indicies;
     float aratio;
 
-    // номер символа в кодовой таблице
+    // character number in the code table
     unsigned int character;
 
 public:
@@ -143,7 +144,7 @@ public:
     void Render(const Camera& cam);
 };
 
-// класс линии из отрисовки букв
+// line class from letter rendering
 class TextLine2d : public RenderableObject, public PlaceableObject {
 private:
     std::unique_ptr<Text2d> symbol;

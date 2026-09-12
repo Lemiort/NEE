@@ -10,13 +10,13 @@ PerlinNoise::PerlinNoise() {
 
 PerlinNoise::PerlinNoise(double _persistence, double _frequency,
                          double _amplitude, int _octaves, int _randomseed) {
-    //сила, частота
+    // strength, frequency
     persistence = _persistence;
-    //частота
+    // frequency
     frequency = _frequency;
-    //амплитуда
+    // amplitude
     amplitude = _amplitude;
-    //октава
+    // octave
     octaves = _octaves;
     randomseed = 2 + _randomseed * _randomseed;
 }

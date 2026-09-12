@@ -28,7 +28,7 @@ ShadowMapFBO::~ShadowMapFBO() {
 }
 
 bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
-    // Создаем буфер глубины
+    // Create depth buffer
     glGenTextures(1, &m_shadowMap);
     glBindTexture(GL_TEXTURE_2D, m_shadowMap);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, WindowWidth,
@@ -40,14 +40,14 @@ bool ShadowMapFBO::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
-    // Создаем FBO
+    // Create FBO
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
                            GL_TEXTURE_2D, m_shadowMap, 0);
 
-    // Отключаем запись в буфер цвета
+    // Disable color buffer writing
     // glDrawBuffer(GL_NONE);
     glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
     for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {

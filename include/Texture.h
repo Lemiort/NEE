@@ -22,10 +22,10 @@ public:
 class Texture2D : public Texture {
 protected:
 public:
-    // конструктор абстрактной текстуры
+    // abstract texture constructor
     Texture2D(GLuint texBufferID, bool _del = true);
 
-    // конструктор по умолчанию, удаляет текстуру после использования
+    // default constructor, deletes the texture after use
     Texture2D() {}
     virtual ~Texture2D();
     virtual bool Load(const char* filename);
