@@ -3,13 +3,11 @@
 #include <glad/gl.h>
 
 #include <array>
-#include <cstdio>  // for fprintf and stderr
-#include <iostream>
 #include <sstream>
 #include <string>
 
+#include "spdlog/spdlog.h"
 #define STB_IMAGE_IMPLEMENTATION
-
 #include "stb_image.h"
 
 /**
@@ -28,8 +26,9 @@ GLuint loadTexture(const std::string& path) {
     unsigned char* data =
         stbi_load(path.c_str(), &width, &height, &channels, 0);
     if (!data) {
-        fprintf(stderr, "Failed to load texture '%s': %s\n", path.c_str(),
-                stbi_failure_reason());
+        spdlog::error("Failed to load texture {}: {}", path.c_str(),
+                      stbi_failure_reason());
+
         return 0;
     }
 

@@ -4,12 +4,9 @@
 #include <glad/gl.h>
 
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <ctime>
-#include <iostream>
 #include <memory>
-#include <print>
 #include <string>
 #include <utility>
 #include <vector>
@@ -22,6 +19,7 @@
 #include "Texture.hpp"
 #include "Util.hpp"
 #include "Version.hpp"
+#include "spdlog/spdlog.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
@@ -37,7 +35,7 @@ void CalcFPS() {
 }
 
 void ErrorCallback(int error, const char* description) {
-    std::cerr << "Error " << error << ":" << description;
+    spdlog::error("GLFW Error {}: {}", error, description);
 }
 void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
                  int /*mods*/) {
@@ -100,12 +98,14 @@ void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
 
             // stbi_write_tga returns 1 on success and 0 on error
             if (result == 0) {
-                std::cerr
-                    << "[STB Write Error] Could not save save screenshot to: "
-                    << buffer << '\n';
+                // Log STB write failure with spdlog
+                spdlog::error(
+                    "[STB Write Error] Could not save screenshot to: {}",
+                    buffer);
             } else {
                 {
-                    std::cout << "\n Screenshot saved as " << buffer;
+                    // Inform about successful screenshot via spdlog
+                    spdlog::info("Screenshot saved as {}", buffer);
                 }
             }
         } else {
@@ -1271,7 +1271,7 @@ int main(int /*argc*/, char** /*argv*/) {
         window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
 
     if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
-        std::println(stderr, "Failed to initialize GLAD");
+        spdlog::critical("Failed to initialize GLAD");
         return 1;
     }
 

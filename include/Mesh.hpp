@@ -4,7 +4,6 @@
 #include "Camera.hpp"
 // #include "ShaderFunctions.hpp"
 #include <fstream>
-#include <iostream>
 
 #include "Material.hpp"
 #include "MaterialObject.hpp"

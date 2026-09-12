@@ -6,16 +6,13 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
-#include <cstdio>
 #include <cstring>
 #include <fstream>
 #include <ios>
-#include <iostream>
 #include <memory>
 #include <ostream>
-#include <print>
 #include <sstream>
-#include <stdexcept>  // std::out_of_range]
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -24,6 +21,7 @@
 #include "Shader.hpp"
 #include "ShaderFunctions.hpp"
 #include "Texture.hpp"
+#include "spdlog/spdlog.h"
 
 // The shader program is managed via a shared_ptr. Initialize it to nullptr.
 FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
@@ -180,7 +178,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
             // found texture name
             if (t == 0) {
                 imgFilename = string("fonts/") + string(in_s, temp.length());
-                std::print("\nFont image is {}", imgFilename);
+                spdlog::info("Font image is {}", imgFilename);
             }
 
             // find font name
@@ -195,8 +193,8 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 // sscanf(in_s.c_str(),"%s %dpx",fontName,fontHeight);
                 // flag that data is now being read
                 data = true;
-                std::print("\nFont name is {}", fontName);
-                std::print("\nFont height is {}", fontHeight);
+                spdlog::info("Font name is {}", fontName);
+                spdlog::info("Font height is {}", fontHeight);
             }
             // find information about upcoming kerning
             t = in_s.find("kerning pairs:");
@@ -254,7 +252,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                  (static_cast<uint32_t>(buffer2[2]) << 8) |
                  (static_cast<uint32_t>(buffer2[1]) << 16) |
                  (static_cast<uint32_t>(buffer2[0]) << 24);
-    std::print("\n width={}", imageWidth);
+    spdlog::info("width={}", imageWidth);
 
     // Calculate height
     fread(&buffer2, 1, 4, imageFile);
@@ -264,7 +262,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                   (static_cast<uint32_t>(buffer2[2]) << 8) |
                   (static_cast<uint32_t>(buffer2[1]) << 16) |
                   (static_cast<uint32_t>(buffer2[0]) << 24);
-    std::print("\n height={}", imageHeight);
+    spdlog::info("height={}", imageHeight);
 
     // Convert pixel to relative coordinates
     pkx = 1.0F / static_cast<float>(imageWidth);

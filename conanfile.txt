@@ -4,6 +4,7 @@ glad/2.0.8
 nlohmann_json/3.12.0
 glm/1.0.3
 stb/cci.20240531
+spdlog/1.17.0
 
 [generators]
 CMakeDeps

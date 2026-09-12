@@ -1,7 +1,8 @@
 #include "Light.hpp"
 
-#include <iomanip>
 #include <memory>
+
+#include "spdlog/spdlog.h"
 
 void DirectionalLight::SetCol(Vector3f col) {
     color[0] = col.x;
@@ -115,8 +116,7 @@ m_AngleV = -ToDegree(asin(direction[1]));
 //Vector3f View(1.0f, 0.0f, 0.0f);
 //View.Rotate(m_AngleH, Vaxis);
 //View.Normalize();
-mesh->SetRotate(0,0,m_AngleH);
-cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
+mesh->SetRotate(0,0,m_AngleH);*/
 
     /*// Rotate the view vector by the vertical angle around the horizontal axis
     Vector3f Haxis = Vaxis.Cross(View);
@@ -137,8 +137,6 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
 
     float xrot = 0, yrot = 0, zrot = 0;
 
-    cout << "\rproj:(" << setprecision(1);
-
     // X axis
     {
         // get the pojection
@@ -152,7 +150,8 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
 
         // update up vector
         proj.Rotate(-xrot, Vector3f(1, 0, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("proj: ({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y,
+                      proj.z);
     }
 
     // Y axis
@@ -168,7 +167,7 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
 
         // update the up vector
         proj.Rotate(-yrot, Vector3f(0, 1, 0));
-        cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  (";
+        spdlog::debug("({},{},{});", proj.x, proj.y, proj.z);
 
         // Z axis
         if (proj != dir) {
@@ -183,11 +182,10 @@ cout<<"\r"<<m_AngleH<<" "<<m_AngleV;*/
             proj.Rotate(-zrot, Vector3f(0, 0, 1));
         }
     }
-    cout << proj.x << ",  " << proj.y << ",  " << proj.z << ");  rot: ";
+    spdlog::debug("({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y, proj.z);
 
-    cout << setprecision(1) << (int)xrot << " " << (int)yrot << " " << (int)zrot
-         << ", dir:(" << direction[0] << ", " << direction[1] << ","
-         << direction[2] << ")";
+    spdlog::debug("rot: ({:.1f} {:.1f} {:.1f}, dir:({:.3f}, {:.3f}, {:.3f})",
+                  xrot, yrot, zrot, direction[0], direction[1], direction[2]);
 
     mesh->SetRotation(xrot, yrot, zrot);
     //=======================================================
@@ -287,7 +285,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     sphere = make_shared<Mesh>();
     sphere->Init(_mat, "models/normal_geosphere.ho3d");
     radius = CalcSphereSize() / 2;
-    std::cout << "\nLight radius is " << radius;
+    spdlog::info("Light radius is {}", radius);
 }
 PointLight::~PointLight() {}
 void PointLight::Render(const Camera& cam) {

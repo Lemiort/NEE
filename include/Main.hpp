@@ -7,7 +7,6 @@
 #include <string.h>
 
 #include <fstream>
-#include <iostream>
 #include <memory>
 #include <sstream>
 #include <thread>
@@ -15,7 +14,6 @@
 #include "Billboard.hpp"
 #include "GBuffer.hpp"
 #include "Light.hpp"
-#include "Logger.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "PerlinNoise.hpp"

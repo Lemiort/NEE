@@ -3,10 +3,8 @@
 #include <glad/gl.h>
 
 #include <cstddef>
-#include <cstdio>
 #include <memory>
 #include <new>
-#include <print>
 #include <string>
 #include <vector>
 
@@ -14,6 +12,7 @@
 #include "Camera.hpp"
 #include "CubemapTexture.hpp"
 #include "Shader.hpp"
+#include "spdlog/spdlog.h"
 
 SkyBox::SkyBox(shared_ptr<Shader> shader)
     : shaderProgramID(shader->shaderProgramID) {
@@ -65,7 +64,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         }
         fclose(fp);
     } catch (const std::bad_alloc&) {
-        std::print("\nError creating make_shared<Mesh> in Skybox");
+        spdlog::error("Error creating make_shared<Mesh> in Skybox");
         return false;
     }
     // create buffer to store everything
@@ -89,7 +88,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
             Directory, PosXFilename, NegXFilename, PosYFilename, NegYFilename,
             PosZFilename, NegZFilename);
     } catch (const std::bad_alloc&) {
-        std::print("\nError creating new Cubemap");
+        spdlog::error("Error creating new Cubemap");
         return false;
     }
     pCubemapTex->Load();
@@ -139,7 +138,6 @@ void SkyBox::Render(const Camera& cam) {
 
     pCubemapTex->Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
-    // cout<<colTexID<<"\n"<<textureID<<"\n";
 
     glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
                        reinterpret_cast<const GLfloat*>(TM.GetTSRVC()));

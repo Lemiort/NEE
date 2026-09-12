@@ -1,7 +1,6 @@
 #ifndef UTIL_H_INCLUDED
 #define UTIL_H_INCLUDED
 
-#include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string>

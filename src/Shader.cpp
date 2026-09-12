@@ -2,15 +2,15 @@
 
 #include <glad/gl.h>
 
-#include <cstdio>
 #include <cstdlib>
-#include <print>
 
 #include "ShaderFunctions.hpp"
+#include "spdlog/spdlog.h"
+
 Shader::Shader()
 
 {
-  // ctor
+    // ctor
 }
 void Shader::AddShader(const char* source, ShaderType type) {
     switch (type) {
@@ -46,8 +46,7 @@ void Shader::Init() {
     flog = fopen("shaderbuild.log", "w");
     shaderProgramID = glCreateProgram();
     if (shaderProgramID == 0) {
-        std::println(stderr, "Error creating shader program");
-        std::println(flog, "Error creating shader program");
+        spdlog::error("Error creating shader program");
         fclose(flog);
         exit(1);
     }
@@ -69,9 +68,8 @@ void Shader::Init() {
     if (Success == 0) {
         glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
                             ErrorLog);
-        std::println(stderr, "Error linking shader program: '{}'", ErrorLog);
-        std::println(
-            flog,
+        spdlog::error("Error linking shader program: '{}'", ErrorLog);
+        spdlog::error(
             "Error linking shader program: at files '{}', '{}', '{}', '{}'",
             vShaderFileName, gShaderFileName, fShaderFileName, ErrorLog);
         fclose(flog);
@@ -83,11 +81,11 @@ void Shader::Init() {
     if (Success == 0) {
         glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
                             ErrorLog);
-        std::println(stderr, "Invalid shader program: '{}'", ErrorLog);
+        spdlog::error("Invalid shader program: '{}'", ErrorLog);
         // fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
-        std::println(
-            flog, "Invalid shader program: at files '{}', '{}', '{}', '{}'",
-            vShaderFileName, gShaderFileName, fShaderFileName, ErrorLog);
+        spdlog::error("Invalid shader program: at files '{}', '{}', '{}', '{}'",
+                      vShaderFileName, gShaderFileName, fShaderFileName,
+                      ErrorLog);
         fclose(flog);
         exit(1);
     }

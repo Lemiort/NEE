@@ -4,12 +4,9 @@
 
 #include <cmath>
 #include <cstdint>
-#include <cstdio>
 #include <fstream>
 #include <ios>
-#include <iostream>
 #include <memory>
-#include <print>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -19,6 +16,7 @@
 #include "Material.hpp"
 #include "Text2D.hpp"
 #include "Texture.hpp"
+#include "spdlog/spdlog.h"
 
 Character2d::Character2d() = default;
 
@@ -88,7 +86,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
             // found texture name
             if (t == 0) {
                 imgFilename = string("fonts/") + string(inStr, temp.length());
-                std::print("\nFont image is {}", imgFilename);
+                spdlog::info("Font image is {}", imgFilename);
             }
 
             // searching for font name
@@ -103,8 +101,8 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
 
                 // flag indicating data reading has started
                 data = true;
-                std::print("\nFont name is {}", fontName);
-                std::print("\nFont height is {}", fontHeight);
+                spdlog::info("Font name is {}", fontName);
+                spdlog::info("Font height is {}", fontHeight);
             }
             // searching for information that kerning will be processed now
             t = inStr.find("kerning pairs:");
@@ -158,7 +156,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                  (static_cast<uint32_t>(buffer2[2]) << 8) |
                  (static_cast<uint32_t>(buffer2[1]) << 16) |
                  (static_cast<uint32_t>(buffer2[0]) << 24);
-    std::print("\n width={}", imageWidth);
+    spdlog::info("width={}", imageWidth);
 
     // calculate height
     fread(&buffer2, 1, 4, imageFile);
@@ -168,7 +166,7 @@ bool Character2d::Init(shared_ptr<Material> _mat, string _fileName) {
                   (static_cast<uint32_t>(buffer2[2]) << 8) |
                   (static_cast<uint32_t>(buffer2[1]) << 16) |
                   (static_cast<uint32_t>(buffer2[0]) << 24);
-    std::print("\n height={}", imageHeight);
+    spdlog::info("height={}", imageHeight);
 
     // conversion of pixel to relative coordinates
     pkx = 1.0F / static_cast<float>(imageWidth);

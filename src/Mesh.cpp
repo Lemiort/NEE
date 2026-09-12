@@ -2,22 +2,21 @@
 
 #include <glad/gl.h>
 
-#include <cstdio>
 #include <fstream>
 #include <ios>
 #include <memory>
 #include <new>
 #include <ostream>
-#include <print>
 #include <utility>
 #include <vector>
 
 #include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "spdlog/spdlog.h"
 
 Mesh::Mesh() {
-  // mat=NULL;
+    // mat=NULL;
 }
 
 Mesh::~Mesh() {
@@ -41,13 +40,13 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
 }
 
 bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
-  mat = std::move(_mat);
-  shaderProgram = mat->GetShader();
-  // mat->Use();
+    mat = std::move(_mat);
+    shaderProgram = mat->GetShader();
+    // mat->Use();
 
-  if (shaderProgram == nullptr) {
-    return false;
-  }
+    if (shaderProgram == nullptr) {
+        return false;
+    }
 
     Scale = 0;
     std::vector<int> spindices;
@@ -58,13 +57,13 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     spfaces = 0;
     spverts = 0;
     try {
-      FILE* fp = nullptr;
-      fstream fout("ImporObj.log", ios::out);
-      // fopen_s(&fp,model,"r+b");
-      fp = fopen(model, "r+b");
-      if (fp == nullptr) {
-        return false;
-      }
+        FILE* fp = nullptr;
+        fstream fout("ImporObj.log", ios::out);
+        // fopen_s(&fp,model,"r+b");
+        fp = fopen(model, "r+b");
+        if (fp == nullptr) {
+            return false;
+        }
         fread(&spverts, sizeof(int), 1, fp);
         fout << spverts << '\n';
         spvertices.resize(spverts * 3);
@@ -112,8 +111,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         }
         fout.close();
     } catch (const std::bad_alloc&) {
-      std::print("\nError creating make_shared<Mesh>");
-      return false;
+        spdlog::error("Error creating make_shared<Mesh>");
+        return false;
     }
 
     // create buffer to store everything
@@ -160,47 +159,47 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-  Assistant TM;
-  Assistant TM2;  // TM - For object, 2- for object's normal, 3 - for
-                  // camera position for specular
-  TM.Scale(scale[0], scale[1], scale[2]);
-  TM.WorldPos(position[0], position[1], position[2]);
-  TM.Rotate(rotation[0], rotation[1], rotation[2]);
-  TM2.Rotate(rotation[0], rotation[1], rotation[2]);
-  TM.RotateOverVector(rv, rPhi);
-  TM2.RotateOverVector(rv, rPhi);
+    Assistant TM;
+    Assistant TM2;  // TM - For object, 2- for object's normal, 3 - for
+                    // camera position for specular
+    TM.Scale(scale[0], scale[1], scale[2]);
+    TM.WorldPos(position[0], position[1], position[2]);
+    TM.Rotate(rotation[0], rotation[1], rotation[2]);
+    TM2.Rotate(rotation[0], rotation[1], rotation[2]);
+    TM.RotateOverVector(rv, rPhi);
+    TM2.RotateOverVector(rv, rPhi);
 
-  TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-  TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                        cam.GetZNear(), cam.GetZFar());
+    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
+    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
+                          cam.GetZNear(), cam.GetZFar());
 
-  mat->Use();
+    mat->Use();
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
-                        BUFFER_OFFSET(sizeof(float) * 3 * spverts));
-  glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
-                        BUFFER_OFFSET(sizeof(float) * 6 * spverts));
-  glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
-                        BUFFER_OFFSET(sizeof(float) * 8 * spverts));
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 3 * spverts));
+    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 6 * spverts));
+    glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+                          BUFFER_OFFSET(sizeof(float) * 8 * spverts));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-  glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
-                     reinterpret_cast<const GLfloat*>(TM.GetTSR()));
-  glUniformMatrix4fv(
-      rotateID, 1, GL_TRUE,
-      reinterpret_cast<const GLfloat*>(TM2.GetRotate()));  // rotation of model
+    glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
+                       reinterpret_cast<const GLfloat*>(TM.GetTSR()));
+    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
+                       reinterpret_cast<const GLfloat*>(
+                           TM2.GetRotate()));  // rotation of model
 
-  glEnableVertexAttribArray(positionID);
-  glEnableVertexAttribArray(normalID);
-  glEnableVertexAttribArray(uvID);
-  glEnableVertexAttribArray(tangentID);
-  glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
-  glDisableVertexAttribArray(positionID);
-  glDisableVertexAttribArray(normalID);
-  glDisableVertexAttribArray(uvID);
-  glDisableVertexAttribArray(tangentID);
+    glEnableVertexAttribArray(positionID);
+    glEnableVertexAttribArray(normalID);
+    glEnableVertexAttribArray(uvID);
+    glEnableVertexAttribArray(tangentID);
+    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
+    glDisableVertexAttribArray(positionID);
+    glDisableVertexAttribArray(normalID);
+    glDisableVertexAttribArray(uvID);
+    glDisableVertexAttribArray(tangentID);
 }
 
 void Mesh::SetVectorRotate(Vector3f v, float phi) {

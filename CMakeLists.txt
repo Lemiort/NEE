@@ -11,6 +11,7 @@ find_package(glad REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
+find_package(spdlog REQUIRED)
 
 
 enable_testing()
@@ -73,6 +74,7 @@ PRIVATE
     glfw
     stb::stb
     nlohmann_json::nlohmann_json
+    spdlog::spdlog
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

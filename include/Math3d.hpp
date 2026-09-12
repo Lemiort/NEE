@@ -2,8 +2,6 @@
 #define MATH_3D_H_INCLUDED
 #define _USE_MATH_DEFINES  // for C++
 #include <cmath>
-#include <cstdio>
-#include <iostream>
 
 #ifndef M_PI
 #define M_PI (3.14159265358979323846)
@@ -104,7 +102,7 @@ struct Vector3f {
 
     void Rotate(float Angle, const Vector3f& Axis);
 
-    void Print() const { printf("(%.02f, %.02f, %.02f", x, y, z); }
+    // void Print() const { printf("(%.02f, %.02f, %.02f", x, y, z); }
 
     float Lenght() const;
 };
