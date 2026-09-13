@@ -132,9 +132,6 @@ void MouseButtonCallback(GLFWwindow* /*window*/, int button, int action,
 void FrameBufferSizeCallback(GLFWwindow* /*window*/, int w, int h) {
     width = w;
     height = h;
-    if (tline1) {
-        tline1->SetAspectRatio(width, height);
-    }
     if (fLine1) {
         fLine1->SetAspectRatio(width, height);
     }
@@ -388,18 +385,16 @@ void RenderPass() {
 
     bb1->Render(pGameCamera);
 
-    /* xline->Render(pGameCamera,width, height);
-     yline->Render(pGameCamera, width, height);
-     zline->Render(pGameCamera,width, height);
+    // xline->Render(pGameCamera,width, height);
+    //  yline->Render(pGameCamera, width, height);
+    //  zline->Render(pGameCamera,width, height);
 
     //
-    tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Cube.GetNumFaces()*10000)+"
-    faces").c_str());
-     //tline1->Render(-1,0.5,32.0,(char*)ConvertToString(fps).c_str());
-     //fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-     spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
-     fLine1->Render((ConvertToString(spfaces)+"
-    faces").c_str(),-1.0f,0.0f,45.0f);*/
+    // tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Cube.GetNumFaces()*10000)+"
+    // faces").c_str());
+    // fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
+    //  spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
+    //  fLine1->Render((ConvertToString(spfaces)+"faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
 void DSBeginLightPasses() {
@@ -1153,11 +1148,6 @@ int InitScene(GLFWwindow* window) {
         bb1->SetPos(Vector3f(0, 0, 0));
 
         noise1 = std::make_unique<PerlinNoise>(1, 10.3, 0.5, 2, 42);
-
-        tline1 = std::make_unique<TextLine2d>();
-        tline2 = std::make_unique<TextLine2d>();
-        tline1->Init(width, height, textShader);
-        tline2->Init(width, height, textShader);
         // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
         // fLine1->SetAspectRatio(width,height);
 
