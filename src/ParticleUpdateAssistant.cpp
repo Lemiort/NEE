@@ -12,17 +12,6 @@ ParticleUpdateAssistant::~ParticleUpdateAssistant() {
     // dtor
 }
 bool ParticleUpdateAssistant::Init(const Shader& shader) {
-    /*        char* vertexShaderSorceCode=ReadFile("shaders/particle.vsh");
-            char* fragmentShaderSourceCode=ReadFile("shaders/particle.fsh");
-            char* geometryShaderSourceCode=ReadFile("shaders/particle.gsh");
-            GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-            GLuint
-       fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode); GLuint
-       geometryShaderID=MakeGeometryShader(geometryShaderSourceCode);*
-            shaderProgramID=MakeShaderProgram(vertexShaderID,geometryShaderID,
-       fragmentShaderID); delete[] vertexShaderSorceCode; delete[]
-       fragmentShaderSourceCode; delete[] geometryShaderSourceCode;*/
-
     const GLchar* Varyings[4];
     Varyings[0] = "Type1";
     Varyings[1] = "Position1";

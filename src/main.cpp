@@ -381,7 +381,6 @@ void RenderPass() {
             Cube.Render(pGameCamera);
         }
     }
-    // delete tempTexture;
 
     bb1->Render(pGameCamera);
 
@@ -1080,20 +1079,6 @@ int InitScene(GLFWwindow* window) {
         skyboxShader->AddShader(ReadFile("shaders/skybox.fsh"), FragmnetShader);
         skyboxShader->Init();
     }
-
-    /*//text shader
-    {
-    vertexShaderSorceCode=ReadFile("shaders/text2d.vsh");
-    fragmentShaderSourceCode=ReadFile("shaders/text2d.fsh");
-
-
-    textShader=new Shader();
-    textShader->AddShader(vertexShaderSorceCode,VertexShader);
-    textShader->AddShader(fragmentShaderSourceCode,FragmnetShader);
-    textShader->Init();
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
-    }*/
 
     skybox1 = std::make_unique<SkyBox>(skyboxShader);
     skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",

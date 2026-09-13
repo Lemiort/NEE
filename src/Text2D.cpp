@@ -11,6 +11,7 @@
 #include <ios>
 #include <memory>
 #include <ostream>
+#include <regex>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -21,6 +22,7 @@
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
+#include "stb_image.h"
 
 // The shader program is managed via a shared_ptr. Initialize it to nullptr.
 FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
@@ -43,42 +45,39 @@ void FontLine2d::Render(const Camera& cam) {
     float dx = 0.0F;
     prevChar = 0;
     // float dy=0.0f;
-    Vector2f temp;
     spaceWidth = character.GetSpaceWidth() /
                  (static_cast<float>(character.GetFontHeight()));
-    for (unsigned int i = 0; i < text.length(); ++i) {
+    for (size_t i = 0; i < text.length(); ++i) {
         // look up info about this character
-        uint32_t const code = ((static_cast<uint32_t>(prevChar)) << 16) |
-                              (static_cast<uint32_t>(text.at(i)));
         float kerning = 0;
         try {
-            kerning = character.kerningInfo.at(code);
+            kerning = character.kerningInfo.at(
+                {prevChar, static_cast<char16_t>(text.at(i))});
         } catch (std::out_of_range) {
             kerning = 0;
         }
         dx += kerning;
 
         // if we found a space character, draw it
-        if (static_cast<unsigned int>(text.at(i)) ==
-            static_cast<unsigned int>(' ')) {
+        if (static_cast<char16_t>(text.at(i)) == static_cast<char16_t>(' ')) {
             dx += position[2] * spaceWidth;
         }
 
         // actual drawing
         character.SetPosition(position[0] + dx, position[1], position[2]);
         character.SetCharacter(text.at(i));
-        temp = character.GetLastCharacterLength();
+        auto lastCharacterLength = character.GetLastCharacterLength();
         character.Render(cam);
 
         // if the character exists, draw it
-        if (temp.x > 0.0F) {
+        if (lastCharacterLength.x > 0.0F) {
             // space and separator between characters
-            dx += temp.x + (position[2] * spaceWidth / 4.0F);
+            dx += lastCharacterLength.x + (position[2] * spaceWidth / 4.0F);
         } else {
             continue;  // no character - do not write anything
         }
         // remember the previous character
-        prevChar = static_cast<unsigned int>(text.at(i));
+        prevChar = static_cast<char16_t>(text.at(i));
     }
 }
 
@@ -86,7 +85,7 @@ Font2d::Font2d() : aratio(1) { color = Vector4f(1.0F, 1.0F, 1.0F, 1.0F); }
 
 Font2d::~Font2d() = default;
 
-float Font2d::GetHeight(unsigned int c) const {
+float Font2d::GetHeight(char16_t c) const {
     FontCharacter const temp = fontInfo.at(c);
     float const realHeight =
         static_cast<float>(temp.height) / static_cast<float>(imageHeight);
@@ -94,7 +93,7 @@ float Font2d::GetHeight(unsigned int c) const {
     return (2 * dx) * realHeight * ky;
 }
 
-float Font2d::GetWidth(unsigned int c) const {
+float Font2d::GetWidth(char16_t c) const {
     FontCharacter const temp = fontInfo.at(c);
     float const realWidth =
         static_cast<float>(temp.width) / static_cast<float>(imageWidth);
@@ -110,7 +109,7 @@ float Font2d::GetSpaceWidth() const {
     return (2 * dx) * realWidth * kx;
 }
 
-int Font2d::GetFontHeight() const { return fontHeight; }
+uint32_t Font2d::GetFontHeight() const { return fontHeight; }
 
 bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     shaderProgram = _sh;
@@ -130,7 +129,7 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     colorID = shaderProgram->GetUniformLocation("textColor");
 
     // fill indices
-    std::array<unsigned int, 4> indicies = {0, 1, 2, 3};
+    const std::array<uint32_t, 4> indicies = {0, 1, 2, 3};
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
                  GL_STATIC_DRAW);
@@ -140,83 +139,72 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     fin.open(filename.c_str(), std::ios::in);
     // temporary variable for reading
     std::string in_s;
-    bool kerning = false;
-    bool data = false;
-    while (1) {
-        getline(fin, in_s);
-        if (!fin.eof()) {
-            // read data
-            if (data) {
-                std::stringstream sstr;
-                unsigned int t1[6];
-                int t2[2];
-                sstr << in_s;
-                unsigned int code = 0;
-                sstr >> code;
-                sstr >> t1[0] >> t1[1] >> t1[2] >> t1[3] >> t2[0] >> t2[1] >>
-                    t1[4] >> t1[5];
-                FontCharacter const temp2 = FontCharacter(
-                    t1[0], t1[1], t1[2], t1[3], t2[0], t2[1], t1[4], t1[5]);
-                fontInfo.insert(
-                    std::pair<unsigned int, FontCharacter>(code, temp2));
-            }
-            if (kerning) {
-                std::stringstream sstr;
-                sstr << in_s;
-                uint16_t code1 = 0;
-                sstr >> code1;
-                uint16_t code2 = 0;
-                float f1 = NAN;
-                sstr >> code2 >> f1;
-                uint32_t const code = (static_cast<uint32_t>(code1) << 16) |
-                                      (static_cast<uint32_t>(code2));
-                kerningInfo.insert(std::pair<uint32_t, float>(code, f1));
-            }
-            // find texture name
-            int t = in_s.find("textures: ");
-            std::string temp("textures: ");
-            // found texture name
-            if (t == 0) {
-                imgFilename =
-                    std::string("fonts/") + std::string(in_s, temp.length());
-                spdlog::info("Font image is {}", imgFilename);
-            }
 
-            // find font name
-            t = in_s.find("px");
-            if (t >= 0) {
-                int const t2 = in_s.find(' ');
-                fontName = std::string(in_s, 0, t2);
-                std::stringstream sstr;
-                temp = std::string(in_s, t2, t - t2);
-                sstr << temp;
-                sstr >> fontHeight;
-                // sscanf(in_s.c_str(),"%s %dpx",fontName,fontHeight);
-                // flag that data is now being read
-                data = true;
-                spdlog::info("Font name is {}", fontName);
-                spdlog::info("Font height is {}", fontHeight);
-            }
-            // find information about upcoming kerning
-            t = in_s.find("kerning pairs:");
-            if (t >= 0) {
-                // stopped reading data
-                data = false;
-                // started reading kerning pairs
-                kerning = true;
-            }
+    enum class FontFileState {
+        None = 0,
+        TextureFilename,
+        FontNameSize,
+        FontData,
+        KerningAnnouncement,
+        KerningData
+    };
+    FontFileState state = FontFileState::None;
 
-        } else {
-            {
-                break;
-            }
+    while (std::getline(fin, in_s)) {
+        // read data
+        if (state == FontFileState::FontData) {
+            std::stringstream sstr;
+            sstr << in_s;
+            uint16_t code = 0;
+            sstr >> code;
+            FontCharacter symbol;
+            sstr >> symbol.xpos >> symbol.ypos >> symbol.width >>
+                symbol.height >> symbol.xOffset >> symbol.yOffset >>
+                symbol.origW >> symbol.origH;
+            fontInfo.insert({static_cast<char16_t>(code), symbol});
+        } else if (state == FontFileState::KerningData) {
+            std::stringstream sstr;
+            sstr << in_s;
+            static_assert(sizeof(uint16_t) == sizeof(char16_t));
+            uint16_t code1 = 0;
+            sstr >> code1;
+            uint16_t code2 = 0;
+            float f1 = NAN;
+            sstr >> code2 >> f1;
+            kerningInfo.insert(
+                {{static_cast<char16_t>(code1), static_cast<char16_t>(code2)},
+                 f1});
         }
-        in_s.clear();
+        // find texture name
+        std::regex texturesPattern(R"(textures:\s*([a-zA-Z0-9_\-\.]+))");
+        std::smatch match;
+        if (std::regex_search(in_s, match, texturesPattern)) {
+            state = FontFileState::TextureFilename;
+            imgFilename = std::string("fonts/") + match[1].str();
+            spdlog::info("Font image is \"{}\"", imgFilename);
+        }
+
+        // find font name
+        std::regex fontNameSizePattern(R"((.*?)\s+(\d+)px$)");
+        if (std::regex_search(in_s, match, fontNameSizePattern)) {
+            state = FontFileState::FontNameSize;
+            fontName = match[1].str();
+            fontHeight = std::stoi(match[2].str());
+
+            spdlog::info("Font name is {}", fontName);
+            spdlog::info("Font height is {}", fontHeight);
+
+            // flag that data is now being read
+            state = FontFileState::FontData;
+        }
+        // find information about upcoming kerning
+        if (in_s.find("kerning pairs:") != in_s.npos) {
+            state = FontFileState::KerningData;
+        }
     }
     /*================================================*/
 
     // create texture
-    // Load PNG. Pass 4 to have RGBA
     texBufferID = loadTexture(imgFilename);
 
     // activate texture unit 0
@@ -226,50 +214,22 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     texSamplerID = shaderProgram->GetUniformLocation("texSampler");
 
     // Get image dimensions
-    FILE* imageFile = fopen(imgFilename.c_str(), "rb");
-    char buffer2[4];
-
-    // Load header
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 0 %x",buffer);
-    // printf("\nBuffer 0 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 1 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nIHDR chank");
-    // printf("\nBuffer 2 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 3 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 4 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-
+    int width, height, channels;
+    if (!stbi_info(imgFilename.c_str(), &width, &height, &channels)) {
+        spdlog::error("Error reading image info:{}", stbi_failure_reason());
+        return false;
+    }
     // Calculate width
-    imageWidth = (static_cast<uint32_t>(buffer2[3]) << 0) |
-                 (static_cast<uint32_t>(buffer2[2]) << 8) |
-                 (static_cast<uint32_t>(buffer2[1]) << 16) |
-                 (static_cast<uint32_t>(buffer2[0]) << 24);
+    imageWidth = static_cast<uint32_t>(width);
     spdlog::info("width={}", imageWidth);
 
     // Calculate height
-    fread(&buffer2, 1, 4, imageFile);
-    // printf("\nBuffer 5 %x %x %x
-    // %x",buffer2[0],buffer2[1],buffer2[2],buffer2[3]);
-    imageHeight = (static_cast<uint32_t>(buffer2[3]) << 0) |
-                  (static_cast<uint32_t>(buffer2[2]) << 8) |
-                  (static_cast<uint32_t>(buffer2[1]) << 16) |
-                  (static_cast<uint32_t>(buffer2[0]) << 24);
+    imageHeight = static_cast<uint32_t>(height);
     spdlog::info("height={}", imageHeight);
 
     // Convert pixel to relative coordinates
     pkx = 1.0F / static_cast<float>(imageWidth);
     pky = 1.0F / static_cast<float>(imageHeight);
-
-    fclose(imageFile);
 
     return true;
 }
@@ -282,26 +242,29 @@ void Font2d::SetAspectRatio(int _width, int _height) {
 
 void Font2d::SetAspectRatio(float f) { aratio = f; }
 
-void Font2d::SetCharacter(unsigned int c) {
+void Font2d::SetCharacter(char16_t c) {
     character = c;
 
     // this is a mess, setting the Y coordinate
     position[2] = position[2] / static_cast<float>(fontHeight);
-    temp = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
+    currentCharacter = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
     try {
-        temp = fontInfo.at(character);
+        currentCharacter = fontInfo.at(character);
     } catch (const std::out_of_range& oor) {
         // printf("\n char is out of range");
         characterLength = Vector2f(-1.0F, -1.0F);
         return;
     }
-    realWidth = static_cast<float>(temp.width) / static_cast<float>(imageWidth);
-    realHeight =
-        static_cast<float>(temp.height) / static_cast<float>(imageHeight);
+    realWidth = static_cast<float>(currentCharacter.width) /
+                static_cast<float>(imageWidth);
+    realHeight = static_cast<float>(currentCharacter.height) /
+                 static_cast<float>(imageHeight);
     dx = 1.0F;
-    xOffset = position[2] * (2 * dx) * kx * static_cast<float>(temp.xOffset) /
+    xOffset = position[2] * (2 * dx) * kx *
+              static_cast<float>(currentCharacter.xOffset) /
               static_cast<float>(imageWidth);
-    yOffset = position[2] * (-2 * dx) * ky * static_cast<float>(temp.yOffset) /
+    yOffset = position[2] * (-2 * dx) * ky *
+              static_cast<float>(currentCharacter.yOffset) /
               static_cast<float>(imageHeight);
 
     characterLength = Vector2f((2 * dx) * realWidth * kx * position[2],
@@ -313,27 +276,9 @@ Vector2f Font2d::GetLastCharacterLength() {
     return characterLength;
 }
 
-// Vector2f Font2d::Render(unsigned int c,float px,float py,float size)
 void Font2d::Render(const Camera& cam) {
     SetAspectRatio(cam.GetWidth(), cam.GetHeight());
     shaderProgram->Use();
-    /*position[2]=position[2]/(float)fontHeight;
-    FontCharacter temp(0,0,0,0,0,0,0,0);
-    try
-    {
-        temp=fontInfo.at(character);
-    }
-    catch(const std::out_of_range& oor)
-    {
-        //printf("\n char is out of range");
-        return;// Vector2f(-1.0f,-1.0f);
-    }
-    float realWidth=(float)temp.width/(float)imageWidth;
-    float realHeight=(float)temp.height/(float)imageHeight;
-    float dx=1.0f;
-    float xOffset=position[2]*(2*dx)*kx*(float)temp.xOffset/(float)imageWidth;
-    float
-    yOffset=position[2]*(-2*dx)*ky*(float)temp.yOffset/(float)imageHeight;*/
 
     float vertices[] = {0.0F,
                         (-2 * dx) * realHeight * ky,
@@ -366,9 +311,9 @@ void Font2d::Render(const Camera& cam) {
     suvID = shaderProgram->GetUniformLocation("s_UV");
     sizeID = shaderProgram->GetUniformLocation("size");
     colorID = shaderProgram->GetUniformLocation("textColor");
-    float const u =
-        static_cast<float>(temp.xpos) / static_cast<float>(imageWidth);
-    float const v = 1.0F - (static_cast<float>(temp.ypos) /
+    float const u = static_cast<float>(currentCharacter.xpos) /
+                    static_cast<float>(imageWidth);
+    float const v = 1.0F - (static_cast<float>(currentCharacter.ypos) /
                             static_cast<float>(imageHeight));
     // printf("\nu=%f,  v=%f ",u,v);
     // Calculate offset

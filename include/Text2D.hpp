@@ -12,30 +12,16 @@
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 struct FontCharacter {
-    //    X pos   Y pos   Width   Height   Xoffset  Yoffset  Orig W   Orig H
-    unsigned int xpos, ypos, width, height, origW, origH;
-    int xOffset, yOffset;
-    FontCharacter(unsigned u1 = 0, unsigned u2 = 0, unsigned u3 = 0,
-                  unsigned u4 = 0, int i1 = 0, int i2 = 0, unsigned u5 = 0,
-                  unsigned u6 = 0) {
-        xpos = u1;
-        ypos = u2;
-        width = u3;
-        height = u4;
-        origW = u5;
-        origH = u6;
-        xOffset = i1;
-        yOffset = i2;
-    }
+    uint32_t xpos;
+    uint32_t ypos;
+    uint32_t width;
+    uint32_t height;
+    int32_t xOffset;
+    int32_t yOffset;
+    uint32_t origW;
+    uint32_t origH;
 };
-struct KerningPairs {
-    unsigned int code1;
-    unsigned int code2;
-    KerningPairs(unsigned k1, unsigned int k2) {
-        code1 = k1;
-        code2 = k2;
-    }
-};
+using KerningPair = std::pair<char16_t, char16_t>;
 
 // font
 class Font2d : public RenderableObject, public PlaceableObject {
@@ -47,7 +33,6 @@ private:
     GLuint colorID;
     Vector4f color;
     std::string filename;
-    unsigned int* indicies;
     float aratio;
 
     // ratio of image sizes to screen
@@ -55,34 +40,34 @@ private:
 
     // pixel size in UV coordinates
     float pkx, pky;
-    int fontHeight;
+    uint32_t fontHeight;
     uint32_t imageWidth, imageHeight;
     std::string fontName;
-    std::map<unsigned int, FontCharacter> fontInfo;
+    std::map<char16_t, FontCharacter> fontInfo;
 
     float realWidth;
     float realHeight;
     float dx;
     float xOffset;
     float yOffset;
-    FontCharacter temp;
+    FontCharacter currentCharacter;
 
 protected:
     Vector2f characterLength;
-    unsigned int character;
-    std::map<uint32_t, float> kerningInfo;
+    char16_t character;
+    std::map<KerningPair, float> kerningInfo;
 
 public:
     Font2d();
     ~Font2d();
     bool Init(std::string filename, std::shared_ptr<Shader> _sh);
-    int GetFontHeight() const;
-    float GetWidth(unsigned int c) const;
-    float GetHeight(unsigned int c) const;
+    uint32_t GetFontHeight() const;
+    float GetWidth(char16_t c) const;
+    float GetHeight(char16_t c) const;
     float GetSpaceWidth() const;
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
-    void SetCharacter(unsigned int c);
+    void SetCharacter(char16_t c);
 
     // returns the length of the current character
     Vector2f GetLastCharacterLength();
@@ -98,7 +83,7 @@ private:
     float prevX, prevY;
     float aratio;
     float spaceWidth;
-    unsigned int prevChar;
+    char16_t prevChar;
     std::string text;
 
 public:
