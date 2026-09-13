@@ -14,17 +14,17 @@
 Material::Material() {
     // ctor
 
-    colorMap = make_shared<Texture2D>();
+    colorMap = std::make_shared<Texture2D>();
     auto tempMap = colorMap;
     tempMap->Load("Textures/checker.tga");
 
-    normalMap = make_shared<Texture2D>();
+    normalMap = std::make_shared<Texture2D>();
     normalMap->Load("Textures/normal_map.tga");
 
-    specularMap = make_shared<Texture2D>();
+    specularMap = std::make_shared<Texture2D>();
     specularMap->Load("Textures/specular.tga");
 
-    shadowMap = make_shared<Texture2D>();
+    shadowMap = std::make_shared<Texture2D>();
     shadowMap->Load("Textures/white.png");
 
     // abstract texture
@@ -32,7 +32,7 @@ Material::Material() {
     texturesID.resize(max_texture_units);
     abstractSamplersID.resize(max_texture_units);
 
-    abstractMap = make_shared<AbstractTexture>();
+    abstractMap = std::make_shared<AbstractTexture>();
 
     for (int i = 0; i < max_texture_units; i++) {
         abstractSamplersID[i] = 0;
@@ -43,7 +43,7 @@ Material::Material() {
 
 Material::~Material() = default;
 
-bool Material::Init(const shared_ptr<Shader>& _sh) {
+bool Material::Init(const std::shared_ptr<Shader>& _sh) {
     if (_sh == nullptr) {
         return false;
     }
@@ -126,23 +126,23 @@ void Material::Use() {
     }
 }
 
-void Material::SetColorTexture(shared_ptr<Texture2D> _colorMap) {
+void Material::SetColorTexture(std::shared_ptr<Texture2D> _colorMap) {
     colorMap = std::move(_colorMap);
 }
 
-void Material::SetNormalTexture(shared_ptr<Texture2D> _normalMap) {
+void Material::SetNormalTexture(std::shared_ptr<Texture2D> _normalMap) {
     normalMap = std::move(_normalMap);
 }
 
-void Material::SetSpecularTexture(shared_ptr<Texture2D> _specularMap) {
+void Material::SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap) {
     specularMap = std::move(_specularMap);
 }
 
-void Material::SetShadowTexture(shared_ptr<Texture2D> _shadowMap) {
+void Material::SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap) {
     shadowMap = std::move(_shadowMap);
 }
 
-void Material::SetTexture(const shared_ptr<Texture2D>& _map, GLuint num) {
+void Material::SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num) {
     if (num <= 3) {
         return;
     }

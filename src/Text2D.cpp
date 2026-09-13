@@ -19,7 +19,6 @@
 #include "Camera.hpp"
 #include "Math3d.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
 
@@ -28,7 +27,7 @@ FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
 
 FontLine2d::~FontLine2d() = default;
 
-bool FontLine2d::Init(string filename, shared_ptr<Shader> _sh) {
+bool FontLine2d::Init(std::string filename, std::shared_ptr<Shader> _sh) {
     return character.Init(std::move(filename), std::move(_sh));
 }
 
@@ -37,7 +36,7 @@ void FontLine2d::SetAspectRatio(int w, int h) {
     aratio = static_cast<float>(h) / static_cast<float>(w);
 }
 
-void FontLine2d::SetText(string _text) { text = std::move(_text); }
+void FontLine2d::SetText(std::string _text) { text = std::move(_text); }
 
 // void FontLine2d::Render(string text, float startX, float startY,float size )
 void FontLine2d::Render(const Camera& cam) {
@@ -113,10 +112,10 @@ float Font2d::GetSpaceWidth() const {
 
 int Font2d::GetFontHeight() const { return fontHeight; }
 
-bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
+bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     shaderProgram = _sh;
     filename = _filename;
-    string imgFilename;
+    std::string imgFilename;
     // generate vertex buffer for future use
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -137,10 +136,10 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                  GL_STATIC_DRAW);
 
     /*===========Filling font information============*/
-    fstream fin;
-    fin.open(filename.c_str(), ios::in);
+    std::fstream fin;
+    fin.open(filename.c_str(), std::ios::in);
     // temporary variable for reading
-    string in_s;
+    std::string in_s;
     bool kerning = false;
     bool data = false;
     while (1) {
@@ -148,7 +147,7 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
         if (!fin.eof()) {
             // read data
             if (data) {
-                stringstream sstr;
+                std::stringstream sstr;
                 unsigned int t1[6];
                 int t2[2];
                 sstr << in_s;
@@ -158,10 +157,11 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                     t1[4] >> t1[5];
                 FontCharacter const temp2 = FontCharacter(
                     t1[0], t1[1], t1[2], t1[3], t2[0], t2[1], t1[4], t1[5]);
-                fontInfo.insert(pair<unsigned int, FontCharacter>(code, temp2));
+                fontInfo.insert(
+                    std::pair<unsigned int, FontCharacter>(code, temp2));
             }
             if (kerning) {
-                stringstream sstr;
+                std::stringstream sstr;
                 sstr << in_s;
                 uint16_t code1 = 0;
                 sstr >> code1;
@@ -170,14 +170,15 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
                 sstr >> code2 >> f1;
                 uint32_t const code = (static_cast<uint32_t>(code1) << 16) |
                                       (static_cast<uint32_t>(code2));
-                kerningInfo.insert(pair<uint32_t, float>(code, f1));
+                kerningInfo.insert(std::pair<uint32_t, float>(code, f1));
             }
             // find texture name
             int t = in_s.find("textures: ");
-            string temp("textures: ");
+            std::string temp("textures: ");
             // found texture name
             if (t == 0) {
-                imgFilename = string("fonts/") + string(in_s, temp.length());
+                imgFilename =
+                    std::string("fonts/") + std::string(in_s, temp.length());
                 spdlog::info("Font image is {}", imgFilename);
             }
 
@@ -185,9 +186,9 @@ bool Font2d::Init(string _filename, shared_ptr<Shader> _sh) {
             t = in_s.find("px");
             if (t >= 0) {
                 int const t2 = in_s.find(' ');
-                fontName = string(in_s, 0, t2);
-                stringstream sstr;
-                temp = string(in_s, t2, t - t2);
+                fontName = std::string(in_s, 0, t2);
+                std::stringstream sstr;
+                temp = std::string(in_s, t2, t - t2);
                 sstr << temp;
                 sstr >> fontHeight;
                 // sscanf(in_s.c_str(),"%s %dpx",fontName,fontHeight);
@@ -403,15 +404,14 @@ void Font2d::Render(const Camera& cam) {
 Text2d::Text2d() : aratio(1) { color = Vector4f(1.0F, 1.0F, 1.0F, 1.0F); }
 
 Text2d::~Text2d() = default;
-void Text2d::Init(int width, int height, shared_ptr<Shader> _sh) {
+void Text2d::Init(int width, int height, std::shared_ptr<Shader> _sh) {
     if (!_sh) {
         yourselfShader = true;
         aratio = static_cast<float>(height) / static_cast<float>(width);
-        char const* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
-        char const* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
-        shaderProgram = make_shared<Shader>();
-        shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-        shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        shaderProgram = std::make_shared<Shader>();
+        shaderProgram->AddShader(ReadFile("shaders/text2d.vsh"), VertexShader);
+        shaderProgram->AddShader(ReadFile("shaders/text2d.fsh"),
+                                 FragmnetShader);
         shaderProgram->Init();
     } else {
         shaderProgram = _sh;
@@ -493,7 +493,8 @@ void Text2d::SetAspectRatio(float f) {
     glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), &vertices);
 }
 
-void Text2d::Init(shared_ptr<Shader> shader, GLuint textureID, GLuint texBuf) {
+void Text2d::Init(std::shared_ptr<Shader> shader, GLuint textureID,
+                  GLuint texBuf) {
     // shaderProgramID=shader;
     shaderProgram = std::move(shader);
     yourselfShader = false;
@@ -586,7 +587,7 @@ void TextLine2d::SetAspectRatio(int width, int height) {
     }
 }
 
-void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh) {
+void TextLine2d::Init(int width, int height, std::shared_ptr<Shader> _sh) {
     symbol = std::make_unique<Text2d>();
     pixelSize =
         static_cast<float>(512) /
@@ -596,7 +597,7 @@ void TextLine2d::Init(int width, int height, shared_ptr<Shader> _sh) {
     symbol->Init(width, height, std::move(_sh));
 }
 
-void TextLine2d::SetText(string _text) { text = std::move(_text); }
+void TextLine2d::SetText(std::string _text) { text = std::move(_text); }
 
 void TextLine2d::Render(const Camera& cam) {
     float delta = 0;

@@ -6,7 +6,6 @@
 #include "Camera.hpp"
 #include "EngineCommon.hpp"
 #include "Math3d.hpp"
-#include "ShaderFunctions.hpp"
 #include "Util.hpp"
 ParticleSystem::ParticleSystem() = default;
 
@@ -33,21 +32,16 @@ bool ParticleSystem::Init(Vector3f Pos) {
                      GL_DYNAMIC_DRAW);
     }
 
-    char const* vertexShaderSorceCode = ReadFile("shaders/particle.vsh");
-    char const* fragmentShaderSourceCode = ReadFile("shaders/particle.fsh");
-    char const* geometryShaderSourceCode = ReadFile("shaders/particle.gsh");
-    GLuint const vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
-    GLuint const fragmentShaderID =
-        MakeFragmentShader(fragmentShaderSourceCode);
-    GLuint const geometryShaderID =
-        MakeGeometryShader(geometryShaderSourceCode);
-    shaderProgramID =
-        MakeShaderProgram(vertexShaderID, geometryShaderID, fragmentShaderID);
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
-    delete[] geometryShaderSourceCode;
+    m_shader = std::make_unique<Shader>();
+    m_shader->AddShader(ReadFile("shaders/particle.vsh"),
+                        ShaderType::VertexShader);
+    m_shader->AddShader(ReadFile("shaders/particle.fsh"),
+                        ShaderType::FragmnetShader);
+    m_shader->AddShader(ReadFile("shaders/particle.gsh"),
+                        ShaderType::GeometryShader);
+    m_shader->Init();
 
-    if (!m_updateAssistant.Init(shaderProgramID)) {
+    if (!m_updateAssistant.Init(*m_shader)) {
         return false;
     }
 
@@ -139,7 +133,7 @@ void ParticleSystem::RenderParticles(const Camera& cam) {
     // Camera position
     //  glUniform3f(camPosID,cam.GetPos().x,cam.GetPos().y,cam.GetPos().z);
 
-    glUseProgram(shaderProgramID);
+    m_shader->Use();
     m_billboardAssistant.SetCameraPosition(cam.GetPos());
     m_billboardAssistant.SetVP(reinterpret_cast<const GLfloat*>(TM.GetVC()));
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);

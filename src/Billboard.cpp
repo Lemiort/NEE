@@ -2,24 +2,15 @@
 
 #include <glad/gl.h>
 
-#include <memory>
 #include <utility>
 
 #include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 
-Billboard::Billboard() : shader(false) { Pos = Vector3f(1, 1, 1); }
+Billboard::Billboard() { Pos = Vector3f(1, 1, 1); }
 
-/*Billboard::Billboard(GLuint _shader)
-{
-    Pos=Vector3f(0,0,0);
-    shaderProgramID=_shader;
-    shader=true;
-}*/
-
-Billboard::Billboard(shared_ptr<Shader> _shader) : shader(true) {
+Billboard::Billboard(std::shared_ptr<Shader> _shader) {
     Pos = Vector3f(0, 0, 0);
     shaderProgram = std::move(_shader);
     // shaderProgramID=_shader->shaderProgramID;
@@ -30,27 +21,15 @@ Billboard::~Billboard() {
 }
 
 void Billboard::Init(const char* TexFilename) {
-    if (!shader) {
-        char const* vertexShaderSorceCode = ReadFile("shaders/billboard.vsh");
-        char const* fragmentShaderSourceCode =
-            ReadFile("shaders/billboard.fsh");
-        char const* geometryShaderSourceCode =
-            ReadFile("shaders/billboard.gsh");
-        shaderProgram = make_shared<Shader>();
-        shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-        shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
-        shaderProgram->AddShader(geometryShaderSourceCode, GeometryShader);
+    if (!shaderProgram) {
+        shaderProgram = std::make_shared<Shader>();
+        shaderProgram->AddShader(ReadFile("shaders/billboard.vsh"),
+                                 VertexShader);
+        shaderProgram->AddShader(ReadFile("shaders/billboard.fsh"),
+                                 FragmnetShader);
+        shaderProgram->AddShader(ReadFile("shaders/billboard.gsh"),
+                                 GeometryShader);
         shaderProgram->Init();
-        /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-        GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-        GLuint geometryShaderID=MakeGeometryShader(geometryShaderSourceCode);
-        shaderProgramID=MakeShaderProgram(vertexShaderID,geometryShaderID,
-        fragmentShaderID);*/
-        // shaderProgramID=MakeShaderProgram(vertexShaderID, fragmentShaderID);
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
-        delete[] geometryShaderSourceCode;
-        shader = true;
     }
     colorMap.Load(TexFilename);
     colorMap.Bind(GL_TEXTURE0);

@@ -11,7 +11,7 @@ ParticleUpdateAssistant::ParticleUpdateAssistant() {
 ParticleUpdateAssistant::~ParticleUpdateAssistant() {
     // dtor
 }
-bool ParticleUpdateAssistant::Init(GLuint shader) {
+bool ParticleUpdateAssistant::Init(const Shader& shader) {
     /*        char* vertexShaderSorceCode=ReadFile("shaders/particle.vsh");
             char* fragmentShaderSourceCode=ReadFile("shaders/particle.fsh");
             char* geometryShaderSourceCode=ReadFile("shaders/particle.gsh");
@@ -22,7 +22,6 @@ bool ParticleUpdateAssistant::Init(GLuint shader) {
             shaderProgramID=MakeShaderProgram(vertexShaderID,geometryShaderID,
        fragmentShaderID); delete[] vertexShaderSorceCode; delete[]
        fragmentShaderSourceCode; delete[] geometryShaderSourceCode;*/
-    shaderProgramID = shader;
 
     const GLchar* Varyings[4];
     Varyings[0] = "Type1";
@@ -30,24 +29,21 @@ bool ParticleUpdateAssistant::Init(GLuint shader) {
     Varyings[2] = "Velocity1";
     Varyings[3] = "Age1";
 
-    glTransformFeedbackVaryings(shaderProgramID, 4, Varyings,
+    glTransformFeedbackVaryings(shader.GetShaderProgramId(), 4, Varyings,
                                 GL_INTERLEAVED_ATTRIBS);
 
     /*if (!Finalize()) {
         return false;
     }*/
 
-    m_deltaTimeMillisLocation =
-        glGetUniformLocation(shaderProgramID, "gDeltaTimeMillis");
-    m_randomTextureLocation =
-        glGetUniformLocation(shaderProgramID, "gRandomTexture");
-    m_timeLocation = glGetUniformLocation(shaderProgramID, "gTime");
-    m_launcherLifetimeLocation =
-        glGetUniformLocation(shaderProgramID, "gLauncherLifetime");
-    m_shellLifetimeLocation =
-        glGetUniformLocation(shaderProgramID, "gShellLifetime");
+    m_deltaTimeMillisLocation = shader.GetUniformLocation("gDeltaTimeMillis");
+    m_randomTextureLocation = shader.GetUniformLocation("gRandomTexture");
+    m_timeLocation = shader.GetUniformLocation("gTime");
+    m_launcherLifetimeLocation = shader.GetUniformLocation("gLauncherLifetime");
+
+    m_shellLifetimeLocation = shader.GetUniformLocation("gShellLifetime");
     m_secondaryShellLifetimeLocation =
-        glGetUniformLocation(shaderProgramID, "gSecondaryShellLifetime");
+        shader.GetUniformLocation("gSecondaryShellLifetime");
 
     return !(m_deltaTimeMillisLocation == INVALID_UNIFORM_LOCATION ||
              m_timeLocation == INVALID_UNIFORM_LOCATION ||

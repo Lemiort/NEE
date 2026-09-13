@@ -2,11 +2,13 @@
 #define PARTICLEUPDATEASSISTANT_H
 #include <glad/gl.h>
 
+#include "Shader.hpp"
+
 class ParticleUpdateAssistant {
 public:
     ParticleUpdateAssistant();
     virtual ~ParticleUpdateAssistant();
-    virtual bool Init(GLuint shader);
+    virtual bool Init(const Shader& shader);
     void Enable();
 
     void SetParticleLifetime(float Lifetime);

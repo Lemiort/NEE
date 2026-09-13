@@ -1,15 +1,13 @@
 #ifndef SKYBOX_H_INCLUDED
 #define SKYBOX_H_INCLUDED
 
-#include <memory>
-
-#include "CubemapTexture.hpp"
-// #include "ShaderFunctions.hpp"
 #include <PlaceableObject.hpp>
 #include <RenderableObject.hpp>
+#include <memory>
 
 #include "Assistant.hpp"
 #include "Camera.hpp"
+#include "CubemapTexture.hpp"
 #include "Shader.hpp"
 #include "TgaLoader.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))

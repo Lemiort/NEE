@@ -46,7 +46,7 @@ private:
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
     Vector4f color;
-    string filename;
+    std::string filename;
     unsigned int* indicies;
     float aratio;
 
@@ -57,8 +57,8 @@ private:
     float pkx, pky;
     int fontHeight;
     uint32_t imageWidth, imageHeight;
-    string fontName;
-    map<unsigned int, FontCharacter> fontInfo;
+    std::string fontName;
+    std::map<unsigned int, FontCharacter> fontInfo;
 
     float realWidth;
     float realHeight;
@@ -70,12 +70,12 @@ private:
 protected:
     Vector2f characterLength;
     unsigned int character;
-    map<uint32_t, float> kerningInfo;
+    std::map<uint32_t, float> kerningInfo;
 
 public:
     Font2d();
     ~Font2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
     int GetFontHeight() const;
     float GetWidth(unsigned int c) const;
     float GetHeight(unsigned int c) const;
@@ -94,19 +94,19 @@ public:
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
     float prevX, prevY;
     float aratio;
     float spaceWidth;
     unsigned int prevChar;
-    string text;
+    std::string text;
 
 public:
     FontLine2d();
     ~FontLine2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
     void SetAspectRatio(int w, int h);
-    void SetText(string _text);
+    void SetText(std::string _text);
     // void Render(string text,float x, float y, float size);
     void Render(const Camera& cam);
 };
@@ -132,8 +132,8 @@ private:
 public:
     Text2d();
     ~Text2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
-    void Init(shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
+    void Init(int width, int height, std::shared_ptr<Shader> _sh = NULL);
+    void Init(std::shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
     void SetCharacter(unsigned int c);
@@ -148,14 +148,14 @@ private:
     float aratio;
     float pixelSize;
     // shared_ptr<Shader> shaderProgram;
-    string text;
+    std::string text;
 
 public:
     TextLine2d();
     ~TextLine2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
+    void Init(int width, int height, std::shared_ptr<Shader> _sh = NULL);
     void SetAspectRatio(int width, int height);
-    void SetText(string _text);
+    void SetText(std::string _text);
     // void Render(float x, float y,float size, char* input);
     void Render(const Camera& cam);
 };

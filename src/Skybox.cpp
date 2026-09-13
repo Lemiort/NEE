@@ -15,7 +15,7 @@
 #include "spdlog/spdlog.h"
 
 SkyBox::SkyBox(shared_ptr<Shader> shader)
-    : shaderProgramID(shader->shaderProgramID) {
+    : shaderProgramID(shader->GetShaderProgramId()) {
     shaderProgram = shader;
 }
 SkyBox::~SkyBox() = default;

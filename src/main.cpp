@@ -15,7 +15,6 @@
 #include "Light.hpp"
 #include "Math3d.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
 #include "Version.hpp"
@@ -853,15 +852,10 @@ void PreInitScene(GLFWwindow* window) {
 
     // text shader
     {
-        char const* vertexShaderSorceCode = ReadFile("shaders/text2d.vsh");
-        char const* fragmentShaderSourceCode = ReadFile("shaders/text2d.fsh");
-
         textShader = std::make_unique<Shader>();
-        textShader->AddShader(vertexShaderSorceCode, VertexShader);
-        textShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        textShader->AddShader(ReadFile("shaders/text2d.vsh"), VertexShader);
+        textShader->AddShader(ReadFile("shaders/text2d.fsh"), FragmnetShader);
         textShader->Init();
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
     }
     // Use smart pointer for automatic lifetime management
     fLine1 = std::make_unique<FontLine2d>();
@@ -923,17 +917,14 @@ int InitScene(GLFWwindow* window) {
 
     // normal shader
     //  InitRender(window, "Normal shader loading...");
-    char const* vertexShaderSorceCode = ReadFile("shaders/vertexShader.vsh");
-    char const* fragmentShaderSourceCode =
-        ReadFile("shaders/fragmentShader.fsh");
+
     {
         meshShader = make_shared<Shader>();
-        meshShader->AddShader((const char*)vertexShaderSorceCode, VertexShader);
-        meshShader->AddShader((const char*)fragmentShaderSourceCode,
+        meshShader->AddShader(ReadFile("shaders/vertexShader.vsh"),
+                              VertexShader);
+        meshShader->AddShader(ReadFile("shaders/fragmentShader.fsh"),
                               FragmnetShader);
         meshShader->Init();
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
 
         gCamViewID = meshShader->GetUniformLocation("gVC");
         rotateID = meshShader->GetUniformLocation("mRotate");
@@ -954,17 +945,10 @@ int InitScene(GLFWwindow* window) {
     // shadow shader
     {
         InitRender(window, "Shade shader loading...");
-        vertexShaderSorceCode = ReadFile("shaders/fbo.vsh");
-        fragmentShaderSourceCode = ReadFile("shaders/fbo.fsh");
         shadowShader = make_shared<Shader>();
-        shadowShader->AddShader((const char*)vertexShaderSorceCode,
-                                VertexShader);
-        shadowShader->AddShader((const char*)fragmentShaderSourceCode,
-                                FragmnetShader);
+        shadowShader->AddShader(ReadFile("shaders/fbo.vsh"), VertexShader);
+        shadowShader->AddShader(ReadFile("shaders/fbo.fsh"), FragmnetShader);
         shadowShader->Init();
-
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
     }
 
     // shadow material
@@ -977,18 +961,12 @@ int InitScene(GLFWwindow* window) {
     // shaded shader
     {
         InitRender(window, "Shaded shader loading...");
-        vertexShaderSorceCode = ReadFile("shaders/shadowed.vsh");
-        // fragmentShaderSourceCode=ReadFile("shaders/fragmentShader.fsh");
-        fragmentShaderSourceCode = ReadFile("shaders/shadowed.fsh");
         shadowMeshShader = make_shared<Shader>();
-        shadowMeshShader->AddShader((const char*)vertexShaderSorceCode,
+        shadowMeshShader->AddShader(ReadFile("shaders/shadowed.vsh"),
                                     VertexShader);
-        shadowMeshShader->AddShader((const char*)fragmentShaderSourceCode,
+        shadowMeshShader->AddShader(ReadFile("shaders/shadowed.fsh"),
                                     FragmnetShader);
         shadowMeshShader->Init();
-
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
     }
 
     // shaded material
@@ -1008,13 +986,10 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "StencilPass shader loading...");
         // load shader
         {
-            vertexShaderSorceCode = ReadFile("shaders/DSStencilPass.vsh");
             DSStencilPassShader = make_shared<Shader>();
-            DSStencilPassShader->AddShader((const char*)vertexShaderSorceCode,
-                                           VertexShader);
+            DSStencilPassShader->AddShader(
+                ReadFile("shaders/DSStencilPass.vsh"), VertexShader);
             DSStencilPassShader->Init();
-
-            delete[] vertexShaderSorceCode;
         }
         // load material
         {
@@ -1030,17 +1005,12 @@ int InitScene(GLFWwindow* window) {
         gBuffer1->Init(width, height);
         // load shader
         {
-            vertexShaderSorceCode = ReadFile("shaders/DSGeometryPass.vsh");
-            fragmentShaderSourceCode = ReadFile("shaders/DSGeometryPass.fsh");
             DSGeometryPassShader = make_shared<Shader>();
-            DSGeometryPassShader->AddShader((const char*)vertexShaderSorceCode,
-                                            VertexShader);
             DSGeometryPassShader->AddShader(
-                (const char*)fragmentShaderSourceCode, FragmnetShader);
+                ReadFile("shaders/DSGeometryPass.vsh"), VertexShader);
+            DSGeometryPassShader->AddShader(
+                ReadFile("shaders/DSGeometryPass.fsh"), FragmnetShader);
             DSGeometryPassShader->Init();
-
-            delete[] vertexShaderSorceCode;
-            delete[] fragmentShaderSourceCode;
         }
         // load material
         {
@@ -1055,17 +1025,12 @@ int InitScene(GLFWwindow* window) {
         // point light shader
         {  // load shader
             {
-                vertexShaderSorceCode = ReadFile("shaders/DSPointLight.vsh");
-                fragmentShaderSourceCode = ReadFile("shaders/DSPointLight.fsh");
                 DSPointLightShader = make_shared<Shader>();
                 DSPointLightShader->AddShader(
-                    (const char*)vertexShaderSorceCode, VertexShader);
+                    ReadFile("shaders/DSPointLight.vsh"), VertexShader);
                 DSPointLightShader->AddShader(
-                    (const char*)fragmentShaderSourceCode, FragmnetShader);
+                    ReadFile("shaders/DSPointLight.fsh"), FragmnetShader);
                 DSPointLightShader->Init();
-
-                delete[] vertexShaderSorceCode;
-                delete[] fragmentShaderSourceCode;
             }
             // load material
             {
@@ -1077,19 +1042,12 @@ int InitScene(GLFWwindow* window) {
         // directional light shader
         {  // load shader
             {
-                vertexShaderSorceCode =
-                    ReadFile("shaders/DSDirectionalLight.vsh");
-                fragmentShaderSourceCode =
-                    ReadFile("shaders/DSDirectionalLight.fsh");
                 DSDirectionalLightShader = make_shared<Shader>();
                 DSDirectionalLightShader->AddShader(
-                    (const char*)vertexShaderSorceCode, VertexShader);
+                    ReadFile("shaders/DSDirectionalLight.vsh"), VertexShader);
                 DSDirectionalLightShader->AddShader(
-                    (const char*)fragmentShaderSourceCode, FragmnetShader);
+                    ReadFile("shaders/DSDirectionalLight.fsh"), FragmnetShader);
                 DSDirectionalLightShader->Init();
-
-                delete[] vertexShaderSorceCode;
-                delete[] fragmentShaderSourceCode;
             }
             // load material
             {
@@ -1102,17 +1060,12 @@ int InitScene(GLFWwindow* window) {
         {
             // load shader
             {
-                vertexShaderSorceCode = ReadFile("shaders/DSSpotLight.vsh");
-                fragmentShaderSourceCode = ReadFile("shaders/DSSpotLight.fsh");
                 DSSpotLightShader = make_shared<Shader>();
-                DSSpotLightShader->AddShader((const char*)vertexShaderSorceCode,
-                                             VertexShader);
                 DSSpotLightShader->AddShader(
-                    (const char*)fragmentShaderSourceCode, FragmnetShader);
+                    ReadFile("shaders/DSSpotLight.vsh"), VertexShader);
+                DSSpotLightShader->AddShader(
+                    ReadFile("shaders/DSSpotLight.fsh"), FragmnetShader);
                 DSSpotLightShader->Init();
-
-                delete[] vertexShaderSorceCode;
-                delete[] fragmentShaderSourceCode;
             }
             // load material
             {
@@ -1125,16 +1078,12 @@ int InitScene(GLFWwindow* window) {
     // skybox shader
     {
         InitRender(window, "Skybox shader loading...");
-        vertexShaderSorceCode = ReadFile("shaders/skybox.vsh");
-        fragmentShaderSourceCode = ReadFile("shaders/skybox.fsh");
 
         skyboxShader = make_shared<Shader>();
 
-        skyboxShader->AddShader(vertexShaderSorceCode, VertexShader);
-        skyboxShader->AddShader(fragmentShaderSourceCode, FragmnetShader);
+        skyboxShader->AddShader(ReadFile("shaders/skybox.vsh"), VertexShader);
+        skyboxShader->AddShader(ReadFile("shaders/skybox.fsh"), FragmnetShader);
         skyboxShader->Init();
-        delete[] vertexShaderSorceCode;
-        delete[] fragmentShaderSourceCode;
     }
 
     /*//text shader

@@ -2,52 +2,77 @@
 
 #include <glad/gl.h>
 
-#include <cstdlib>
+#include <fstream>
 
-#include "ShaderFunctions.hpp"
 #include "spdlog/spdlog.h"
 
-Shader::Shader()
+std::string ReadFile(const std::filesystem::path& filepath) {
+    // Open in binary mode to ensure accurate byte count and prevent CRLF
+    // translation issues
+    std::ifstream file(filepath, std::ios::in | std::ios::binary);
 
-{
-    // ctor
+    if (!file.is_open()) {
+        spdlog::error("Failed to open file: {}", filepath.string());
+        throw std::runtime_error("Failed to open file: " + filepath.string());
+    }
+
+    // Use std::filesystem to get the exact file size
+    auto file_size = std::filesystem::file_size(filepath);
+
+    // Allocate the string buffer ahead of time
+    std::string content;
+    content.resize(file_size);
+
+    // Read the file directly into the string's underlying memory buffer
+    file.read(&content[0], file_size);
+
+    return content;
 }
-void Shader::AddShader(const char* source, ShaderType type) {
+
+GLuint MakeShader(const std::string& source, ShaderType shaderType) {
+    GLuint shaderId{};
+    switch (shaderType) {
+        case ShaderType::FragmnetShader:
+            shaderId = glCreateShader(GL_FRAGMENT_SHADER);
+            break;
+        case ShaderType::GeometryShader:
+            shaderId = glCreateShader(GL_GEOMETRY_SHADER);
+            break;
+        case ShaderType::VertexShader:
+            shaderId = glCreateShader(GL_VERTEX_SHADER);
+            break;
+    }
+    if (shaderId == 0) {
+        spdlog::error("Error creating vertex shader");
+        exit(1);
+    }
+    const char* c_str = source.c_str();
+    glShaderSource(shaderId, 1, &c_str, nullptr);
+    glCompileShader(shaderId);
+    return shaderId;
+}
+
+Shader::Shader() = default;
+
+void Shader::AddShader(const std::string& source, ShaderType type) {
     switch (type) {
         case VertexShader:
-            if (source != nullptr) {
-                vShaderFileName = source;
-            } else {
-                vShaderFileName = "none";
-            }
-            vShader = MakeVertexShader(source);
+            vShader = MakeShader(source, ShaderType::VertexShader);
             break;
         case FragmnetShader:
-            if (source != nullptr) {
-                fShaderFileName = source;
-            } else {
-                fShaderFileName = "none";
-            }
-            fShader = MakeFragmentShader(source);
+            fShader = MakeShader(source, ShaderType::FragmnetShader);
             break;
         case GeometryShader:
-            if (source != nullptr) {
-                gShaderFileName = source;
-            } else {
-                gShaderFileName = "none";
-            }
-            gShader = MakeGeometryShader(source);
+            gShader = MakeShader(source, ShaderType::GeometryShader);
             break;
     }
 }
 void Shader::Init() {
     FILE* flog = nullptr;
     // fopen_s(&flog,"shaderbuild.log","w");
-    flog = fopen("shaderbuild.log", "w");
     shaderProgramID = glCreateProgram();
     if (shaderProgramID == 0) {
         spdlog::error("Error creating shader program");
-        fclose(flog);
         exit(1);
     }
     if (vShader != 0) {
@@ -69,10 +94,6 @@ void Shader::Init() {
         glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
                             ErrorLog);
         spdlog::error("Error linking shader program: '{}'", ErrorLog);
-        spdlog::error(
-            "Error linking shader program: at files '{}', '{}', '{}', '{}'",
-            vShaderFileName, gShaderFileName, fShaderFileName, ErrorLog);
-        fclose(flog);
         exit(1);
     }
 
@@ -82,14 +103,8 @@ void Shader::Init() {
         glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
                             ErrorLog);
         spdlog::error("Invalid shader program: '{}'", ErrorLog);
-        // fprintf(flog, "Invalid shader program: '%s'\n", ErrorLog);
-        spdlog::error("Invalid shader program: at files '{}', '{}', '{}', '{}'",
-                      vShaderFileName, gShaderFileName, fShaderFileName,
-                      ErrorLog);
-        fclose(flog);
         exit(1);
     }
-    fclose(flog);
     // return shaderID;
     initialized = true;
 }
