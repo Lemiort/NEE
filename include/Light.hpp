@@ -6,7 +6,6 @@
 #include "Mesh.hpp"
 #include "PlaceableObject.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Light : public MaterialObject {

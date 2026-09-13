@@ -5,10 +5,13 @@
 #include "Math3d.hpp"
 #define MAX_PARTICLES 1000
 // #include "Billboard.hpp"
+#include <memory>
+
 #include "BillboardAssistant.hpp"
 #include "Camera.hpp"
 #include "ParticleUpdateAssistant.hpp"
 #include "RandomTexture.hpp"
+#include "Shader.hpp"
 #include "Texture.hpp"
 
 #define PARTICLE_LIFETIME 10.0f
@@ -34,7 +37,6 @@ private:
     Vector3f m_Pos;
     Texture2D m_colorTexture;
     ParticleUpdateAssistant m_updateAssistant;
-    GLuint shaderProgramID;
     BillboardAssistant m_billboardAssistant;
     int m_time;
     void RenderParticles(const Camera& cam);
@@ -45,6 +47,7 @@ private:
         Vector3f Vel;
         float LifetimeMillis{};
     };
+    std::unique_ptr<Shader> m_shader;
 };
 
 #endif  // PARTICLESYSTEM_H_INCLUDED

@@ -4,7 +4,6 @@
 
 #include "EngineCommon.hpp"
 #include "Math3d.hpp"
-#include "ShaderFunctions.hpp"
 #include "Util.hpp"
 
 BillboardAssistant::BillboardAssistant() {
@@ -16,26 +15,19 @@ BillboardAssistant::~BillboardAssistant() {
 }
 
 bool BillboardAssistant::Init() {
-    char const* vertexShaderSorceCode = ReadFile("shaders/particle.vsh");
-    char const* fragmentShaderSourceCode = ReadFile("shaders/particle.fsh");
-    char const* geometryShaderSourceCode = ReadFile("shaders/particle.gsh");
-    GLuint const vertexShaderID = MakeVertexShader(vertexShaderSorceCode);
-    GLuint const fragmentShaderID =
-        MakeFragmentShader(fragmentShaderSourceCode);
-    GLuint const geometryShaderID =
-        MakeGeometryShader(geometryShaderSourceCode);
-    shaderProgramID =
-        MakeShaderProgram(vertexShaderID, geometryShaderID, fragmentShaderID);
-    delete[] vertexShaderSorceCode;
-    delete[] fragmentShaderSourceCode;
-    delete[] geometryShaderSourceCode;
+    m_shader = std::make_unique<Shader>();
+    m_shader->AddShader(ReadFile("shaders/particle.vsh"),
+                        ShaderType::VertexShader);
+    m_shader->AddShader(ReadFile("shaders/particle.fsh"),
+                        ShaderType::FragmnetShader);
+    m_shader->AddShader(ReadFile("shaders/particle.gsh"),
+                        ShaderType::GeometryShader);
+    m_shader->Init();
 
-    m_VPLocation = glGetUniformLocation(shaderProgramID, "gVP");
-    // m_VPLocation = GetUniformLocation("gVP");
-    m_cameraPosLocation = glGetUniformLocation(shaderProgramID, "gCameraPos");
-    m_colorMapLocation = glGetUniformLocation(shaderProgramID, "gColorMap");
-    m_billboardSizeLocation =
-        glGetUniformLocation(shaderProgramID, "gBillboardSize");
+    m_VPLocation = m_shader->GetUniformLocation("gVP");
+    m_cameraPosLocation = m_shader->GetUniformLocation("gCameraPos");
+    m_colorMapLocation = m_shader->GetUniformLocation("gColorMap");
+    m_billboardSizeLocation = m_shader->GetUniformLocation("gBillboardSize");
 
     if (m_VPLocation == INVALID_UNIFORM_LOCATION ||
         m_cameraPosLocation == INVALID_UNIFORM_LOCATION ||

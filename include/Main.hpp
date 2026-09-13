@@ -135,7 +135,6 @@ std::unique_ptr<Line> zline;
 std::unique_ptr<Line> dirLightLine;
 Mesh TestMesh, Plane, Cube;
 std::unique_ptr<SkyBox> skybox1;
-std::unique_ptr<TextLine2d> tline1, tline2;
 std::unique_ptr<FontLine2d> fLine1;
 std::unique_ptr<PerlinNoise> noise1;
 std::unique_ptr<Billboard> bb1;

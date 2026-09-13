@@ -1,17 +1,18 @@
 #ifndef BILLBOARD_H
 #define BILLBOARD_H
+#include <memory>
+
 #include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Math3d.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
-#include "ShaderFunctions.hpp"
 #include "Texture.hpp"
 class Billboard : public RenderableObject {
 public:
     Billboard();
     //  Billboard(GLuint shader);
-    Billboard(shared_ptr<Shader> shader);
+    Billboard(std::shared_ptr<Shader> shader);
     ~Billboard();
     void Init(const char* TexFilename);
     // Render using a reference instead of a raw pointer for safety.
@@ -22,7 +23,6 @@ public:
 protected:
 private:
     // shared_ptr<Shader> shaderProgram;
-    bool shader;
     GLuint VBO;
     Vector3f Pos;
     Texture2D colorMap;

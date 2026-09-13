@@ -12,30 +12,16 @@
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 struct FontCharacter {
-    //    X pos   Y pos   Width   Height   Xoffset  Yoffset  Orig W   Orig H
-    unsigned int xpos, ypos, width, height, origW, origH;
-    int xOffset, yOffset;
-    FontCharacter(unsigned u1 = 0, unsigned u2 = 0, unsigned u3 = 0,
-                  unsigned u4 = 0, int i1 = 0, int i2 = 0, unsigned u5 = 0,
-                  unsigned u6 = 0) {
-        xpos = u1;
-        ypos = u2;
-        width = u3;
-        height = u4;
-        origW = u5;
-        origH = u6;
-        xOffset = i1;
-        yOffset = i2;
-    }
+    uint32_t xpos;
+    uint32_t ypos;
+    uint32_t width;
+    uint32_t height;
+    int32_t xOffset;
+    int32_t yOffset;
+    uint32_t origW;
+    uint32_t origH;
 };
-struct KerningPairs {
-    unsigned int code1;
-    unsigned int code2;
-    KerningPairs(unsigned k1, unsigned int k2) {
-        code1 = k1;
-        code2 = k2;
-    }
-};
+using KerningPair = std::pair<char16_t, char16_t>;
 
 // font
 class Font2d : public RenderableObject, public PlaceableObject {
@@ -46,8 +32,7 @@ private:
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
     Vector4f color;
-    string filename;
-    unsigned int* indicies;
+    std::string filename;
     float aratio;
 
     // ratio of image sizes to screen
@@ -55,34 +40,34 @@ private:
 
     // pixel size in UV coordinates
     float pkx, pky;
-    int fontHeight;
+    uint32_t fontHeight;
     uint32_t imageWidth, imageHeight;
-    string fontName;
-    map<unsigned int, FontCharacter> fontInfo;
+    std::string fontName;
+    std::map<char16_t, FontCharacter> fontInfo;
 
     float realWidth;
     float realHeight;
     float dx;
     float xOffset;
     float yOffset;
-    FontCharacter temp;
+    FontCharacter currentCharacter;
 
 protected:
     Vector2f characterLength;
-    unsigned int character;
-    map<uint32_t, float> kerningInfo;
+    char16_t character;
+    std::map<KerningPair, float> kerningInfo;
 
 public:
     Font2d();
     ~Font2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
-    int GetFontHeight() const;
-    float GetWidth(unsigned int c) const;
-    float GetHeight(unsigned int c) const;
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
+    uint32_t GetFontHeight() const;
+    float GetWidth(char16_t c) const;
+    float GetHeight(char16_t c) const;
     float GetSpaceWidth() const;
     void SetAspectRatio(int width, int height);
     void SetAspectRatio(float);
-    void SetCharacter(unsigned int c);
+    void SetCharacter(char16_t c);
 
     // returns the length of the current character
     Vector2f GetLastCharacterLength();
@@ -94,69 +79,21 @@ public:
 class FontLine2d : public RenderableObject, public PlaceableObject {
 private:
     Font2d character;
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
     float prevX, prevY;
     float aratio;
     float spaceWidth;
-    unsigned int prevChar;
-    string text;
+    char16_t prevChar;
+    std::string text;
 
 public:
     FontLine2d();
     ~FontLine2d();
-    bool Init(string filename, shared_ptr<Shader> _sh);
+    bool Init(std::string filename, std::shared_ptr<Shader> _sh);
     void SetAspectRatio(int w, int h);
-    void SetText(string _text);
+    void SetText(std::string _text);
     // void Render(string text,float x, float y, float size);
     void Render(const Camera& cam);
 };
 
-// character-by-character rendering class
-class Text2d : public RenderableObject, public PlaceableObject {
-private:
-    bool yourselfShader;
-    // GLuint shaderProgramID;
-    // shared_ptr<Shader> shaderProgram;
-    GLuint positionID, spositionID;
-    GLuint uvID, suvID;
-    GLuint sizeID;
-    GLuint texSamplerID, texBufferID;
-    GLuint colorID;
-    Vector4f color;
-    unsigned int* indicies;
-    float aratio;
-
-    // character number in the code table
-    unsigned int character;
-
-public:
-    Text2d();
-    ~Text2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
-    void Init(shared_ptr<Shader> shader, GLuint texture, GLuint texbuf);
-    void SetAspectRatio(int width, int height);
-    void SetAspectRatio(float);
-    void SetCharacter(unsigned int c);
-    // void Render(unsigned int c, float x, float y, float size);
-    void Render(const Camera& cam);
-};
-
-// line class from letter rendering
-class TextLine2d : public RenderableObject, public PlaceableObject {
-private:
-    std::unique_ptr<Text2d> symbol;
-    float aratio;
-    float pixelSize;
-    // shared_ptr<Shader> shaderProgram;
-    string text;
-
-public:
-    TextLine2d();
-    ~TextLine2d();
-    void Init(int width, int height, shared_ptr<Shader> _sh = NULL);
-    void SetAspectRatio(int width, int height);
-    void SetText(string _text);
-    // void Render(float x, float y,float size, char* input);
-    void Render(const Camera& cam);
-};
 #endif  // TEXT_2D_H_INCLUDED

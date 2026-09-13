@@ -1,10 +1,9 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
-#include "Assistant.hpp"
-#include "Camera.hpp"
-// #include "ShaderFunctions.hpp"
 #include <fstream>
 
+#include "Assistant.hpp"
+#include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
 #include "Math3d.hpp"

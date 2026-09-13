@@ -7,9 +7,8 @@
 #include <memory>
 #include <string>
 
-#include "CubemapTexture.hpp"
-// #include "ShaderFunctions.hpp"
 #include "Camera.hpp"
+#include "CubemapTexture.hpp"
 #include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"

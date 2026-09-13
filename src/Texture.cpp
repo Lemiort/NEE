@@ -23,8 +23,7 @@ GLuint loadTexture(const std::string& path) {
     // stbi_set_flip_vertically_on_load flips vertically if requested; we
     // want Y inverted
     stbi_set_flip_vertically_on_load(1);
-    unsigned char* data =
-        stbi_load(path.c_str(), &width, &height, &channels, 0);
+    auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
     if (!data) {
         spdlog::error("Failed to load texture {}: {}", path.c_str(),
                       stbi_failure_reason());
@@ -71,7 +70,7 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
 
     for (size_t i = 0; i < faces.size(); ++i) {
         int w, h, ch;
-        unsigned char* data = stbi_load(faces[i].c_str(), &w, &h, &ch, 0);
+        auto data = stbi_load(faces[i].c_str(), &w, &h, &ch, 0);
         if (!data) {
             glDeleteTextures(1, &tex);
             return 0;  // failure

@@ -333,11 +333,9 @@ float PointLight::CalcSphereSize() {
 }
 
 Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
-    char* vertexShaderSorceCode = ReadFile("shaders/lightVS.vsh");
-    char* fragmentShaderSourceCode = ReadFile("shaders/lightFS.fsh");
     shaderProgram = make_shared<Shader>();
-    shaderProgram->AddShader(vertexShaderSorceCode, VertexShader);
-    shaderProgram->AddShader(fragmentShaderSourceCode, FragmnetShader);
+    shaderProgram->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
+    shaderProgram->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
     shaderProgram->Init();
     /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
     GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
