@@ -2,7 +2,6 @@
 #define BILLBOARD_H
 #include <memory>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include <glm/glm.hpp>
 #include "RenderableObject.hpp"

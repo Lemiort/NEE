@@ -3,7 +3,6 @@
 #include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "EngineCommon.hpp"
 #include <glm/glm.hpp>
@@ -122,21 +121,10 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
 void ParticleSystem::RenderParticles(const Camera& cam) {
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
     m_updateAssistant.Enable();
-    Assistant
-        TM;  // TM - For object, 2 - for normal of the object, 3 - for position
-
-    // camera for specular
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
-    // Projection matrix of the camera
-    //  glUniformMatrix4fv(camViewID, 1, GL_FALSE, glm::value_ptr(*TM.GetVC()));
-    // Camera position
-    //  glUniform3f(camPosID,cam.GetPos().x,cam.GetPos().y,cam.GetPos().z);
 
     m_shader->Use();
     m_billboardAssistant.SetCameraPosition(cam.GetPos());
-    m_billboardAssistant.SetVP(*TM.GetVC());
+    m_billboardAssistant.SetVP(cam.GetViewProjectionMatrix());
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 
     glDisable(GL_RASTERIZER_DISCARD);

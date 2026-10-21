@@ -1,7 +1,6 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
 #include <glm/glm.hpp>
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "MaterialObject.hpp"
 #include "Mesh.hpp"

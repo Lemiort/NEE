@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -9,7 +10,6 @@
 #include <string>
 #include <vector>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "CubemapTexture.hpp"
 #include "Shader.hpp"
@@ -122,13 +122,11 @@ void SkyBox::Render(const Camera& cam) {
     glCullFace(GL_FRONT);
     glDepthFunc(GL_LEQUAL);
 
-    Assistant
-        TM;  // TM - For object, 2- for object's normal, 3 - for camera position
-    TM.Scale(3, 3, 3);
-    TM.WorldPos(cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
+    const glm::mat4 modelMatrix =
+        glm::translate(glm::mat4(1.0f), cam.GetPos()) *
+        glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
+    const glm::mat4 worldViewProjection =
+        cam.GetViewProjectionMatrix() * modelMatrix;
 
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
@@ -140,7 +138,7 @@ void SkyBox::Render(const Camera& cam) {
     glUniform1i(textureID, 2);
 
     glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
-                       glm::value_ptr(*TM.GetTSRVC()));
+                       glm::value_ptr(worldViewProjection));
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
