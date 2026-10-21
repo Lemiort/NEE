@@ -2,7 +2,7 @@
 #define PARTICLESYSTEM_H_INCLUDED
 #include <glad/gl.h>
 
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #define MAX_PARTICLES 1000
 // #include "Billboard.hpp"
 #include <memory>
@@ -24,7 +24,7 @@ class ParticleSystem {
 public:
     ParticleSystem();
     ~ParticleSystem();
-    bool Init(Vector3f Pos);
+    bool Init(glm::vec3 Pos);
     void Render(int DeltaTimeMillis, const Camera& cam);
 
 private:
@@ -34,7 +34,7 @@ private:
     GLuint m_particleBuffer[2];
     GLuint m_transformFeedback[2];
     RandomTexture m_randomTexture;
-    Vector3f m_Pos;
+    glm::vec3 m_Pos;
     Texture2D m_colorTexture;
     ParticleUpdateAssistant m_updateAssistant;
     BillboardAssistant m_billboardAssistant;
@@ -43,8 +43,8 @@ private:
     void UpdateParticles(int DeltaTimeMillis);
     struct Particle {
         float Type{};
-        Vector3f Pos;
-        Vector3f Vel;
+        glm::vec3 Pos;
+        glm::vec3 Vel;
         float LifetimeMillis{};
     };
     std::unique_ptr<Shader> m_shader;

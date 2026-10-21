@@ -1,6 +1,7 @@
 #include "Billboard.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <utility>
 
@@ -8,10 +9,10 @@
 #include "Camera.hpp"
 #include "Shader.hpp"
 
-Billboard::Billboard() { Pos = Vector3f(1, 1, 1); }
+Billboard::Billboard() { Pos = glm::vec3(1, 1, 1); }
 
 Billboard::Billboard(std::shared_ptr<Shader> _shader) {
-    Pos = Vector3f(0, 0, 0);
+    Pos = glm::vec3(0, 0, 0);
     shaderProgram = std::move(_shader);
     // shaderProgramID=_shader->shaderProgramID;
 }
@@ -45,7 +46,7 @@ void Billboard::Init(const char* TexFilename) {
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
-void Billboard::SetPos(Vector3f Pos) {
+void Billboard::SetPos(glm::vec3 Pos) {
     Pos = Pos;
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
@@ -66,8 +67,8 @@ void Billboard::Render(const Camera& cam) {
                           cam.GetZNear(), cam.GetZFar());
 
     // camera projection matrix
-    glUniformMatrix4fv(camViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(camViewID, 1, GL_FALSE,
+                       glm::value_ptr(*TM.GetVC()));
     // camera position
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 

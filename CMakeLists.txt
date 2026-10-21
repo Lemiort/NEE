@@ -14,7 +14,7 @@ find_package(stb REQUIRED)
 find_package(spdlog REQUIRED)
 
 
-enable_testing()
+include(CTest)
 
 if(BUILD_TESTING)
     add_subdirectory(tests)
@@ -22,10 +22,11 @@ endif()
 
 include_directories(include)
 # include_directories(src)
-file(GLOB_RECURSE SOURCES_LIST "src/*.cpp")
-file(GLOB_RECURSE HEADERS_LIST "include/*.hpp")
+file(GLOB_RECURSE SOURCES_LIST CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE HEADERS_LIST CONFIGURE_DEPENDS "include/*.hpp")
 
 add_executable(${PROJECT_NAME} ${SOURCES_LIST})
+target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_FORCE_CTOR_INIT)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 23
@@ -72,6 +73,7 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE 
     glad::glad
     glfw
+    glm::glm
     stb::stb
     nlohmann_json::nlohmann_json
     spdlog::spdlog

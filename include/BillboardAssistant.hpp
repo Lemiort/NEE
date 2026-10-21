@@ -4,16 +4,16 @@
 
 #include <memory>
 
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "Shader.hpp"
 class BillboardAssistant {
 public:
     BillboardAssistant();
     virtual ~BillboardAssistant();
     virtual bool Init();
-    void SetVP(const Matrix4f& VP) const;
+    void SetVP(const glm::mat4& VP) const;
     void SetVP(const GLfloat* VP) const;
-    void SetCameraPosition(const Vector3f& Pos) const;
+    void SetCameraPosition(const glm::vec3& Pos) const;
     void SetColorTextureUnit(unsigned int TextureUnit) const;
     void SetBillboardSize(float BillboardSize) const;
 

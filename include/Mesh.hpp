@@ -6,7 +6,7 @@
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "PlaceableObject.hpp"
 #include "RotatableObject.hpp"
 #include "ScaleableObject.hpp"
@@ -17,12 +17,12 @@
 using namespace std;
 
 struct Vertex {
-    Vector3f Pos;
-    Vector3f UV;
-    Vector3f Normal;
-    Vector3f Tangent;
+    glm::vec3 Pos;
+    glm::vec3 UV;
+    glm::vec3 Normal;
+    glm::vec3 Tangent;
     Vertex() {}
-    Vertex(Vector3f& pos, Vector3f& uv, Vector3f& normal, Vector3f& tangent) {
+    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal, glm::vec3& tangent) {
         Pos = pos;
         UV = uv;
         Normal = normal;
@@ -51,7 +51,7 @@ protected:
     // rotation angle around the vector
     float rPhi;
     // rotation vector
-    Vector3f rv;
+    glm::vec3 rv;
 
 public:
     Mesh();
@@ -62,7 +62,7 @@ public:
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
     void Render(const Camera& cam);
-    void SetVectorRotate(Vector3f v, float phi);
+    void SetVectorRotate(glm::vec3 v, float phi);
     void Rotate(float x, float y, float z);
 
 private:

@@ -1,6 +1,6 @@
 #include "PlaceableObject.hpp"
 
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 
 PlaceableObject::PlaceableObject() {
     // ctor
@@ -18,12 +18,12 @@ void PlaceableObject::SetPosition(float x, float y, float z) {
     position[1] = y;
     position[2] = z;
 }
-void PlaceableObject::SetPosition(Vector3f _pos) {
+void PlaceableObject::SetPosition(glm::vec3 _pos) {
     position[0] = _pos.x;
     position[1] = _pos.y;
     position[2] = _pos.z;
 }
 
-Vector3f PlaceableObject::GetPosition() {
+glm::vec3 PlaceableObject::GetPosition() {
     return {position[0], position[1], position[2]};
 }

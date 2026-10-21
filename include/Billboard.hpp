@@ -4,7 +4,7 @@
 
 #include "Assistant.hpp"
 #include "Camera.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
@@ -18,13 +18,13 @@ public:
     // Render using a reference instead of a raw pointer for safety.
     // Render using a reference instead of a raw pointer for safety.
     void Render(const Camera& cam);
-    void SetPos(Vector3f _Pos);
+    void SetPos(glm::vec3 _Pos);
     // GLuint shaderProgramID;
 protected:
 private:
     // shared_ptr<Shader> shaderProgram;
     GLuint VBO;
-    Vector3f Pos;
+    glm::vec3 Pos;
     Texture2D colorMap;
     GLuint colSamplerID;
     GLuint positionID;

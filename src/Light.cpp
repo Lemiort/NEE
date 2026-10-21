@@ -1,16 +1,18 @@
 #include "Light.hpp"
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include <memory>
 
 #include "spdlog/spdlog.h"
 
-void DirectionalLight::SetCol(Vector3f col) {
+void DirectionalLight::SetCol(glm::vec3 col) {
     color[0] = col.x;
     color[1] = col.y;
     color[2] = col.z;
 }
 
-void DirectionalLight::SetDir(Vector3f dir) {
+void DirectionalLight::SetDir(glm::vec3 dir) {
     direction[0] = dir.x;
     direction[1] = dir.y;
     direction[2] = dir.z;
@@ -38,18 +40,18 @@ void DirectionalLight::Render(const Camera& cam) {
     mesh->Render(cam);
 }
 
-Vector3f DirectionalLight::GetDir() {
-    return Vector3f(direction[0], direction[1], direction[2]);
+glm::vec3 DirectionalLight::GetDir() {
+    return glm::vec3(direction[0], direction[1], direction[2]);
 }
-Vector3f DirectionalLight::GetCol() {
-    return Vector3f(color[0], color[1], color[2]);
+glm::vec3 DirectionalLight::GetCol() {
+    return glm::vec3(color[0], color[1], color[2]);
 }
 
 DirectionalLight::DirectionalLight() {}
 DirectionalLight::~DirectionalLight() {}
 
-Vector3f SpotLight::GetPos() {
-    return Vector3f(position[0], position[1], position[2]);
+glm::vec3 SpotLight::GetPos() {
+    return glm::vec3(position[0], position[1], position[2]);
 }
 
 SpotLight::SpotLight() {}
@@ -74,150 +76,36 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 
     mesh = make_shared<Mesh>();
     mesh->Init(_mat, "models/cone2.ho3d");
-    mesh->SetRotation(90, 0, 0);
 }
 
 void SpotLight::Render(const Camera& cam) {
-    /* Vector3f HTarget(direction[0], 0.0, direction[2]);
-HTarget.Normalize();
+    const glm::vec3 dir(target[0] - position[0], target[1] - position[1],
+                       target[2] - position[2]);
+    const float distance = glm::length(dir);
+    if (distance <= 1e-6f) return;
 
-float m_AngleH;
-float m_AngleV;
+    direction[0] = dir.x;
+    direction[1] = dir.y;
+    direction[2] = dir.z;
+    direction[3] = 1.0f;
 
-if (HTarget.z >= 0.0f)
-{
-if (HTarget.x >= 0.0f)
-{
- m_AngleH = 360.0f - ToDegree(asin(HTarget.z));
-}
-else
-{
- m_AngleH = 180.0f + ToDegree(asin(HTarget.z));
-}
-}
-else
-{
-if (HTarget.x >= 0.0f)
-{
- m_AngleH = ToDegree(asin(-HTarget.z));
-}
-else
-{
- m_AngleH = 90.0f + ToDegree(asin(-HTarget.z));
-}
-}
+    // The cone mesh points along +Y. Align its axis with the target direction.
+    const glm::vec3 unit = dir / distance;
+    const float x =
+        glm::degrees(glm::asin(glm::clamp(unit.z, -1.0f, 1.0f)));
+    const float z = glm::abs(unit.z) >= 1.0f - 1e-6f
+                        ? 0.0f
+                        : glm::degrees(glm::atan(-unit.x, unit.y));
+    mesh->SetRotation(x, 0.0f, z);
 
-m_AngleV = -ToDegree(asin(direction[1]));
-
-
-     const Vector3f Vaxis(0.0f, 1.0f, 0.0f);
-
-// Rotate the view vector by the horizontal angle around the vertical axis
-//Vector3f View(1.0f, 0.0f, 0.0f);
-//View.Rotate(m_AngleH, Vaxis);
-//View.Normalize();
-mesh->SetRotate(0,0,m_AngleH);*/
-
-    /*// Rotate the view vector by the vertical angle around the horizontal axis
-    Vector3f Haxis = Vaxis.Cross(View);
-    Haxis.Normalize();
-    View.Rotate(m_AngleV, Haxis);*/
-
-    //======Previous solution to the problem========
-    direction[0] = target[0] - position[0];
-    direction[1] = target[1] - position[1];
-    direction[2] = target[2] - position[2];
-    direction[3] = 1;
-
-    Vector3f dir(direction[0], direction[1], direction[2]);
-    Vector3f proj(0, 1, 0);
-    Vector3f directionXY(direction[0], direction[1], 0);
-    Vector3f directionYZ(0, direction[1], direction[2]);
-    Vector3f directionXZ(direction[0], 0, direction[2]);
-
-    float xrot = 0, yrot = 0, zrot = 0;
-
-    // X axis
-    {
-        // get the pojection
-        Vector3f projYZ(0, proj.y, proj.z);
-
-        // calc rotation
-        if (projYZ.Cross(directionYZ).x > 0)
-            xrot = -ToDegree(CalcAngle(directionYZ, projYZ));
-        else
-            xrot = ToDegree(CalcAngle(directionYZ, projYZ));
-
-        // update up vector
-        proj.Rotate(-xrot, Vector3f(1, 0, 0));
-        spdlog::debug("proj: ({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y,
-                      proj.z);
-    }
-
-    // Y axis
-    if (proj != dir) {
-        // get the pojection
-        Vector3f projXZ(proj.x, 0, proj.z);
-
-        // calc the rotation
-        if (projXZ.Cross(directionXZ).y > 0)
-            yrot = -ToDegree(CalcAngle(directionXZ, projXZ));
-        else
-            yrot = ToDegree(CalcAngle(directionXZ, projXZ));
-
-        // update the up vector
-        proj.Rotate(-yrot, Vector3f(0, 1, 0));
-        spdlog::debug("({},{},{});", proj.x, proj.y, proj.z);
-
-        // Z axis
-        if (proj != dir) {
-            // get the pojection
-            Vector3f projXY(proj.x, proj.y, 0);
-
-            // calc the rotation
-            if (projXY.Cross(directionXY).z > 0)
-                zrot = ToDegree(CalcAngle(directionXY, projXY));
-            else
-                zrot = -ToDegree(CalcAngle(directionXY, projXY));
-            proj.Rotate(-zrot, Vector3f(0, 0, 1));
-        }
-    }
-    spdlog::debug("({:.1f},  {:.1f},  {:.1f});", proj.x, proj.y, proj.z);
-
-    spdlog::debug("rot: ({:.1f} {:.1f} {:.1f}, dir:({:.3f}, {:.3f}, {:.3f})",
-                  xrot, yrot, zrot, direction[0], direction[1], direction[2]);
-
-    mesh->SetRotation(xrot, yrot, zrot);
-    //=======================================================
-
-    /*//==========решение на основе сферических координат=======
-    Vector3f sphericalDirection = ToSphericalCoordinates( dir );
-    Vector3f sphericalUp = ToSphericalCoordinates( Vector3f(0.0,
-                                                            1.0,
-                                                            0.0) );
-    mesh->SetRotate( sphericalDirection.y-sphericalUp.y,
-                    0.0f,
-                    sphericalDirection.z - sphericalUp.z);
-    //=========================================================*/
-
-    //=====решение на основе поворота вокруг вектора============
-    // Vector3f rotateVector =  dir.Cross(proj);
-    /*mesh->SetVectorRotate(rotateVector,
-                          CalcAngle(dir,proj));*/
-    // mesh->SetVectorRotate(proj,
-    //                       -90.0f);
-    //==========================================================
-
-    // TODO idea: use vector dot product
-
-    mesh->SetScale(dir.Lenght() * cos(ToRadian(Cutoff)), dir.Lenght(),
-                   dir.Lenght() * cos(ToRadian(Cutoff)));
-
+    // Cutoff is the cone's half angle; its radius is distance * tan(cutoff).
+    const float radius = distance * glm::tan(glm::radians(Cutoff));
+    mesh->SetScale(radius, distance, radius);
     mesh->SetPosition(position[0], position[1], position[2]);
     mesh->Render(cam);
 }
 
-void SpotLight::SetTarget(Vector3f _target) {
+void SpotLight::SetTarget(glm::vec3 _target) {
     target[0] = _target.x;
     target[1] = _target.y;
     target[2] = _target.z;
@@ -243,7 +131,7 @@ void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
     Cutoff = cut;
 }
 
-void SpotLight::SetPos(Vector3f pos) {
+void SpotLight::SetPos(glm::vec3 pos) {
     position[0] = pos.x;
     position[1] = pos.y;
     position[2] = pos.z;
@@ -300,7 +188,7 @@ void PointLight::Render(const Camera& cam) {
                     glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
 
 
-                    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const
+                    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, (const
        GLfloat*)TM.GetTSRVC());
                     glUniform4f(PixelColorID,color[0],color[1],color[2],1);
                     glUniform1f(PointSizeID, 5.0);
@@ -313,13 +201,13 @@ void PointLight::Render(const Camera& cam) {
     sphere->Render(cam);
 }
 
-void PointLight::SetPos(Vector3f pos) {
+void PointLight::SetPos(glm::vec3 pos) {
     position[0] = pos.x;
     position[1] = pos.y;
     position[2] = pos.z;
 }
 
-void PointLight::SetCol(Vector3f col) {
+void PointLight::SetCol(glm::vec3 col) {
     color[0] = col.x;
     color[1] = col.y;
     color[2] = col.z;
@@ -328,11 +216,11 @@ void PointLight::SetCol(Vector3f col) {
 }
 float PointLight::CalcSphereSize() {
     return 8.0f *
-               sqrtf(Vector3f(color[0], color[1], color[2]).Lenght() * power) +
+               sqrtf(glm::length(glm::vec3(color[0], color[1], color[2])) * power) +
            1.0f;
 }
 
-Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
+Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
     shaderProgram = make_shared<Shader>();
     shaderProgram->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
     shaderProgram->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
@@ -361,7 +249,7 @@ Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color) {
     PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID = shaderProgram->GetUniformLocation("size");
 }
-Line::Line(Vector3f pos1, Vector3f pos2, Vector3f color,
+Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
            shared_ptr<Shader> shader) {
     // shaderProgramID=shader;
     shaderProgram = shader;
@@ -399,7 +287,7 @@ void Line::Render(const Camera& cam) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE, (const GLfloat*)TM.GetTSRVC());
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(*TM.GetTSRVC()));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(positionID);
