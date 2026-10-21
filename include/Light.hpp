@@ -1,6 +1,6 @@
 #ifndef LIGHT_H_INCLUDED
 #define LIGHT_H_INCLUDED
-#include "Assistant.hpp"
+#include <glm/glm.hpp>
 #include "Camera.hpp"
 #include "MaterialObject.hpp"
 #include "Mesh.hpp"
@@ -23,10 +23,10 @@ public:
     GLfloat direction[4];
     // GLfloat	color[3];
     DirectionalLight();
-    Vector3f GetDir();
-    Vector3f GetCol();
-    void SetDir(Vector3f dir);
-    void SetCol(Vector3f col);
+    glm::vec3 GetDir();
+    glm::vec3 GetCol();
+    void SetDir(glm::vec3 dir);
+    void SetCol(glm::vec3 col);
     DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, shared_ptr<Material> _mat);
     virtual void Render(const Camera& cam);
@@ -41,8 +41,8 @@ public:
                shared_ptr<Material> _mat);
     ~PointLight();
     virtual void Render(const Camera& cam);
-    void SetPos(Vector3f pos);
-    void SetCol(Vector3f col);
+    void SetPos(glm::vec3 pos);
+    void SetCol(glm::vec3 col);
 
 protected:
     // GLuint shaderProgramID;
@@ -58,7 +58,7 @@ protected:
 };
 class SpotLight : public DirectionalLight, public PlaceableObject {
 public:
-    float Cutoff;  // cutoff angle in radians
+    float Cutoff;  // cone half angle in degrees
                    //  float position[3];
     float target[3];
     SpotLight();
@@ -66,9 +66,9 @@ public:
               GLfloat b, float p1, float p2, float p3, float cutoff,
               shared_ptr<Material> _mat);
     ~SpotLight();
-    Vector3f GetPos();
-    void SetPos(Vector3f pos);
-    void SetTarget(Vector3f _target);
+    glm::vec3 GetPos();
+    void SetPos(glm::vec3 pos);
+    void SetTarget(glm::vec3 _target);
     virtual void Render(const Camera& cam);
 
 private:
@@ -78,17 +78,17 @@ private:
 
 class Line : public RenderableObject {
 public:
-    /*Vector3f p1;
-    Vector3f p2;
-    Vector3f c1;*/
+    /*glm::vec3 p1;
+    glm::vec3 p2;
+    glm::vec3 c1;*/
     // GLuint shaderProgramID;
     GLuint PixelColorID, PointSizeID;
     GLuint gWorldID;
     GLuint positionID;
     float col[3];
     float pos[6];
-    Line(Vector3f pos1, Vector3f pos2, Vector3f color);
-    Line(Vector3f pos1, Vector3f pos2, Vector3f color,
+    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
+    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
          shared_ptr<Shader> shader);
     ~Line();
     // void Render(const Camera& pGameCamera, int width, int height);

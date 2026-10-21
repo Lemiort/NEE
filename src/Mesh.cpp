@@ -1,6 +1,7 @@
 #include "Mesh.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <ios>
@@ -10,9 +11,9 @@
 #include <utility>
 #include <vector>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "Transform.hpp"
 #include "spdlog/spdlog.h"
 
 Mesh::Mesh() {
@@ -159,19 +160,12 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-    Assistant TM;
-    Assistant TM2;  // TM - For object, 2- for object's normal, 3 - for
-                    // camera position for specular
-    TM.Scale(scale[0], scale[1], scale[2]);
-    TM.WorldPos(position[0], position[1], position[2]);
-    TM.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM2.Rotate(rotation[0], rotation[1], rotation[2]);
-    TM.RotateOverVector(rv, rPhi);
-    TM2.RotateOverVector(rv, rPhi);
-
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
+    const Transform transform{
+        glm::vec3(position[0], position[1], position[2]),
+        glm::vec3(rotation[0], rotation[1], rotation[2]),
+        glm::vec3(scale[0], scale[1], scale[2])};
+    const glm::mat4 modelMatrix = transform.ModelMatrix();
+    const glm::mat4 rotationMatrix = transform.RotationMatrix();
 
     mat->Use();
 
@@ -185,11 +179,10 @@ void Mesh::Render(const Camera& cam) {
                           BUFFER_OFFSET(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetTSR()));
-    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(
-                           TM2.GetRotate()));  // rotation of model
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
+                       glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(rotateID, 1, GL_FALSE,
+                       glm::value_ptr(rotationMatrix));  // rotation of model
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);
@@ -200,11 +193,6 @@ void Mesh::Render(const Camera& cam) {
     glDisableVertexAttribArray(normalID);
     glDisableVertexAttribArray(uvID);
     glDisableVertexAttribArray(tangentID);
-}
-
-void Mesh::SetVectorRotate(Vector3f v, float phi) {
-    rPhi = phi;
-    rv = v;
 }
 
 int Mesh::GetNumFaces() const { return spfaces; }

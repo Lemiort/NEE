@@ -1,14 +1,14 @@
 #ifndef SCALEABLEOBJECT_H
 #define SCALEABLEOBJECT_H
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 
 class ScaleableObject {
 public:
     ScaleableObject();
     virtual ~ScaleableObject();
     void SetScale(float x, float y, float z);
-    void SetScale(Vector3f v);
-    Vector3f GetScale();
+    void SetScale(glm::vec3 v);
+    glm::vec3 GetScale();
 
 protected:
  float scale[3]{};

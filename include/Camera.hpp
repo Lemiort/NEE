@@ -3,7 +3,7 @@
 
 #include <memory>
 
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 
 class Camera {
 public:
@@ -11,8 +11,8 @@ public:
            float zfar);
 
     Camera(int WindowWidth, int WindowHeight, float fov, float znear,
-           float zfar, const Vector3f& Pos, const Vector3f& Target,
-           const Vector3f& Up);
+           float zfar, const glm::vec3& Pos, const glm::vec3& Target,
+           const glm::vec3& Up);
 
     bool OnKeyboard(char Key);
 
@@ -20,11 +20,15 @@ public:
 
     void OnRender();
 
-    const Vector3f& GetPos() const;
+    const glm::vec3& GetPos() const;
 
-    const Vector3f& GetTarget() const;
+    const glm::vec3& GetTarget() const;
 
-    const Vector3f& GetUp() const;
+    const glm::vec3& GetUp() const;
+
+    [[nodiscard]] glm::mat4 GetViewMatrix() const;
+    [[nodiscard]] glm::mat4 GetProjectionMatrix() const;
+    [[nodiscard]] glm::mat4 GetViewProjectionMatrix() const;
 
     float GetFov() const;
 
@@ -52,9 +56,9 @@ private:
     void Init();
     void Update();
 
-    Vector3f m_pos;
-    Vector3f m_target;
-    Vector3f m_up;
+    glm::vec3 m_pos;
+    glm::vec3 m_target;
+    glm::vec3 m_up;
 
     int m_windowWidth;
     int m_windowHeight;
@@ -67,7 +71,7 @@ private:
     bool m_OnLeftEdge;
     bool m_OnRightEdge;
 
-    Vector2i m_mousePos;
+    glm::ivec2 m_mousePos;
 };
 
 #endif  // CAMERA_H_INCLUDED

@@ -2,6 +2,9 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cmath>
 #include <cstdlib>
@@ -11,9 +14,8 @@
 #include <utility>
 #include <vector>
 
-#include "Assistant.hpp"
 #include "Light.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
@@ -22,6 +24,25 @@
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image_write.h"
+
+namespace {
+// The scene passes historically use a 30 degree, 1..1000 projection even
+// when the interactive camera has different clipping settings.
+glm::mat4 RenderPassViewProjection(const Camera& camera) {
+    const glm::mat4 projection = glm::perspectiveRH_NO(
+        glm::radians(30.0f),
+        static_cast<float>(camera.GetWidth()) / camera.GetHeight(), 1.0f,
+        1000.0f);
+    return projection * camera.GetViewMatrix();
+}
+
+void SetLightColor(GLint uniformLocation, const GLfloat* color) {
+    const glm::mat4 colorMatrix = glm::scale(
+        glm::mat4(1.0f), glm::vec3(color[0], color[1], color[2]));
+    glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                       glm::value_ptr(colorMatrix));
+}
+}  // namespace
 
 void CalcFPS() {
     double const currentTime = glfwGetTime();
@@ -158,53 +179,35 @@ void ShadowPass() {
     // light3->SetPos(pGameCamera.GetPos());
     // light3->SetDir(pGameCamera.GetTarget()-pGameCamera.GetPos());
     Camera const lightCam(width, height, 45, 1, 1000.0F, spotLight1->GetPos(),
-                          Vector3f(-1.0, -1.0, -1.0), Vector3f(0.0, 1.0, 0.0));
+                          glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
 
     Plane.SetScale(30.0F, 30.0F, 30.0F);
     Plane.SetPosition(0.0F, -3.0F, 0.0F);
     Plane.SetRotation(0.0, 0.0, 0.0);
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // Camera for specular
-    TM.SetCamera(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
 
     shadowShader->Use();
     gCamViewID = shadowShader->GetUniformLocation("gVC");
     rotateID = shadowShader->GetUniformLocation("mRotate");
     camPosID = shadowShader->GetUniformLocation("s_vCamPos");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(lightViewProjection));
     // Lighting
     {
         // Directional light
-        Assistant LA;
-        LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
-                 directionalLight1->color[2]);
-        glUniformMatrix4fv(
-            dirLightColID, 1, GL_TRUE,
-            reinterpret_cast<const GLfloat*>(LA.GetScaleTrans()));
+        SetLightColor(dirLightColID, directionalLight1->color);
         glUniform3f(dirLightDirID, directionalLight1->direction[0],
                     directionalLight1->direction[1],
                     directionalLight1->direction[2]);
         // point light
-        Assistant LA2;
-        LA2.Scale(pointLight1->color[0], pointLight1->color[1],
-                  pointLight1->color[2]);
-        glUniformMatrix4fv(
-            pointLightColID, 1, GL_TRUE,
-            reinterpret_cast<const GLfloat*>(LA2.GetScaleTrans()));
+        SetLightColor(pointLightColID, pointLight1->color);
         glUniform3f(pointLightPosID, pointLight1->position[0],
                     pointLight1->position[1], pointLight1->position[2]);
         glUniform1f(pointLightIntID, pointLight1->power);
 
         // spot light
-        Assistant LA3;
-        LA3.Scale(spotLight1->color[0], spotLight1->color[1],
-                  spotLight1->color[2]);
-        glUniformMatrix4fv(
-            spotLightColID, 1, GL_TRUE,
-            reinterpret_cast<const GLfloat*>(LA3.GetScaleTrans()));
+        SetLightColor(spotLightColID, spotLight1->color);
         glUniform3f(spotLightDirID, spotLight1->direction[0],
                     spotLight1->direction[1], spotLight1->direction[2]);
         glUniform1f(spotLightCutoffID,
@@ -244,56 +247,14 @@ void RenderPass() {
     Plane.SetScale(30.0F, 30.0F, 30.0F);
     Plane.SetPosition(0.0F, -3.0F, 0.0F);
     Plane.SetRotation(0.0, 0.0, 0.0);
-    Assistant TM;
-    Assistant TM2;  // TM - For object, 2- for object normal, 3 - for
-                    // camera position for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     Camera const lightCam(width, height, pGameCamera.GetFov(),
                           pGameCamera.GetZNear(), pGameCamera.GetZFar(),
-                          spotLight1->GetPos(), Vector3f(-1.0, -1.0, -1.0),
-                          Vector3f(0.0, 1.0, 0.0));
+                          spotLight1->GetPos(), glm::vec3(-1.0, -1.0, -1.0),
+                          glm::vec3(0.0, 1.0, 0.0));
 
-    TM2.SetCamera(lightCam.GetPos(), lightCam.GetTarget(), lightCam.GetUp());
-    TM2.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
-
-    /*meshShader->Use();
-    gCamViewID =	meshShader->GetUniformLocation("gVC");
-    rotateID =	    meshShader->GetUniformLocation("mRotate");
-    camPosID =    meshShader->GetUniformLocation("s_vCamPos");
-
-
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
-    // lighting
-    {
-
-        // directional light
-        Assistant LA;
-        LA.Scale(light1->color[0],light1->color[1],light1->color[2]);
-        glUniformMatrix4fv(dirLightColID,1, GL_TRUE, (const
-    GLfloat*)LA.GetScaleTrans());
-        glUniform3f(dirLightDirID,light1->direction[0],light1->direction[1],light1->direction[2]);
-        // Point light
-        Assistant LA2;
-        LA2.Scale(light2->color[0],light2->color[1],light2->color[2]);
-        glUniformMatrix4fv(pointLightColID,1, GL_TRUE, (const
-    GLfloat*)LA2.GetScaleTrans());
-        glUniform3f(pointLightPosID,light2->position[0],light2->position[1],light2->position[2]);
-        glUniform1f(pointLightIntID,light2->power);
-        // spot light
-        Assistant LA3;
-        LA3.Scale(light3->color[0],light3->color[1],light3->color[2]);
-        glUniformMatrix4fv(spotLightColID,1, GL_TRUE, (const
-    GLfloat*)LA3.GetScaleTrans());
-        glUniform3f(spotLightDirID,light3->direction[0],light3->direction[1],light3->direction[2]);
-        glUniform1f(spotLightCutoffID,cosf((light3->Cutoff)*3.14/180.0f));
-        glUniform3f(spotLightPosID,light3->position[0],light3->position[1],light3->position[2]);
-    }
-
-    //Rotate camera for specular highlights
-    glUniform3f(camPosID,pGameCamera.GetPos().x,pGameCamera.GetPos().y,pGameCamera.GetPos().z);*/
+    const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
 
     /*Cube.SetMaterial(mainMaterial);
     for(float i=-5.0f;i<5.0f;i+=0.1f)
@@ -324,40 +285,25 @@ void RenderPass() {
         rotateID = meshShader->GetUniformLocation("mRotate");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
 
-        glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                           reinterpret_cast<const GLfloat*>(TM.GetVC()));
-        glUniformMatrix4fv(gLightCamViewID, 1, GL_TRUE,
-                           reinterpret_cast<const GLfloat*>(TM2.GetVC()));
+        glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                           glm::value_ptr(viewProjection));
+        glUniformMatrix4fv(gLightCamViewID, 1, GL_FALSE,
+                           glm::value_ptr(lightViewProjection));
 
         // Lighting
         {
             // Directional light
-            Assistant LA;
-            LA.Scale(directionalLight1->color[0], directionalLight1->color[1],
-                     directionalLight1->color[2]);
-            glUniformMatrix4fv(
-                dirLightColID, 1, GL_TRUE,
-                reinterpret_cast<const GLfloat*>(LA.GetScaleTrans()));
+            SetLightColor(dirLightColID, directionalLight1->color);
             glUniform3f(dirLightDirID, directionalLight1->direction[0],
                         directionalLight1->direction[1],
                         directionalLight1->direction[2]);
             // Point light
-            Assistant LA2;
-            LA2.Scale(pointLight1->color[0], pointLight1->color[1],
-                      pointLight1->color[2]);
-            glUniformMatrix4fv(
-                pointLightColID, 1, GL_TRUE,
-                reinterpret_cast<const GLfloat*>(LA2.GetScaleTrans()));
+            SetLightColor(pointLightColID, pointLight1->color);
             glUniform3f(pointLightPosID, pointLight1->position[0],
                         pointLight1->position[1], pointLight1->position[2]);
             glUniform1f(pointLightIntID, pointLight1->power);
             // spot light
-            Assistant LA3;
-            LA3.Scale(spotLight1->color[0], spotLight1->color[1],
-                      spotLight1->color[2]);
-            glUniformMatrix4fv(
-                spotLightColID, 1, GL_TRUE,
-                reinterpret_cast<const GLfloat*>(LA3.GetScaleTrans()));
+            SetLightColor(spotLightColID, spotLight1->color);
             glUniform3f(spotLightDirID, spotLight1->direction[0],
                         spotLight1->direction[1], spotLight1->direction[2]);
             glUniform1f(spotLightCutoffID,
@@ -480,19 +426,10 @@ void DSStencilPass(Light& light) {
     // important.
     glStencilFunc(GL_ALWAYS, 0, 0);
 
-    // glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
-    // glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
-    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_DECR,
-                        GL_KEEP);  //  TODO make opposite
-    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_INCR,
+    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
+    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
 
-                        GL_KEEP);  // TODO make opposite
-
-    Assistant TM;  // TM - For object, 2 - for normal, 3 - for position
-                   // camera for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     // define camera variable addresses
     gCamViewID = DSStencilPassShader->GetUniformLocation("gVC");
@@ -500,8 +437,8 @@ void DSStencilPass(Light& light) {
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
 
     light.SetMaterial(DSStencilPassMaterial);
     light.Render(pGameCamera);
@@ -519,13 +456,9 @@ void DSPointLightPass(PointLight& pointLight) {
     glBlendFunc(GL_ONE, GL_ONE);
 
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glCullFace(GL_FRONT);
 
-    Assistant TM;  // TM - For object, 2 - for normal, 3 - for position
-                   // camera for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     // enable shader
     DSPointLightShader->Use();
@@ -536,8 +469,8 @@ void DSPointLightPass(PointLight& pointLight) {
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
     // load the camera rotation for specular
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
@@ -561,10 +494,7 @@ void DSPointLightPass(PointLight& pointLight) {
     pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
 
     // load light parameters for source 1
-    Assistant LA2;
-    LA2.Scale(pointLight.color[0], pointLight.color[1], pointLight.color[2]);
-    glUniformMatrix4fv(pointLightColID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(LA2.GetScaleTrans()));
+    SetLightColor(pointLightColID, pointLight.color);
     glUniform3f(pointLightPosID, pointLight.position[0], pointLight.position[1],
                 pointLight.position[2]);
     glUniform1f(pointLightIntID, pointLight.power);
@@ -572,7 +502,7 @@ void DSPointLightPass(PointLight& pointLight) {
     pointLight.SetMaterial(DSPointLightMaterial);
     pointLight.Render(pGameCamera);
 
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
 
@@ -587,13 +517,9 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glBlendFunc(GL_ONE, GL_ONE);
 
     glEnable(GL_CULL_FACE);
-    glCullFace(GL_BACK);
+    glCullFace(GL_FRONT);
 
-    Assistant TM;  // TM - For object, 2 - for normal, 3 - for position
-                   // camera for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     // enable shader
     DSSpotLightShader->Use();
@@ -604,8 +530,8 @@ void DSSpotLightPass(SpotLight& spotLight) {
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
     // load the camera rotation for specular
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
@@ -624,15 +550,12 @@ void DSSpotLightPass(SpotLight& spotLight) {
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
     // Load the light parameters for source 1
-    Assistant LA2;
-    LA2.Scale(spotLight.color[0], spotLight.color[1], spotLight.color[2]);
     glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
                 spotLight.position[2]);
-    glUniformMatrix4fv(spotLightColID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(LA2.GetScaleTrans()));
+    SetLightColor(spotLightColID, spotLight.color);
     glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
                 spotLight.direction[2]);
-    glUniform1f(spotLightCutoffID, cosf(ToRadian(spotLight.Cutoff)));
+    glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
 
     // enable buffer data
     // glBindFramebuffer(GL_FRAMEBUFFER, 0);
@@ -640,7 +563,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     spotLight.SetMaterial(DSSpotLightMaterial);
     spotLight.Render(pGameCamera);
 
-    glCullFace(GL_FRONT);
+    glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
 
@@ -652,11 +575,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
 
-    Assistant TM;  // TM - For object, 2 - for normal, 3 - for position
-                   // camera for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     DSDirectionalLightShader->Use();
     // get camera parameter addresses
@@ -667,8 +586,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
 
     // Get the address of light variables
     dirLightColID =
@@ -677,11 +596,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
         DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
 
     // Load the light parameters
-    Assistant LA2;
-    LA2.Scale(directionalLight.color[0], directionalLight.color[1],
-              directionalLight.color[2]);
-    glUniformMatrix4fv(dirLightColID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(LA2.GetScaleTrans()));
+    SetLightColor(dirLightColID, directionalLight.color);
     glUniform3f(dirLightDirID, directionalLight.direction[0],
                 directionalLight.direction[1], directionalLight.direction[2]);
 
@@ -767,17 +682,13 @@ void DSGeometryPass() {
 
     CalcFPS();
 
-    Assistant TM;  // TM - Для объекта, 2- для нормали объекта, 3 - для позиции
-                   // camera for specular
-    TM.SetCamera(pGameCamera.GetPos(), pGameCamera.GetTarget(),
-                 pGameCamera.GetUp());
-    TM.SetPerspectiveProj(30.0F, width, height, 1.0F, 1000.0F);
+    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
 
     DSGeometryPassShader->Use();
     gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
 
     Cube.SetMaterial(DSGeometryPassMaterial);
     for (float i = -5.0F; i < 5.0F; i += 0.1F) {
@@ -1081,8 +992,9 @@ int InitScene(GLFWwindow* window) {
     }
 
     skybox1 = std::make_unique<SkyBox>(skyboxShader);
+    // The viewer faces -Z by default, so the front image belongs on -Z.
     skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
-                  "sp3bot.tga", "sp3front.tga", "sp3back.tga");
+                  "sp3bot.tga", "sp3back.tga", "sp3front.tga");
     // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
@@ -1113,10 +1025,10 @@ int InitScene(GLFWwindow* window) {
                                                  0.0F, 1.0F, 0.0F,  // position
                                                  35.0F,  // cutoff in degrees
                                                  DSSpotLightMaterial);
-        Vector3f const PX(1, 0, 0);
-        Vector3f const PY(0, 1, 0);
-        Vector3f const PZ(0, 0, 1);
-        Vector3f const P0(0, 0, 0);
+        glm::vec3 const PX(1, 0, 0);
+        glm::vec3 const PY(0, 1, 0);
+        glm::vec3 const PZ(0, 0, 1);
+        glm::vec3 const P0(0, 0, 0);
 
         xline = std::make_unique<Line>(PX, P0, PX);
         yline = std::make_unique<Line>(PY, P0, PY, xline->GetShader());
@@ -1130,7 +1042,7 @@ int InitScene(GLFWwindow* window) {
         InitRender(window, "Final steps...");
         bb1 = std::make_unique<Billboard>();
         bb1->Init("Textures/monster_hellknight.png");
-        bb1->SetPos(Vector3f(0, 0, 0));
+        bb1->SetPos(glm::vec3(0, 0, 0));
 
         noise1 = std::make_unique<PerlinNoise>(1, 10.3, 0.5, 2, 42);
         // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
@@ -1141,7 +1053,7 @@ int InitScene(GLFWwindow* window) {
         // smfbo1->Init(width,height);
         //************************************/
         // pGameCamera = new
-        // Camera(width,height,light3->GetPos(),Vector3f(-1.0,-1.0,-1.0),Vector3f(0.0,1.0,0.0));
+        // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
     glFlush();
     initialized = true;
@@ -1202,7 +1114,8 @@ int main(int /*argc*/, char** /*argv*/) {
     glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
     glEnable(GL_CULL_FACE);
     glEnable(GL_PROGRAM_POINT_SIZE);
-    glCullFace(GL_FRONT);
+    glFrontFace(GL_CCW);
+    glCullFace(GL_BACK);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     // enable transparency
