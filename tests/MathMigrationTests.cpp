@@ -2,16 +2,16 @@
 #include <gtest/gtest.h>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
+#include "Transform.hpp"
 
 namespace {
 constexpr float kTolerance = 1e-4f;
 
 glm::vec3 rotate(float x, float y, float z, const glm::vec3& direction) {
-    Assistant transform;
-    transform.Rotate(x, y, z);
-    return glm::vec3(*transform.GetTSR() * glm::vec4(direction, 0.0f));
+    Transform transform;
+    transform.rotationDegrees = glm::vec3(x, y, z);
+    return glm::vec3(transform.ModelMatrix() * glm::vec4(direction, 0.0f));
 }
 }  // namespace
 
@@ -35,15 +35,24 @@ TEST(ObjectTransform, UsesRightHandedEulerAxes) {
 }
 
 TEST(ObjectTransform, AppliesScaleThenRotationThenTranslation) {
-    Assistant model;
-    model.Scale(2, 3, 4);
-    model.Rotate(0, 90, 0);
-    model.WorldPos(5, 6, 7);
+    const Transform model{glm::vec3(5, 6, 7), glm::vec3(0, 90, 0),
+                          glm::vec3(2, 3, 4)};
 
-    const glm::vec4 transformed = *model.GetTSR() * glm::vec4(1, 0, 0, 1);
+    const glm::vec4 transformed = model.ModelMatrix() * glm::vec4(1, 0, 0, 1);
     EXPECT_NEAR(transformed.x, 5.0f, kTolerance);
     EXPECT_NEAR(transformed.y, 6.0f, kTolerance);
     EXPECT_NEAR(transformed.z, 5.0f, kTolerance);
+}
+
+TEST(ObjectTransform, RotationMatrixOmitsTranslationAndScale) {
+    const Transform transform{glm::vec3(5, 6, 7), glm::vec3(0, 90, 0),
+                              glm::vec3(2, 3, 4)};
+    const glm::vec4 rotated =
+        transform.RotationMatrix() * glm::vec4(1, 0, 0, 1);
+    EXPECT_NEAR(rotated.x, 0.0f, kTolerance);
+    EXPECT_NEAR(rotated.y, 0.0f, kTolerance);
+    EXPECT_NEAR(rotated.z, -1.0f, kTolerance);
+    EXPECT_NEAR(rotated.w, 1.0f, kTolerance);
 }
 
 TEST(CameraControls, KeyboardMovesAlongStandardAxes) {
@@ -79,26 +88,31 @@ TEST(CameraControls, UnchangedMousePositionPreservesInitialHeading) {
 }
 
 TEST(CameraProjection, MapsNearAndFarPlanesToOpenGLDepth) {
-    Assistant cameraTransform;
-    cameraTransform.SetPerspectiveProj(60, 800, 600, 1, 100);
-    cameraTransform.SetCamera(glm::vec3(0), glm::vec3(0, 0, -1),
-                              glm::vec3(0, 1, 0));
-
-    const glm::mat4 projectionView = *cameraTransform.GetVC();
+    Camera camera(800, 600, 60, 1, 100);
+    const glm::mat4 projectionView = camera.GetViewProjectionMatrix();
     const glm::vec4 nearClip = projectionView * glm::vec4(0, 0, -1, 1);
     const glm::vec4 farClip = projectionView * glm::vec4(0, 0, -100, 1);
     EXPECT_NEAR(nearClip.z / nearClip.w, -1.0f, kTolerance);
     EXPECT_NEAR(farClip.z / farClip.w, 1.0f, kTolerance);
 }
 
+TEST(CameraProjection, ViewMatrixUsesPositionAndForwardDirection) {
+    Camera camera(800, 600, 60, 1, 100, glm::vec3(2, 3, 4),
+                  glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+    const glm::mat4 view = camera.GetViewMatrix();
+    const glm::vec4 eye = view * glm::vec4(2, 3, 4, 1);
+    const glm::vec4 ahead = view * glm::vec4(2, 3, 3, 1);
+    EXPECT_NEAR(eye.x, 0.0f, kTolerance);
+    EXPECT_NEAR(eye.y, 0.0f, kTolerance);
+    EXPECT_NEAR(eye.z, 0.0f, kTolerance);
+    EXPECT_NEAR(ahead.z, -1.0f, kTolerance);
+}
+
 TEST(CameraProjection, WorldRightAppearsOnScreenRight) {
-    Assistant cameraTransform;
-    cameraTransform.SetPerspectiveProj(60, 800, 600, 1, 100);
-    cameraTransform.SetCamera(glm::vec3(0), glm::vec3(0, 0, -1),
-                              glm::vec3(0, 1, 0));
+    Camera camera(800, 600, 60, 1, 100);
 
     const glm::vec4 rightClip =
-        *cameraTransform.GetVC() * glm::vec4(1, 0, -3, 1);
+        camera.GetViewProjectionMatrix() * glm::vec4(1, 0, -3, 1);
     EXPECT_GT(rightClip.x / rightClip.w, 0.0f);
 }
 

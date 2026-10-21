@@ -5,7 +5,6 @@
 
 #include <utility>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Shader.hpp"
 
@@ -60,15 +59,11 @@ void Billboard::SetPos(glm::vec3 Pos) {
 void Billboard::Render(const Camera& cam) {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
-    Assistant TM;  // TM - For object, 2 - for object normal, 3 - for position
-                   // camera for specular
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
+    const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
 
     // camera projection matrix
     glUniformMatrix4fv(camViewID, 1, GL_FALSE,
-                       glm::value_ptr(*TM.GetVC()));
+                       glm::value_ptr(viewProjection));
     // camera position
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 

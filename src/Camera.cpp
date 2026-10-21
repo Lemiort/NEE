@@ -7,6 +7,8 @@
 #include <cmath>
 
 #include <glm/glm.hpp>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_transform.hpp>
 
 const static float STEP_SCALE = 0.1F;
 const static int MARGIN = 100;
@@ -178,6 +180,21 @@ const glm::vec3& Camera::GetPos() const { return m_pos; }
 const glm::vec3& Camera::GetTarget() const { return m_target; }
 
 const glm::vec3& Camera::GetUp() const { return m_up; }
+
+glm::mat4 Camera::GetViewMatrix() const {
+    return glm::lookAtRH(m_pos, m_pos + m_target, m_up);
+}
+
+glm::mat4 Camera::GetProjectionMatrix() const {
+    return glm::perspectiveRH_NO(glm::radians(FOV),
+                                 static_cast<float>(m_windowWidth) /
+                                     static_cast<float>(m_windowHeight),
+                                 zNear, zFar);
+}
+
+glm::mat4 Camera::GetViewProjectionMatrix() const {
+    return GetProjectionMatrix() * GetViewMatrix();
+}
 
 float Camera::GetZNear() const { return zNear; }
 

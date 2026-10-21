@@ -26,6 +26,10 @@ public:
 
     const glm::vec3& GetUp() const;
 
+    [[nodiscard]] glm::mat4 GetViewMatrix() const;
+    [[nodiscard]] glm::mat4 GetProjectionMatrix() const;
+    [[nodiscard]] glm::mat4 GetViewProjectionMatrix() const;
+
     float GetFov() const;
 
     void SetFOV(float fov);

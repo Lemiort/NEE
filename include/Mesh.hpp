@@ -2,7 +2,6 @@
 #define MESH_H_INCLUDED
 #include <fstream>
 
-#include "Assistant.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
@@ -48,11 +47,6 @@ protected:
     int spfaces, spverts;
     int Scale;
 
-    // rotation angle around the vector
-    float rPhi;
-    // rotation vector
-    glm::vec3 rv;
-
 public:
     Mesh();
     virtual ~Mesh();
@@ -62,8 +56,6 @@ public:
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
     void Render(const Camera& cam);
-    void SetVectorRotate(glm::vec3 v, float phi);
-    void Rotate(float x, float y, float z);
 
 private:
 };

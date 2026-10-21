@@ -177,25 +177,6 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
 }
 PointLight::~PointLight() {}
 void PointLight::Render(const Camera& cam) {
-    /*Assistant TM;
-    TM.WorldPos(position[0],position[1],position[2]);
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam, Width, Height, zNear, zFar);*/
-
-    /*shaderProgram->Use();
-                    //glUseProgram(shaderProgramID);
-                    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-                    glVertexAttribPointer(positionID,3,GL_FLOAT,GL_FALSE,0,0);
-
-
-                    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, (const
-       GLfloat*)TM.GetTSRVC());
-                    glUniform4f(PixelColorID,color[0],color[1],color[2],1);
-                    glUniform1f(PointSizeID, 5.0);
-                    glEnableVertexAttribArray(positionID);
-                    glDrawArrays(GL_POINTS,0,1);
-                    glDisableVertexAttribArray(positionID);*/
-
     sphere->SetScale(radius, radius, radius);
     sphere->SetPosition(position[0], position[1], position[2]);
     sphere->Render(cam);
@@ -276,18 +257,15 @@ Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
 Line::~Line() {}
 // void Line::Render(const Camera& pGameCamera, int width, int height)
 void Line::Render(const Camera& cam) {
-    Assistant TM;
-    TM.WorldPos(0, 0, 0);
-    TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
-    TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
-                          cam.GetZNear(), cam.GetZFar());
+    const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
 
     shaderProgram->Use();
     // glUseProgram(shaderProgramID);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(*TM.GetTSRVC()));
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
+                       glm::value_ptr(viewProjection));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(positionID);
