@@ -5,7 +5,7 @@
 #include <cstring>
 #include <map>
 
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
@@ -31,7 +31,7 @@ private:
     GLuint sizeID;
     GLuint texSamplerID, texBufferID;
     GLuint colorID;
-    Vector4f color;
+    glm::vec4 color;
     std::string filename;
     float aratio;
 
@@ -53,7 +53,7 @@ private:
     FontCharacter currentCharacter;
 
 protected:
-    Vector2f characterLength;
+    glm::vec2 characterLength;
     char16_t character;
     std::map<KerningPair, float> kerningInfo;
 
@@ -70,7 +70,7 @@ public:
     void SetCharacter(char16_t c);
 
     // returns the length of the current character
-    Vector2f GetLastCharacterLength();
+    glm::vec2 GetLastCharacterLength();
     void Render(const Camera& cam);
     friend class FontLine2d;
 };

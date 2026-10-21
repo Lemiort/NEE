@@ -18,7 +18,7 @@
 #include <utility>
 
 #include "Camera.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
@@ -81,7 +81,7 @@ void FontLine2d::Render(const Camera& cam) {
     }
 }
 
-Font2d::Font2d() : aratio(1) { color = Vector4f(1.0F, 1.0F, 1.0F, 1.0F); }
+Font2d::Font2d() : aratio(1) { color = glm::vec4(1.0F, 1.0F, 1.0F, 1.0F); }
 
 Font2d::~Font2d() = default;
 
@@ -129,7 +129,9 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     colorID = shaderProgram->GetUniformLocation("textColor");
 
     // fill indices
-    const std::array<uint32_t, 4> indicies = {0, 1, 2, 3};
+    // The vertices are bottom-left, top-left, bottom-right, top-right.
+    // Draw both strip triangles counterclockwise so back-face culling keeps them.
+    const std::array<uint32_t, 4> indicies = {0, 2, 1, 3};
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
                  GL_STATIC_DRAW);
@@ -252,7 +254,7 @@ void Font2d::SetCharacter(char16_t c) {
         currentCharacter = fontInfo.at(character);
     } catch (const std::out_of_range& oor) {
         // printf("\n char is out of range");
-        characterLength = Vector2f(-1.0F, -1.0F);
+        characterLength = glm::vec2(-1.0F, -1.0F);
         return;
     }
     realWidth = static_cast<float>(currentCharacter.width) /
@@ -267,12 +269,12 @@ void Font2d::SetCharacter(char16_t c) {
               static_cast<float>(currentCharacter.yOffset) /
               static_cast<float>(imageHeight);
 
-    characterLength = Vector2f((2 * dx) * realWidth * kx * position[2],
+    characterLength = glm::vec2((2 * dx) * realWidth * kx * position[2],
                                (2 * dx) * realHeight * ky);
 }
 
-Vector2f Font2d::GetLastCharacterLength() {
-    // return Vector2f((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
+glm::vec2 Font2d::GetLastCharacterLength() {
+    // return glm::vec2((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
     return characterLength;
 }
 
@@ -343,5 +345,5 @@ void Font2d::Render(const Camera& cam) {
     glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(sverticesID);
     glDisableVertexAttribArray(uvID);
-    // return Vector2f((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
+    // return glm::vec2((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
 }

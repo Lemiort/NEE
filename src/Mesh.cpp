@@ -1,6 +1,7 @@
 #include "Mesh.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
 #include <ios>
@@ -185,11 +186,10 @@ void Mesh::Render(const Camera& cam) {
                           BUFFER_OFFSET(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetTSR()));
-    glUniformMatrix4fv(rotateID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(
-                           TM2.GetRotate()));  // rotation of model
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
+                       glm::value_ptr(*TM.GetTSR()));
+    glUniformMatrix4fv(rotateID, 1, GL_FALSE,
+                       glm::value_ptr(*TM2.GetRotate()));  // rotation of model
 
     glEnableVertexAttribArray(positionID);
     glEnableVertexAttribArray(normalID);
@@ -202,7 +202,7 @@ void Mesh::Render(const Camera& cam) {
     glDisableVertexAttribArray(tangentID);
 }
 
-void Mesh::SetVectorRotate(Vector3f v, float phi) {
+void Mesh::SetVectorRotate(glm::vec3 v, float phi) {
     rPhi = phi;
     rv = v;
 }

@@ -1,6 +1,7 @@
 #include "Skybox.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -118,14 +119,13 @@ void SkyBox::Render(const Camera& cam) {
     GLint OldDepthFuncMode = 0;
     glGetIntegerv(GL_DEPTH_FUNC, &OldDepthFuncMode);
 
-    glCullFace(GL_BACK);
+    glCullFace(GL_FRONT);
     glDepthFunc(GL_LEQUAL);
 
     Assistant
         TM;  // TM - For object, 2- for object's normal, 3 - for camera position
     TM.Scale(3, 3, 3);
     TM.WorldPos(cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
-    TM.Rotate(180, 180, 0);
     TM.SetCamera(cam.GetPos(), cam.GetTarget(), cam.GetUp());
     TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
                           cam.GetZNear(), cam.GetZFar());
@@ -139,8 +139,8 @@ void SkyBox::Render(const Camera& cam) {
     pCubemapTex->Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(TM.GetTSRVC()));
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
+                       glm::value_ptr(*TM.GetTSRVC()));
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);

@@ -1,23 +1,24 @@
 #include "ParticleSystem.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "Assistant.hpp"
 #include "Camera.hpp"
 #include "EngineCommon.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "Util.hpp"
 ParticleSystem::ParticleSystem() = default;
 
 ParticleSystem::~ParticleSystem() = default;
 
-bool ParticleSystem::Init(Vector3f Pos) {
+bool ParticleSystem::Init(glm::vec3 Pos) {
     Particle Particles[MAX_PARTICLES];
     ZERO_MEM(Particles);
 
     Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
     Particles[0].Pos = Pos;
-    Particles[0].Vel = Vector3f(0.0F, 0.0001F, 0.0F);
+    Particles[0].Vel = glm::vec3(0.0F, 0.0001F, 0.0F);
     Particles[0].LifetimeMillis = 0.0F;
 
     glGenTransformFeedbacks(2, m_transformFeedback);
@@ -129,13 +130,13 @@ void ParticleSystem::RenderParticles(const Camera& cam) {
     TM.SetPerspectiveProj(cam.GetFov(), cam.GetWidth(), cam.GetHeight(),
                           cam.GetZNear(), cam.GetZFar());
     // Projection matrix of the camera
-    //  glUniformMatrix4fv(camViewID, 1, GL_TRUE, (const GLfloat*)TM.GetVC());
+    //  glUniformMatrix4fv(camViewID, 1, GL_FALSE, glm::value_ptr(*TM.GetVC()));
     // Camera position
     //  glUniform3f(camPosID,cam.GetPos().x,cam.GetPos().y,cam.GetPos().z);
 
     m_shader->Use();
     m_billboardAssistant.SetCameraPosition(cam.GetPos());
-    m_billboardAssistant.SetVP(reinterpret_cast<const GLfloat*>(TM.GetVC()));
+    m_billboardAssistant.SetVP(*TM.GetVC());
     m_colorTexture.Bind(COLOR_TEXTURE_UNIT);
 
     glDisable(GL_RASTERIZER_DISCARD);

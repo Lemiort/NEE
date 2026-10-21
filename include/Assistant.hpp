@@ -1,15 +1,14 @@
 #ifndef ASSISTANT_H_INCLUDED
 #define ASSISTANT_H_INCLUDED
-#define USE_MATH_DEFINES  // for C++
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 class Assistant {
 public:
-    Matrix4f transformation;
-    Matrix4f temp;
+    glm::mat4 transformation;
+    glm::mat4 temp;
     Assistant() : phi(0) {
-        scale = Vector3f(1.0F, 1.0F, 1.0F);
-        worldPos = Vector3f(0.0F, 0.0F, 0.0F);
-        rotate = Vector3f(0.0F, 0.0F, 0.0F);
+        scale = glm::vec3(1.0F, 1.0F, 1.0F);
+        worldPos = glm::vec3(0.0F, 0.0F, 0.0F);
+        rotate = glm::vec3(0.0F, 0.0F, 0.0F);
     }
     void Scale(float ScaleX, float ScaleY, float ScaleZ) {
         scale.x = ScaleX;
@@ -22,7 +21,7 @@ public:
         worldPos.y = y;
         worldPos.z = z;
     }
-    void WorldPos(Vector3f v) {
+    void WorldPos(glm::vec3 v) {
         worldPos.x = v.x;
         worldPos.y = v.y;
         worldPos.z = v.z;
@@ -34,7 +33,7 @@ public:
         rotate.z = RotateZ;
     }
 
-    void RotateOverVector(Vector3f v, float _phi) {
+    void RotateOverVector(glm::vec3 v, float _phi) {
         rotateVector = v;
         phi = _phi;
     }
@@ -48,27 +47,23 @@ public:
         persProj.zFar = zFar;
     }
 
-    void SetCamera(const Vector3f& Pos, const Vector3f& Target,
-                   const Vector3f& Up) {
+    void SetCamera(const glm::vec3& Pos, const glm::vec3& Target,
+                   const glm::vec3& Up) {
         camera.Pos = Pos;
         camera.Target = Target;
         camera.Up = Up;
     }
 
-    const Matrix4f* GetTSRVC();
-    const Matrix4f* GetTSR();
-    const Matrix4f* GetVC();
-    const Matrix4f* GetRotate();
-    const Matrix4f* GetCameraTrans();
-    const Matrix4f* GetScaleTrans();
-    // const Matrix4f* GetCamTransMat();
+    const glm::mat4* GetTSRVC();
+    const glm::mat4* GetTSR();
+    const glm::mat4* GetVC();
+    const glm::mat4* GetRotate();
+    const glm::mat4* GetCameraTrans();
+    const glm::mat4* GetScaleTrans();
+    // const glm::mat4* GetCamTransMat();
 
 private:
-    void InitScaleTransform(Matrix4f& m) const;
-    void InitRotateTransform(Matrix4f& m) const;
-    void InitTranslationTransform(Matrix4f& m) const;
-
-    void InitPerspectiveProj(Matrix4f& m) const;
+    glm::mat4 GetModelTransform() const;
     struct {
         float FOV;
         float Width;
@@ -77,14 +72,14 @@ private:
         float zFar;
     } persProj;
     struct {
-        Vector3f Pos;
-        Vector3f Target;
-        Vector3f Up;
+        glm::vec3 Pos;
+        glm::vec3 Target;
+        glm::vec3 Up;
     } camera;
-    Vector3f scale;
-    Vector3f worldPos;
-    Vector3f rotate;
-    Vector3f rotateVector;
+    glm::vec3 scale;
+    glm::vec3 worldPos;
+    glm::vec3 rotate;
+    glm::vec3 rotateVector;
     float phi;
 };
 #endif  // ASSISTANT_H_INCLUDED

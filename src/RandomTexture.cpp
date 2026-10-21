@@ -2,9 +2,9 @@
 
 #include <glad/gl.h>
 
+#include <cstdlib>
 #include <vector>
 
-#include "Math3d.hpp"
 #include "Util.hpp"
 
 RandomTexture::RandomTexture() : textureID(0) {
@@ -19,11 +19,15 @@ RandomTexture::~RandomTexture() {
 }
 
 bool RandomTexture::InitRandomTexture(unsigned int Size) {
-    std::vector<Vector3f> pRandomData(Size);
+    const auto randomFloat = [] {
+        return static_cast<float>(std::rand()) /
+               static_cast<float>(RAND_MAX);
+    };
+    std::vector<glm::vec3> pRandomData(Size);
     for (unsigned int i = 0; i < Size; i++) {
-        pRandomData[i].x = RandomFloat();
-        pRandomData[i].y = RandomFloat();
-        pRandomData[i].z = RandomFloat();
+        pRandomData[i].x = randomFloat();
+        pRandomData[i].y = randomFloat();
+        pRandomData[i].z = randomFloat();
     }
 
     glGenTextures(1, &textureID);

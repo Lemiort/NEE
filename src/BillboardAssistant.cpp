@@ -1,9 +1,10 @@
 #include "BillboardAssistant.hpp"
 
 #include <glad/gl.h>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "EngineCommon.hpp"
-#include "Math3d.hpp"
+#include <glm/glm.hpp>
 #include "Util.hpp"
 
 BillboardAssistant::BillboardAssistant() {
@@ -39,16 +40,16 @@ bool BillboardAssistant::Init() {
     return GLCheckError();
 }
 
-void BillboardAssistant::SetVP(const Matrix4f& VP) const {
-    glUniformMatrix4fv(m_VPLocation, 1, GL_TRUE,
-                       reinterpret_cast<const GLfloat*>(VP.m));
+void BillboardAssistant::SetVP(const glm::mat4& VP) const {
+    glUniformMatrix4fv(m_VPLocation, 1, GL_FALSE,
+                       glm::value_ptr(VP));
 }
 
 void BillboardAssistant::SetVP(const GLfloat* VP) const {
-    glUniformMatrix4fv(m_VPLocation, 1, GL_TRUE, VP);
+    glUniformMatrix4fv(m_VPLocation, 1, GL_FALSE, VP);
 }
 
-void BillboardAssistant::SetCameraPosition(const Vector3f& Pos) const {
+void BillboardAssistant::SetCameraPosition(const glm::vec3& Pos) const {
     glUniform3f(m_cameraPosLocation, Pos.x, Pos.y, Pos.z);
 }
 
