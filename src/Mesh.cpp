@@ -17,7 +17,8 @@
 #include "spdlog/spdlog.h"
 
 Mesh::Mesh() {
-    // mat=NULL;
+    VBO = 0;
+    IBO = 0;
 }
 
 Mesh::~Mesh() {
