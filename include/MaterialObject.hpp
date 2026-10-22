@@ -1,6 +1,8 @@
 #ifndef MATERIALOBJECT_H
 #define MATERIALOBJECT_H
 
+#include <memory>
+
 #include "Material.hpp"
 #include "RenderableObject.hpp"
 
@@ -8,7 +10,7 @@
 class MaterialObject : public RenderableObject {
 public:
     MaterialObject();
-    virtual ~MaterialObject();
+    ~MaterialObject() override;
     virtual void SetMaterial(std::shared_ptr<Material> _mat);
     virtual std::shared_ptr<Material> GetMaterial();
 

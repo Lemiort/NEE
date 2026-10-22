@@ -4,6 +4,7 @@
 #include <glad/gl.h>
 
 #include <cstddef>
+#include <array>
 #include <memory>
 #include <string>
 
@@ -15,38 +16,39 @@
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 class SkyBox : public RenderableObject, public PlaceableObject {
 public:
-    explicit SkyBox(shared_ptr<Shader> shader);
-    ~SkyBox() override;
+ explicit SkyBox(const shared_ptr<Shader>& shader);
+ ~SkyBox() override;
 
-    bool Init(const string& Directory, const string& PosXFilename,
-              const string& NegXFilename, const string& PosYFilename,
-              const string& NegYFilename, const string& PosZFilename,
-              const string& NegZFilename);
+ bool Init(const string& Directory, const string& PosXFilename,
+           const string& NegXFilename, const string& PosYFilename,
+           const string& NegYFilename, const string& PosZFilename,
+           const string& NegZFilename);
 
-    void Render(const Camera& cam) override;
-    GLuint shaderProgramID;
-    GLuint VBO;  // vertex buffer, ������ ������� ��� ���������
-    GLuint positionID;
-    GLuint IBO;  // index buffer
-    GLuint gWorldID, gCamViewID;
-    int spfaces, spverts;
-    int Scale;
-    void Init(GLuint shader, const char* model);
+ void Render(const Camera& cam) override;
+ GLuint shaderProgramID;
+ GLuint VBO{};  // vertex buffer, ������ ������� ��� ���������
+ GLint positionID{};
+ GLuint IBO{};  // index buffer
+ GLint gWorldID{}, gCamViewID{};
+ int spfaces{}, spverts{};
+ int Scale{};
+ void Init(GLuint shader, const char* model);
 
 private:
     std::unique_ptr<CubemapTexture> pCubemapTex;
-    GLuint WVPID;
-    GLuint textureID;
+    GLint WVPID{};
+    GLint textureID{};
     // shared_ptr<Shader> shaderProgram;
 public:
-    GLuint uvID, normalID;
-    GLuint rotateID;
-    GLuint camtransID, camPosID;
-    GLuint colTexID, texBufferID;
+ GLint uvID{}, normalID{};
+ GLint rotateID{};
+ GLint camtransID{}, camPosID{};
+ GLint colTexID{};
+ GLuint texBufferID{};
 
-    // float position[3];
-    float rotation[3];
-    float scale[3];
+ // float position[3];
+ std::array<float, 3> rotation{};
+ std::array<float, 3> scale{};
 };
 
 #endif  // SKYBOX_H_INCLUDED

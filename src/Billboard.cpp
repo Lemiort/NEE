@@ -2,7 +2,10 @@
 
 #include <glad/gl.h>
 
+#include <array>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 #include <utility>
 
 #include "Camera.hpp"
@@ -16,9 +19,7 @@ Billboard::Billboard(std::shared_ptr<Shader> _shader) {
     // shaderProgramID=_shader->shaderProgramID;
 }
 
-Billboard::~Billboard() {
-    // dtor
-}
+Billboard::~Billboard() = default;
 
 void Billboard::Init(const char* TexFilename) {
     if (!shaderProgram) {
@@ -39,20 +40,22 @@ void Billboard::Init(const char* TexFilename) {
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // creating a buffer
-    float coords[3] = {Pos.x, Pos.y, Pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, coords, GL_DYNAMIC_DRAW);
+    const std::array<float, 3> coords = {Pos.x, Pos.y, Pos.z};
+    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
+                 GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
-void Billboard::SetPos(glm::vec3 Pos) {
-    Pos = Pos;
+void Billboard::SetPos(glm::vec3 pos) {
+    this->Pos = pos;
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // creating a buffer
-    float coords[3] = {Pos.x, Pos.y, Pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3, coords, GL_DYNAMIC_DRAW);
+    const std::array<float, 3> coords = {pos.x, pos.y, pos.z};
+    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
+                 GL_DYNAMIC_DRAW);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
 }
 

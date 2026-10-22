@@ -3,15 +3,16 @@
 
 #include <glad/gl.h>
 
+#include <array>
 #include <string>
 
 class ShadowMapFBO {
 public:
     ShadowMapFBO();
     virtual ~ShadowMapFBO();
-    bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
+    bool Init(GLsizei windowWidth, GLsizei windowHeight);
 
-    GLuint GetTexture() const;
+    [[nodiscard]] GLuint GetTexture() const;
 
     void BindForWriting() const;
 
@@ -27,14 +28,14 @@ public:
 
     GLuint GetTexture(unsigned num);
 
-    std::string CheckShadowTexture() const;
+    [[nodiscard]] std::string CheckShadowTexture() const;
 
-private:
-    GLuint m_fbo;
-    GLuint m_rbo;
-    GLuint m_shadowMap;
+   private:
+    GLuint m_fbo{0};
+    GLuint m_rbo{0};
+    GLuint m_shadowMap{0};
 
-    GLuint m_textures[GBUFFER_NUM_TEXTURES]{};
+    std::array<GLuint, GBUFFER_NUM_TEXTURES> m_textures{};
 };
 
 #endif  // SHADOWMAPFBO_H

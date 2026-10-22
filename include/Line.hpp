@@ -3,7 +3,7 @@
 #include <glad/gl.h>
 
 #include <cstddef>
-#include <glm/glm.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <memory>
 
 #include "Camera.hpp"
@@ -16,9 +16,9 @@ public:
     glm::vec3 p2;
     glm::vec3 c1;*/
     //	GLuint shaderProgramID;
-    GLuint PixelColorID, PointSizeID;
-    GLuint gWorldID;
-    GLuint positionID;
+    GLint PixelColorID, PointSizeID;
+    GLint gWorldID;
+    GLint positionID;
     GLuint VBO;
     float col[3];
     float pos[6];
@@ -28,6 +28,6 @@ public:
     void Render(const Camera& pGameCamera);
 
 private:
-    shared_ptr<Shader> shaderProgram;
+    std::shared_ptr<Shader> shaderProgram;
 };
 #endif  // LINE_H_INCLUDED

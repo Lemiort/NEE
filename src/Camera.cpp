@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <cmath>
 #include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
-#include <glm/glm.hpp>
+#include <glm/geometric.hpp>
+#include <glm/trigonometric.hpp>
 
 const static float STEP_SCALE = 0.1F;
 const static int MARGIN = 100;
@@ -48,7 +50,7 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
 void Camera::Init() {
     // Zero yaw faces -Z; positive yaw turns toward +X.
     m_AngleH = glm::degrees(std::atan2(m_target.x, -m_target.z));
-    m_AngleV = glm::degrees(std::asin(std::clamp(m_target.y, -1.0f, 1.0f)));
+    m_AngleV = glm::degrees(std::asin(std::clamp(m_target.y, -1.0F, 1.0F)));
 
     m_OnUpperEdge = false;
     m_OnLowerEdge = false;
@@ -60,10 +62,10 @@ void Camera::Init() {
     // glutWarpPointer(m_mousePos.x, m_mousePos.y);
 }
 
-bool Camera::OnKeyboard(char Key) {
+bool Camera::OnKeyboard(int key) {
     bool Ret = false;
 
-    switch (Key) {
+    switch (key) {
         case GLFW_KEY_W: {
             m_pos += (m_target * STEP_SCALE);
             Ret = true;
@@ -103,7 +105,7 @@ void Camera::OnMouse(int x, int y) {
 
     m_AngleH += static_cast<float>(DeltaX) / 20.0F;
     m_AngleV -= static_cast<float>(DeltaY) / 20.0F;
-    m_AngleV = std::clamp(m_AngleV, -89.0f, 89.0f);
+    m_AngleV = std::clamp(m_AngleV, -89.0F, 89.0F);
 
     if (DeltaX == 0) {
         if (x <= MARGIN) {
@@ -145,13 +147,13 @@ void Camera::OnRender() {
 
     if (m_OnUpperEdge) {
         if (m_AngleV < 89.0F) {
-            m_AngleV = std::min(89.0f, m_AngleV + 0.1F);
-            ShouldUpdate = true;
+          m_AngleV = std::min(89.0F, m_AngleV + 0.1F);
+          ShouldUpdate = true;
         }
     } else if (m_OnLowerEdge) {
         if (m_AngleV > -89.0F) {
-            m_AngleV = std::max(-89.0f, m_AngleV - 0.1F);
-            ShouldUpdate = true;
+          m_AngleV = std::max(-89.0F, m_AngleV - 0.1F);
+          ShouldUpdate = true;
         }
     }
 

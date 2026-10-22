@@ -2,20 +2,16 @@
 #define RANDOMTEXTURE_H
 #include <glad/gl.h>
 
-#include <glm/glm.hpp>
-
-#include "EngineCommon.hpp"
-#include "Util.hpp"
 class RandomTexture {
-public:
-    RandomTexture();
-    virtual ~RandomTexture();
-    bool InitRandomTexture(unsigned int Size);
-    void Bind(GLenum TextureUnit);
+ public:
+  RandomTexture();
+  virtual ~RandomTexture();
+  bool InitRandomTexture(GLsizei size);
+  void Bind(GLenum TextureUnit) const;
 
-protected:
-private:
-    GLuint textureID;
+ protected:
+ private:
+  GLuint textureID{0};
 };
 
 #endif  // RANDOMTEXTURE_H

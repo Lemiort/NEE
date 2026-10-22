@@ -2,34 +2,56 @@
 
 #include <glad/gl.h>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
+#include <array>
+#include <cstddef>
+#include <cstdint>
+#include <glm/ext/vector_float3.hpp>
+#include <memory>
 
 #include "Camera.hpp"
 #include "EngineCommon.hpp"
+#include "Shader.hpp"
 #include "Util.hpp"
+
+namespace {
+constexpr float kInitialParticleVelocity = 0.0001F;
+constexpr float kLauncherLifetimeMillis = 100.0F;
+constexpr float kShellLifetimeMillis = 10000.0F;
+constexpr float kSecondaryShellLifetimeMillis = 2500.0F;
+constexpr GLsizei kRandomTextureSize = 1000;
+
+const GLvoid* BufferOffset(std::size_t byteOffset) {
+    // OpenGL treats these pointer values as byte offsets when a VBO is bound.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+    return reinterpret_cast<const GLvoid*>(
+        static_cast<std::uintptr_t>(byteOffset));
+}
+}  // namespace
+
 ParticleSystem::ParticleSystem() = default;
 
 ParticleSystem::~ParticleSystem() = default;
 
 bool ParticleSystem::Init(glm::vec3 Pos) {
-    Particle Particles[MAX_PARTICLES];
-    ZERO_MEM(Particles);
+    std::array<Particle, MAX_PARTICLES> particles{};
 
-    Particles[0].Type = PARTICLE_TYPE_LAUNCHER;
-    Particles[0].Pos = Pos;
-    Particles[0].Vel = glm::vec3(0.0F, 0.0001F, 0.0F);
-    Particles[0].LifetimeMillis = 0.0F;
+    particles.at(0).Type = PARTICLE_TYPE_LAUNCHER;
+    particles.at(0).Pos = Pos;
+    particles.at(0).Vel = glm::vec3(0.0F, kInitialParticleVelocity, 0.0F);
+    particles.at(0).LifetimeMillis = 0.0F;
 
-    glGenTransformFeedbacks(2, m_transformFeedback);
-    glGenBuffers(2, m_particleBuffer);
+    glGenTransformFeedbacks(static_cast<GLsizei>(m_transformFeedback.size()),
+                            m_transformFeedback.data());
+    glGenBuffers(static_cast<GLsizei>(m_particleBuffer.size()),
+                 m_particleBuffer.data());
 
-    for (unsigned int i = 0; i < 2; i++) {
-        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, m_transformFeedback[i]);
-        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_particleBuffer[i]);
+    for (std::size_t i = 0; i < m_transformFeedback.size(); ++i) {
+        glBindTransformFeedback(GL_TRANSFORM_FEEDBACK,
+                                m_transformFeedback.at(i));
+        glBindBufferBase(GL_TRANSFORM_FEEDBACK_BUFFER, 0, m_particleBuffer.at(i));
         glBindTransformFeedback(GL_TRANSFORM_FEEDBACK, 0);
-        glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[i]);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(Particles), Particles,
+        glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer.at(i));
+        glBufferData(GL_ARRAY_BUFFER, sizeof(particles), particles.data(),
                      GL_DYNAMIC_DRAW);
     }
 
@@ -49,11 +71,11 @@ bool ParticleSystem::Init(glm::vec3 Pos) {
     m_updateAssistant.Enable();
 
     m_updateAssistant.SetRandomTextureUnit(RANDOM_TEXTURE_UNIT_INDEX);
-    m_updateAssistant.SetLauncherLifetime(100.0F);
-    m_updateAssistant.SetShellLifetime(10000.0F);
-    m_updateAssistant.SetSecondaryShellLifetime(2500.0F);
+    m_updateAssistant.SetLauncherLifetime(kLauncherLifetimeMillis);
+    m_updateAssistant.SetShellLifetime(kShellLifetimeMillis);
+    m_updateAssistant.SetSecondaryShellLifetime(kSecondaryShellLifetimeMillis);
 
-    if (!m_randomTexture.InitRandomTexture(1000)) {
+    if (!m_randomTexture.InitRandomTexture(kRandomTextureSize)) {
         return false;
     }
 
@@ -71,21 +93,23 @@ void ParticleSystem::Render(int DeltaTimeMillis, const Camera& cam) {
     RenderParticles(cam);
 
     m_currVB = m_currTFB;
-    m_currTFB = (m_currTFB + 1) & 0x1;
+    m_currTFB = (m_currTFB + 1U) %
+                static_cast<unsigned int>(m_transformFeedback.size());
 }
 
 void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     m_updateAssistant.Enable();
     m_updateAssistant.SetTime(m_time);
-    m_updateAssistant.SetDeltaTimeMillis(DeltaTimeMillis);
+    m_updateAssistant.SetDeltaTimeMillis(
+        static_cast<float>(DeltaTimeMillis));
 
     m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
 
     glEnable(GL_RASTERIZER_DISCARD);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currVB]);
+    glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer.at(m_currVB));
     glBindTransformFeedback(GL_TRANSFORM_FEEDBACK,
-                            m_transformFeedback[m_currTFB]);
+                            m_transformFeedback.at(m_currTFB));
 
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
@@ -95,11 +119,11 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
     glVertexAttribPointer(0, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
                           nullptr);  // type
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
-                          (const GLvoid*)4);  // position
+                          BufferOffset(offsetof(Particle, Pos)));  // position
     glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
-                          (const GLvoid*)16);  // velocity
+                          BufferOffset(offsetof(Particle, Vel)));  // velocity
     glVertexAttribPointer(3, 1, GL_FLOAT, GL_FALSE, sizeof(Particle),
-                          (const GLvoid*)28);  // lifetime
+                          BufferOffset(offsetof(Particle, LifetimeMillis)));
 
     glBeginTransformFeedback(GL_POINTS);
 
@@ -108,7 +132,7 @@ void ParticleSystem::UpdateParticles(int DeltaTimeMillis) {
 
         m_isFirst = false;
     } else {
-        glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currVB]);
+        glDrawTransformFeedback(GL_POINTS, m_transformFeedback.at(m_currVB));
     }
 
     glEndTransformFeedback();
@@ -130,14 +154,14 @@ void ParticleSystem::RenderParticles(const Camera& cam) {
 
     glDisable(GL_RASTERIZER_DISCARD);
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer[m_currTFB]);
+    glBindBuffer(GL_ARRAY_BUFFER, m_particleBuffer.at(m_currTFB));
 
     glEnableVertexAttribArray(0);
 
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle),
-                          (const GLvoid*)4);  // position
+                          BufferOffset(offsetof(Particle, Pos)));  // position
 
-    glDrawTransformFeedback(GL_POINTS, m_transformFeedback[m_currTFB]);
+    glDrawTransformFeedback(GL_POINTS, m_transformFeedback.at(m_currTFB));
 
     glDisableVertexAttribArray(0);
 }

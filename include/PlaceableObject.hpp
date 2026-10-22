@@ -2,7 +2,7 @@
 #define PLACEABLEOBJECT_H
 
 #include <array>
-#include <glm/glm.hpp>
+#include <glm/ext/vector_float3.hpp>
 
 #include "Object.hpp"
 

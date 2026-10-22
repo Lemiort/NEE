@@ -2,14 +2,14 @@
 
 #include <glad/gl.h>
 
-#include <cstdlib>
+#include <cstddef>
+#include <glm/ext/vector_float3.hpp>
+#include <random>
 #include <vector>
 
 #include "Util.hpp"
 
-RandomTexture::RandomTexture() : textureID(0) {
-    // ctor
-}
+RandomTexture::RandomTexture() = default;
 
 RandomTexture::~RandomTexture() {
     // dtor
@@ -18,20 +18,26 @@ RandomTexture::~RandomTexture() {
     }
 }
 
-bool RandomTexture::InitRandomTexture(unsigned int Size) {
-    const auto randomFloat = [] {
-        return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
+bool RandomTexture::InitRandomTexture(GLsizei size) {
+    if (size <= 0) {
+        return false;
+    }
+    std::mt19937 generator(std::random_device{}());
+    std::uniform_real_distribution<float> distribution(0.0F, 1.0F);
+    const auto randomFloat = [&generator, &distribution] {
+        return distribution(generator);
     };
-    std::vector<glm::vec3> pRandomData(Size);
-    for (unsigned int i = 0; i < Size; i++) {
-        pRandomData[i].x = randomFloat();
-        pRandomData[i].y = randomFloat();
-        pRandomData[i].z = randomFloat();
+    std::vector<glm::vec3> pRandomData(static_cast<std::size_t>(size));
+    for (GLsizei i = 0; i < size; ++i) {
+        auto& randomVector = pRandomData.at(static_cast<std::size_t>(i));
+        randomVector.x = randomFloat();
+        randomVector.y = randomFloat();
+        randomVector.z = randomFloat();
     }
 
     glGenTextures(1, &textureID);
     glBindTexture(GL_TEXTURE_1D, textureID);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, Size, 0.0F, GL_RGB, GL_FLOAT,
+    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0.0F, GL_RGB, GL_FLOAT,
                  pRandomData.data());
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -42,7 +48,7 @@ bool RandomTexture::InitRandomTexture(unsigned int Size) {
     return GLCheckError();
 }
 
-void RandomTexture::Bind(GLenum TextureUnit) {
-    glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_1D, textureID);
+void RandomTexture::Bind(GLenum TextureUnit) const {
+  glActiveTexture(TextureUnit);
+  glBindTexture(GL_TEXTURE_1D, textureID);
 }

@@ -15,13 +15,13 @@ public:
 
     bool Load();
 
-    void Bind(GLenum TextureUnit);
+    void Bind(GLenum TextureUnit) const;
 
-private:
+   private:
     string m_fileNames[6];
 
 public:
-    GLuint m_textureObj;
+ GLuint m_textureObj{};
 };
 
 #endif  // CUBEMAP_TEXTURE_H_INCLUDED

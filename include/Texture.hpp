@@ -2,6 +2,7 @@
 #define TEXTURE_H_INCLUDED
 #include <glad/gl.h>
 
+#include <array>
 #include <string>
 
 /**
@@ -19,17 +20,17 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces);
 
 class Texture {
 protected:
-    GLuint texBufferID;
-    bool del;
-    std::string ConvertInternalFormatToString(GLenum format);
+ GLuint texBufferID{};
+ bool del;
+ static std::string ConvertInternalFormatToString(GLenum format);
 
 public:
-    GLuint GetTextureID() const;
-    explicit Texture(bool _del = true);
-    virtual ~Texture();
-    // virtual ~Texture(bool del=true);
-    std::string GetParameters();
-    virtual void Bind(GLenum TextureUnit);
+ [[nodiscard]] GLuint GetTextureID() const;
+ explicit Texture(bool _del = true);
+ virtual ~Texture();
+ // virtual ~Texture(bool del=true);
+ std::string GetParameters() const;
+ virtual void Bind(GLenum TextureUnit);
 };
 
 class Texture2D : public Texture {

@@ -1,7 +1,10 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
-#include <fstream>
-#include <glm/glm.hpp>
+#include <glad/gl.h>
+
+#include <cstddef>
+#include <glm/ext/vector_float3.hpp>
+#include <memory>
 
 #include "Camera.hpp"
 #include "Material.hpp"
@@ -9,8 +12,6 @@
 #include "PlaceableObject.hpp"
 #include "RotatableObject.hpp"
 #include "ScaleableObject.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
 // #include "Light.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;
@@ -20,14 +21,9 @@ struct Vertex {
     glm::vec3 UV;
     glm::vec3 Normal;
     glm::vec3 Tangent;
-    Vertex() {}
-    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal,
-           glm::vec3& tangent) {
-        Pos = pos;
-        UV = uv;
-        Normal = normal;
-        Tangent = tangent;
-    }
+    Vertex() = default;
+    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal, glm::vec3& tangent)
+        : Pos(pos), UV(uv), Normal(normal), Tangent(tangent) {}
 };
 
 class Mesh : public PlaceableObject,
@@ -36,28 +32,28 @@ class Mesh : public PlaceableObject,
              public ScaleableObject {
 public:
 protected:
-    GLuint positionID, uvID, normalID, tangentID;
-    GLuint gWorldID, gCamViewID;
-    GLuint rotateID;
-    GLuint dirLightDirID, dirLightColID;
-    GLuint pointLightColID, pointLightIntID, pointLightPosID;
-    GLuint camtransID, camPosID;
-    GLuint specBufferID, specSamplerID;
-    GLuint colSamplerUI, normSamplerUI;
-    GLuint shadowMap;
-    int spfaces, spverts;
-    int Scale;
+ GLint positionID{}, uvID{}, normalID{}, tangentID{};
+ GLint gWorldID{}, gCamViewID{};
+ GLint rotateID{};
+ GLint dirLightDirID{}, dirLightColID{};
+ GLint pointLightColID{}, pointLightIntID{}, pointLightPosID{};
+ GLint camtransID{}, camPosID{};
+ GLint specBufferID{}, specSamplerID{};
+ GLint colSamplerUI{}, normSamplerUI{};
+ GLuint shadowMap{};
+ int spfaces{}, spverts{};
+ int Scale{};
 
 public:
     Mesh();
-    virtual ~Mesh();
-    int GetNumFaces() const;
-    int GetNumVerts() const;
-    void SetMaterial(shared_ptr<Material> _mat);
+    ~Mesh() override;
+    [[nodiscard]] int GetNumFaces() const;
+    [[nodiscard]] int GetNumVerts() const;
+    void SetMaterial(shared_ptr<Material> _mat) override;
     bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
-    void Render(const Camera& cam);
+    void Render(const Camera& cam) override;
 
-private:
+   private:
 };
 #endif  // MESH_H_INCLUDED

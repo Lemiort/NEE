@@ -2,19 +2,18 @@
 
 #include <glad/gl.h>
 
-#include <glm/glm.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <memory>
 
 #include "EngineCommon.hpp"
+#include "Shader.hpp"
 #include "Util.hpp"
 
-BillboardAssistant::BillboardAssistant() {
-    // ctor
-}
+BillboardAssistant::BillboardAssistant() = default;
 
-BillboardAssistant::~BillboardAssistant() {
-    // dtor
-}
+BillboardAssistant::~BillboardAssistant() = default;
 
 bool BillboardAssistant::Init() {
     m_shader = std::make_unique<Shader>();
@@ -53,8 +52,8 @@ void BillboardAssistant::SetCameraPosition(const glm::vec3& Pos) const {
     glUniform3f(m_cameraPosLocation, Pos.x, Pos.y, Pos.z);
 }
 
-void BillboardAssistant::SetColorTextureUnit(unsigned int TextureUnit) const {
-    glUniform1i(m_colorMapLocation, TextureUnit);
+void BillboardAssistant::SetColorTextureUnit(GLint textureUnit) const {
+    glUniform1i(m_colorMapLocation, textureUnit);
 }
 
 void BillboardAssistant::SetBillboardSize(float BillboardSize) const {
