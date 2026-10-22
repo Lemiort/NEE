@@ -1,8 +1,8 @@
 #include "Billboard.hpp"
 
 #include <glad/gl.h>
-#include <glm/gtc/type_ptr.hpp>
 
+#include <glm/gtc/type_ptr.hpp>
 #include <utility>
 
 #include "Camera.hpp"
@@ -62,8 +62,7 @@ void Billboard::Render(const Camera& cam) {
     const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
 
     // camera projection matrix
-    glUniformMatrix4fv(camViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(camViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
     // camera position
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 

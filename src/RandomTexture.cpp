@@ -20,8 +20,7 @@ RandomTexture::~RandomTexture() {
 
 bool RandomTexture::InitRandomTexture(unsigned int Size) {
     const auto randomFloat = [] {
-        return static_cast<float>(std::rand()) /
-               static_cast<float>(RAND_MAX);
+        return static_cast<float>(std::rand()) / static_cast<float>(RAND_MAX);
     };
     std::vector<glm::vec3> pRandomData(Size);
     for (unsigned int i = 0; i < Size; i++) {

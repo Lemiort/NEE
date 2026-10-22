@@ -3,10 +3,10 @@
 #include <glad/gl.h>
 
 #include <cstddef>
+#include <glm/glm.hpp>
 #include <memory>
 
 #include "Camera.hpp"
-#include <glm/glm.hpp>
 #include "Shader.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 

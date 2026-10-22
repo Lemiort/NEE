@@ -1,7 +1,6 @@
 #include "Light.hpp"
 
 #include <glm/gtc/type_ptr.hpp>
-
 #include <memory>
 
 #include "spdlog/spdlog.h"
@@ -80,7 +79,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 
 void SpotLight::Render(const Camera& cam) {
     const glm::vec3 dir(target[0] - position[0], target[1] - position[1],
-                       target[2] - position[2]);
+                        target[2] - position[2]);
     const float distance = glm::length(dir);
     if (distance <= 1e-6f) return;
 
@@ -91,8 +90,7 @@ void SpotLight::Render(const Camera& cam) {
 
     // The cone mesh points along +Y. Align its axis with the target direction.
     const glm::vec3 unit = dir / distance;
-    const float x =
-        glm::degrees(glm::asin(glm::clamp(unit.z, -1.0f, 1.0f)));
+    const float x = glm::degrees(glm::asin(glm::clamp(unit.z, -1.0f, 1.0f)));
     const float z = glm::abs(unit.z) >= 1.0f - 1e-6f
                         ? 0.0f
                         : glm::degrees(glm::atan(-unit.x, unit.y));
@@ -196,8 +194,8 @@ void PointLight::SetCol(glm::vec3 col) {
     radius = CalcSphereSize();
 }
 float PointLight::CalcSphereSize() {
-    return 8.0f *
-               sqrtf(glm::length(glm::vec3(color[0], color[1], color[2])) * power) +
+    return 8.0f * sqrtf(glm::length(glm::vec3(color[0], color[1], color[2])) *
+                        power) +
            1.0f;
 }
 
@@ -264,8 +262,7 @@ void Line::Render(const Camera& cam) {
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(viewProjection));
     glUniform1f(PointSizeID, 1.5);
     glUniform4f(PixelColorID, col[0], col[1], col[2], 1.0);
     glEnableVertexAttribArray(positionID);

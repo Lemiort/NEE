@@ -1,5 +1,6 @@
 #include <GLFW/glfw3.h>
 #include <gtest/gtest.h>
+
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.hpp"
@@ -97,8 +98,8 @@ TEST(CameraProjection, MapsNearAndFarPlanesToOpenGLDepth) {
 }
 
 TEST(CameraProjection, ViewMatrixUsesPositionAndForwardDirection) {
-    Camera camera(800, 600, 60, 1, 100, glm::vec3(2, 3, 4),
-                  glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
+    Camera camera(800, 600, 60, 1, 100, glm::vec3(2, 3, 4), glm::vec3(0, 0, -1),
+                  glm::vec3(0, 1, 0));
     const glm::mat4 view = camera.GetViewMatrix();
     const glm::vec4 eye = view * glm::vec4(2, 3, 4, 1);
     const glm::vec4 ahead = view * glm::vec4(2, 3, 3, 1);

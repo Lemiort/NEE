@@ -5,10 +5,9 @@
 
 #include <algorithm>
 #include <cmath>
-
-#include <glm/glm.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/glm.hpp>
 
 const static float STEP_SCALE = 0.1F;
 const static int MARGIN = 100;
@@ -165,7 +164,7 @@ void Camera::Update() {
     const float yaw = glm::radians(m_AngleH);
     const float pitch = glm::radians(m_AngleV);
     m_target = glm::vec3(std::sin(yaw) * std::cos(pitch), std::sin(pitch),
-                        -std::cos(yaw) * std::cos(pitch));
+                         -std::cos(yaw) * std::cos(pitch));
     const glm::vec3 right =
         glm::normalize(glm::cross(m_target, glm::vec3(0, 1, 0)));
     m_up = glm::normalize(glm::cross(right, m_target));
@@ -186,10 +185,10 @@ glm::mat4 Camera::GetViewMatrix() const {
 }
 
 glm::mat4 Camera::GetProjectionMatrix() const {
-    return glm::perspectiveRH_NO(glm::radians(FOV),
-                                 static_cast<float>(m_windowWidth) /
-                                     static_cast<float>(m_windowHeight),
-                                 zNear, zFar);
+    return glm::perspectiveRH_NO(
+        glm::radians(FOV),
+        static_cast<float>(m_windowWidth) / static_cast<float>(m_windowHeight),
+        zNear, zFar);
 }
 
 glm::mat4 Camera::GetViewProjectionMatrix() const {

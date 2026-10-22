@@ -1,11 +1,12 @@
 #include "ParticleSystem.hpp"
 
 #include <glad/gl.h>
+
+#include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.hpp"
 #include "EngineCommon.hpp"
-#include <glm/glm.hpp>
 #include "Util.hpp"
 ParticleSystem::ParticleSystem() = default;
 

@@ -2,9 +2,9 @@
 #define BILLBOARDASSISTANT_H
 #include <glad/gl.h>
 
+#include <glm/glm.hpp>
 #include <memory>
 
-#include <glm/glm.hpp>
 #include "Shader.hpp"
 class BillboardAssistant {
 public:
