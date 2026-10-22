@@ -207,7 +207,7 @@ void Mesh::Render(const Camera& /*cam*/) {
 
   glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(modelMatrix));
   glUniformMatrix4fv(rotateID, 1, GL_FALSE,
-                     glm::value_ptr(rotationMatrix));  // rotation of model
+                     glm::value_ptr(rotationMatrix));
 
   glEnableVertexAttribArray(positionID);
   glEnableVertexAttribArray(normalID);

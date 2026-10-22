@@ -32,6 +32,7 @@ void Billboard::Init(const char* TexFilename) {
                                  GeometryShader);
         shaderProgram->Init();
     }
+    shaderProgram->Use();
     colorMap.Load(TexFilename);
     colorMap.Bind(GL_TEXTURE0);
     colSamplerID = shaderProgram->GetUniformLocation("colTexSampler");
