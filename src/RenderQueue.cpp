@@ -2,14 +2,19 @@
 
 #include <utility>
 
-void RenderQueue::SubmitOpaqueMesh(Mesh& mesh, const Transform& transform) {
-    opaqueMeshes_.push_back({.mesh = mesh, .transform = transform});
+void RenderQueue::SubmitOpaqueMesh(Mesh& mesh, const Transform& transform,
+                                   std::shared_ptr<Material> material) {
+    opaqueMeshes_.push_back({.mesh = mesh,
+                             .transform = transform,
+                             .material = std::move(material)});
 }
 
 void RenderQueue::SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
+                                        std::shared_ptr<Material> material,
                                         float opacity) {
     transparentMeshes_.push_back({.mesh = mesh,
                                   .transform = transform,
+                                  .material = std::move(material),
                                   .layer = RenderLayer::Transparent,
                                   .opacity = opacity});
 }

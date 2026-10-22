@@ -1,0 +1,48 @@
+#ifndef FORWARD_PIPELINE_HPP_INCLUDED
+#define FORWARD_PIPELINE_HPP_INCLUDED
+
+#include <glad/gl.h>
+
+#include <memory>
+#include <span>
+
+#include "Camera.hpp"
+#include "Light.hpp"
+#include "RenderQueue.hpp"
+#include "Shader.hpp"
+#include "Skybox.hpp"
+
+struct ForwardPipelineScene {
+    const Camera& camera;
+    const DirectionalLight& directionalLight;
+    const PointLight& pointLight;
+    const SpotLight& spotLight;
+    SkyBox& skybox;
+    const RenderQueue& queue;
+};
+
+class ForwardPipeline {
+public:
+    [[nodiscard]] bool Init(std::shared_ptr<Shader> meshShader);
+    void Render(const ForwardPipelineScene& scene);
+
+private:
+    void RenderMeshes(std::span<const MeshRenderCommand> commands,
+                      const Camera& camera);
+
+    std::shared_ptr<Shader> meshShader_;
+    GLint cameraViewProjectionUniform_{};
+    GLint lightViewProjectionUniform_{};
+    GLint cameraPositionUniform_{};
+    GLint directionalLightDirectionUniform_{};
+    GLint directionalLightColorUniform_{};
+    GLint pointLightPositionUniform_{};
+    GLint pointLightColorUniform_{};
+    GLint pointLightIntensityUniform_{};
+    GLint spotLightPositionUniform_{};
+    GLint spotLightDirectionUniform_{};
+    GLint spotLightColorUniform_{};
+    GLint spotLightCutoffUniform_{};
+};
+
+#endif  // FORWARD_PIPELINE_HPP_INCLUDED

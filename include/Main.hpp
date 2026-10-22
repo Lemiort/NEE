@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Billboard.hpp"
+#include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
 #include "Light.hpp"
 #include "Material.hpp"
@@ -114,6 +115,7 @@ private:
         DSStencilPassMaterial;
     std::shared_ptr<Texture2D> whiteTexture;
     std::unique_ptr<GBuffer> gBuffer1;
+    std::unique_ptr<ForwardPipeline> forwardPipeline;
     std::unique_ptr<DirectionalLight> directionalLight1;
     std::unique_ptr<PointLight> pointLight1, pointLight2;
     std::unique_ptr<SpotLight> spotLight1;

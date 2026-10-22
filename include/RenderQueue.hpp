@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <glm/ext/vector_float3.hpp>
+#include <memory>
 #include <span>
 #include <vector>
 
@@ -10,6 +11,7 @@
 #include "Transform.hpp"
 
 class Billboard;
+class Material;
 class Mesh;
 
 enum class RenderLayer { Opaque, Transparent, Overlay };
@@ -20,6 +22,7 @@ enum class RenderLayer { Opaque, Transparent, Overlay };
 struct MeshRenderCommand {
     std::reference_wrapper<Mesh> mesh;
     Transform transform;
+    std::shared_ptr<Material> material;
     RenderLayer layer{RenderLayer::Opaque};
     float opacity{1.0F};
 };
@@ -44,8 +47,10 @@ struct DebugLineRenderCommand {
 
 class RenderQueue {
 public:
-    void SubmitOpaqueMesh(Mesh& mesh, const Transform& transform);
+    void SubmitOpaqueMesh(Mesh& mesh, const Transform& transform,
+                          std::shared_ptr<Material> material);
     void SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
+                               std::shared_ptr<Material> material,
                                float opacity);
     void SubmitBillboard(Billboard& billboard, const glm::vec3& position);
     void SubmitText(FontLine2d text);

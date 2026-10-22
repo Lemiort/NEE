@@ -338,117 +338,39 @@ void Application::ShadowPass() {
 }
 
 void Application::RenderPass() {
-    // Drawing stage
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // CalcFPS();
     Scale += 0.021F;
-    TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
-    TestMesh.SetScale(0.02, 0.02, 0.02);
-    TestMesh.SetPosition(0, -0.2, 0);
+    renderQueue.Clear();
+    renderQueue.SubmitOpaqueMesh(
+        Plane,
+        Transform{.position = glm::vec3(0.0F, -3.0F, 0.0F),
+                  .rotationDegrees = glm::vec3(0.0F),
+                  .scale = glm::vec3(30.0F)},
+        mainMaterial);
 
-    Plane.SetScale(30.0F, 30.0F, 30.0F);
-    Plane.SetPosition(0.0F, -3.0F, 0.0F);
-    Plane.SetRotation(0.0, 0.0, 0.0);
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    Camera const lightCam(width, height, pGameCamera.GetFov(),
-                          pGameCamera.GetZNear(), pGameCamera.GetZFar(),
-                          spotLight1->GetPos(), glm::vec3(-1.0, -1.0, -1.0),
-                          glm::vec3(0.0, 1.0, 0.0));
-
-    const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
-
-    /*Sphere.SetMaterial(mainMaterial);
-    for(float i=-5.0f;i<5.0f;i+=0.1f)
-        for(float j=-5.0f;j<5.0f;j+=0.1f)
-    {
-        Sphere.SetScale(0.001f,0.001f,0.001f);
-        Sphere.SetRotate(0,30*sinf(Scale),0);
-        Sphere.SetPosition(i,noise1->GetHeight(i,j),j);
-        Sphere.Render(30,width, height, 1, 1000,pGameCamera);
-    }*/
-
-    /* TestMesh.Render(30,width, height, 1, 1000,pGameCamera);
-      TestMesh.SetPosition(-3,-0.2,0);
-      TestMesh.Render(30,width, height, 1, 1000,pGameCamera);*/
-    skybox1->Render(pGameCamera);
-
-    /*Texture2D* tempTexture=new Texture2D(gBuffer1->GetTexture(2),false);
-    //shadowMeshMaterial->SetShadowTexture(tempTexture);
-    mainMaterial->SetColorTexture(tempTexture);
-    fLine1->Render(tempTexture->GetParameters(),-1.0f,-0.2f,32.0f);*/
-    Plane.SetMaterial(mainMaterial);
-    // Simple copy-paste
-    {
-        meshShader->Use();
-        GLint const gLightCamViewID =
-            meshShader->GetUniformLocation("gLightVC");
-        gCamViewID = meshShader->GetUniformLocation("gVC");
-        rotateID = meshShader->GetUniformLocation("mRotate");
-        camPosID = meshShader->GetUniformLocation("s_vCamPos");
-
-        glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                           glm::value_ptr(viewProjection));
-        glUniformMatrix4fv(gLightCamViewID, 1, GL_FALSE,
-                           glm::value_ptr(lightViewProjection));
-
-        // Lighting
-        {
-            // Directional light
-            SetLightColor(dirLightColID, directionalLight1->color);
-            glUniform3f(dirLightDirID, directionalLight1->direction.at(0),
-                        directionalLight1->direction.at(1),
-                        directionalLight1->direction.at(2));
-            // Point light
-            SetLightColor(pointLightColID, pointLight1->color);
-            const glm::vec3 pointLightPosition = pointLight1->GetPosition();
-            glUniform3f(pointLightPosID, pointLightPosition.x,
-                        pointLightPosition.y, pointLightPosition.z);
-            glUniform1f(pointLightIntID, pointLight1->power);
-            // spot light
-            SetLightColor(spotLightColID, spotLight1->color);
-            glUniform3f(spotLightDirID, spotLight1->direction.at(0),
-                        spotLight1->direction.at(1),
-                        spotLight1->direction.at(2));
-            glUniform1f(spotLightCutoffID,
-                        glm::cos(glm::radians(spotLight1->Cutoff)));
-            const glm::vec3 spotLightPosition = spotLight1->GetPosition();
-            glUniform3f(spotLightPosID, spotLightPosition.x,
-                        spotLightPosition.y, spotLightPosition.z);
-        }
-
-        // camera rotation for specular
-        glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
-                    pGameCamera.GetPos().z);
-    }
-    // Plane.SetMaterial(mainMaterial);
-    Plane.Render(pGameCamera);
-    Sphere.SetMaterial(mainMaterial);
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Sphere.SetScale(0.05F, 0.05F, 0.05F);
-            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                               j);
-            Sphere.Render(pGameCamera);
+            renderQueue.SubmitOpaqueMesh(
+                Sphere,
+                Transform{
+                    .position = glm::vec3(
+                        i, static_cast<float>(noise1->GetHeight(i, j)), j),
+                    .rotationDegrees =
+                        glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
+                    .scale = glm::vec3(0.05F)},
+                mainMaterial);
         }
     }
+    renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
 
-    bb1->Render(pGameCamera);
-
-    // xline->Render(pGameCamera,width, height);
-    //  yline->Render(pGameCamera, width, height);
-    //  zline->Render(pGameCamera,width, height);
-
-    //
-    // tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Sphere.GetNumFaces()*10000)+"
-    // faces").c_str());
-    // fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-    //  spfaces=Sphere.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
-    //  fLine1->Render((ConvertToString(spfaces)+"faces").c_str(),-1.0f,0.0f,45.0f);*/
+    forwardPipeline->Render({.camera = pGameCamera,
+                             .directionalLight = *directionalLight1,
+                             .pointLight = *pointLight1,
+                             .spotLight = *spotLight1,
+                             .skybox = *skybox1,
+                             .queue = renderQueue});
 }
 
 void Application::DSBeginLightPasses() {
@@ -966,6 +888,11 @@ int Application::InitScene(GLFWwindow* window) {
         gCamViewID = meshShader->GetUniformLocation("gVC");
         rotateID = meshShader->GetUniformLocation("mRotate");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
+    }
+    forwardPipeline = std::make_unique<ForwardPipeline>();
+    if (!forwardPipeline->Init(meshShader)) {
+        spdlog::critical("Unable to initialize the forward rendering pipeline");
+        return EXIT_FAILURE;
     }
 
     // main material
