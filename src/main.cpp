@@ -378,9 +378,11 @@ void Application::RenderPass() {
 void Application::InterfacePass() {
     renderQueue.ClearText();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    // glDisable(GL_DEPTH_TEST);
     xline->Render(pGameCamera);
     yline->Render(pGameCamera);
     zline->Render(pGameCamera);
@@ -413,8 +415,9 @@ void Application::InterfacePass() {
 
     // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera);
-    // glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
+    glDepthMask(GL_TRUE);
+    glEnable(GL_DEPTH_TEST);
 }
 
 void Application::RenderScene() {
@@ -451,7 +454,7 @@ void Application::RenderScene() {
                           .skybox = *skybox1,
                           .queue = renderQueue};
     if (renderType == RenderType::DEFERRED_SHADING) {
-        deferredPipeline->Render(scene);
+        deferredPipeline->Render(scene, *forwardPipeline);
     } else {
         const GBufferDebugView debugView = [this] {
             switch (renderType) {

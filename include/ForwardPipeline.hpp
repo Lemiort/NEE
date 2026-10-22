@@ -17,10 +17,13 @@ class ForwardPipeline {
 public:
     [[nodiscard]] bool Init(std::shared_ptr<Shader> meshShader);
     void Render(const SceneView& scene);
+    void RenderTransparent(const SceneView& scene);
 
 private:
+    void PrepareLighting(const SceneView& scene);
     void RenderMeshes(std::span<const MeshRenderCommand> commands,
-                      const Camera& camera);
+                      const Camera& camera, bool applyOpacity);
+    void RenderTransparentObjects(const SceneView& scene);
 
     std::shared_ptr<Shader> meshShader_;
     GLint cameraViewProjectionUniform_{};
@@ -35,6 +38,7 @@ private:
     GLint spotLightDirectionUniform_{};
     GLint spotLightColorUniform_{};
     GLint spotLightCutoffUniform_{};
+    GLint opacityUniform_{};
 };
 
 #endif  // FORWARD_PIPELINE_HPP_INCLUDED

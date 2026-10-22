@@ -1,5 +1,6 @@
 #include "RenderQueue.hpp"
 
+#include <algorithm>
 #include <utility>
 
 void RenderQueue::SubmitOpaqueMesh(Mesh& mesh, const Transform& transform,
@@ -16,7 +17,7 @@ void RenderQueue::SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
                                   .transform = transform,
                                   .material = std::move(material),
                                   .layer = RenderLayer::Transparent,
-                                  .opacity = opacity});
+                                  .opacity = std::clamp(opacity, 0.0F, 1.0F)});
 }
 
 void RenderQueue::SubmitBillboard(Billboard& billboard,

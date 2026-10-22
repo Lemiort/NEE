@@ -22,6 +22,7 @@ uniform mat4 sLightCol;
 uniform vec3 sLightDir;
 
 uniform float sLightCutoff;
+uniform float opacity;
 
 out vec4 fColor;
 vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
@@ -79,7 +80,7 @@ void main()
 	//свет прожектора
 	vec4 spotLightColor=CalcSpotLight(sLightDir,Normal,sLightCol);
 	fColor=pointLightColor+/*+dirLightColor+*/spotLightColor;
-	fColor.a=1.0;
+	fColor.a=opacity;
 	//fColor=vec4(Tangent,1.0);
 	/*if(fColor.x==0 && fColor.y==0 && fColor.z==0) 
 	{

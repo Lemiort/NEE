@@ -9,6 +9,7 @@
 #include "Shader.hpp"
 
 class Light;
+class ForwardPipeline;
 
 enum class GBufferDebugView { Position, Diffuse, Normal, TextureCoordinates };
 
@@ -29,7 +30,7 @@ struct DeferredPipelineResources {
 class DeferredPipeline {
 public:
     [[nodiscard]] bool Init(DeferredPipelineResources resources);
-    void Render(const SceneView& scene);
+    void Render(const SceneView& scene, ForwardPipeline& transparentPipeline);
     void RenderDebug(const SceneView& scene, GBufferDebugView view);
 
 private:

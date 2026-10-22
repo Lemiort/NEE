@@ -7,6 +7,7 @@
 #include <glm/trigonometric.hpp>
 #include <utility>
 
+#include "ForwardPipeline.hpp"
 #include "Light.hpp"
 #include "Mesh.hpp"
 #include "RenderQueue.hpp"
@@ -46,7 +47,8 @@ bool DeferredPipeline::Init(DeferredPipelineResources resources) {
            spotLightMaterial_ && directionalLightMaterial_;
 }
 
-void DeferredPipeline::Render(const SceneView& scene) {
+void DeferredPipeline::Render(const SceneView& scene,
+                              ForwardPipeline& transparentPipeline) {
     gBuffer_->StartFrame();
     GeometryPass(scene);
     glEnable(GL_STENCIL_TEST);
@@ -60,6 +62,7 @@ void DeferredPipeline::Render(const SceneView& scene) {
     }
     glDisable(GL_STENCIL_TEST);
     DirectionalLightPass(scene.directionalLight, scene.camera);
+    transparentPipeline.RenderTransparent(scene);
     FinalPass(scene.camera);
 }
 
