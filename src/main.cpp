@@ -761,19 +761,22 @@ void Application::InterfacePass() {
         ConvertToString(pGameCamera.GetPos().z);
     // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText(strCampos);
-    fLine1->SetPosition(-1.0F, 0.0F, 24.0F);
+    fLine1->SetPosition(-1.0F, 0.0F);
+    fLine1->SetFontSize(24.0F);
     fLine1->Render(pGameCamera);
     // gBuffer1->CheckTextures();
     CalcFPS();
     // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(ConvertToString(fps));
-    fLine1->SetPosition(-1.0F, 0.9F, 24.0F);
+    fLine1->SetPosition(-1.0F, 0.9F);
+    fLine1->SetFontSize(24.0F);
     fLine1->Render(pGameCamera);
 
     if (renderType == RenderType::DEFERRED_SHADING) {
         // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
-        fLine1->SetPosition(-1.0F, -0.2F, 36.0F);
+        fLine1->SetPosition(-1.0F, -0.2F);
+        fLine1->SetFontSize(36.0F);
         fLine1->Render(pGameCamera);
     }
 
@@ -888,7 +891,8 @@ void Application::PreInitScene(GLFWwindow* window) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1->SetText("Loading...");
-    fLine1->SetPosition(-1.0F, -0.1F, 72.0F);
+    fLine1->SetPosition(-1.0F, -0.1F);
+    fLine1->SetFontSize(72.0F);
     fLine1->Render(pGameCamera);
     glfwSwapBuffers(window);
     initialized = false;
@@ -906,12 +910,14 @@ void Application::InitRender(GLFWwindow* window, string message) {
         CalcFPS();
         // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
         fLine1->SetText(ConvertToString(fps));
-        fLine1->SetPosition(-1.0F, 0.9F, 24.0F);
+        fLine1->SetPosition(-1.0F, 0.9F);
+        fLine1->SetFontSize(24.0F);
         fLine1->Render(pGameCamera);
 
         // fLine1->Render(message,-1.0f,-0.1f,36.0f);
         fLine1->SetText(std::move(message));
-        fLine1->SetPosition(-1.0F, -0.1F, 36.0F);
+        fLine1->SetPosition(-1.0F, -0.1F);
+        fLine1->SetFontSize(36.0F);
         fLine1->Render(pGameCamera);
 
         glfwSwapBuffers(window);

@@ -3,6 +3,7 @@ find_package(GTest REQUIRED)
 add_executable(math_migration_tests
     MathMigrationTests.cpp
     ../src/Camera.cpp
+    ../src/FontMetrics.cpp
     ../src/Transformable.cpp
 )
 target_include_directories(math_migration_tests PRIVATE ${PROJECT_SOURCE_DIR}/include)

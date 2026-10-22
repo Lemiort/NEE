@@ -7,6 +7,8 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "Camera.hpp"
+#include "FontMetrics.hpp"
+#include "TextLayout.hpp"
 #include "Transform.hpp"
 #include "Transformable.hpp"
 
@@ -81,6 +83,29 @@ TEST(ObjectTransform, CanBeUsedThroughTransformInterface) {
 
     EXPECT_EQ(transformable.GetTransform().position, glm::vec3(4.0F));
     EXPECT_EQ(transformable.GetTransform().scale, glm::vec3(1.0F));
+}
+
+TEST(TextLayout, KeepsPositionAndFontSizeAsDistinctProperties) {
+    const TextLayout layout{.position = glm::vec2(-0.5F, 0.25F),
+                            .fontSizePixels = 36.0F};
+
+    EXPECT_EQ(layout.position, glm::vec2(-0.5F, 0.25F));
+    EXPECT_EQ(layout.fontSizePixels, 36.0F);
+}
+
+TEST(FontMetrics, StoresGlyphsAndDefaultsMissingKerningToZero) {
+    FontMetrics metrics;
+    metrics.SetFont("Example", 32);
+    metrics.SetAtlasSize(256, 128);
+    metrics.AddCharacter(u'A', FontCharacter{.width = 12, .height = 20});
+    metrics.AddKerning(u'A', u'V', -1.5F);
+
+    EXPECT_EQ(metrics.GetFontName(), "Example");
+    EXPECT_EQ(metrics.GetFontHeight(), 32U);
+    EXPECT_EQ(metrics.GetAtlasWidth(), 256U);
+    EXPECT_EQ(metrics.GetCharacter(u'A').width, 12U);
+    EXPECT_FLOAT_EQ(metrics.GetKerning(u'A', u'V'), -1.5F);
+    EXPECT_FLOAT_EQ(metrics.GetKerning(u'A', u'A'), 0.0F);
 }
 
 TEST(CameraControls, KeyboardMovesAlongStandardAxes) {

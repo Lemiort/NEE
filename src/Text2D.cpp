@@ -48,6 +48,26 @@ void FontLine2d::SetAspectRatio(int w, int h) {
 
 void FontLine2d::SetText(std::string _text) { text = std::move(_text); }
 
+void FontLine2d::SetPosition(float x, float y) noexcept {
+    SetPosition(glm::vec2{x, y});
+}
+
+void FontLine2d::SetPosition(const glm::vec2& position) noexcept {
+    layout_.position = position;
+}
+
+const glm::vec2& FontLine2d::GetPosition() const noexcept {
+    return layout_.position;
+}
+
+void FontLine2d::SetFontSize(float fontSizePixels) noexcept {
+    layout_.fontSizePixels = fontSizePixels;
+}
+
+float FontLine2d::GetFontSize() const noexcept {
+    return layout_.fontSizePixels;
+}
+
 // void FontLine2d::Render(string text, float startX, float startY,float size )
 void FontLine2d::Render(const Camera& cam) {
     float dx = 0.0F;
@@ -57,23 +77,17 @@ void FontLine2d::Render(const Camera& cam) {
                  (static_cast<float>(character.GetFontHeight()));
     for (size_t i = 0; i < text.length(); ++i) {
         // look up info about this character
-        float kerning = 0;
-        try {
-            kerning = character.kerningInfo.at(
-                {prevChar, static_cast<char16_t>(text.at(i))});
-        } catch (const std::out_of_range&) {
-            kerning = 0;
-        }
-        dx += kerning;
+        dx += character.GetKerning(prevChar, static_cast<char16_t>(text.at(i)));
 
         // if we found a space character, draw it
         if (static_cast<char16_t>(text.at(i)) == static_cast<char16_t>(' ')) {
-            dx += transform_.position.z * spaceWidth;
+            dx += layout_.fontSizePixels * spaceWidth;
         }
 
         // actual drawing
-        character.SetPosition(transform_.position.x + dx, transform_.position.y,
-                              transform_.position.z);
+        character.SetPosition(
+            glm::vec2{layout_.position.x + dx, layout_.position.y});
+        character.SetFontSize(layout_.fontSizePixels);
         character.SetCharacter(text.at(i));
         auto lastCharacterLength = character.GetLastCharacterLength();
         character.Render(cam);
@@ -82,7 +96,7 @@ void FontLine2d::Render(const Camera& cam) {
         if (lastCharacterLength.x > 0.0F) {
             // space and separator between characters
             dx += lastCharacterLength.x +
-                  (transform_.position.z * spaceWidth / 4.0F);
+                  (layout_.fontSizePixels * spaceWidth / 4.0F);
         } else {
             continue;  // no character - do not write anything
         }
@@ -96,30 +110,34 @@ Font2d::Font2d() { color = glm::vec4(1.0F, 1.0F, 1.0F, 1.0F); }
 Font2d::~Font2d() = default;
 
 float Font2d::GetHeight(char16_t c) const {
-    FontCharacter const temp = fontInfo.at(c);
-    float const realHeight =
-        static_cast<float>(temp.height) / static_cast<float>(imageHeight);
+    const FontCharacter& temp = metrics_.GetCharacter(c);
+    float const realHeight = static_cast<float>(temp.height) /
+                             static_cast<float>(metrics_.GetAtlasHeight());
     float const dx = 1.0F;
     return (2 * dx) * realHeight * ky;
 }
 
 float Font2d::GetWidth(char16_t c) const {
-    FontCharacter const temp = fontInfo.at(c);
-    float const realWidth =
-        static_cast<float>(temp.width) / static_cast<float>(imageWidth);
+    const FontCharacter& temp = metrics_.GetCharacter(c);
+    float const realWidth = static_cast<float>(temp.width) /
+                            static_cast<float>(metrics_.GetAtlasWidth());
     float const dx = 1.0F;
     return (2 * dx) * realWidth * kx;
 }
 
 float Font2d::GetSpaceWidth() const {
-    FontCharacter const temp = fontInfo.at(34);
-    float const realWidth =
-        static_cast<float>(temp.origW) / static_cast<float>(imageWidth);
+    const FontCharacter& temp = metrics_.GetCharacter(34);
+    float const realWidth = static_cast<float>(temp.origW) /
+                            static_cast<float>(metrics_.GetAtlasWidth());
     float const dx = 1.0F;
     return (2 * dx) * realWidth * kx;
 }
 
-uint32_t Font2d::GetFontHeight() const { return fontHeight; }
+float Font2d::GetKerning(char16_t previous, char16_t current) const noexcept {
+    return metrics_.GetKerning(previous, current);
+}
+
+uint32_t Font2d::GetFontHeight() const { return metrics_.GetFontHeight(); }
 
 bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
     shaderProgram = std::move(_sh);
@@ -174,7 +192,7 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
             sstr >> symbol.xpos >> symbol.ypos >> symbol.width >>
                 symbol.height >> symbol.xOffset >> symbol.yOffset >>
                 symbol.origW >> symbol.origH;
-            fontInfo.insert({static_cast<char16_t>(code), symbol});
+            metrics_.AddCharacter(static_cast<char16_t>(code), symbol);
         } else if (state == FontFileState::KerningData) {
             std::stringstream sstr;
             sstr << in_s;
@@ -184,9 +202,8 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
             uint16_t code2 = 0;
             float f1 = NAN;
             sstr >> code2 >> f1;
-            kerningInfo.insert(
-                {{static_cast<char16_t>(code1), static_cast<char16_t>(code2)},
-                 f1});
+            metrics_.AddKerning(static_cast<char16_t>(code1),
+                                static_cast<char16_t>(code2), f1);
         }
         // find texture name
         std::regex const texturesPattern(R"(textures:\s*([a-zA-Z0-9_\-\.]+))");
@@ -201,8 +218,10 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
         std::regex const fontNameSizePattern(R"((.*?)\s+(\d+)px$)");
         if (std::regex_search(in_s, match, fontNameSizePattern)) {
             state = FontFileState::FontNameSize;
-            fontName = match.str(1);
-            fontHeight = std::stoi(match.str(2));
+            const std::string fontName = match.str(1);
+            const auto fontHeight =
+                static_cast<uint32_t>(std::stoul(match.str(2)));
+            metrics_.SetFont(fontName, fontHeight);
 
             spdlog::info("Font name is {}", fontName);
             spdlog::info("Font height is {}", fontHeight);
@@ -235,11 +254,12 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
         return false;
     }
     // Calculate width
-    imageWidth = static_cast<uint32_t>(width);
+    const auto imageWidth = static_cast<uint32_t>(width);
+    const auto imageHeight = static_cast<uint32_t>(height);
+    metrics_.SetAtlasSize(imageWidth, imageHeight);
     spdlog::info("width={}", imageWidth);
 
     // Calculate height
-    imageHeight = static_cast<uint32_t>(height);
     spdlog::info("height={}", imageHeight);
 
     // Convert pixel to relative coordinates
@@ -251,40 +271,49 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
 
 void Font2d::SetAspectRatio(int _width, int _height) {
     aratio = static_cast<float>(_height) / static_cast<float>(_width);
-    kx = static_cast<float>(imageWidth) / static_cast<float>(_width);
-    ky = static_cast<float>(imageHeight) / static_cast<float>(_height);
+    kx = static_cast<float>(metrics_.GetAtlasWidth()) /
+         static_cast<float>(_width);
+    ky = static_cast<float>(metrics_.GetAtlasHeight()) /
+         static_cast<float>(_height);
 }
 
 void Font2d::SetAspectRatio(float f) { aratio = f; }
 
+void Font2d::SetPosition(const glm::vec2& position) noexcept {
+    layout_.position = position;
+}
+
+void Font2d::SetFontSize(float fontSizePixels) noexcept {
+    layout_.fontSizePixels = fontSizePixels;
+}
+
 void Font2d::SetCharacter(char16_t c) {
     character = c;
 
-    // this is a mess, setting the Y coordinate
-    transform_.position.z /= static_cast<float>(fontHeight);
+    const float fontScale =
+        layout_.fontSizePixels / static_cast<float>(metrics_.GetFontHeight());
     currentCharacter = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
     try {
-        currentCharacter = fontInfo.at(character);
+        currentCharacter = metrics_.GetCharacter(character);
     } catch (const std::out_of_range& oor) {
         // printf("\n char is out of range");
         characterLength = glm::vec2(-1.0F, -1.0F);
         return;
     }
     realWidth = static_cast<float>(currentCharacter.width) /
-                static_cast<float>(imageWidth);
+                static_cast<float>(metrics_.GetAtlasWidth());
     realHeight = static_cast<float>(currentCharacter.height) /
-                 static_cast<float>(imageHeight);
+                 static_cast<float>(metrics_.GetAtlasHeight());
     dx = 1.0F;
-    xOffset = transform_.position.z * (2 * dx) * kx *
+    xOffset = fontScale * (2 * dx) * kx *
               static_cast<float>(currentCharacter.xOffset) /
-              static_cast<float>(imageWidth);
-    yOffset = transform_.position.z * (-2 * dx) * ky *
+              static_cast<float>(metrics_.GetAtlasWidth());
+    yOffset = fontScale * (-2 * dx) * ky *
               static_cast<float>(currentCharacter.yOffset) /
-              static_cast<float>(imageHeight);
+              static_cast<float>(metrics_.GetAtlasHeight());
 
-    characterLength =
-        glm::vec2((2 * dx) * realWidth * kx * transform_.position.z,
-                  (2 * dx) * realHeight * ky);
+    characterLength = glm::vec2((2 * dx) * realWidth * kx * fontScale,
+                                (2 * dx) * realHeight * ky);
 }
 
 glm::vec2 Font2d::GetLastCharacterLength() {
@@ -328,21 +357,22 @@ void Font2d::Render(const Camera& cam) {
     sizeID = shaderProgram->GetUniformLocation("size");
     colorID = shaderProgram->GetUniformLocation("textColor");
     float const u = static_cast<float>(currentCharacter.xpos) /
-                    static_cast<float>(imageWidth);
+                    static_cast<float>(metrics_.GetAtlasWidth());
     float const v = 1.0F - (static_cast<float>(currentCharacter.ypos) /
-                            static_cast<float>(imageHeight));
+                            static_cast<float>(metrics_.GetAtlasHeight()));
     // printf("\nu=%f,  v=%f ",u,v);
     // Calculate offset
     // px+=((float)temp.xOffset/(float)imageWidth)*kx*1.0f*size;
     // py-=((float)temp.yOffset/(float)imageHeight)*ky*1.0f*size;
 
     // vector position in space
-    glUniform2f(spositionID, transform_.position.x + xOffset,
-                transform_.position.y + yOffset);
+    glUniform2f(spositionID, layout_.position.x + xOffset,
+                layout_.position.y + yOffset);
     // UV offset vector
     glUniform2f(suvID, u, v);
     // Size
-    glUniform1f(sizeID, transform_.position.z);
+    glUniform1f(sizeID, layout_.fontSizePixels /
+                            static_cast<float>(metrics_.GetFontHeight()));
 
     glVertexAttribPointer(sverticesID, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
     glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
