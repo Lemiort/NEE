@@ -116,7 +116,7 @@ private:
     std::unique_ptr<PointLight> pointLight1, pointLight2;
     std::unique_ptr<SpotLight> spotLight1;
     std::unique_ptr<Line> xline, yline, zline, dirLightLine;
-    Mesh TestMesh, Plane, Cube;
+    Mesh TestMesh, Plane, Sphere;
     std::unique_ptr<SkyBox> skybox1;
     std::unique_ptr<FontLine2d> fLine1;
     std::unique_ptr<PerlinNoise> noise1;

@@ -8,8 +8,10 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
@@ -17,9 +19,12 @@
 #include <glm/trigonometric.hpp>
 #include <memory>
 #include <string>
+#include <system_error>
 #include <utility>
 #include <vector>
 
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
@@ -36,6 +41,40 @@ constexpr int kGridExtentSteps = 50;
 constexpr float kGridStepsPerUnit = 10.0F;
 constexpr std::size_t kScreenshotFilenameCapacity = 80;
 constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
+
+void ConfigureLogging(const char* executablePath) {
+    std::error_code pathError;
+    const auto absoluteExecutablePath =
+        std::filesystem::absolute(executablePath, pathError);
+    std::filesystem::path logDirectory;
+    if (pathError) {
+        pathError.clear();
+        logDirectory = std::filesystem::current_path(pathError);
+    } else {
+        logDirectory = absoluteExecutablePath.parent_path();
+    }
+    if (pathError) {
+        std::fprintf(stderr, "Unable to determine log file location: %s\n",
+                     pathError.message().c_str());
+        return;
+    }
+
+    const auto logPath = logDirectory / "NEE.log";
+    try {
+        auto consoleSink =
+            std::make_shared<spdlog::sinks::stderr_color_sink_mt>();
+        auto fileSink = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
+            logPath.string(), true);
+        auto logger = std::make_shared<spdlog::logger>(
+            "nee", spdlog::sinks_init_list{consoleSink, fileSink});
+        logger->flush_on(spdlog::level::err);
+        spdlog::set_default_logger(std::move(logger));
+        spdlog::info("Logging to '{}'", logPath.string());
+    } catch (const spdlog::spdlog_ex& error) {
+        std::fprintf(stderr, "Unable to create log file '%s': %s\n",
+                     logPath.string().c_str(), error.what());
+    }
+}
 
 // The scene passes historically use a 30 degree, 1..1000 projection even
 // when the interactive camera has different clipping settings.
@@ -283,17 +322,17 @@ void Application::ShadowPass() {
     glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
                 lightCam.GetPos().z);
 
-    Cube.SetMaterial(shadowMaterial);
+    Sphere.SetMaterial(shadowMaterial);
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                             j);
-            Cube.Render(lightCam);
+            Sphere.SetScale(0.05F, 0.05F, 0.05F);
+            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                               j);
+            Sphere.Render(lightCam);
         }
     }
     Plane.SetMaterial(shadowMaterial);
@@ -323,14 +362,14 @@ void Application::RenderPass() {
 
     const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
 
-    /*Cube.SetMaterial(mainMaterial);
+    /*Sphere.SetMaterial(mainMaterial);
     for(float i=-5.0f;i<5.0f;i+=0.1f)
         for(float j=-5.0f;j<5.0f;j+=0.1f)
     {
-        Cube.SetScale(0.001f,0.001f,0.001f);
-        Cube.SetRotate(0,30*sinf(Scale),0);
-        Cube.SetPosition(i,noise1->GetHeight(i,j),j);
-        Cube.Render(30,width, height, 1, 1000,pGameCamera);
+        Sphere.SetScale(0.001f,0.001f,0.001f);
+        Sphere.SetRotate(0,30*sinf(Scale),0);
+        Sphere.SetPosition(i,noise1->GetHeight(i,j),j);
+        Sphere.Render(30,width, height, 1, 1000,pGameCamera);
     }*/
 
     /* TestMesh.Render(30,width, height, 1, 1000,pGameCamera);
@@ -387,17 +426,17 @@ void Application::RenderPass() {
     }
     // Plane.SetMaterial(mainMaterial);
     Plane.Render(pGameCamera);
-    Cube.SetMaterial(mainMaterial);
+    Sphere.SetMaterial(mainMaterial);
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                             j);
-            Cube.Render(pGameCamera);
+            Sphere.SetScale(0.05F, 0.05F, 0.05F);
+            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                               j);
+            Sphere.Render(pGameCamera);
         }
     }
 
@@ -408,10 +447,10 @@ void Application::RenderPass() {
     //  zline->Render(pGameCamera,width, height);
 
     //
-    // tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Cube.GetNumFaces()*10000)+"
+    // tline2->Render(-1,0.9,64.0,(char*)(ConvertToString(Sphere.GetNumFaces()*10000)+"
     // faces").c_str());
     // fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-    //  spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
+    //  spfaces=Sphere.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
     //  fLine1->Render((ConvertToString(spfaces)+"faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
@@ -479,7 +518,7 @@ void Application::DSLightingPass() {
     }
 
     /* fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-     spfaces=Cube.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
+     spfaces=Sphere.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
      fLine1->Render((ConvertToString(spfaces)+"
      faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
@@ -761,17 +800,17 @@ void Application::DSGeometryPass() {
 
     glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
-    Cube.SetMaterial(DSGeometryPassMaterial);
+    Sphere.SetMaterial(DSGeometryPassMaterial);
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                             j);
-            Cube.Render(pGameCamera);
+            Sphere.SetScale(0.05F, 0.05F, 0.05F);
+            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                               j);
+            Sphere.Render(pGameCamera);
         }
     }
 
@@ -919,9 +958,15 @@ int Application::InitScene(GLFWwindow* window) {
         mainMaterial->Init(meshShader);
     }
 
-    // Cube.Init(mainMaterial,"models/sphere2.ho3d");
-    TestMesh.Init(mainMaterial, "models/torus1.ho3d");
-    // Plane.Init(mainMaterial, "models/plane.ho3d");
+    // Sphere.Init(mainMaterial, "models/sphere.obj");
+    if (!TestMesh.Init(mainMaterial, "models/torus1.obj")) {
+        spdlog::critical(
+            "Scene initialization aborted: required model '{}' failed to "
+            "initialize",
+            "models/torus1.obj");
+        return EXIT_FAILURE;
+    }
+    // Plane.Init(mainMaterial, "models/normal_plane.obj");
 
     // shadow shader
     {
@@ -958,8 +1003,20 @@ int Application::InitScene(GLFWwindow* window) {
         whiteTexture = make_shared<Texture2D>();
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
-        Cube.Init(shadowMeshMaterial, "models/normal_geosphere.ho3d");
-        Plane.Init(shadowMeshMaterial, "models/normal_plane.ho3d");
+        if (!Sphere.Init(shadowMeshMaterial, "models/normal_geosphere.obj")) {
+            spdlog::critical(
+                "Scene initialization aborted: required model '{}' failed to "
+                "initialize",
+                "models/normal_geosphere.obj");
+            return EXIT_FAILURE;
+        }
+        if (!Plane.Init(shadowMeshMaterial, "models/normal_plane.obj")) {
+            spdlog::critical(
+                "Scene initialization aborted: required model '{}' failed to "
+                "initialize",
+                "models/normal_plane.obj");
+            return EXIT_FAILURE;
+        }
     }
 
     // StencilPass material shader
@@ -1069,8 +1126,14 @@ int Application::InitScene(GLFWwindow* window) {
 
     skybox1 = std::make_unique<SkyBox>(skyboxShader);
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
-                  "sp3bot.tga", "sp3back.tga", "sp3front.tga");
+    if (!skybox1->Init("Textures", "sp3right.tga", "sp3left.tga",
+                       "sp3top.tga", "sp3bot.tga", "sp3back.tga",
+                       "sp3front.tga")) {
+        spdlog::critical(
+            "Scene initialization aborted: required skybox model "
+            "'models/sphere.obj' failed to initialize");
+        return EXIT_FAILURE;
+    }
     // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
@@ -1173,7 +1236,8 @@ int Application::Run(GLFWwindow* window) {
     return result;
 }
 
-int main() {
+int main(int argc, char* argv[]) {
+    ConfigureLogging(argc > 0 ? argv[0] : "NEE");
     glfwSetErrorCallback(&Application::ErrorCallback);
     if (glfwInit() == 0) {
         return EXIT_FAILURE;
@@ -1241,5 +1305,6 @@ int main() {
     }  // Destroy GL resources while the window's context still exists.
     glfwDestroyWindow(window);
     glfwTerminate();
+    spdlog::shutdown();
     return result;
 }
