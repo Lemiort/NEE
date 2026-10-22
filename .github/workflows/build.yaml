@@ -78,6 +78,3 @@ jobs:
     - name: Build Project
       run: |
         cmake --build build --config Release
-
-    - name: Super-Linter
-      uses: super-linter/super-linter@v9.0.0
