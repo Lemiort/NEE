@@ -11,10 +11,7 @@
 #include "Material.hpp"
 #include "MaterialObject.hpp"
 #include "Mesh.hpp"
-#include "RenderableObject.hpp"
-#include "Shader.hpp"
 #include "Transformable.hpp"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Light : public MaterialObject {
 public:
@@ -82,28 +79,6 @@ public:
 private:
     void Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
               GLfloat b, float p1, float p2, float p3, float cutoff);
-};
-
-class Line : public RenderableObject {
-public:
-    /*glm::vec3 p1;
-    glm::vec3 p2;
-    glm::vec3 c1;*/
-    // GLuint shaderProgramID;
-    GLint PixelColorID, PointSizeID;
-    GLint gWorldID;
-    GLint positionID;
-    std::array<float, 3> col{};
-    std::array<float, 6> pos{};
-    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color);
-    Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
-         shared_ptr<Shader> shader);
-    ~Line() override;
-    // void Render(const Camera& pGameCamera, int width, int height);
-    void Render(const Camera& cam) override;
-    shared_ptr<Shader> GetShader() const override;
-
-private:
 };
 
 #endif  // LIGHT_H_INCLUDED

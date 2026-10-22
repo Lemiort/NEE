@@ -58,6 +58,7 @@ public:
 
     void Clear() noexcept;
     void ClearText() noexcept;
+    void ClearDebugLines() noexcept;
 
     [[nodiscard]] std::span<const MeshRenderCommand> GetOpaqueMeshes()
         const noexcept;

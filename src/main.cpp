@@ -377,15 +377,26 @@ void Application::RenderPass() {
 
 void Application::InterfacePass() {
     renderQueue.ClearText();
+    renderQueue.ClearDebugLines();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    xline->Render(pGameCamera);
-    yline->Render(pGameCamera);
-    zline->Render(pGameCamera);
+    renderQueue.SubmitDebugLine({.start = glm::vec3(1.0F, 0.0F, 0.0F),
+                                 .end = glm::vec3(0.0F),
+                                 .color = glm::vec3(1.0F, 0.0F, 0.0F)});
+    renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F, 1.0F, 0.0F),
+                                 .end = glm::vec3(0.0F),
+                                 .color = glm::vec3(0.0F, 1.0F, 0.0F)});
+    renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F, 0.0F, 1.0F),
+                                 .end = glm::vec3(0.0F),
+                                 .color = glm::vec3(0.0F, 0.0F, 1.0F)});
+    renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F),
+                                 .end = directionalLight1->GetDir(),
+                                 .color = directionalLight1->GetCol()});
+    debugRenderer->Render(renderQueue.GetDebugLines(), pGameCamera);
     std::string const strCampos =
         ConvertToString(pGameCamera.GetPos().x) + "; " +
         ConvertToString(pGameCamera.GetPos().y) + "; " +
@@ -414,7 +425,6 @@ void Application::InterfacePass() {
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
 
     // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
-    dirLightLine->Render(pGameCamera);
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -573,6 +583,16 @@ int Application::InitScene(GLFWwindow* window) {
     forwardPipeline = std::make_unique<ForwardPipeline>();
     if (!forwardPipeline->Init(meshShader)) {
         spdlog::critical("Unable to initialize the forward rendering pipeline");
+        return EXIT_FAILURE;
+    }
+
+    debugShader = std::make_shared<Shader>();
+    debugShader->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
+    debugShader->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
+    debugShader->Init();
+    debugRenderer = std::make_unique<DebugRenderer>();
+    if (!debugRenderer->Init(debugShader)) {
+        spdlog::critical("Unable to initialize the debug renderer");
         return EXIT_FAILURE;
     }
 
@@ -788,16 +808,6 @@ int Application::InitScene(GLFWwindow* window) {
                                                  0.0F, 1.0F, 0.0F,  // position
                                                  35.0F,  // cutoff in degrees
                                                  DSSpotLightMaterial);
-        glm::vec3 const PX(1, 0, 0);
-        glm::vec3 const PY(0, 1, 0);
-        glm::vec3 const PZ(0, 0, 1);
-        glm::vec3 const P0(0, 0, 0);
-
-        xline = std::make_unique<Line>(PX, P0, PX);
-        yline = std::make_unique<Line>(PY, P0, PY, xline->GetShader());
-        zline = std::make_unique<Line>(PZ, P0, PZ, xline->GetShader());
-        dirLightLine = std::make_unique<Line>(P0, directionalLight1->GetDir(),
-                                              directionalLight1->GetCol());
     }
 
     // other

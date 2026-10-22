@@ -69,26 +69,7 @@ void DeferredPipeline::Render(const SceneView& scene,
 void DeferredPipeline::RenderDebug(const SceneView& scene,
                                    GBufferDebugView view) {
     GeometryPass(scene);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    gBuffer_->BindForReading();
-    const auto texture = [view] {
-        switch (view) {
-            case GBufferDebugView::Position:
-                return GBuffer::GBUFFER_TEXTURE_TYPE_POSITION;
-            case GBufferDebugView::Diffuse:
-                return GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE;
-            case GBufferDebugView::Normal:
-                return GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL;
-            case GBufferDebugView::TextureCoordinates:
-                return GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD;
-        }
-        return GBuffer::GBUFFER_TEXTURE_TYPE_POSITION;
-    }();
-    GBuffer::SetReadBuffer(texture);
-    glBlitFramebuffer(0, 0, scene.camera.GetWidth(), scene.camera.GetHeight(),
-                      0, 0, scene.camera.GetWidth(), scene.camera.GetHeight(),
-                      GL_COLOR_BUFFER_BIT, GL_LINEAR);
+    debugPass_.Render(*gBuffer_, scene.camera, view);
 }
 
 void DeferredPipeline::GeometryPass(const SceneView& scene) {

@@ -142,12 +142,18 @@ TEST(RenderQueue, SnapshotsTextAtSubmissionTime) {
 
 TEST(RenderQueue, KeepsDebugDataIndependentFromDebugObjects) {
     RenderQueue queue;
+    FontLine2d text;
+    text.SetText("overlay");
+    queue.SubmitText(text);
     queue.SubmitDebugLine({.start = glm::vec3(1.0F, 2.0F, 3.0F),
                            .end = glm::vec3(4.0F, 5.0F, 6.0F),
                            .color = glm::vec3(1.0F, 0.0F, 0.0F)});
 
     ASSERT_EQ(queue.GetDebugLines().size(), 1U);
     EXPECT_EQ(queue.GetDebugLines().front().end, glm::vec3(4.0F, 5.0F, 6.0F));
+    queue.ClearDebugLines();
+    EXPECT_TRUE(queue.GetDebugLines().empty());
+    EXPECT_EQ(queue.GetText().size(), 1U);
     queue.Clear();
     EXPECT_TRUE(queue.GetDebugLines().empty());
     EXPECT_TRUE(queue.GetText().empty());

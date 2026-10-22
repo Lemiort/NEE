@@ -4,10 +4,8 @@
 
 #include <cmath>
 #include <glm/common.hpp>
-#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/geometric.hpp>
-#include <glm/gtc/type_ptr.hpp>
 #include <glm/trigonometric.hpp>
 #include <memory>
 #include <utility>
@@ -15,7 +13,6 @@
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
-#include "Shader.hpp"
 #include "spdlog/spdlog.h"
 
 namespace {
@@ -205,75 +202,3 @@ void PointLight::SetCol(glm::vec3 col) {
 float PointLight::CalcSphereSize() {
     return CalculateSphereSize(color.at(0), color.at(1), color.at(2), power);
 }
-
-Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color) {
-    shaderProgram = make_shared<Shader>();
-    shaderProgram->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
-    shaderProgram->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
-    shaderProgram->Init();
-    positionID = shaderProgram->GetAttribLocation("position");
-    gWorldID = shaderProgram->GetUniformLocation("gWVCP");
-    PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
-    PointSizeID = shaderProgram->GetUniformLocation("size");
-    /*GLuint vertexShaderID=MakeVertexShader(vertexShaderSorceCode);
-    GLuint fragmentShaderID=MakeFragmentShader(fragmentShaderSourceCode);
-    shaderProgramID=MakeShaderProgram(vertexShaderID, fragmentShaderID);*/
-
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), nullptr, GL_STATIC_DRAW);
-
-    pos.at(0) = pos1.x;
-    pos.at(1) = pos1.y;
-    pos.at(2) = pos1.z;
-    pos.at(3) = pos2.x;
-    pos.at(4) = pos2.y;
-    pos.at(5) = pos2.z;
-
-    col.at(0) = color.x;
-    col.at(1) = color.y;
-    col.at(2) = color.z;
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos.data());
-}
-Line::Line(glm::vec3 pos1, glm::vec3 pos2, glm::vec3 color,
-           shared_ptr<Shader> shader) {
-    // shaderProgramID=shader;
-    shaderProgram = std::move(shader);
-    positionID = shaderProgram->GetAttribLocation("position");
-    gWorldID = shaderProgram->GetUniformLocation("gWVCP");
-    PixelColorID = shaderProgram->GetUniformLocation("PixelColor");
-    PointSizeID = shaderProgram->GetUniformLocation("size");
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, 6 * sizeof(float), nullptr, GL_STATIC_DRAW);
-
-    pos.at(0) = pos1.x;
-    pos.at(1) = pos1.y;
-    pos.at(2) = pos1.z;
-    pos.at(3) = pos2.x;
-    pos.at(4) = pos2.y;
-    pos.at(5) = pos2.z;
-
-    col.at(0) = color.x;
-    col.at(1) = color.y;
-    col.at(2) = color.z;
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(pos), pos.data());
-}
-Line::~Line() = default;
-// void Line::Render(const Camera& pGameCamera, int width, int height)
-void Line::Render(const Camera& cam) {
-    const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
-
-    shaderProgram->Use();
-    // glUseProgram(shaderProgramID);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-
-    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-    glUniform1f(PointSizeID, 1.5);
-    glUniform4f(PixelColorID, col.at(0), col.at(1), col.at(2), 1.0);
-    glEnableVertexAttribArray(positionID);
-    glDrawArrays(GL_LINES, 0, 2);
-    glDisableVertexAttribArray(positionID);
-}
-shared_ptr<Shader> Line::GetShader() const { return shaderProgram; }

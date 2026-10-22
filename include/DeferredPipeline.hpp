@@ -4,14 +4,13 @@
 #include <memory>
 
 #include "GBuffer.hpp"
+#include "GBufferDebugPass.hpp"
 #include "Material.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
 
 class Light;
 class ForwardPipeline;
-
-enum class GBufferDebugView { Position, Diffuse, Normal, TextureCoordinates };
 
 struct DeferredPipelineResources {
     GBuffer& gBuffer;
@@ -53,6 +52,7 @@ private:
     std::shared_ptr<Material> pointLightMaterial_;
     std::shared_ptr<Material> spotLightMaterial_;
     std::shared_ptr<Material> directionalLightMaterial_;
+    GBufferDebugPass debugPass_;
 };
 
 #endif  // DEFERRED_PIPELINE_HPP_INCLUDED

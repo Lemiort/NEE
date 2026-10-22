@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Billboard.hpp"
+#include "DebugRenderer.hpp"
 #include "DeferredPipeline.hpp"
 #include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
@@ -96,8 +97,8 @@ private:
     GLint spotLightColID = 0, spotLightDirID = 0, spotLightCutoffID = 0,
           spotLightPosID = 0;
 
-    std::shared_ptr<Shader> meshShader, skyboxShader, textShader, shadowShader,
-        shadowMeshShader;
+    std::shared_ptr<Shader> meshShader, skyboxShader, textShader, debugShader,
+        shadowShader, shadowMeshShader;
     std::shared_ptr<Shader> DSGeometryPassShader, DSPointLightShader;
     std::shared_ptr<Shader> DSDirectionalLightShader, DSSpotLightShader,
         DSStencilPassShader;
@@ -108,11 +109,11 @@ private:
     std::shared_ptr<Texture2D> whiteTexture;
     std::unique_ptr<GBuffer> gBuffer1;
     std::unique_ptr<DeferredPipeline> deferredPipeline;
+    std::unique_ptr<DebugRenderer> debugRenderer;
     std::unique_ptr<ForwardPipeline> forwardPipeline;
     std::unique_ptr<DirectionalLight> directionalLight1;
     std::unique_ptr<PointLight> pointLight1, pointLight2;
     std::unique_ptr<SpotLight> spotLight1;
-    std::unique_ptr<Line> xline, yline, zline, dirLightLine;
     Mesh TestMesh, Plane, Sphere;
     std::unique_ptr<SkyBox> skybox1;
     std::shared_ptr<Font2d> interfaceFont;

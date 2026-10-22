@@ -43,6 +43,8 @@ void RenderQueue::Clear() noexcept {
 
 void RenderQueue::ClearText() noexcept { text_.clear(); }
 
+void RenderQueue::ClearDebugLines() noexcept { debugLines_.clear(); }
+
 std::span<const MeshRenderCommand> RenderQueue::GetOpaqueMeshes()
     const noexcept {
     return opaqueMeshes_;
