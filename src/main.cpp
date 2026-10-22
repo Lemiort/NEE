@@ -251,9 +251,6 @@ void Application::FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
 void Application::OnFrameBufferSize(int w, int h) {
     width = w;
     height = h;
-    if (fLine1) {
-        fLine1->SetAspectRatio(width, height);
-    }
     if (smfbo1 != nullptr) {
         smfbo1->Init(w, h);
     }
@@ -763,21 +760,21 @@ void Application::InterfacePass() {
     fLine1->SetText(strCampos);
     fLine1->SetPosition(-1.0F, 0.0F);
     fLine1->SetFontSize(24.0F);
-    fLine1->Render(pGameCamera);
+    textRenderer->Render(*fLine1, pGameCamera);
     // gBuffer1->CheckTextures();
     CalcFPS();
     // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(ConvertToString(fps));
     fLine1->SetPosition(-1.0F, 0.9F);
     fLine1->SetFontSize(24.0F);
-    fLine1->Render(pGameCamera);
+    textRenderer->Render(*fLine1, pGameCamera);
 
     if (renderType == RenderType::DEFERRED_SHADING) {
         // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
         fLine1->SetPosition(-1.0F, -0.2F);
         fLine1->SetFontSize(36.0F);
-        fLine1->Render(pGameCamera);
+        textRenderer->Render(*fLine1, pGameCamera);
     }
 
     // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
@@ -884,16 +881,24 @@ void Application::PreInitScene(GLFWwindow* window) {
         textShader->Init();
     }
     // Use smart pointer for automatic lifetime management
+    interfaceFont = std::make_shared<Font2d>();
+    if (!interfaceFont->Load("fonts/MagistralIC_UTF-8.fnt")) {
+        return;
+    }
+    textRenderer = std::make_unique<TextRenderer>();
+    if (!textRenderer->Init(textShader) ||
+        !textRenderer->RegisterFont(interfaceFont)) {
+        return;
+    }
     fLine1 = std::make_unique<FontLine2d>();
-    fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"), textShader);
-    fLine1->SetAspectRatio(width, height);
+    fLine1->SetFont(interfaceFont);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1->SetText("Loading...");
     fLine1->SetPosition(-1.0F, -0.1F);
     fLine1->SetFontSize(72.0F);
-    fLine1->Render(pGameCamera);
+    textRenderer->Render(*fLine1, pGameCamera);
     glfwSwapBuffers(window);
     initialized = false;
 }
@@ -912,13 +917,13 @@ void Application::InitRender(GLFWwindow* window, string message) {
         fLine1->SetText(ConvertToString(fps));
         fLine1->SetPosition(-1.0F, 0.9F);
         fLine1->SetFontSize(24.0F);
-        fLine1->Render(pGameCamera);
+        textRenderer->Render(*fLine1, pGameCamera);
 
         // fLine1->Render(message,-1.0f,-0.1f,36.0f);
         fLine1->SetText(std::move(message));
         fLine1->SetPosition(-1.0F, -0.1F);
         fLine1->SetFontSize(36.0F);
-        fLine1->Render(pGameCamera);
+        textRenderer->Render(*fLine1, pGameCamera);
 
         glfwSwapBuffers(window);
         glfwPollEvents();

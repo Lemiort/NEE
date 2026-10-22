@@ -16,6 +16,7 @@
 #include "ShadowMapFBO.hpp"
 #include "Skybox.hpp"
 #include "Text2D.hpp"
+#include "TextRenderer.hpp"
 
 constexpr int WINDOW_WIDTH = 1366;
 constexpr int WINDOW_HEIGHT = 768;
@@ -118,6 +119,8 @@ private:
     std::unique_ptr<Line> xline, yline, zline, dirLightLine;
     Mesh TestMesh, Plane, Sphere;
     std::unique_ptr<SkyBox> skybox1;
+    std::shared_ptr<Font2d> interfaceFont;
+    std::unique_ptr<TextRenderer> textRenderer;
     std::unique_ptr<FontLine2d> fLine1;
     std::unique_ptr<PerlinNoise> noise1;
     std::unique_ptr<Billboard> bb1;

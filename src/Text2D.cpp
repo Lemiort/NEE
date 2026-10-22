@@ -1,394 +1,77 @@
 #include "Text2D.hpp"
 
-#include <glad/gl.h>
-
-#include <array>
 #include <cmath>
-#include <cstddef>
 #include <cstdint>
-#include <cstring>
 #include <fstream>
-#include <ios>
-#include <memory>
 #include <regex>
 #include <sstream>
-#include <stdexcept>
 #include <string>
-#include <utility>
 
-#include "Camera.hpp"
-#include "Shader.hpp"
-#include "Texture.hpp"
 #include "spdlog/spdlog.h"
 #include "stb_image.h"
 
-namespace {
-const GLvoid* BufferOffset(std::size_t byteOffset) {
-    // With a VBO bound, OpenGL interprets this pointer value as a byte offset.
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,
-    // performance-no-int-to-ptr)
-    return reinterpret_cast<const GLvoid*>(
-        static_cast<std::uintptr_t>(byteOffset));
-}
-}  // namespace
-
-// The shader program is managed via a shared_ptr. Initialize it to nullptr.
-FontLine2d::FontLine2d() : shaderProgram(nullptr) {}
-
-FontLine2d::~FontLine2d() = default;
-
-bool FontLine2d::Init(std::string filename, std::shared_ptr<Shader> _sh) {
-    return character.Init(std::move(filename), std::move(_sh));
-}
-
-void FontLine2d::SetAspectRatio(int w, int h) {
-    character.SetAspectRatio(w, h);
-    aratio = static_cast<float>(h) / static_cast<float>(w);
-}
-
-void FontLine2d::SetText(std::string _text) { text = std::move(_text); }
-
-void FontLine2d::SetPosition(float x, float y) noexcept {
-    SetPosition(glm::vec2{x, y});
-}
-
-void FontLine2d::SetPosition(const glm::vec2& position) noexcept {
-    layout_.position = position;
-}
-
-const glm::vec2& FontLine2d::GetPosition() const noexcept {
-    return layout_.position;
-}
-
-void FontLine2d::SetFontSize(float fontSizePixels) noexcept {
-    layout_.fontSizePixels = fontSizePixels;
-}
-
-float FontLine2d::GetFontSize() const noexcept {
-    return layout_.fontSizePixels;
-}
-
-// void FontLine2d::Render(string text, float startX, float startY,float size )
-void FontLine2d::Render(const Camera& cam) {
-    float dx = 0.0F;
-    prevChar = 0;
-    // float dy=0.0f;
-    spaceWidth = character.GetSpaceWidth() /
-                 (static_cast<float>(character.GetFontHeight()));
-    for (size_t i = 0; i < text.length(); ++i) {
-        // look up info about this character
-        dx += character.GetKerning(prevChar, static_cast<char16_t>(text.at(i)));
-
-        // if we found a space character, draw it
-        if (static_cast<char16_t>(text.at(i)) == static_cast<char16_t>(' ')) {
-            dx += layout_.fontSizePixels * spaceWidth;
-        }
-
-        // actual drawing
-        character.SetPosition(
-            glm::vec2{layout_.position.x + dx, layout_.position.y});
-        character.SetFontSize(layout_.fontSizePixels);
-        character.SetCharacter(text.at(i));
-        auto lastCharacterLength = character.GetLastCharacterLength();
-        character.Render(cam);
-
-        // if the character exists, draw it
-        if (lastCharacterLength.x > 0.0F) {
-            // space and separator between characters
-            dx += lastCharacterLength.x +
-                  (layout_.fontSizePixels * spaceWidth / 4.0F);
-        } else {
-            continue;  // no character - do not write anything
-        }
-        // remember the previous character
-        prevChar = static_cast<char16_t>(text.at(i));
+bool Font2d::Load(std::string filename) {
+    std::fstream input(filename, std::ios::in);
+    if (!input) {
+        spdlog::error("Unable to open font description '{}'", filename);
+        return false;
     }
-}
 
-Font2d::Font2d() { color = glm::vec4(1.0F, 1.0F, 1.0F, 1.0F); }
-
-Font2d::~Font2d() = default;
-
-float Font2d::GetHeight(char16_t c) const {
-    const FontCharacter& temp = metrics_.GetCharacter(c);
-    float const realHeight = static_cast<float>(temp.height) /
-                             static_cast<float>(metrics_.GetAtlasHeight());
-    float const dx = 1.0F;
-    return (2 * dx) * realHeight * ky;
-}
-
-float Font2d::GetWidth(char16_t c) const {
-    const FontCharacter& temp = metrics_.GetCharacter(c);
-    float const realWidth = static_cast<float>(temp.width) /
-                            static_cast<float>(metrics_.GetAtlasWidth());
-    float const dx = 1.0F;
-    return (2 * dx) * realWidth * kx;
-}
-
-float Font2d::GetSpaceWidth() const {
-    const FontCharacter& temp = metrics_.GetCharacter(34);
-    float const realWidth = static_cast<float>(temp.origW) /
-                            static_cast<float>(metrics_.GetAtlasWidth());
-    float const dx = 1.0F;
-    return (2 * dx) * realWidth * kx;
-}
-
-float Font2d::GetKerning(char16_t previous, char16_t current) const noexcept {
-    return metrics_.GetKerning(previous, current);
-}
-
-uint32_t Font2d::GetFontHeight() const { return metrics_.GetFontHeight(); }
-
-bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
-    shaderProgram = std::move(_sh);
-    filename = std::move(_filename);
-    std::string imgFilename;
-    // generate vertex buffer for future use
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // and index buffer
-    glGenBuffers(1, &IBO);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    // get shader variables values
-    sverticesID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
-    spositionID = shaderProgram->GetUniformLocation("s_Position");
-    suvID = shaderProgram->GetUniformLocation("s_UV");
-    colorID = shaderProgram->GetUniformLocation("textColor");
-
-    // fill indices
-    // The vertices are bottom-left, top-left, bottom-right, top-right.
-    // Draw both strip triangles counterclockwise so back-face culling keeps
-    // them.
-    const std::array<uint32_t, 4> indicies = {0, 2, 1, 3};
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
-                 GL_STATIC_DRAW);
-
-    /*===========Filling font information============*/
-    std::fstream fin;
-    fin.open(filename.c_str(), std::ios::in);
-    // temporary variable for reading
-    std::string in_s;
-
-    enum class FontFileState {
-        None = 0,
-        TextureFilename,
-        FontNameSize,
-        FontData,
-        KerningAnnouncement,
-        KerningData
-    };
+    enum class FontFileState { None, FontData, KerningData };
     FontFileState state = FontFileState::None;
-
-    while (std::getline(fin, in_s)) {
-        // read data
+    std::string line;
+    while (std::getline(input, line)) {
         if (state == FontFileState::FontData) {
-            std::stringstream sstr;
-            sstr << in_s;
-            uint16_t code = 0;
-            sstr >> code;
-            FontCharacter symbol{};
-            sstr >> symbol.xpos >> symbol.ypos >> symbol.width >>
-                symbol.height >> symbol.xOffset >> symbol.yOffset >>
-                symbol.origW >> symbol.origH;
-            metrics_.AddCharacter(static_cast<char16_t>(code), symbol);
+            std::stringstream stream(line);
+            uint16_t code{};
+            FontCharacter character{};
+            if (stream >> code >> character.xpos >> character.ypos >>
+                character.width >> character.height >> character.xOffset >>
+                character.yOffset >> character.origW >> character.origH) {
+                metrics_.AddCharacter(static_cast<char16_t>(code), character);
+            }
         } else if (state == FontFileState::KerningData) {
-            std::stringstream sstr;
-            sstr << in_s;
-            static_assert(sizeof(uint16_t) == sizeof(char16_t));
-            uint16_t code1 = 0;
-            sstr >> code1;
-            uint16_t code2 = 0;
-            float f1 = NAN;
-            sstr >> code2 >> f1;
-            metrics_.AddKerning(static_cast<char16_t>(code1),
-                                static_cast<char16_t>(code2), f1);
+            std::stringstream stream(line);
+            uint16_t previous{};
+            uint16_t current{};
+            float amount = NAN;
+            if (stream >> previous >> current >> amount) {
+                metrics_.AddKerning(static_cast<char16_t>(previous),
+                                    static_cast<char16_t>(current), amount);
+            }
         }
-        // find texture name
-        std::regex const texturesPattern(R"(textures:\s*([a-zA-Z0-9_\-\.]+))");
+
         std::smatch match;
-        if (std::regex_search(in_s, match, texturesPattern)) {
-            state = FontFileState::TextureFilename;
-            imgFilename = std::string("fonts/") + match.str(1);
-            spdlog::info("Font image is \"{}\"", imgFilename);
+        const std::regex texturePattern(R"(textures:\s*([a-zA-Z0-9_\-\.]+))");
+        if (std::regex_search(line, match, texturePattern)) {
+            atlasFilename_ = std::string("fonts/") + match.str(1);
         }
-
-        // find font name
-        std::regex const fontNameSizePattern(R"((.*?)\s+(\d+)px$)");
-        if (std::regex_search(in_s, match, fontNameSizePattern)) {
-            state = FontFileState::FontNameSize;
-            const std::string fontName = match.str(1);
-            const auto fontHeight =
-                static_cast<uint32_t>(std::stoul(match.str(2)));
-            metrics_.SetFont(fontName, fontHeight);
-
-            spdlog::info("Font name is {}", fontName);
-            spdlog::info("Font height is {}", fontHeight);
-
-            // flag that data is now being read
+        const std::regex fontPattern(R"((.*?)\s+(\d+)px$)");
+        if (std::regex_search(line, match, fontPattern)) {
+            metrics_.SetFont(match.str(1),
+                             static_cast<uint32_t>(std::stoul(match.str(2))));
             state = FontFileState::FontData;
         }
-        // find information about upcoming kerning
-        if (in_s.contains("kerning pairs:")) {
+        if (line.contains("kerning pairs:")) {
             state = FontFileState::KerningData;
         }
     }
-    /*================================================*/
 
-    // create texture
-    texBufferID = loadTexture(imgFilename);
-
-    // activate texture unit 0
-    glActiveTexture(GL_TEXTURE0);
-    // bind texture to active texture unit
-    glBindTexture(GL_TEXTURE_2D, texBufferID);
-    texSamplerID = shaderProgram->GetUniformLocation("texSampler");
-
-    // Get image dimensions
     int width{};
     int height{};
     int channels{};
-    if (stbi_info(imgFilename.c_str(), &width, &height, &channels) == 0) {
-        spdlog::error("Error reading image info:{}", stbi_failure_reason());
+    if (atlasFilename_.empty() ||
+        stbi_info(atlasFilename_.c_str(), &width, &height, &channels) == 0) {
+        spdlog::error("Error reading font atlas '{}': {}", atlasFilename_,
+                      stbi_failure_reason());
         return false;
     }
-    // Calculate width
-    const auto imageWidth = static_cast<uint32_t>(width);
-    const auto imageHeight = static_cast<uint32_t>(height);
-    metrics_.SetAtlasSize(imageWidth, imageHeight);
-    spdlog::info("width={}", imageWidth);
-
-    // Calculate height
-    spdlog::info("height={}", imageHeight);
-
-    // Convert pixel to relative coordinates
-    pkx = 1.0F / static_cast<float>(imageWidth);
-    pky = 1.0F / static_cast<float>(imageHeight);
-
-    return true;
+    metrics_.SetAtlasSize(static_cast<uint32_t>(width),
+                          static_cast<uint32_t>(height));
+    return metrics_.GetFontHeight() != 0;
 }
 
-void Font2d::SetAspectRatio(int _width, int _height) {
-    aratio = static_cast<float>(_height) / static_cast<float>(_width);
-    kx = static_cast<float>(metrics_.GetAtlasWidth()) /
-         static_cast<float>(_width);
-    ky = static_cast<float>(metrics_.GetAtlasHeight()) /
-         static_cast<float>(_height);
-}
-
-void Font2d::SetAspectRatio(float f) { aratio = f; }
-
-void Font2d::SetPosition(const glm::vec2& position) noexcept {
-    layout_.position = position;
-}
-
-void Font2d::SetFontSize(float fontSizePixels) noexcept {
-    layout_.fontSizePixels = fontSizePixels;
-}
-
-void Font2d::SetCharacter(char16_t c) {
-    character = c;
-
-    const float fontScale =
-        layout_.fontSizePixels / static_cast<float>(metrics_.GetFontHeight());
-    currentCharacter = FontCharacter(0, 0, 0, 0, 0, 0, 0, 0);
-    try {
-        currentCharacter = metrics_.GetCharacter(character);
-    } catch (const std::out_of_range& oor) {
-        // printf("\n char is out of range");
-        characterLength = glm::vec2(-1.0F, -1.0F);
-        return;
-    }
-    realWidth = static_cast<float>(currentCharacter.width) /
-                static_cast<float>(metrics_.GetAtlasWidth());
-    realHeight = static_cast<float>(currentCharacter.height) /
-                 static_cast<float>(metrics_.GetAtlasHeight());
-    dx = 1.0F;
-    xOffset = fontScale * (2 * dx) * kx *
-              static_cast<float>(currentCharacter.xOffset) /
-              static_cast<float>(metrics_.GetAtlasWidth());
-    yOffset = fontScale * (-2 * dx) * ky *
-              static_cast<float>(currentCharacter.yOffset) /
-              static_cast<float>(metrics_.GetAtlasHeight());
-
-    characterLength = glm::vec2((2 * dx) * realWidth * kx * fontScale,
-                                (2 * dx) * realHeight * ky);
-}
-
-glm::vec2 Font2d::GetLastCharacterLength() {
-    // return glm::vec2((2*dx)*realWidth*kx*size,(2*dx)*realHeight*ky);
-    return characterLength;
-}
-
-void Font2d::Render(const Camera& cam) {
-    SetAspectRatio(cam.GetWidth(), cam.GetHeight());
-    shaderProgram->Use();
-
-    const std::array<float, 8> vertices = {0.0F,
-                                           (-2 * dx) * realHeight * ky,
-                                           0.0F,
-                                           0.0F,
-                                           (2 * dx) * realWidth * kx,
-                                           (-2 * dx) * realHeight * ky,
-                                           (2 * dx) * realWidth * kx,
-                                           0.0F};
-    /*float vertices[]={0.0f,0.0f,
-                        0.0f,1.0f,
-                        1.0f,0.0f,
-                        1.0f,1.0f
-                            };*/
-    const std::array<float, 8> uvs = {0.0F,      -realHeight, 0.0F,      0.0F,
-                                      realWidth, -realHeight, realWidth, 0.0F};
-    /*  float uvs[]={0.0f,0.0f,
-                        0.0f,0.0f,
-                        0.0f,0.0f,
-                                            0.0f,0.0f};*/
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices) + sizeof(uvs), nullptr,
-                 GL_DYNAMIC_DRAW);
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(vertices), vertices.data());
-    glBufferSubData(GL_ARRAY_BUFFER, sizeof(vertices), sizeof(uvs), uvs.data());
-
-    sverticesID = shaderProgram->GetAttribLocation("Position");
-    uvID = shaderProgram->GetAttribLocation("UV");
-    spositionID = shaderProgram->GetUniformLocation("s_Position");
-    suvID = shaderProgram->GetUniformLocation("s_UV");
-    sizeID = shaderProgram->GetUniformLocation("size");
-    colorID = shaderProgram->GetUniformLocation("textColor");
-    float const u = static_cast<float>(currentCharacter.xpos) /
-                    static_cast<float>(metrics_.GetAtlasWidth());
-    float const v = 1.0F - (static_cast<float>(currentCharacter.ypos) /
-                            static_cast<float>(metrics_.GetAtlasHeight()));
-    // printf("\nu=%f,  v=%f ",u,v);
-    // Calculate offset
-    // px+=((float)temp.xOffset/(float)imageWidth)*kx*1.0f*size;
-    // py-=((float)temp.yOffset/(float)imageHeight)*ky*1.0f*size;
-
-    // vector position in space
-    glUniform2f(spositionID, layout_.position.x + xOffset,
-                layout_.position.y + yOffset);
-    // UV offset vector
-    glUniform2f(suvID, u, v);
-    // Size
-    glUniform1f(sizeID, layout_.fontSizePixels /
-                            static_cast<float>(metrics_.GetFontHeight()));
-
-    glVertexAttribPointer(sverticesID, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(vertices)));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-
-    glActiveTexture(GL_TEXTURE0);
-    // assign texture to active texture unit
-    glBindTexture(GL_TEXTURE_2D, texBufferID);
-    glUniform1i(texSamplerID,
-                0);  // tell shader to use texture unit 0
-    glUniform4f(colorID, color.r, color.g, color.b, color.a);
-    glEnableVertexAttribArray(sverticesID);
-    glEnableVertexAttribArray(uvID);
-    glDrawElements(GL_TRIANGLE_STRIP, 4, GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(sverticesID);
-    glDisableVertexAttribArray(uvID);
-    // return glm::vec2((2*dx)*realWidth*kx*position[2],(2*dx)*realHeight*ky);
+const FontMetrics& Font2d::GetMetrics() const noexcept { return metrics_; }
+const std::string& Font2d::GetAtlasFilename() const noexcept {
+    return atlasFilename_;
 }

@@ -8,6 +8,7 @@
 
 #include "Camera.hpp"
 #include "FontMetrics.hpp"
+#include "Text2D.hpp"
 #include "TextLayout.hpp"
 #include "Transform.hpp"
 #include "Transformable.hpp"
@@ -106,6 +107,19 @@ TEST(FontMetrics, StoresGlyphsAndDefaultsMissingKerningToZero) {
     EXPECT_EQ(metrics.GetCharacter(u'A').width, 12U);
     EXPECT_FLOAT_EQ(metrics.GetKerning(u'A', u'V'), -1.5F);
     EXPECT_FLOAT_EQ(metrics.GetKerning(u'A', u'A'), 0.0F);
+}
+
+TEST(TextModel, StoresPresentationDataWithoutRenderingDependencies) {
+    FontLine2d line;
+    line.SetText("status");
+    line.SetPosition(-0.75F, 0.5F);
+    line.SetFontSize(24.0F);
+    line.SetColor(glm::vec4(0.25F, 0.5F, 0.75F, 1.0F));
+
+    EXPECT_EQ(line.GetText(), "status");
+    EXPECT_EQ(line.GetPosition(), glm::vec2(-0.75F, 0.5F));
+    EXPECT_EQ(line.GetFontSize(), 24.0F);
+    EXPECT_EQ(line.GetColor(), glm::vec4(0.25F, 0.5F, 0.75F, 1.0F));
 }
 
 TEST(CameraControls, KeyboardMovesAlongStandardAxes) {
