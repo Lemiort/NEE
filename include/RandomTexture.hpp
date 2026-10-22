@@ -2,8 +2,9 @@
 #define RANDOMTEXTURE_H
 #include <glad/gl.h>
 
-#include "EngineCommon.hpp"
 #include <glm/glm.hpp>
+
+#include "EngineCommon.hpp"
 #include "Util.hpp"
 class RandomTexture {
 public:

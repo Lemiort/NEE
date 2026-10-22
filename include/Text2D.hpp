@@ -3,9 +3,9 @@
 #include <glad/gl.h>
 
 #include <cstring>
+#include <glm/glm.hpp>
 #include <map>
 
-#include <glm/glm.hpp>
 #include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"

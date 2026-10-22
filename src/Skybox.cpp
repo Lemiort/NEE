@@ -1,10 +1,10 @@
 #include "Skybox.hpp"
 
 #include <glad/gl.h>
-#include <glm/gtc/type_ptr.hpp>
-#include <glm/ext/matrix_transform.hpp>
 
 #include <cstddef>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <memory>
 #include <new>
 #include <string>

@@ -1,9 +1,9 @@
 #ifndef BILLBOARD_H
 #define BILLBOARD_H
+#include <glm/glm.hpp>
 #include <memory>
 
 #include "Camera.hpp"
-#include <glm/glm.hpp>
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"

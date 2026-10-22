@@ -11,7 +11,7 @@ public:
     glm::vec3 GetScale();
 
 protected:
- float scale[3]{};
+    float scale[3]{};
 
 private:
 };

@@ -1,11 +1,11 @@
 #ifndef MESH_H_INCLUDED
 #define MESH_H_INCLUDED
 #include <fstream>
+#include <glm/glm.hpp>
 
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
-#include <glm/glm.hpp>
 #include "PlaceableObject.hpp"
 #include "RotatableObject.hpp"
 #include "ScaleableObject.hpp"
@@ -21,7 +21,8 @@ struct Vertex {
     glm::vec3 Normal;
     glm::vec3 Tangent;
     Vertex() {}
-    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal, glm::vec3& tangent) {
+    Vertex(glm::vec3& pos, glm::vec3& uv, glm::vec3& normal,
+           glm::vec3& tangent) {
         Pos = pos;
         UV = uv;
         Normal = normal;

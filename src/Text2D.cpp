@@ -8,6 +8,7 @@
 #include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <glm/glm.hpp>
 #include <ios>
 #include <memory>
 #include <ostream>
@@ -18,7 +19,6 @@
 #include <utility>
 
 #include "Camera.hpp"
-#include <glm/glm.hpp>
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
@@ -130,7 +130,8 @@ bool Font2d::Init(std::string _filename, std::shared_ptr<Shader> _sh) {
 
     // fill indices
     // The vertices are bottom-left, top-left, bottom-right, top-right.
-    // Draw both strip triangles counterclockwise so back-face culling keeps them.
+    // Draw both strip triangles counterclockwise so back-face culling keeps
+    // them.
     const std::array<uint32_t, 4> indicies = {0, 2, 1, 3};
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indicies), indicies.data(),
@@ -270,7 +271,7 @@ void Font2d::SetCharacter(char16_t c) {
               static_cast<float>(imageHeight);
 
     characterLength = glm::vec2((2 * dx) * realWidth * kx * position[2],
-                               (2 * dx) * realHeight * ky);
+                                (2 * dx) * realHeight * ky);
 }
 
 glm::vec2 Font2d::GetLastCharacterLength() {

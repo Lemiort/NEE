@@ -2,8 +2,8 @@
 #define PLACEABLEOBJECT_H
 
 #include <array>
-
 #include <glm/glm.hpp>
+
 #include "Object.hpp"
 
 class PlaceableObject : public Object {

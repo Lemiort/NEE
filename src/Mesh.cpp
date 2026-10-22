@@ -1,9 +1,9 @@
 #include "Mesh.hpp"
 
 #include <glad/gl.h>
-#include <glm/gtc/type_ptr.hpp>
 
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 #include <ios>
 #include <memory>
 #include <new>
@@ -161,10 +161,9 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     return true;
 }
 void Mesh::Render(const Camera& cam) {
-    const Transform transform{
-        glm::vec3(position[0], position[1], position[2]),
-        glm::vec3(rotation[0], rotation[1], rotation[2]),
-        glm::vec3(scale[0], scale[1], scale[2])};
+    const Transform transform{glm::vec3(position[0], position[1], position[2]),
+                              glm::vec3(rotation[0], rotation[1], rotation[2]),
+                              glm::vec3(scale[0], scale[1], scale[2])};
     const glm::mat4 modelMatrix = transform.ModelMatrix();
     const glm::mat4 rotationMatrix = transform.RotationMatrix();
 
@@ -180,8 +179,7 @@ void Mesh::Render(const Camera& cam) {
                           BUFFER_OFFSET(sizeof(float) * 8 * spverts));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
-                       glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(rotateID, 1, GL_FALSE,
                        glm::value_ptr(rotationMatrix));  // rotation of model
 
