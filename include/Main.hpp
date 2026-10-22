@@ -114,7 +114,7 @@ private:
     std::unique_ptr<DirectionalLight> directionalLight1;
     std::unique_ptr<PointLight> pointLight1, pointLight2;
     std::unique_ptr<SpotLight> spotLight1;
-    Mesh TestMesh, Plane, Sphere;
+    Mesh TestMesh, Plane, Sphere, transparentTeapot;
     std::unique_ptr<SkyBox> skybox1;
     std::shared_ptr<Font2d> interfaceFont;
     std::unique_ptr<TextRenderer> textRenderer;

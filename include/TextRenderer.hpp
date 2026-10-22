@@ -26,9 +26,8 @@ public:
                 const Camera& camera);
 
 private:
-    void DrawGlyph(const FontCharacter& glyph, const TextLayout& layout,
-                   const glm::vec4& color, const FontMetrics& metrics,
-                   float cursorOffset, int viewportWidth, int viewportHeight);
+    void RenderBatch(std::span<const FontLine2d* const> lines,
+                     const Camera& camera);
 
     std::shared_ptr<Shader> shader_;
     std::unordered_map<const Font2d*, std::unique_ptr<Texture2D>> atlases_;

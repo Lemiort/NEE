@@ -38,7 +38,6 @@ private:
     GLint spotLightDirectionUniform_{};
     GLint spotLightColorUniform_{};
     GLint spotLightCutoffUniform_{};
-    GLint opacityUniform_{};
 };
 
 #endif  // FORWARD_PIPELINE_HPP_INCLUDED

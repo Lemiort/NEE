@@ -363,6 +363,12 @@ void Application::RenderPass() {
                 mainMaterial);
         }
     }
+    renderQueue.SubmitTransparentMesh(
+        transparentTeapot,
+        Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
+                  .rotationDegrees = glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
+                  .scale = glm::vec3(0.05F)},
+        mainMaterial, 0.45F);
     renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
 
     const std::array pointLights{pointLight1.get(), pointLight2.get()};
@@ -454,6 +460,12 @@ void Application::RenderScene() {
                 DSGeometryPassMaterial);
         }
     }
+    renderQueue.SubmitTransparentMesh(
+        transparentTeapot,
+        Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
+                  .rotationDegrees = glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
+                  .scale = glm::vec3(0.05F)},
+        mainMaterial, 0.45F);
 
     const std::array pointLights{pointLight1.get(), pointLight2.get()};
     const std::array spotLights{spotLight1.get()};
@@ -609,6 +621,13 @@ int Application::InitScene(GLFWwindow* window) {
             "Scene initialization aborted: required model '{}' failed to "
             "initialize",
             "models/torus1.obj");
+        return EXIT_FAILURE;
+    }
+    if (!transparentTeapot.Init(mainMaterial, "models/teapot.obj")) {
+        spdlog::critical(
+            "Scene initialization aborted: required model '{}' failed to "
+            "initialize",
+            "models/teapot.obj");
         return EXIT_FAILURE;
     }
     // Plane.Init(mainMaterial, "models/normal_plane.obj");

@@ -18,6 +18,7 @@ public:
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
     void SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap);
     void SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap);
+    void SetOpacity(float opacity) noexcept;
     void SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num);
     void SetTexture(GLuint _map, GLuint num);
     std::shared_ptr<Shader> GetShader() { return shaderProgram; }
@@ -34,6 +35,8 @@ protected:
     std::vector<GLint> abstractSamplersID;
     // GLuint colSamplerUI, normSamplerUI;
     GLint shadowSamplerID{};
+    GLint opacityID{-1};
+    float opacity{1.0F};
     GLint max_texture_units{};
     std::vector<GLuint> texturesID;
 };

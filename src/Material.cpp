@@ -78,12 +78,13 @@ bool Material::Init(const std::shared_ptr<Shader>& _sh) {
     shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
     // tell shader to use texture unit 3 for shadow map
     glUniform1i(shadowSamplerID, 3);
+    opacityID = shaderProgram->GetUniformLocation("opacity");
 
     std::string const abstractSamplerName("gSampler");
     for (GLint i = 4; i < max_texture_units; i++) {
         abstractSamplersID.at(static_cast<std::size_t>(i)) =
             shaderProgram->GetUniformLocation(
-            (abstractSamplerName + ConvertToString(i)).c_str());
+                (abstractSamplerName + ConvertToString(i)).c_str());
         // std::cout<<"\nSampler name is
         // "<<(abstractSamplerName+ConvertToString(i)).c_str();
     }
@@ -111,6 +112,9 @@ void Material::Use() {
     // assign texture to active texture unit
     glUniform1i(shadowSamplerID,
                 3);  // tell shader to use texture unit 3
+    if (opacityID >= 0) {
+        glUniform1f(opacityID, opacity);
+    }
 
     // starting from 4th, are custom texture units
     for (GLint i = 4; i < max_texture_units; i++) {
@@ -129,6 +133,8 @@ void Material::Use() {
         }
     }
 }
+
+void Material::SetOpacity(float value) noexcept { opacity = value; }
 
 void Material::SetColorTexture(std::shared_ptr<Texture2D> _colorMap) {
     colorMap = std::move(_colorMap);

@@ -55,7 +55,6 @@ bool ForwardPipeline::Init(std::shared_ptr<Shader> meshShader) {
     spotLightDirectionUniform_ = meshShader_->GetUniformLocation("sLightDir");
     spotLightColorUniform_ = meshShader_->GetUniformLocation("sLightCol");
     spotLightCutoffUniform_ = meshShader_->GetUniformLocation("sLightCutoff");
-    opacityUniform_ = meshShader_->GetUniformLocation("opacity");
     return true;
 }
 
@@ -132,9 +131,8 @@ void ForwardPipeline::RenderMeshes(std::span<const MeshRenderCommand> commands,
             previousMaterial = command.material.get();
         }
         if (command.material != nullptr) {
-            command.material->Use();
+            command.material->SetOpacity(applyOpacity ? command.opacity : 1.0F);
         }
-        glUniform1f(opacityUniform_, applyOpacity ? command.opacity : 1.0F);
         mesh.SetTransform(command.transform);
         mesh.Render(camera);
     }
