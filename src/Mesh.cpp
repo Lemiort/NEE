@@ -2,26 +2,19 @@
 
 #include <glad/gl.h>
 
-#include <cstdio>
-#include <array>
 #include <cstddef>
 #include <cstdint>
-#include <fstream>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
-#include <ios>
 #include <limits>
 #include <memory>
 #include <new>
-#include <ostream>
 #include <utility>
 #include <vector>
-#ifdef _MSC_VER
-#include <stdio.h>
-#endif
 
 #include "Camera.hpp"
 #include "Material.hpp"
+#include "ModelLoader.hpp"
 #include "Transform.hpp"
 #include "spdlog/spdlog.h"
 
@@ -29,9 +22,6 @@ namespace {
 constexpr std::size_t kPositionComponentCount = 3;
 constexpr std::size_t kTextureCoordinateComponentCount = 2;
 constexpr std::size_t kNormalComponentCount = 3;
-constexpr std::size_t kVertexComponentCount =
-    kPositionComponentCount + kTextureCoordinateComponentCount +
-    kNormalComponentCount;
 constexpr std::size_t kGpuVertexComponentCount =
     kPositionComponentCount + kNormalComponentCount +
     kTextureCoordinateComponentCount + kNormalComponentCount;
@@ -42,18 +32,6 @@ const GLvoid* BufferOffset(std::size_t byteOffset) {
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
     return reinterpret_cast<const GLvoid*>(
         static_cast<std::uintptr_t>(byteOffset));
-}
-
-std::FILE* OpenBinaryFile(const char* path) {
-#ifdef _MSC_VER
-    std::FILE* file = nullptr;
-    if (fopen_s(&file, path, "rb") != 0) {
-        return nullptr;
-    }
-    return file;
-#else
-    return std::fopen(path, "rb");
-#endif
 }
 }  // namespace
 
@@ -84,129 +62,70 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
 
 bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     mat = std::move(_mat);
+    if (mat == nullptr || model == nullptr) {
+        spdlog::error("Cannot initialize mesh without a material and model");
+        return false;
+    }
     shaderProgram = mat->GetShader();
-    // mat->Use();
 
     if (shaderProgram == nullptr) {
         return false;
     }
 
     Scale = 0;
-    std::vector<int> spindices;
+    spfaces = 0;
+    spverts = 0;
+    ModelData modelData;
+    try {
+        if (!LoadModel(model, modelData)) {
+            return false;
+        }
+    } catch (const std::bad_alloc&) {
+        spdlog::error("Unable to allocate data for mesh model '{}'", model);
+        return false;
+    }
+
+    const std::size_t vertexCount = modelData.vertices.size();
+    const std::size_t indexCount = modelData.indices.size();
+    const auto maxBufferSize =
+        static_cast<std::size_t>(std::numeric_limits<GLsizeiptr>::max());
+    if (vertexCount >
+            static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
+        indexCount >
+            static_cast<std::size_t>(std::numeric_limits<GLsizei>::max()) ||
+        vertexCount >
+            maxBufferSize / (sizeof(float) * kGpuVertexComponentCount) ||
+        indexCount > maxBufferSize / sizeof(std::uint32_t) ||
+        indexCount % kTriangleIndexCount != 0) {
+        spdlog::error("Model '{}' exceeds supported mesh limits", model);
+        return false;
+    }
+
     std::vector<float> spvertices;
     std::vector<float> spnormals;
     std::vector<float> spuvs;
     std::vector<float> sptangent;
-    spfaces = 0;
-    spverts = 0;
     try {
-        std::unique_ptr<std::FILE, decltype(&std::fclose)> fp(
-        OpenBinaryFile(model), &std::fclose);
-        fstream fout("ImporObj.log", ios::out);
-        if (fp == nullptr) {
-            spdlog::error("Unable to open mesh model: {}", model);
-            return false;
-        }
-        const auto read = [&fp]<typename T>(T* destination,
-                                             std::size_t count) {
-            return std::fread(destination, sizeof(T), count, fp.get()) == count;
-        };
-        int vertexCount = 0;
-        if (!read(&vertexCount, 1) || vertexCount <= 0) {
-            spdlog::error("Mesh model has an invalid vertex count: {}", model);
-            return false;
-        }
-        const auto vertexCountSize = static_cast<std::size_t>(vertexCount);
-        if (vertexCountSize >
-                std::vector<float>{}.max_size() / kPositionComponentCount ||
-            vertexCountSize >
-                static_cast<std::size_t>(
-                    std::numeric_limits<GLsizeiptr>::max()) /
-                    (sizeof(float) * kGpuVertexComponentCount)) {
-            spdlog::error("Mesh model vertex count is too large: {}", model);
-            return false;
-        }
-        spvertices.resize(vertexCountSize * kPositionComponentCount);
-        spuvs.resize(vertexCountSize * kTextureCoordinateComponentCount);
-        spnormals.resize(vertexCountSize * kNormalComponentCount);
-        sptangent.resize(vertexCountSize * kNormalComponentCount);
-
-        std::array<float, kVertexComponentCount> vertex{};
-        for (std::size_t i = 0; i < vertexCountSize; ++i) {
-            if (!read(vertex.data(), vertex.size())) {
-                spdlog::error("Mesh model has truncated vertex data: {}", model);
-                return false;
-            }
-            const std::size_t positionOffset = i * kPositionComponentCount;
-            const std::size_t textureOffset =
-                i * kTextureCoordinateComponentCount;
-            const std::size_t normalOffset = i * kNormalComponentCount;
-            spvertices.at(positionOffset) = vertex.at(0);
-            spvertices.at(positionOffset + 1) = vertex.at(1);
-            spvertices.at(positionOffset + 2) = vertex.at(2);
-            spuvs.at(textureOffset) = vertex.at(3);
-            spuvs.at(textureOffset + 1) = vertex.at(4);
-            spnormals.at(normalOffset) = vertex.at(5);
-            spnormals.at(normalOffset + 1) = vertex.at(6);
-            spnormals.at(normalOffset + 2) = vertex.at(7);
-        }
-        if (!read(sptangent.data(), sptangent.size())) {
-            spdlog::error("Mesh model has truncated tangent data: {}", model);
-            return false;
-        }
-        spverts = vertexCount;
-        fout << spverts << '\n';
-        for (std::size_t i = 0; i < vertexCountSize; ++i) {
-            const std::size_t positionOffset = i * kPositionComponentCount;
-            const std::size_t textureOffset =
-                i * kTextureCoordinateComponentCount;
-            const std::size_t normalOffset = i * kNormalComponentCount;
-            fout << i << " ";
-            fout << spvertices.at(positionOffset) << ",";
-            fout << spvertices.at(positionOffset + 1) << ",";
-            fout << spvertices.at(positionOffset + 2) << ",";
-            fout << spuvs.at(textureOffset) << ",";
-            fout << spuvs.at(textureOffset + 1) << ",";
-            fout << spnormals.at(normalOffset) << ",";
-            fout << spnormals.at(normalOffset + 1) << ",";
-            fout << spnormals.at(normalOffset + 2) << ",\n";
-        }
-        int faceCount = 0;
-        if (!read(&faceCount, 1) || faceCount <= 0) {
-            spdlog::error("Mesh model has an invalid face count: {}", model);
-            return false;
-        }
-        const auto faceCountSize = static_cast<std::size_t>(faceCount);
-        if (faceCountSize >
-                std::vector<int>{}.max_size() / kTriangleIndexCount ||
-            faceCountSize >
-                static_cast<std::size_t>(
-                    std::numeric_limits<GLsizeiptr>::max()) /
-                    (sizeof(int) * kTriangleIndexCount) ||
-            faceCountSize >
-                static_cast<std::size_t>(
-                    std::numeric_limits<GLsizei>::max()) /
-                    kTriangleIndexCount) {
-            spdlog::error("Mesh model face count is too large: {}", model);
-            return false;
-        }
-        spfaces = faceCount;
-        fout << "\n" << spfaces << '\n';
-        spindices.resize(faceCountSize * kTriangleIndexCount);
-        if (!read(spindices.data(), spindices.size())) {
-            spdlog::error("Mesh model has truncated index data: {}", model);
-            return false;
-        }
-        for (std::size_t i = 0; i < faceCountSize; ++i) {
-            const std::size_t indexOffset = i * kTriangleIndexCount;
-            fout << spindices.at(indexOffset) << ",";
-            fout << spindices.at(indexOffset + 1) << ","
-                 << spindices.at(indexOffset + 2) << '\n';
+        spvertices.reserve(vertexCount * kPositionComponentCount);
+        spnormals.reserve(vertexCount * kNormalComponentCount);
+        spuvs.reserve(vertexCount * kTextureCoordinateComponentCount);
+        sptangent.reserve(vertexCount * kNormalComponentCount);
+        for (const ModelVertex& vertex : modelData.vertices) {
+            spvertices.insert(spvertices.end(), vertex.position.begin(),
+                              vertex.position.end());
+            spnormals.insert(spnormals.end(), vertex.normal.begin(),
+                             vertex.normal.end());
+            spuvs.insert(spuvs.end(), vertex.uv.begin(), vertex.uv.end());
+            sptangent.insert(sptangent.end(), vertex.tangent.begin(),
+                             vertex.tangent.end());
         }
     } catch (const std::bad_alloc&) {
-        spdlog::error("Error creating make_shared<Mesh>");
+        spdlog::error("Unable to allocate GPU data for mesh model '{}'", model);
         return false;
     }
+
+    spverts = static_cast<int>(vertexCount);
+    spfaces = static_cast<int>(indexCount / kTriangleIndexCount);
 
     // create buffer to store everything
     glGenBuffers(1, &VBO);
@@ -224,7 +143,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     const GLsizeiptr vertexBufferBytes =
         positionBytes + normalBytes + textureCoordinateBytes + tangentBytes;
     const auto indexBufferBytes = static_cast<GLsizeiptr>(
-        sizeof(int) * kTriangleIndexCount * static_cast<std::size_t>(spfaces));
+        sizeof(std::uint32_t) * kTriangleIndexCount *
+        static_cast<std::size_t>(spfaces));
     glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
     // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, positionBytes, spvertices.data());
@@ -242,8 +162,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     // bind indices to buffer
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes, spindices.data(),
-                 GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
+                 modelData.indices.data(), GL_STATIC_DRAW);
 
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     normalID = shaderProgram->GetAttribLocation("s_vNormal");
