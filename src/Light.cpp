@@ -68,9 +68,7 @@ glm::vec3 DirectionalLight::GetCol() {
 DirectionalLight::DirectionalLight() = default;
 DirectionalLight::~DirectionalLight() = default;
 
-glm::vec3 SpotLight::GetPos() {
-    return {position.at(0), position.at(1), position.at(2)};
-}
+glm::vec3 SpotLight::GetPos() { return GetPosition(); }
 
 SpotLight::SpotLight() = default;
 
@@ -81,9 +79,7 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     color.at(0) = r;
     color.at(1) = g;
     color.at(2) = b;
-    position.at(0) = p1;
-    position.at(1) = p2;
-    position.at(2) = p3;
+    SetPosition(p1, p2, p3);
     target.at(0) = t1;
     target.at(1) = t2;
     target.at(2) = t3;
@@ -97,9 +93,9 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
 }
 
 void SpotLight::Render(const Camera& cam) {
-    const glm::vec3 dir(target.at(0) - position.at(0),
-                        target.at(1) - position.at(1),
-                        target.at(2) - position.at(2));
+    const glm::vec3 position = GetPosition();
+    const glm::vec3 dir(target.at(0) - position.x, target.at(1) - position.y,
+                        target.at(2) - position.z);
     const float distance = glm::length(dir);
     if (distance <= 1e-6F) {
         return;
@@ -121,7 +117,7 @@ void SpotLight::Render(const Camera& cam) {
     // Cutoff is the cone's half angle; its radius is distance * tan(cutoff).
     const float radius = distance * glm::tan(glm::radians(Cutoff));
     mesh->SetScale(radius, distance, radius);
-    mesh->SetPosition(position.at(0), position.at(1), position.at(2));
+    mesh->SetPosition(position);
     mesh->Render(cam);
 }
 
@@ -129,9 +125,10 @@ void SpotLight::SetTarget(glm::vec3 _target) {
     target.at(0) = _target.x;
     target.at(1) = _target.y;
     target.at(2) = _target.z;
-    direction.at(0) = target.at(0) - position.at(0);
-    direction.at(1) = target.at(1) - position.at(1);
-    direction.at(2) = target.at(2) - position.at(2);
+    const glm::vec3 position = GetPosition();
+    direction.at(0) = target.at(0) - position.x;
+    direction.at(1) = target.at(1) - position.y;
+    direction.at(2) = target.at(2) - position.z;
     direction.at(3) = 1;
 }
 
@@ -145,29 +142,23 @@ void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
     color.at(0) = r;
     color.at(1) = g;
     color.at(2) = b;
-    position.at(0) = p1;
-    position.at(1) = p2;
-    position.at(2) = p3;
+    SetPosition(p1, p2, p3);
     Cutoff = cut;
 }
 
 void SpotLight::SetPos(glm::vec3 pos) {
-    position.at(0) = pos.x;
-    position.at(1) = pos.y;
-    position.at(2) = pos.z;
+    SetPosition(pos);
 
-    direction.at(0) = target.at(0) - position.at(0);
-    direction.at(1) = target.at(1) - position.at(1);
-    direction.at(2) = target.at(2) - position.at(2);
+    direction.at(0) = target.at(0) - pos.x;
+    direction.at(1) = target.at(1) - pos.y;
+    direction.at(2) = target.at(2) - pos.z;
     direction.at(3) = 1;
 }
 
 PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
                        float p, shared_ptr<Material> _mat)
     : power(p), radius(CalculateSphereSize(r, g, b, p) / 2.0F) {
-    position.at(0) = d1;
-    position.at(1) = d2;
-    position.at(2) = d3;
+    SetPosition(d1, d2, d3);
     color.at(0) = r;
     color.at(1) = g;
     color.at(2) = b;
@@ -198,15 +189,11 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
 PointLight::~PointLight() = default;
 void PointLight::Render(const Camera& cam) {
     sphere->SetScale(radius, radius, radius);
-    sphere->SetPosition(position.at(0), position.at(1), position.at(2));
+    sphere->SetPosition(GetPosition());
     sphere->Render(cam);
 }
 
-void PointLight::SetPos(glm::vec3 pos) {
-    position.at(0) = pos.x;
-    position.at(1) = pos.y;
-    position.at(2) = pos.z;
-}
+void PointLight::SetPos(glm::vec3 pos) { SetPosition(pos); }
 
 void PointLight::SetCol(glm::vec3 col) {
     color.at(0) = col.x;
@@ -289,4 +276,4 @@ void Line::Render(const Camera& cam) {
     glDrawArrays(GL_LINES, 0, 2);
     glDisableVertexAttribArray(positionID);
 }
-shared_ptr<Shader> Line::GetShader() { return shaderProgram; }
+shared_ptr<Shader> Line::GetShader() const { return shaderProgram; }

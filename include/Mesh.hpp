@@ -9,9 +9,7 @@
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
-#include "PlaceableObject.hpp"
-#include "RotatableObject.hpp"
-#include "ScaleableObject.hpp"
+#include "Transformable.hpp"
 // #include "Light.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 using namespace std;
@@ -26,23 +24,20 @@ struct Vertex {
         : Pos(pos), UV(uv), Normal(normal), Tangent(tangent) {}
 };
 
-class Mesh : public PlaceableObject,
-             public MaterialObject,
-             public RotatableObject,
-             public ScaleableObject {
+class Mesh : public MaterialObject, public Transformable {
 public:
 protected:
- GLint positionID{}, uvID{}, normalID{}, tangentID{};
- GLint gWorldID{}, gCamViewID{};
- GLint rotateID{};
- GLint dirLightDirID{}, dirLightColID{};
- GLint pointLightColID{}, pointLightIntID{}, pointLightPosID{};
- GLint camtransID{}, camPosID{};
- GLint specBufferID{}, specSamplerID{};
- GLint colSamplerUI{}, normSamplerUI{};
- GLuint shadowMap{};
- int spfaces{}, spverts{};
- int Scale{};
+    GLint positionID{}, uvID{}, normalID{}, tangentID{};
+    GLint gWorldID{}, gCamViewID{};
+    GLint rotateID{};
+    GLint dirLightDirID{}, dirLightColID{};
+    GLint pointLightColID{}, pointLightIntID{}, pointLightPosID{};
+    GLint camtransID{}, camPosID{};
+    GLint specBufferID{}, specSamplerID{};
+    GLint colSamplerUI{}, normSamplerUI{};
+    GLuint shadowMap{};
+    int spfaces{}, spverts{};
+    int Scale{};
 
 public:
     Mesh();
@@ -54,6 +49,6 @@ public:
     void SetTexture(GLuint textureUnit);
     void Render(const Camera& cam) override;
 
-   private:
+private:
 };
 #endif  // MESH_H_INCLUDED

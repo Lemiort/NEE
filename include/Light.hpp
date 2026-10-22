@@ -11,15 +11,15 @@
 #include "Material.hpp"
 #include "MaterialObject.hpp"
 #include "Mesh.hpp"
-#include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
+#include "Transformable.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 class Light : public MaterialObject {
 public:
     // TODO make it protected
- std::array<GLfloat, 3> color{};
+    std::array<GLfloat, 3> color{};
 };
 
 class DirectionalLight : public Light {
@@ -28,19 +28,19 @@ protected:
     shared_ptr<Mesh> mesh;
 
 public:
- std::array<GLfloat, 4> direction{};
- // GLfloat	color[3];
- DirectionalLight();
- glm::vec3 GetDir();
- glm::vec3 GetCol();
- void SetDir(glm::vec3 dir);
- void SetCol(glm::vec3 col);
- DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
-                  GLfloat b, shared_ptr<Material> _mat);
- void Render(const Camera& cam) override;
- ~DirectionalLight() override;
+    std::array<GLfloat, 4> direction{};
+    // GLfloat	color[3];
+    DirectionalLight();
+    glm::vec3 GetDir();
+    glm::vec3 GetCol();
+    void SetDir(glm::vec3 dir);
+    void SetCol(glm::vec3 col);
+    DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
+                     GLfloat b, shared_ptr<Material> _mat);
+    void Render(const Camera& cam) override;
+    ~DirectionalLight() override;
 };
-class PointLight : public Light, public PlaceableObject {
+class PointLight : public Light, public Transformable {
 public:
     // float position[3];
     // float	color[3];
@@ -64,20 +64,20 @@ protected:
     float radius{};
     shared_ptr<Mesh> sphere;
 };
-class SpotLight : public DirectionalLight, public PlaceableObject {
+class SpotLight : public DirectionalLight, public Transformable {
 public:
- float Cutoff{};  // cone half angle in degrees
-                  //  float position[3];
- std::array<float, 3> target{};
- SpotLight();
- SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g, GLfloat b,
-           float p1, float p2, float p3, float cutoff,
-           shared_ptr<Material> _mat);
- ~SpotLight() override;
- glm::vec3 GetPos();
- void SetPos(glm::vec3 pos);
- void SetTarget(glm::vec3 _target);
- void Render(const Camera& cam) override;
+    float Cutoff{};  // cone half angle in degrees
+                     //  float position[3];
+    std::array<float, 3> target{};
+    SpotLight();
+    SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
+              GLfloat b, float p1, float p2, float p3, float cutoff,
+              shared_ptr<Material> _mat);
+    ~SpotLight() override;
+    glm::vec3 GetPos();
+    void SetPos(glm::vec3 pos);
+    void SetTarget(glm::vec3 _target);
+    void Render(const Camera& cam) override;
 
 private:
     void Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
@@ -101,9 +101,9 @@ public:
     ~Line() override;
     // void Render(const Camera& pGameCamera, int width, int height);
     void Render(const Camera& cam) override;
-    shared_ptr<Shader> GetShader() override;
+    shared_ptr<Shader> GetShader() const override;
 
-   private:
+private:
 };
 
 #endif  // LIGHT_H_INCLUDED

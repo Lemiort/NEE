@@ -3,6 +3,7 @@ find_package(GTest REQUIRED)
 add_executable(math_migration_tests
     MathMigrationTests.cpp
     ../src/Camera.cpp
+    ../src/Transformable.cpp
 )
 target_include_directories(math_migration_tests PRIVATE ${PROJECT_SOURCE_DIR}/include)
 target_compile_definitions(math_migration_tests PRIVATE GLM_FORCE_CTOR_INIT)

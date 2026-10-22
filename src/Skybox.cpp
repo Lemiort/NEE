@@ -27,7 +27,7 @@ constexpr std::size_t kTriangleIndexCount = 3;
 
 SkyBox::SkyBox(const shared_ptr<Shader>& shader)
     : shaderProgramID(shader->GetShaderProgramId()) {
-  shaderProgram = shader;
+    shaderProgram = shader;
 }
 SkyBox::~SkyBox() = default;
 bool SkyBox::Init(const string& Directory, const string& PosXFilename,
@@ -73,12 +73,12 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    const auto vertexBufferBytes = static_cast<GLsizeiptr>(
-        sizeof(float) * kPositionComponentCount *
-        static_cast<std::size_t>(spverts));
-    const auto indexBufferBytes = static_cast<GLsizeiptr>(
-        sizeof(std::uint32_t) * kTriangleIndexCount *
-        static_cast<std::size_t>(spfaces));
+    const auto vertexBufferBytes =
+        static_cast<GLsizeiptr>(sizeof(float) * kPositionComponentCount *
+                                static_cast<std::size_t>(spverts));
+    const auto indexBufferBytes =
+        static_cast<GLsizeiptr>(sizeof(std::uint32_t) * kTriangleIndexCount *
+                                static_cast<std::size_t>(spfaces));
     glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
     // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBufferBytes, spvertices.data());
@@ -109,9 +109,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
     glUniform1i(textureID, 2);
-    position.fill(0.0F);
-    rotation.fill(0.0F);
-    scale.fill(1.0F);
+    transform_ = Transform{};
 
     // clean up memory
     // vectors automatically cleaned up
@@ -146,9 +144,8 @@ void SkyBox::Render(const Camera& cam) {
 
     glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES,
-                   static_cast<GLsizei>(
-                       static_cast<std::size_t>(spfaces) *
-                       kTriangleIndexCount),
+                   static_cast<GLsizei>(static_cast<std::size_t>(spfaces) *
+                                        kTriangleIndexCount),
                    GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(positionID);
 

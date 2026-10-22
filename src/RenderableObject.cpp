@@ -10,9 +10,9 @@ RenderableObject::RenderableObject() = default;
 
 RenderableObject::~RenderableObject() = default;
 
-void RenderableObject::Render(const Camera& cam) {}
-
-std::shared_ptr<Shader> RenderableObject::GetShader() { return shaderProgram; }
+std::shared_ptr<Shader> RenderableObject::GetShader() const {
+    return shaderProgram;
+}
 void RenderableObject::SetShader(std::shared_ptr<Shader> shader) {
     shaderProgram = std::move(shader);
 }

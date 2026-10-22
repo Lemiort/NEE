@@ -29,7 +29,8 @@ constexpr std::size_t kTriangleIndexCount = 3;
 
 const GLvoid* BufferOffset(std::size_t byteOffset) {
     // With a VBO bound, OpenGL interprets this pointer value as a byte offset.
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast, performance-no-int-to-ptr)
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,
+    // performance-no-int-to-ptr)
     return reinterpret_cast<const GLvoid*>(
         static_cast<std::uintptr_t>(byteOffset));
 }
@@ -130,21 +131,21 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    const auto positionBytes = static_cast<GLsizeiptr>(
-        sizeof(float) * kPositionComponentCount *
-        static_cast<std::size_t>(spverts));
-    const auto normalBytes = static_cast<GLsizeiptr>(
-        sizeof(float) * kNormalComponentCount *
-        static_cast<std::size_t>(spverts));
+    const auto positionBytes =
+        static_cast<GLsizeiptr>(sizeof(float) * kPositionComponentCount *
+                                static_cast<std::size_t>(spverts));
+    const auto normalBytes =
+        static_cast<GLsizeiptr>(sizeof(float) * kNormalComponentCount *
+                                static_cast<std::size_t>(spverts));
     const auto textureCoordinateBytes = static_cast<GLsizeiptr>(
         sizeof(float) * kTextureCoordinateComponentCount *
         static_cast<std::size_t>(spverts));
     const GLsizeiptr tangentBytes = normalBytes;
     const GLsizeiptr vertexBufferBytes =
         positionBytes + normalBytes + textureCoordinateBytes + tangentBytes;
-    const auto indexBufferBytes = static_cast<GLsizeiptr>(
-        sizeof(std::uint32_t) * kTriangleIndexCount *
-        static_cast<std::size_t>(spfaces));
+    const auto indexBufferBytes =
+        static_cast<GLsizeiptr>(sizeof(std::uint32_t) * kTriangleIndexCount *
+                                static_cast<std::size_t>(spfaces));
     glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
     // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, positionBytes, spvertices.data());
@@ -175,53 +176,45 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     rotateID =
         shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 
-    position.fill(0.0F);
-    rotation.fill(0.0F);
-    scale.fill(1.0F);
+    transform_ = Transform{};
 
     return true;
 }
 void Mesh::Render(const Camera& /*cam*/) {
-  const Transform transform{
-      .position = glm::vec3(position.at(0), position.at(1), position.at(2)),
-      .rotationDegrees =
-          glm::vec3(rotation.at(0), rotation.at(1), rotation.at(2)),
-      .scale = glm::vec3(scale.at(0), scale.at(1), scale.at(2))};
-  const glm::mat4 modelMatrix = transform.ModelMatrix();
-  const glm::mat4 rotationMatrix = transform.RotationMatrix();
+    const glm::mat4 modelMatrix = transform_.ModelMatrix();
+    const glm::mat4 rotationMatrix = transform_.RotationMatrix();
 
-  mat->Use();
+    mat->Use();
 
-  glBindBuffer(GL_ARRAY_BUFFER, VBO);
-  glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-  glVertexAttribPointer(normalID, 3, GL_FLOAT, GL_FALSE, 0,
-                        BufferOffset(sizeof(float) * 3 *
-                                     static_cast<std::size_t>(spverts)));
-  glVertexAttribPointer(uvID, 2, GL_FLOAT, GL_FALSE, 0,
-                        BufferOffset(sizeof(float) * 6 *
-                                     static_cast<std::size_t>(spverts)));
-  glVertexAttribPointer(tangentID, 3, GL_FLOAT, GL_FALSE, 0,
-                        BufferOffset(sizeof(float) * 8 *
-                                     static_cast<std::size_t>(spverts)));
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(
+        normalID, 3, GL_FLOAT, GL_FALSE, 0,
+        BufferOffset(sizeof(float) * 3 * static_cast<std::size_t>(spverts)));
+    glVertexAttribPointer(
+        uvID, 2, GL_FLOAT, GL_FALSE, 0,
+        BufferOffset(sizeof(float) * 6 * static_cast<std::size_t>(spverts)));
+    glVertexAttribPointer(
+        tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+        BufferOffset(sizeof(float) * 8 * static_cast<std::size_t>(spverts)));
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-  glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-  glUniformMatrix4fv(rotateID, 1, GL_FALSE,
-                     glm::value_ptr(rotationMatrix));
+    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(rotateID, 1, GL_FALSE,
+                       glm::value_ptr(rotationMatrix));  // rotation of model
 
-  glEnableVertexAttribArray(positionID);
-  glEnableVertexAttribArray(normalID);
-  glEnableVertexAttribArray(uvID);
-  glEnableVertexAttribArray(tangentID);
-  glDrawElements(GL_TRIANGLES,
-                  static_cast<GLsizei>(
-                      static_cast<std::size_t>(spfaces) *
-                      kTriangleIndexCount),
-                  GL_UNSIGNED_INT, nullptr);
-  glDisableVertexAttribArray(positionID);
-  glDisableVertexAttribArray(normalID);
-  glDisableVertexAttribArray(uvID);
-  glDisableVertexAttribArray(tangentID);
+    glEnableVertexAttribArray(positionID);
+    glEnableVertexAttribArray(normalID);
+    glEnableVertexAttribArray(uvID);
+    glEnableVertexAttribArray(tangentID);
+    glDrawElements(GL_TRIANGLES,
+                   static_cast<GLsizei>(static_cast<std::size_t>(spfaces) *
+                                        kTriangleIndexCount),
+                   GL_UNSIGNED_INT, nullptr);
+    glDisableVertexAttribArray(positionID);
+    glDisableVertexAttribArray(normalID);
+    glDisableVertexAttribArray(uvID);
+    glDisableVertexAttribArray(tangentID);
 }
 
 int Mesh::GetNumFaces() const { return spfaces; }

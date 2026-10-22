@@ -4,7 +4,6 @@
 #include <glad/gl.h>
 
 #include <array>
-
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -23,14 +22,14 @@
 #include <utility>
 #include <vector>
 
-#include "spdlog/sinks/basic_file_sink.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
 #include "Version.hpp"
+#include "spdlog/sinks/basic_file_sink.h"
+#include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
 #define STB_IMAGE_WRITE_IMPLEMENTATION
@@ -79,20 +78,19 @@ void ConfigureLogging(const char* executablePath) {
 // The scene passes historically use a 30 degree, 1..1000 projection even
 // when the interactive camera has different clipping settings.
 glm::mat4 RenderPassViewProjection(const Camera& camera) {
-  const glm::mat4 projection = glm::perspectiveRH_NO(
-      glm::radians(30.0F),
-      static_cast<float>(camera.GetWidth()) /
-          static_cast<float>(camera.GetHeight()),
-      1.0F, 1000.0F);
-  return projection * camera.GetViewMatrix();
+    const glm::mat4 projection =
+        glm::perspectiveRH_NO(glm::radians(30.0F),
+                              static_cast<float>(camera.GetWidth()) /
+                                  static_cast<float>(camera.GetHeight()),
+                              1.0F, 1000.0F);
+    return projection * camera.GetViewMatrix();
 }
 
-void SetLightColor(GLint uniformLocation,
-                   const std::array<GLfloat, 3>& color) {
-  const glm::mat4 colorMatrix =
-      glm::scale(glm::mat4(1.0F),
-                 glm::vec3(color.at(0), color.at(1), color.at(2)));
-  glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(colorMatrix));
+void SetLightColor(GLint uniformLocation, const std::array<GLfloat, 3>& color) {
+    const glm::mat4 colorMatrix = glm::scale(
+        glm::mat4(1.0F), glm::vec3(color.at(0), color.at(1), color.at(2)));
+    glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
+                       glm::value_ptr(colorMatrix));
 }
 }  // namespace
 
@@ -177,10 +175,9 @@ void Application::OnKey(GLFWwindow* window, int key, int action) {
                     "Cannot capture a screenshot with empty dimensions");
                 return;
             }
-            const std::size_t pixelCount =
-                static_cast<std::size_t>(width) *
-                static_cast<std::size_t>(height) *
-                static_cast<std::size_t>(channels);
+            const std::size_t pixelCount = static_cast<std::size_t>(width) *
+                                           static_cast<std::size_t>(height) *
+                                           static_cast<std::size_t>(channels);
             std::vector<uint8_t> pixels(pixelCount);
 
             // Ensure pixel data is tightly packed to avoid row padding
@@ -226,7 +223,7 @@ void Application::MousePosCallBack(GLFWwindow* window, double x, double y) {
 void Application::OnMousePos(double x, double y) {
     mouse.Update(x, y);
     pGameCamera.OnMouse(static_cast<int>(mouse.posX),
-                      static_cast<int>(mouse.posY));
+                        static_cast<int>(mouse.posY));
 }
 
 void Application::MouseButtonCallback(GLFWwindow* window, int button,
@@ -304,8 +301,9 @@ void Application::ShadowPass() {
                     directionalLight1->direction.at(2));
         // point light
         SetLightColor(pointLightColID, pointLight1->color);
-        glUniform3f(pointLightPosID, pointLight1->position.at(0),
-                    pointLight1->position.at(1), pointLight1->position.at(2));
+        const glm::vec3 pointLightPosition = pointLight1->GetPosition();
+        glUniform3f(pointLightPosID, pointLightPosition.x, pointLightPosition.y,
+                    pointLightPosition.z);
         glUniform1f(pointLightIntID, pointLight1->power);
 
         // spot light
@@ -314,8 +312,9 @@ void Application::ShadowPass() {
                     spotLight1->direction.at(1), spotLight1->direction.at(2));
         glUniform1f(spotLightCutoffID,
                     glm::cos(glm::radians(spotLight1->Cutoff)));
-        glUniform3f(spotLightPosID, spotLight1->position.at(0),
-                    spotLight1->position.at(1), spotLight1->position.at(2));
+        const glm::vec3 spotLightPosition = spotLight1->GetPosition();
+        glUniform3f(spotLightPosID, spotLightPosition.x, spotLightPosition.y,
+                    spotLightPosition.z);
     }
 
     // camera rotation for specular
@@ -405,9 +404,9 @@ void Application::RenderPass() {
                         directionalLight1->direction.at(2));
             // Point light
             SetLightColor(pointLightColID, pointLight1->color);
-            glUniform3f(pointLightPosID, pointLight1->position.at(0),
-                        pointLight1->position.at(1),
-                        pointLight1->position.at(2));
+            const glm::vec3 pointLightPosition = pointLight1->GetPosition();
+            glUniform3f(pointLightPosID, pointLightPosition.x,
+                        pointLightPosition.y, pointLightPosition.z);
             glUniform1f(pointLightIntID, pointLight1->power);
             // spot light
             SetLightColor(spotLightColID, spotLight1->color);
@@ -416,8 +415,9 @@ void Application::RenderPass() {
                         spotLight1->direction.at(2));
             glUniform1f(spotLightCutoffID,
                         glm::cos(glm::radians(spotLight1->Cutoff)));
-            glUniform3f(spotLightPosID, spotLight1->position.at(0),
-                        spotLight1->position.at(1), spotLight1->position.at(2));
+            const glm::vec3 spotLightPosition = spotLight1->GetPosition();
+            glUniform3f(spotLightPosID, spotLightPosition.x,
+                        spotLightPosition.y, spotLightPosition.z);
         }
 
         // camera rotation for specular
@@ -608,8 +608,9 @@ void Application::DSPointLightPass(PointLight& pointLight) {
 
     // load light parameters for source 1
     SetLightColor(pointLightColID, pointLight.color);
-    glUniform3f(pointLightPosID, pointLight.position.at(0),
-                pointLight.position.at(1), pointLight.position.at(2));
+    const glm::vec3 pointLightPosition = pointLight.GetPosition();
+    glUniform3f(pointLightPosID, pointLightPosition.x, pointLightPosition.y,
+                pointLightPosition.z);
     glUniform1f(pointLightIntID, pointLight.power);
 
     pointLight.SetMaterial(DSPointLightMaterial);
@@ -662,8 +663,9 @@ void Application::DSSpotLightPass(SpotLight& spotLight) {
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
     // Load the light parameters for source 1
-    glUniform3f(spotLightPosID, spotLight.position.at(0),
-                spotLight.position.at(1), spotLight.position.at(2));
+    const glm::vec3 spotLightPosition = spotLight.GetPosition();
+    glUniform3f(spotLightPosID, spotLightPosition.x, spotLightPosition.y,
+                spotLightPosition.z);
     SetLightColor(spotLightColID, spotLight.color);
     glUniform3f(spotLightDirID, spotLight.direction.at(0),
                 spotLight.direction.at(1), spotLight.direction.at(2));
@@ -709,7 +711,8 @@ void Application::DSDirectionalLightPass(DirectionalLight& directionalLight) {
     // Load the light parameters
     SetLightColor(dirLightColID, directionalLight.color);
     glUniform3f(dirLightDirID, directionalLight.direction.at(0),
-                directionalLight.direction.at(1), directionalLight.direction.at(2));
+                directionalLight.direction.at(1),
+                directionalLight.direction.at(2));
 
     // Load textures into shader
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
@@ -1126,9 +1129,8 @@ int Application::InitScene(GLFWwindow* window) {
 
     skybox1 = std::make_unique<SkyBox>(skyboxShader);
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    if (!skybox1->Init("Textures", "sp3right.tga", "sp3left.tga",
-                       "sp3top.tga", "sp3bot.tga", "sp3back.tga",
-                       "sp3front.tga")) {
+    if (!skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
+                       "sp3bot.tga", "sp3back.tga", "sp3front.tga")) {
         spdlog::critical(
             "Scene initialization aborted: required skybox model "
             "'models/sphere.obj' failed to initialize");
@@ -1271,7 +1273,8 @@ int main(int argc, char* argv[]) {
     const int profile = glfwGetWindowAttrib(window, GLFW_OPENGL_PROFILE);
     // OpenGL returns null-terminated byte strings through GLubyte pointers.
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
-    const auto* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    const auto* version =
+        reinterpret_cast<const char*>(glGetString(GL_VERSION));
     // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
     const auto* renderer =
         reinterpret_cast<const char*>(glGetString(GL_RENDERER));

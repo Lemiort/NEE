@@ -4,35 +4,34 @@
 #include <glad/gl.h>
 
 #include <cstddef>
-#include <array>
 #include <memory>
 #include <string>
 
 #include "Camera.hpp"
 #include "CubemapTexture.hpp"
-#include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
+#include "Transformable.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
-class SkyBox : public RenderableObject, public PlaceableObject {
+class SkyBox : public RenderableObject, public Transformable {
 public:
- explicit SkyBox(const shared_ptr<Shader>& shader);
- ~SkyBox() override;
+    explicit SkyBox(const shared_ptr<Shader>& shader);
+    ~SkyBox() override;
 
- bool Init(const string& Directory, const string& PosXFilename,
-           const string& NegXFilename, const string& PosYFilename,
-           const string& NegYFilename, const string& PosZFilename,
-           const string& NegZFilename);
+    bool Init(const string& Directory, const string& PosXFilename,
+              const string& NegXFilename, const string& PosYFilename,
+              const string& NegYFilename, const string& PosZFilename,
+              const string& NegZFilename);
 
- void Render(const Camera& cam) override;
- GLuint shaderProgramID;
- GLuint VBO{};  // vertex buffer, ������ ������� ��� ���������
- GLint positionID{};
- GLuint IBO{};  // index buffer
- GLint gWorldID{}, gCamViewID{};
- int spfaces{}, spverts{};
- int Scale{};
- void Init(GLuint shader, const char* model);
+    void Render(const Camera& cam) override;
+    GLuint shaderProgramID;
+    GLuint VBO{};  // vertex buffer, ������ ������� ��� ���������
+    GLint positionID{};
+    GLuint IBO{};  // index buffer
+    GLint gWorldID{}, gCamViewID{};
+    int spfaces{}, spverts{};
+    int Scale{};
+    void Init(GLuint shader, const char* model);
 
 private:
     std::unique_ptr<CubemapTexture> pCubemapTex;
@@ -40,15 +39,11 @@ private:
     GLint textureID{};
     // shared_ptr<Shader> shaderProgram;
 public:
- GLint uvID{}, normalID{};
- GLint rotateID{};
- GLint camtransID{}, camPosID{};
- GLint colTexID{};
- GLuint texBufferID{};
-
- // float position[3];
- std::array<float, 3> rotation{};
- std::array<float, 3> scale{};
+    GLint uvID{}, normalID{};
+    GLint rotateID{};
+    GLint camtransID{}, camPosID{};
+    GLint colTexID{};
+    GLuint texBufferID{};
 };
 
 #endif  // SKYBOX_H_INCLUDED

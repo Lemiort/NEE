@@ -12,9 +12,9 @@
 #include <utility>
 
 #include "Camera.hpp"
-#include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
+#include "Transformable.hpp"
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 
 struct FontCharacter {
@@ -30,34 +30,34 @@ struct FontCharacter {
 using KerningPair = std::pair<char16_t, char16_t>;
 
 // font
-class Font2d : public RenderableObject, public PlaceableObject {
+class Font2d : public RenderableObject, public Transformable {
 private:
- GLint sverticesID{}, spositionID{};
- GLint uvID{}, suvID{};
- GLint sizeID{};
- GLint texSamplerID{};
- GLuint texBufferID{};
- GLint colorID{};
- glm::vec4 color;
- std::string filename;
- float aratio{1};
+    GLint sverticesID{}, spositionID{};
+    GLint uvID{}, suvID{};
+    GLint sizeID{};
+    GLint texSamplerID{};
+    GLuint texBufferID{};
+    GLint colorID{};
+    glm::vec4 color;
+    std::string filename;
+    float aratio{1};
 
- // ratio of image sizes to screen
- float kx{}, ky{};
+    // ratio of image sizes to screen
+    float kx{}, ky{};
 
- // pixel size in UV coordinates
- float pkx{}, pky{};
- uint32_t fontHeight{};
- uint32_t imageWidth{}, imageHeight{};
- std::string fontName;
- std::map<char16_t, FontCharacter> fontInfo;
+    // pixel size in UV coordinates
+    float pkx{}, pky{};
+    uint32_t fontHeight{};
+    uint32_t imageWidth{}, imageHeight{};
+    std::string fontName;
+    std::map<char16_t, FontCharacter> fontInfo;
 
- float realWidth{};
- float realHeight{};
- float dx{};
- float xOffset{};
- float yOffset{};
- FontCharacter currentCharacter{};
+    float realWidth{};
+    float realHeight{};
+    float dx{};
+    float xOffset{};
+    float yOffset{};
+    FontCharacter currentCharacter{};
 
 protected:
     glm::vec2 characterLength;
@@ -83,7 +83,7 @@ public:
 };
 
 // font line
-class FontLine2d : public RenderableObject, public PlaceableObject {
+class FontLine2d : public RenderableObject, public Transformable {
 private:
     Font2d character;
     std::shared_ptr<Shader> shaderProgram;
