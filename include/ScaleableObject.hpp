@@ -1,6 +1,8 @@
 #ifndef SCALEABLEOBJECT_H
 #define SCALEABLEOBJECT_H
-#include <glm/glm.hpp>
+#include <array>
+
+#include <glm/ext/vector_float3.hpp>
 
 class ScaleableObject {
 public:
@@ -11,7 +13,7 @@ public:
     glm::vec3 GetScale();
 
 protected:
- float scale[3]{};
+    std::array<float, 3> scale{};
 
 private:
 };

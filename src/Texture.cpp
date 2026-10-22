@@ -3,6 +3,9 @@
 #include <glad/gl.h>
 
 #include <array>
+#include <cstddef>
+#include <ios>
+#include <ostream>
 #include <sstream>
 #include <string>
 
@@ -19,32 +22,35 @@
  * @return GLuint texture ID or 0 on failure.
  */
 GLuint loadTexture(const std::string& path) {
-    int width, height, channels;
-    // stbi_set_flip_vertically_on_load flips vertically if requested; we
-    // want Y inverted
-    stbi_set_flip_vertically_on_load(1);
-    auto data = stbi_load(path.c_str(), &width, &height, &channels, 0);
-    if (!data) {
-        spdlog::error("Failed to load texture {}: {}", path.c_str(),
-                      stbi_failure_reason());
+  int width{};
+  int height{};
+  int channels{};
+  // stbi_set_flip_vertically_on_load flips vertically if requested; we
+  // want Y inverted
+  stbi_set_flip_vertically_on_load(1);
+  auto* data = stbi_load(path.c_str(), &width, &height, &channels, 0);
+  if (data == nullptr) {
+    spdlog::error("Failed to load texture {}: {}", path.c_str(),
+                  stbi_failure_reason());
 
-        return 0;
-    }
+    return 0;
+  }
 
-    GLuint texID;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    // Determine internal format
-    GLenum format = GL_RGB;
-    if (channels == 1)
-        format = GL_RED;
-    else if (channels == 3)
-        format = GL_RGB;
-    else if (channels == 4)
-        format = GL_RGBA;
+  GLuint texID = 0;
+  glGenTextures(1, &texID);
+  glBindTexture(GL_TEXTURE_2D, texID);
+  // Determine internal format
+  GLenum format = GL_RGB;
+  if (channels == 1) {
+    format = GL_RED;
+  } else if (channels == 3) {
+    format = GL_RGB;
+  } else if (channels == 4) {
+    format = GL_RGBA;
+  }
 
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format,
-                 GL_UNSIGNED_BYTE, data);
+    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0,
+                 format, GL_UNSIGNED_BYTE, data);
     // Generate mipmaps
     glGenerateMipmap(GL_TEXTURE_2D);
     // Set texture parameters
@@ -69,18 +75,21 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
 
     for (size_t i = 0; i < faces.size(); ++i) {
-        int w, h, ch;
-        auto data = stbi_load(faces[i].c_str(), &w, &h, &ch, 0);
-        if (!data) {
-            glDeleteTextures(1, &tex);
-            return 0;  // failure
-        }
+      int w{};
+      int h{};
+      int ch{};
+      auto* data = stbi_load(faces.at(i).c_str(), &w, &h, &ch, 0);
+      if (data == nullptr) {
+        glDeleteTextures(1, &tex);
+        return 0;  // failure
+      }
 
-        GLenum format = (ch == 4 ? GL_RGBA : GL_RGB);
-        GLenum internal = (ch == 4 ? GL_RGBA8 : GL_RGB8);
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i), 0,
-                     internal, w, h, 0, format, GL_UNSIGNED_BYTE, data);
-        stbi_image_free(data);
+      GLenum const format = (ch == 4 ? GL_RGBA : GL_RGB);
+      GLenum const internal = (ch == 4 ? GL_RGBA8 : GL_RGB8);
+      glTexImage2D(
+          GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i), 0,
+          static_cast<GLint>(internal), w, h, 0, format, GL_UNSIGNED_BYTE, data);
+      stbi_image_free(data);
     }
 
     // common parameters
@@ -270,7 +279,7 @@ std::string Texture::ConvertInternalFormatToString(GLenum format) {
 ///////////////////////////////////////////////////////////////////////////////
 // return texture parameters as string using glGetTexLevelParameteriv()
 ///////////////////////////////////////////////////////////////////////////////
-std::string Texture::GetParameters() {
+std::string Texture::GetParameters() const {
     GLuint const id = texBufferID;
     if (glIsTexture(id) == GL_FALSE) {
         return "Not texture object";

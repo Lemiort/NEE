@@ -1,6 +1,8 @@
 #ifndef RENDERABLEOBJECT_H
 #define RENDERABLEOBJECT_H
 
+#include <glad/gl.h>
+
 #include <memory>
 
 #include "Camera.hpp"
@@ -11,16 +13,16 @@
 class RenderableObject : public Object {
 public:
     RenderableObject();
-    virtual ~RenderableObject();
+    ~RenderableObject() override;
     virtual void Render(const Camera& cam);
     virtual std::shared_ptr<Shader> GetShader();
     virtual void SetShader(std::shared_ptr<Shader> shader);
 
 protected:
     std::shared_ptr<Shader> shaderProgram;
-    GLuint VBO, IBO;
+    GLuint VBO{}, IBO{};
 
-private:
+   private:
 };
 
 #endif  // RENDERABLEOBJECT_H

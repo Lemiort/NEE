@@ -2,20 +2,26 @@
 
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
-#include <glm/ext/matrix_clip_space.hpp>
-#include <glm/ext/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
+#include <array>
 
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <cstdlib>
 #include <ctime>
+#include <glm/ext/matrix_clip_space.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/trigonometric.hpp>
 #include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include "Camera.hpp"
 #include "Light.hpp"
-#include <glm/glm.hpp>
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
@@ -26,81 +32,117 @@
 #include "stb_image_write.h"
 
 namespace {
+constexpr int kGridExtentSteps = 50;
+constexpr float kGridStepsPerUnit = 10.0F;
+constexpr std::size_t kScreenshotFilenameCapacity = 80;
+constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
+
 // The scene passes historically use a 30 degree, 1..1000 projection even
 // when the interactive camera has different clipping settings.
 glm::mat4 RenderPassViewProjection(const Camera& camera) {
-    const glm::mat4 projection = glm::perspectiveRH_NO(
-        glm::radians(30.0f),
-        static_cast<float>(camera.GetWidth()) / camera.GetHeight(), 1.0f,
-        1000.0f);
-    return projection * camera.GetViewMatrix();
+  const glm::mat4 projection = glm::perspectiveRH_NO(
+      glm::radians(30.0F),
+      static_cast<float>(camera.GetWidth()) /
+          static_cast<float>(camera.GetHeight()),
+      1.0F, 1000.0F);
+  return projection * camera.GetViewMatrix();
 }
 
-void SetLightColor(GLint uniformLocation, const GLfloat* color) {
-    const glm::mat4 colorMatrix = glm::scale(
-        glm::mat4(1.0f), glm::vec3(color[0], color[1], color[2]));
-    glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
-                       glm::value_ptr(colorMatrix));
+void SetLightColor(GLint uniformLocation,
+                   const std::array<GLfloat, 3>& color) {
+  const glm::mat4 colorMatrix =
+      glm::scale(glm::mat4(1.0F),
+                 glm::vec3(color.at(0), color.at(1), color.at(2)));
+  glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(colorMatrix));
 }
 }  // namespace
 
-void CalcFPS() {
+void Application::CalcFPS() {
     double const currentTime = glfwGetTime();
     ++frameCount;
     if (currentTime - lastTime >= 1.0) {
-        fps = static_cast<double>(frameCount) / (currentTime - lastTime);
+        fps = static_cast<float>(static_cast<double>(frameCount) /
+                                 (currentTime - lastTime));
         lastTime += 1.0;
         frameCount = 0;
     }
 }
 
-void ErrorCallback(int error, const char* description) {
+void Application::ErrorCallback(int error, const char* description) {
     spdlog::error("GLFW Error {}: {}", error, description);
 }
-void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
-                 int /*mods*/) {
+void Application::KeyCallback(GLFWwindow* window, int key, int /*scancode*/,
+                              int action, int /*mods*/) {
+    auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (app != nullptr) {
+        app->OnKey(window, key, action);
+    }
+}
+
+void Application::OnKey(GLFWwindow* window, int key, int action) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
     }
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         if (key == GLFW_KEY_I) {
-            spotLight1->target[0] += 0.1;
+            spotLight1->target.at(0) += 0.1F;
         }
         if (key == GLFW_KEY_K) {
-            spotLight1->target[0] -= 0.1;
+            spotLight1->target.at(0) -= 0.1F;
         }
         if (key == GLFW_KEY_O) {
-            spotLight1->target[1] += 0.1;
+            spotLight1->target.at(1) += 0.1F;
         }
         if (key == GLFW_KEY_L) {
-            spotLight1->target[1] -= 0.1;
+            spotLight1->target.at(1) -= 0.1F;
         }
         if (key == GLFW_KEY_U) {
-            spotLight1->target[2] += 0.1;
+            spotLight1->target.at(2) += 0.1F;
         }
         if (key == GLFW_KEY_J) {
-            spotLight1->target[2] -= 0.1;
+            spotLight1->target.at(2) -= 0.1F;
         }
         if (key == GLFW_KEY_F5) {
-            renderType += 1;
-            renderType %= 6;
+            renderType = static_cast<RenderType>(
+                (std::to_underlying(renderType) + 1) % 6);
         }
         if (key == GLFW_KEY_F12) {
-            time_t rawtime = 0;
-            struct tm* timeinfo = nullptr;
-            char buffer[80];
-
-            time(&rawtime);
-            timeinfo = localtime(&rawtime);
-
-            strftime(buffer, 80, "screenshots/Screenshot %Y-%m-%d %I.%M.%S.jpg",
-                     timeinfo);
+            const std::time_t rawTime = std::time(nullptr);
+            if (rawTime == kInvalidTime) {
+                spdlog::error("Unable to get the current time for screenshot");
+                return;
+            }
+            std::tm timeInfo{};
+#ifdef _WIN32
+            if (localtime_s(&timeInfo, &rawTime) != 0) {
+#else
+            if (localtime_r(&rawTime, &timeInfo) == nullptr) {
+#endif
+                spdlog::error("Unable to format the screenshot timestamp");
+                return;
+            }
+            std::array<char, kScreenshotFilenameCapacity> buffer{};
+            if (std::strftime(buffer.data(), buffer.size(),
+                              "screenshots/Screenshot %Y-%m-%d %I.%M.%S.jpg",
+                              &timeInfo) == 0) {
+                spdlog::error("Screenshot filename is too long");
+                return;
+            }
 
             int result = 0;
 
             // allocate RAM for screen pixels (RGB)
             int const channels = 3;
-            std::vector<uint8_t> pixels(width * height * channels);
+            if (width <= 0 || height <= 0) {
+                spdlog::error(
+                    "Cannot capture a screenshot with empty dimensions");
+                return;
+            }
+            const std::size_t pixelCount =
+                static_cast<std::size_t>(width) *
+                static_cast<std::size_t>(height) *
+                static_cast<std::size_t>(channels);
+            std::vector<uint8_t> pixels(pixelCount);
 
             // Ensure pixel data is tightly packed to avoid row padding
             glPixelStorei(GL_PACK_ALIGNMENT, 1);
@@ -113,19 +155,19 @@ void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
             stbi_flip_vertically_on_write(1);
 
             // sae as tga
-            result =
-                stbi_write_jpg(buffer, width, height, 3, pixels.data(), 100);
+            result = stbi_write_jpg(buffer.data(), width, height, channels,
+                                    pixels.data(), 100);
 
             // stbi_write_tga returns 1 on success and 0 on error
             if (result == 0) {
                 // Log STB write failure with spdlog
                 spdlog::error(
                     "[STB Write Error] Could not save screenshot to: {}",
-                    buffer);
+                    buffer.data());
             } else {
                 {
                     // Inform about successful screenshot via spdlog
-                    spdlog::info("Screenshot saved as {}", buffer);
+                    spdlog::info("Screenshot saved as {}", buffer.data());
                 }
             }
         } else {
@@ -135,22 +177,42 @@ void KeyCallback(GLFWwindow* window, int key, int /*scancode*/, int action,
         }
     }
 }
-void MousePosCallBack(GLFWwindow* /*window*/, double x, double y) {
-    mouse.Update(x, y);
-    if (true) {
-        pGameCamera.OnMouse(mouse.posX, mouse.posY);
+void Application::MousePosCallBack(GLFWwindow* window, double x, double y) {
+    auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (app != nullptr) {
+        app->OnMousePos(x, y);
     }
 }
 
-void MouseButtonCallback(GLFWwindow* /*window*/, int button, int action,
-                         int /*mods*/) {
+void Application::OnMousePos(double x, double y) {
+    mouse.Update(x, y);
+    pGameCamera.OnMouse(static_cast<int>(mouse.posX),
+                      static_cast<int>(mouse.posY));
+}
+
+void Application::MouseButtonCallback(GLFWwindow* window, int button,
+                                      int action, int /*mods*/) {
+    auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (app != nullptr) {
+        app->OnMouseButton(button, action);
+    }
+}
+
+void Application::OnMouseButton(int button, int action) {
     if (button == GLFW_MOUSE_BUTTON_2)  // right button
     {
         mouse.rightButtonPressed = action == GLFW_PRESS;
     }
 }
 
-void FrameBufferSizeCallback(GLFWwindow* /*window*/, int w, int h) {
+void Application::FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
+    auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
+    if (app != nullptr) {
+        app->OnFrameBufferSize(w, h);
+    }
+}
+
+void Application::OnFrameBufferSize(int w, int h) {
     width = w;
     height = h;
     if (fLine1) {
@@ -166,7 +228,7 @@ void FrameBufferSizeCallback(GLFWwindow* /*window*/, int w, int h) {
     glViewport(0, 0, width, height);
 }
 
-void ShadowPass() {
+void Application::ShadowPass() {
     smfbo1->BindForWriting();
     // gBuffer1->BindForWriting();
     // Drawing stage
@@ -179,7 +241,8 @@ void ShadowPass() {
     // light3->SetPos(pGameCamera.GetPos());
     // light3->SetDir(pGameCamera.GetTarget()-pGameCamera.GetPos());
     Camera const lightCam(width, height, 45, 1, 1000.0F, spotLight1->GetPos(),
-                          glm::vec3(-1.0, -1.0, -1.0), glm::vec3(0.0, 1.0, 0.0));
+                          glm::vec3(-1.0F, -1.0F, -1.0F),
+                          glm::vec3(0.0F, 1.0F, 0.0F));
 
     Plane.SetScale(30.0F, 30.0F, 30.0F);
     Plane.SetPosition(0.0F, -3.0F, 0.0F);
@@ -197,23 +260,23 @@ void ShadowPass() {
     {
         // Directional light
         SetLightColor(dirLightColID, directionalLight1->color);
-        glUniform3f(dirLightDirID, directionalLight1->direction[0],
-                    directionalLight1->direction[1],
-                    directionalLight1->direction[2]);
+        glUniform3f(dirLightDirID, directionalLight1->direction.at(0),
+                    directionalLight1->direction.at(1),
+                    directionalLight1->direction.at(2));
         // point light
         SetLightColor(pointLightColID, pointLight1->color);
-        glUniform3f(pointLightPosID, pointLight1->position[0],
-                    pointLight1->position[1], pointLight1->position[2]);
+        glUniform3f(pointLightPosID, pointLight1->position.at(0),
+                    pointLight1->position.at(1), pointLight1->position.at(2));
         glUniform1f(pointLightIntID, pointLight1->power);
 
         // spot light
         SetLightColor(spotLightColID, spotLight1->color);
-        glUniform3f(spotLightDirID, spotLight1->direction[0],
-                    spotLight1->direction[1], spotLight1->direction[2]);
+        glUniform3f(spotLightDirID, spotLight1->direction.at(0),
+                    spotLight1->direction.at(1), spotLight1->direction.at(2));
         glUniform1f(spotLightCutoffID,
-                    cosf((spotLight1->Cutoff) * 3.14 / 180.0F));
-        glUniform3f(spotLightPosID, spotLight1->position[0],
-                    spotLight1->position[1], spotLight1->position[2]);
+                    glm::cos(glm::radians(spotLight1->Cutoff)));
+        glUniform3f(spotLightPosID, spotLight1->position.at(0),
+                    spotLight1->position.at(1), spotLight1->position.at(2));
     }
 
     // camera rotation for specular
@@ -221,11 +284,15 @@ void ShadowPass() {
                 lightCam.GetPos().z);
 
     Cube.SetMaterial(shadowMaterial);
-    for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
+        const float i = static_cast<float>(row) / kGridStepsPerUnit;
+        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
+             ++column) {
+            const float j = static_cast<float>(column) / kGridStepsPerUnit;
             Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                             j);
             Cube.Render(lightCam);
         }
     }
@@ -235,7 +302,7 @@ void ShadowPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void RenderPass() {
+void Application::RenderPass() {
     // Drawing stage
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
@@ -279,7 +346,7 @@ void RenderPass() {
     // Simple copy-paste
     {
         meshShader->Use();
-        GLuint const gLightCamViewID =
+        GLint const gLightCamViewID =
             meshShader->GetUniformLocation("gLightVC");
         gCamViewID = meshShader->GetUniformLocation("gVC");
         rotateID = meshShader->GetUniformLocation("mRotate");
@@ -294,22 +361,24 @@ void RenderPass() {
         {
             // Directional light
             SetLightColor(dirLightColID, directionalLight1->color);
-            glUniform3f(dirLightDirID, directionalLight1->direction[0],
-                        directionalLight1->direction[1],
-                        directionalLight1->direction[2]);
+            glUniform3f(dirLightDirID, directionalLight1->direction.at(0),
+                        directionalLight1->direction.at(1),
+                        directionalLight1->direction.at(2));
             // Point light
             SetLightColor(pointLightColID, pointLight1->color);
-            glUniform3f(pointLightPosID, pointLight1->position[0],
-                        pointLight1->position[1], pointLight1->position[2]);
+            glUniform3f(pointLightPosID, pointLight1->position.at(0),
+                        pointLight1->position.at(1),
+                        pointLight1->position.at(2));
             glUniform1f(pointLightIntID, pointLight1->power);
             // spot light
             SetLightColor(spotLightColID, spotLight1->color);
-            glUniform3f(spotLightDirID, spotLight1->direction[0],
-                        spotLight1->direction[1], spotLight1->direction[2]);
+            glUniform3f(spotLightDirID, spotLight1->direction.at(0),
+                        spotLight1->direction.at(1),
+                        spotLight1->direction.at(2));
             glUniform1f(spotLightCutoffID,
-                        cosf((spotLight1->Cutoff) * 3.14 / 180.0F));
-            glUniform3f(spotLightPosID, spotLight1->position[0],
-                        spotLight1->position[1], spotLight1->position[2]);
+                        glm::cos(glm::radians(spotLight1->Cutoff)));
+            glUniform3f(spotLightPosID, spotLight1->position.at(0),
+                        spotLight1->position.at(1), spotLight1->position.at(2));
         }
 
         // camera rotation for specular
@@ -319,11 +388,15 @@ void RenderPass() {
     // Plane.SetMaterial(mainMaterial);
     Plane.Render(pGameCamera);
     Cube.SetMaterial(mainMaterial);
-    for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
+        const float i = static_cast<float>(row) / kGridStepsPerUnit;
+        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
+             ++column) {
+            const float j = static_cast<float>(column) / kGridStepsPerUnit;
             Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                             j);
             Cube.Render(pGameCamera);
         }
     }
@@ -342,7 +415,7 @@ void RenderPass() {
     //  fLine1->Render((ConvertToString(spfaces)+"faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
-void DSBeginLightPasses() {
+void Application::DSBeginLightPasses() {
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -351,9 +424,9 @@ void DSBeginLightPasses() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void DSEndLigtPasses() { glDisable(GL_BLEND); }
+void Application::DSEndLigtPasses() { glDisable(GL_BLEND); }
 
-void DSLightingPass() {
+void Application::DSLightingPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -380,25 +453,28 @@ void DSLightingPass() {
     glBlitFramebuffer(0, 0, width, height, HalfWidth, 0, width, HalfHeight,
     GL_COLOR_BUFFER_BIT, GL_LINEAR);*/
     switch (renderType) {
-        case 1:
+        case RenderType::POSITION_BUFFER:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 2:
+        case RenderType::DIFFUSE_BUFFER:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 3:
+        case RenderType::NORMAL_BUFFER:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
             break;
-        case 4:
+        case RenderType::TEXCOORD_BUFFER:
             gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
             glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
                               GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            break;
+        default:
+            // dont bind for regular rendering
             break;
     }
 
@@ -408,7 +484,7 @@ void DSLightingPass() {
      faces").c_str(),-1.0f,0.0f,45.0f);*/
 }
 
-void DSStencilPass(Light& light) {
+void Application::DSStencilPass(Light& light) {
     // m_nullTech.Enable();
     // enable shader
     DSStencilPassShader->Use();
@@ -437,14 +513,13 @@ void DSStencilPass(Light& light) {
     camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
     light.SetMaterial(DSStencilPassMaterial);
     light.Render(pGameCamera);
 }
 
-void DSPointLightPass(PointLight& pointLight) {
+void Application::DSPointLightPass(PointLight& pointLight) {
     // gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
 
@@ -469,8 +544,7 @@ void DSPointLightPass(PointLight& pointLight) {
     camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
     // load the camera rotation for specular
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
@@ -495,8 +569,8 @@ void DSPointLightPass(PointLight& pointLight) {
 
     // load light parameters for source 1
     SetLightColor(pointLightColID, pointLight.color);
-    glUniform3f(pointLightPosID, pointLight.position[0], pointLight.position[1],
-                pointLight.position[2]);
+    glUniform3f(pointLightPosID, pointLight.position.at(0),
+                pointLight.position.at(1), pointLight.position.at(2));
     glUniform1f(pointLightIntID, pointLight.power);
 
     pointLight.SetMaterial(DSPointLightMaterial);
@@ -506,7 +580,7 @@ void DSPointLightPass(PointLight& pointLight) {
     glDisable(GL_BLEND);
 }
 
-void DSSpotLightPass(SpotLight& spotLight) {
+void Application::DSSpotLightPass(SpotLight& spotLight) {
     // gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
@@ -530,8 +604,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
 
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
     // load the camera rotation for specular
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
@@ -550,11 +623,11 @@ void DSSpotLightPass(SpotLight& spotLight) {
     spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
 
     // Load the light parameters for source 1
-    glUniform3f(spotLightPosID, spotLight.position[0], spotLight.position[1],
-                spotLight.position[2]);
+    glUniform3f(spotLightPosID, spotLight.position.at(0),
+                spotLight.position.at(1), spotLight.position.at(2));
     SetLightColor(spotLightColID, spotLight.color);
-    glUniform3f(spotLightDirID, spotLight.direction[0], spotLight.direction[1],
-                spotLight.direction[2]);
+    glUniform3f(spotLightDirID, spotLight.direction.at(0),
+                spotLight.direction.at(1), spotLight.direction.at(2));
     glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
 
     // enable buffer data
@@ -567,7 +640,7 @@ void DSSpotLightPass(SpotLight& spotLight) {
     glDisable(GL_BLEND);
 }
 
-void DSDirectionalLightPass(DirectionalLight& directionalLight) {
+void Application::DSDirectionalLightPass(DirectionalLight& directionalLight) {
     // gBuffer1->BindForReading();
     gBuffer1->BindForLightPass();
     // glDisable(GL_DEPTH_TEST);
@@ -586,8 +659,7 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
                 pGameCamera.GetPos().z);
     // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
     // Get the address of light variables
     dirLightColID =
@@ -597,8 +669,8 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
 
     // Load the light parameters
     SetLightColor(dirLightColID, directionalLight.color);
-    glUniform3f(dirLightDirID, directionalLight.direction[0],
-                directionalLight.direction[1], directionalLight.direction[2]);
+    glUniform3f(dirLightDirID, directionalLight.direction.at(0),
+                directionalLight.direction.at(1), directionalLight.direction.at(2));
 
     // Load textures into shader
     DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
@@ -627,13 +699,13 @@ void DSDirectionalLightPass(DirectionalLight& directionalLight) {
     glDisable(GL_BLEND);
 }
 
-void DSFinalPass() {
+void Application::DSFinalPass() {
     gBuffer1->BindForFinalPass();
     glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH,
                       WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
-void InterfacePass() {
+void Application::InterfacePass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -656,7 +728,7 @@ void InterfacePass() {
     fLine1->SetPosition(-1.0F, 0.9F, 24.0F);
     fLine1->Render(pGameCamera);
 
-    if (renderType == 0) {
+    if (renderType == RenderType::DEFERRED_SHADING) {
         // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
         fLine1->SetPosition(-1.0F, -0.2F, 36.0F);
@@ -669,7 +741,7 @@ void InterfacePass() {
     glDisable(GL_BLEND);
 }
 
-void DSGeometryPass() {
+void Application::DSGeometryPass() {
     gBuffer1->BindForGeomPass();
     // gBuffer1->BindForWriting();
     // Only the geometry pass updates the depth test
@@ -687,15 +759,18 @@ void DSGeometryPass() {
     DSGeometryPassShader->Use();
     gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
 
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(viewProjection));
+    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
 
     Cube.SetMaterial(DSGeometryPassMaterial);
-    for (float i = -5.0F; i < 5.0F; i += 0.1F) {
-        for (float j = -5.0F; j < 5.0F; j += 0.1F) {
+    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
+        const float i = static_cast<float>(row) / kGridStepsPerUnit;
+        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
+             ++column) {
+            const float j = static_cast<float>(column) / kGridStepsPerUnit;
             Cube.SetScale(0.05F, 0.05F, 0.05F);
-            Cube.SetRotation(0, 30 * sinf(Scale), 0);
-            Cube.SetPosition(i, noise1->GetHeight(i, j), j);
+            Cube.SetRotation(0, 30.0F * sinf(Scale), 0);
+            Cube.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                             j);
             Cube.Render(pGameCamera);
         }
     }
@@ -706,7 +781,7 @@ void DSGeometryPass() {
     glDisable(GL_DEPTH_TEST);
 }
 
-void RenderScene(GLFWwindow* /*window*/) {
+void Application::RenderScene() {
     // ShadowPass();
     // RenderPass();
     // DSGeometryPass();
@@ -714,7 +789,7 @@ void RenderScene(GLFWwindow* /*window*/) {
     // DSPointLightPass();
     // DSLightingPass();
     // normal deferred shading
-    if (renderType == 0) {
+    if (renderType == RenderType::DEFERRED_SHADING) {
         gBuffer1->StartFrame();
         DSGeometryPass();
         // To update the stencil buffer, it must be activated,
@@ -742,7 +817,8 @@ void RenderScene(GLFWwindow* /*window*/) {
         // DSEndLightPasses();
     }
     // debugging view
-    else if (renderType <= 4) {
+    else if (std::to_underlying(renderType) <=
+             std::to_underlying(RenderType::TEXCOORD_BUFFER)) {
         DSGeometryPass();
         DSLightingPass();
     } else {
@@ -750,14 +826,14 @@ void RenderScene(GLFWwindow* /*window*/) {
     }
     InterfacePass();
 }
-void PreInitScene(GLFWwindow* window) {
+void Application::PreInitScene(GLFWwindow* window) {
     Scale = 0;
     lastTime = glfwGetTime();
     frameCount = 0;
 
     // text shader
     {
-        textShader = std::make_unique<Shader>();
+        textShader = std::make_shared<Shader>();
         textShader->AddShader(ReadFile("shaders/text2d.vsh"), VertexShader);
         textShader->AddShader(ReadFile("shaders/text2d.fsh"), FragmnetShader);
         textShader->Init();
@@ -776,7 +852,7 @@ void PreInitScene(GLFWwindow* window) {
     initialized = false;
 }
 
-void InitRender(GLFWwindow* window, string message) {
+void Application::InitRender(GLFWwindow* window, string message) {
     // thread thr(InitScene,hiddenWindow);
 
     // thr.detach();
@@ -802,7 +878,7 @@ void InitRender(GLFWwindow* window, string message) {
     // thr.join();
 }
 
-int InitScene(GLFWwindow* window) {
+int Application::InitScene(GLFWwindow* window) {
     /*std::thread thr(InitRender, window, string("test"));
 
     thr.detach();*/
@@ -1060,84 +1136,110 @@ int InitScene(GLFWwindow* window) {
     return 0;
 }
 
-int main(int /*argc*/, char** /*argv*/) {
-    renderType = 0;
-    glfwWindowHint(GLFW_SAMPLES, 4);                // 4x antialiasing
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);  // We want OpenGL 3.3
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 4);
-    glfwWindowHint(GLFW_OPENGL_PROFILE,
-                   GLFW_OPENGL_CORE_PROFILE);  // We don't want the old OpenGL
-    GLFWwindow* window = nullptr;
-    glfwSetErrorCallback(reinterpret_cast<GLFWerrorfun>(&ErrorCallback));
-    // glewExperimental = true; // Needed for core profile
-    if (glfwInit() == 0) {
-        exit(EXIT_FAILURE);
+int Application::Run(GLFWwindow* window) {
+    glfwSetWindowUserPointer(window, this);
+    glfwSetFramebufferSizeCallback(window, &FrameBufferSizeCallback);
+    glfwSetKeyCallback(window, &KeyCallback);
+    glfwSetCursorPosCallback(window, &MousePosCallBack);
+    glfwSetMouseButtonCallback(window, &MouseButtonCallback);
+    glfwMakeContextCurrent(window);
+
+    int result = EXIT_SUCCESS;
+    {
+        glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
+        glEnable(GL_CULL_FACE);
+        glEnable(GL_PROGRAM_POINT_SIZE);
+        glFrontFace(GL_CCW);
+        glCullFace(GL_BACK);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glEnable(GL_BLEND);
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glViewport(0, 0, width, height);
+
+        PreInitScene(window);
+        if (InitScene(window) != 0) {
+            result = EXIT_FAILURE;
+        } else {
+            while (glfwWindowShouldClose(window) == 0) {
+                RenderScene();
+                glfwSwapBuffers(window);
+                glfwPollEvents();
+            }
+        }
     }
 
-    // title
-    string title("HOGL ");
+    glfwSetWindowUserPointer(window, nullptr);
+    return result;
+}
+
+int main() {
+    glfwSetErrorCallback(&Application::ErrorCallback);
+    if (glfwInit() == 0) {
+        return EXIT_FAILURE;
+    }
+    glfwWindowHint(GLFW_SAMPLES, 4);
+    // GLFW's default 1.0 request attempts the highest available backwards-
+    // compatible context. The renderers do not yet bind VAOs, so do not
+    // request a core profile here.
+
+    std::string title("HOGL ");
     title += AutoVersion::STATUS;
     title += " ";
-    title += AutoVersion::FULLVERSION_STRING;
+    title += static_cast<const char*>(AutoVersion::FULLVERSION_STRING);
     title += " build ";
     title += ConvertToString(AutoVersion::BUILDS_COUNT);
-
-    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
-                              /*glfwGetPrimaryMonitor()*/ nullptr, nullptr);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT,
+                                          title.c_str(), nullptr, nullptr);
     if (window == nullptr) {
         glfwTerminate();
-        exit(EXIT_FAILURE);
+        return EXIT_FAILURE;
     }
-
-    glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-    hiddenWindow = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, title.c_str(),
-                                    nullptr, window);
-
-    glfwSetFramebufferSizeCallback(
-        window,
-        reinterpret_cast<GLFWframebuffersizefun>(&FrameBufferSizeCallback));
-    width = WINDOW_WIDTH;
-    height = WINDOW_HEIGHT;
     glfwMakeContextCurrent(window);
-    glfwSetKeyCallback(window, reinterpret_cast<GLFWkeyfun>(&KeyCallback));
-    glfwSetCursorPosCallback(
-        window, reinterpret_cast<GLFWcursorposfun>(&MousePosCallBack));
-    glfwSetMouseButtonCallback(
-        window, reinterpret_cast<GLFWmousebuttonfun>(&MouseButtonCallback));
-
     if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
         spdlog::critical("Failed to initialize GLAD");
-        return 1;
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+    const int glMajor = glfwGetWindowAttrib(window, GLFW_CONTEXT_VERSION_MAJOR);
+    const int glMinor = glfwGetWindowAttrib(window, GLFW_CONTEXT_VERSION_MINOR);
+    const int profile = glfwGetWindowAttrib(window, GLFW_OPENGL_PROFILE);
+    // OpenGL returns null-terminated byte strings through GLubyte pointers.
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const auto* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast)
+    const auto* renderer =
+        reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    const char* profileName = "unspecified";
+    if (profile == GLFW_OPENGL_COMPAT_PROFILE) {
+        profileName = "compatibility";
+    } else if (profile == GLFW_OPENGL_CORE_PROFILE) {
+        profileName = "core";
+    }
+    spdlog::info("OpenGL {}.{} [{}] ({}), renderer: {}", glMajor, glMinor,
+                 profileName, version != nullptr ? version : "unknown",
+                 renderer != nullptr ? renderer : "unknown");
+    if (glMajor < 3 || (glMajor == 3 && glMinor < 3)) {
+        spdlog::critical("OpenGL 3.3 or newer is required by the shaders");
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return EXIT_FAILURE;
+    }
+    if (profile == GLFW_OPENGL_CORE_PROFILE) {
+        spdlog::critical(
+            "This renderer requires an OpenGL compatibility context");
+        glfwDestroyWindow(window);
+        glfwTerminate();
+        return EXIT_FAILURE;
     }
 
-    glClearColor(0.0F, 0.0F, 0.0F, 0.0F);
-    glEnable(GL_CULL_FACE);
-    glEnable(GL_PROGRAM_POINT_SIZE);
-    glFrontFace(GL_CCW);
-    glCullFace(GL_BACK);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    // enable transparency
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-    PreInitScene(window);
-    // InitRender(window,"test");
-    if (InitScene(window) != 0) {
-        return -1;
-    }
-
-    while (glfwWindowShouldClose(window) == 0) {
-        RenderScene(window);
-
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-    }
+    int result = 0;
+    {
+        Application app;
+        result = app.Run(window);
+    }  // Destroy GL resources while the window's context still exists.
     glfwDestroyWindow(window);
-    glfwDestroyWindow(hiddenWindow);
     glfwTerminate();
-    exit(EXIT_SUCCESS);
+    return result;
 }

@@ -1,6 +1,8 @@
 #ifndef ROTATABLEOBJECT_H
 #define ROTATABLEOBJECT_H
-#include <glm/glm.hpp>
+#include <array>
+
+#include <glm/ext/vector_float3.hpp>
 
 class RotatableObject {
 public:
@@ -11,7 +13,7 @@ public:
     glm::vec3 GetRotation();
 
 protected:
-    float rotation[3]{};
+    std::array<float, 3> rotation{};
 
 private:
 };

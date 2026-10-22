@@ -2,22 +2,27 @@
 
 #include <glad/gl.h>
 
+#include <array>
+#include <cstddef>
 #include <memory>
 
 #include "Texture.hpp"
-#include "Util.hpp"
 #include "spdlog/spdlog.h"
 
-bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
+bool GBuffer::Init(GLsizei windowWidth, GLsizei windowHeight) {
+    if (windowWidth <= 0 || windowHeight <= 0) {
+        spdlog::error("G-buffer dimensions must be positive");
+        return false;
+    }
     // Create FBO
     glGenFramebuffers(1, &m_fbo);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
     // create and initialize color maps and others
-    glGenTextures(ARRAY_SIZE_IN_ELEMENTS(m_textures), m_textures);
-    for (unsigned int i = 0; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        glBindTexture(GL_TEXTURE_2D, m_textures[i]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, WindowWidth, WindowHeight, 0,
+    glGenTextures(static_cast<GLsizei>(m_textures.size()), m_textures.data());
+    for (std::size_t i = 0; i < m_textures.size(); ++i) {
+        glBindTexture(GL_TEXTURE_2D, m_textures.at(i));
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, windowWidth, windowHeight, 0,
                      GL_RGB, GL_FLOAT, nullptr);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -25,8 +30,10 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
         // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
         glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i,
-                               GL_TEXTURE_2D, m_textures[i], 0);
+        glFramebufferTexture2D(
+            GL_DRAW_FRAMEBUFFER,
+            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i), GL_TEXTURE_2D,
+            m_textures.at(i), 0);
     }
 
     // create depth texture
@@ -35,8 +42,8 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
     // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth,
     // WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, WindowWidth,
-                 WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, windowWidth,
+                 windowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
     // TODO set these parameters correctly
     // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -51,19 +58,20 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     // create and initialize final color buffer
     glGenTextures(1, &m_finalTexture);
     glBindTexture(GL_TEXTURE_2D, m_finalTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, WindowWidth, WindowHeight, 0,
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0,
                  GL_RGB, GL_FLOAT, nullptr);
     glFramebufferTexture2D(
         GL_DRAW_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures),
+        GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()),
         GL_TEXTURE_2D, m_finalTexture, 0);
 
-    GLenum DrawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
-                            GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
-                            GL_COLOR_ATTACHMENT4};
+    const std::array<GLenum, 5> drawBuffers = {
+        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+        GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
-    spdlog::info("draw buffers: {}", ARRAY_SIZE_IN_ELEMENTS(DrawBuffers));
+    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()),
+                  drawBuffers.data());
+    spdlog::info("draw buffers: {}", drawBuffers.size());
 
     // check FBO status
     GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
@@ -106,18 +114,18 @@ bool GBuffer::Init(unsigned int WindowWidth, unsigned int WindowHeight) {
     return true;
 }
 
-void GBuffer::BindForWriting() {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+void GBuffer::BindForWriting() const {
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 }
 
-void GBuffer::BindForReading() {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
+void GBuffer::BindForReading() const {
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
 
-    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
-    i]);
-    }*/
+  /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
+      glActiveTexture(GL_TEXTURE0 + i);
+      glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
+  i]);
+  }*/
 }
 
 void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
@@ -125,30 +133,31 @@ void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
 }
 
 void GBuffer::CheckTextures() {
-    for (unsigned int& m_texture : m_textures) {
-        auto temp = std::make_unique<Texture2D>(m_texture, false);
-        spdlog::info("{}", temp->GetParameters());
-    }
+  for (const GLuint m_texture : m_textures) {
+    auto temp = std::make_unique<Texture2D>(m_texture, false);
+    spdlog::info("{}", temp->GetParameters());
+  }
 }
 
-GLuint GBuffer::GetTexture(unsigned num) { return m_textures[num]; }
+GLuint GBuffer::GetTexture(unsigned num) { return m_textures.at(num); }
 
 GLuint GBuffer::GetDepthTexture() const { return m_depthTexture; }
 
 void GBuffer::StartFrame() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
-    glDrawBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glDrawBuffer(GL_COLOR_ATTACHMENT0 +
+                 static_cast<GLenum>(m_textures.size()));
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
-void GBuffer::BindForGeomPass() {
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
+void GBuffer::BindForGeomPass() const {
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    GLenum DrawBuffers[] = {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1,
-                            GL_COLOR_ATTACHMENT2, GL_COLOR_ATTACHMENT3,
-                            GL_COLOR_ATTACHMENT4};
+  const std::array<GLenum, 5> drawBuffers = {
+      GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
+      GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(ARRAY_SIZE_IN_ELEMENTS(DrawBuffers), DrawBuffers);
+  glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
 }
 
 void GBuffer::BindForStencilPass() {
@@ -157,7 +166,8 @@ void GBuffer::BindForStencilPass() {
 }
 
 void GBuffer::BindForLightPass() {
-    glDrawBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glDrawBuffer(GL_COLOR_ATTACHMENT0 +
+                 static_cast<GLenum>(m_textures.size()));
 
     /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
         glActiveTexture(GL_TEXTURE0 + i);
@@ -169,5 +179,6 @@ void GBuffer::BindForLightPass() {
 void GBuffer::BindForFinalPass() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
-    glReadBuffer(GL_COLOR_ATTACHMENT0 + ARRAY_SIZE_IN_ELEMENTS(m_textures));
+    glReadBuffer(GL_COLOR_ATTACHMENT0 +
+                 static_cast<GLenum>(m_textures.size()));
 }

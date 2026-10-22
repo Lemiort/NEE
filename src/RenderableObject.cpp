@@ -6,13 +6,9 @@
 #include "Camera.hpp"
 #include "Shader.hpp"
 
-RenderableObject::RenderableObject() {
-    // ctor
-}
+RenderableObject::RenderableObject() = default;
 
-RenderableObject::~RenderableObject() {
-    // dtor
-}
+RenderableObject::~RenderableObject() = default;
 
 void RenderableObject::Render(const Camera& cam) {}
 

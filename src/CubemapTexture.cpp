@@ -3,15 +3,9 @@
 #include <glad/gl.h>
 
 #include <array>
-#include <cstdint>
 #include <string>
 
 #include "Texture.hpp"
-#include "Util.hpp"
-static const GLenum types[6] = {
-    GL_TEXTURE_CUBE_MAP_POSITIVE_X, GL_TEXTURE_CUBE_MAP_NEGATIVE_X,
-    GL_TEXTURE_CUBE_MAP_POSITIVE_Y, GL_TEXTURE_CUBE_MAP_NEGATIVE_Y,
-    GL_TEXTURE_CUBE_MAP_POSITIVE_Z, GL_TEXTURE_CUBE_MAP_NEGATIVE_Z};
 CubemapTexture::CubemapTexture(const string& Directory,
                                const string& PosXFilename,
                                const string& NegXFilename,
@@ -45,9 +39,9 @@ bool CubemapTexture::Load() {
     // Magick::Blob blob;
 
     // Load the cubemap using the helper from Texture.cpp
-    std::array<std::string, 6> faces = {m_fileNames[0], m_fileNames[1],
-                                        m_fileNames[2], m_fileNames[3],
-                                        m_fileNames[4], m_fileNames[5]};
+    std::array<std::string, 6> const faces = {m_fileNames[0], m_fileNames[1],
+                                              m_fileNames[2], m_fileNames[3],
+                                              m_fileNames[4], m_fileNames[5]};
 
     m_textureObj = loadCubeMap(faces);
     if (m_textureObj == 0) {
@@ -63,7 +57,7 @@ bool CubemapTexture::Load() {
     return true;
 }
 
-void CubemapTexture::Bind(GLenum TextureUnit) {
-    glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
+void CubemapTexture::Bind(GLenum TextureUnit) const {
+  glActiveTexture(TextureUnit);
+  glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
 }

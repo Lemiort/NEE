@@ -1,9 +1,9 @@
 #ifndef CAMERA_H_INCLUDED
 #define CAMERA_H_INCLUDED
 
-#include <memory>
-
-#include <glm/glm.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
+#include <glm/ext/vector_float3.hpp>
+#include <glm/ext/vector_int2.hpp>
 
 class Camera {
 public:
@@ -14,29 +14,29 @@ public:
            float zfar, const glm::vec3& Pos, const glm::vec3& Target,
            const glm::vec3& Up);
 
-    bool OnKeyboard(char Key);
+    bool OnKeyboard(int key);
 
     void OnMouse(int x, int y);
 
     void OnRender();
 
-    const glm::vec3& GetPos() const;
+    [[nodiscard]] const glm::vec3& GetPos() const;
 
-    const glm::vec3& GetTarget() const;
+    [[nodiscard]] const glm::vec3& GetTarget() const;
 
-    const glm::vec3& GetUp() const;
+    [[nodiscard]] const glm::vec3& GetUp() const;
 
     [[nodiscard]] glm::mat4 GetViewMatrix() const;
     [[nodiscard]] glm::mat4 GetProjectionMatrix() const;
     [[nodiscard]] glm::mat4 GetViewProjectionMatrix() const;
 
-    float GetFov() const;
+    [[nodiscard]] float GetFov() const;
 
     void SetFOV(float fov);
 
-    float GetZNear() const;
+    [[nodiscard]] float GetZNear() const;
 
-    float GetZFar() const;
+    [[nodiscard]] float GetZFar() const;
 
     void SetZNear(float znear);
 
@@ -44,11 +44,11 @@ public:
 
     void OnViewportResize(int width, int height);
 
-    int GetWidth() const;
+    [[nodiscard]] int GetWidth() const;
 
-    int GetHeight() const;
+    [[nodiscard]] int GetHeight() const;
 
-private:
+   private:
     float FOV;
     float zNear;
     float zFar;
@@ -63,13 +63,13 @@ private:
     int m_windowWidth;
     int m_windowHeight;
 
-    float m_AngleH;
-    float m_AngleV;
+    float m_AngleH{};
+    float m_AngleV{};
 
-    bool m_OnUpperEdge;
-    bool m_OnLowerEdge;
-    bool m_OnLeftEdge;
-    bool m_OnRightEdge;
+    bool m_OnUpperEdge{};
+    bool m_OnLowerEdge{};
+    bool m_OnLeftEdge{};
+    bool m_OnRightEdge{};
 
     glm::ivec2 m_mousePos;
 };

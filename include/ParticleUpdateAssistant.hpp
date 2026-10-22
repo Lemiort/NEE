@@ -9,32 +9,32 @@ public:
     ParticleUpdateAssistant();
     virtual ~ParticleUpdateAssistant();
     virtual bool Init(const Shader& shader);
-    void Enable();
+    void Enable() const;
 
     void SetParticleLifetime(float Lifetime);
 
-    void SetDeltaTimeMillis(float DeltaTimeMillis);
+    void SetDeltaTimeMillis(float DeltaTimeMillis) const;
 
-    void SetTime(int Time);
+    void SetTime(int Time) const;
 
-    void SetRandomTextureUnit(unsigned int TextureUnit);
+    void SetRandomTextureUnit(GLint textureUnit) const;
 
-    void SetLauncherLifetime(float Lifetime);
+    void SetLauncherLifetime(float Lifetime) const;
 
-    void SetShellLifetime(float Lifetime);
+    void SetShellLifetime(float Lifetime) const;
 
-    void SetSecondaryShellLifetime(float Lifetime);
+    void SetSecondaryShellLifetime(float Lifetime) const;
 
-protected:
-private:
-    GLuint shaderProgramID;
+   protected:
+   private:
+    GLuint shaderProgramID{};
 
-    GLuint m_deltaTimeMillisLocation;
-    GLuint m_randomTextureLocation;
-    GLuint m_timeLocation;
-    GLuint m_launcherLifetimeLocation;
-    GLuint m_shellLifetimeLocation;
-    GLuint m_secondaryShellLifetimeLocation;
+    GLint m_deltaTimeMillisLocation{};
+    GLint m_randomTextureLocation{};
+    GLint m_timeLocation{};
+    GLint m_launcherLifetimeLocation{};
+    GLint m_shellLifetimeLocation{};
+    GLint m_secondaryShellLifetimeLocation{};
 };
 
 #endif  // PARTICLEUPDATEASSISTANT_H

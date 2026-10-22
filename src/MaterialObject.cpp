@@ -5,13 +5,9 @@
 
 #include "Material.hpp"
 
-MaterialObject::MaterialObject() {
-    // ctor
-}
+MaterialObject::MaterialObject() = default;
 
-MaterialObject::~MaterialObject() {
-    // dtor
-}
+MaterialObject::~MaterialObject() = default;
 
 std::shared_ptr<Material> MaterialObject::GetMaterial() { return mat; }
 
