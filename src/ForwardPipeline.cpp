@@ -52,15 +52,20 @@ bool ForwardPipeline::Init(std::shared_ptr<Shader> meshShader) {
     return true;
 }
 
-void ForwardPipeline::Render(const ForwardPipelineScene& scene) {
+void ForwardPipeline::Render(const SceneView& scene) {
+    if (scene.pointLights.empty() || scene.spotLights.empty()) {
+        return;
+    }
+    const PointLight& pointLight = *scene.pointLights.front();
+    const SpotLight& spotLight = *scene.spotLights.front();
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     scene.skybox.Render(scene.camera);
 
-    const Camera lightCamera(
-        scene.camera.GetWidth(), scene.camera.GetHeight(),
-        scene.camera.GetFov(), scene.camera.GetZNear(), scene.camera.GetZFar(),
-        scene.spotLight.GetPosition(), glm::vec3(-1.0F, -1.0F, -1.0F),
-        glm::vec3(0.0F, 1.0F, 0.0F));
+    const Camera lightCamera(scene.camera.GetWidth(), scene.camera.GetHeight(),
+                             scene.camera.GetFov(), scene.camera.GetZNear(),
+                             scene.camera.GetZFar(), spotLight.GetPosition(),
+                             glm::vec3(-1.0F, -1.0F, -1.0F),
+                             glm::vec3(0.0F, 1.0F, 0.0F));
 
     meshShader_->Use();
     const glm::mat4 viewProjection = RenderPassViewProjection(scene.camera);
@@ -75,18 +80,17 @@ void ForwardPipeline::Render(const ForwardPipelineScene& scene) {
                 scene.directionalLight.direction.at(0),
                 scene.directionalLight.direction.at(1),
                 scene.directionalLight.direction.at(2));
-    SetLightColor(pointLightColorUniform_, scene.pointLight.color);
-    const glm::vec3 pointPosition = scene.pointLight.GetPosition();
+    SetLightColor(pointLightColorUniform_, pointLight.color);
+    const glm::vec3 pointPosition = pointLight.GetPosition();
     glUniform3f(pointLightPositionUniform_, pointPosition.x, pointPosition.y,
                 pointPosition.z);
-    glUniform1f(pointLightIntensityUniform_, scene.pointLight.power);
-    SetLightColor(spotLightColorUniform_, scene.spotLight.color);
-    glUniform3f(spotLightDirectionUniform_, scene.spotLight.direction.at(0),
-                scene.spotLight.direction.at(1),
-                scene.spotLight.direction.at(2));
+    glUniform1f(pointLightIntensityUniform_, pointLight.power);
+    SetLightColor(spotLightColorUniform_, spotLight.color);
+    glUniform3f(spotLightDirectionUniform_, spotLight.direction.at(0),
+                spotLight.direction.at(1), spotLight.direction.at(2));
     glUniform1f(spotLightCutoffUniform_,
-                glm::cos(glm::radians(scene.spotLight.Cutoff)));
-    const glm::vec3 spotPosition = scene.spotLight.GetPosition();
+                glm::cos(glm::radians(spotLight.Cutoff)));
+    const glm::vec3 spotPosition = spotLight.GetPosition();
     glUniform3f(spotLightPositionUniform_, spotPosition.x, spotPosition.y,
                 spotPosition.z);
     glUniform3f(cameraPositionUniform_, scene.camera.GetPos().x,

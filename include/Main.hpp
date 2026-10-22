@@ -8,6 +8,7 @@
 #include <string>
 
 #include "Billboard.hpp"
+#include "DeferredPipeline.hpp"
 #include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
 #include "Light.hpp"
@@ -74,17 +75,8 @@ private:
     void InitRender(GLFWwindow* window, std::string message);
     int InitScene(GLFWwindow* window);
     void RenderScene();
-    void DSLightingPass();
     void RenderPass();
     void ShadowPass();
-    void DSGeometryPass();
-    static void DSBeginLightPasses();
-    void DSStencilPass(Light& light);
-    void DSSpotLightPass(SpotLight& spotLight);
-    void DSPointLightPass(PointLight& pointLight);
-    void DSDirectionalLightPass(DirectionalLight& directionalLight);
-    void DSFinalPass();
-    static void DSEndLigtPasses();
     void InterfacePass();
 
     int width = WINDOW_WIDTH;
@@ -115,6 +107,7 @@ private:
         DSStencilPassMaterial;
     std::shared_ptr<Texture2D> whiteTexture;
     std::unique_ptr<GBuffer> gBuffer1;
+    std::unique_ptr<DeferredPipeline> deferredPipeline;
     std::unique_ptr<ForwardPipeline> forwardPipeline;
     std::unique_ptr<DirectionalLight> directionalLight1;
     std::unique_ptr<PointLight> pointLight1, pointLight2;

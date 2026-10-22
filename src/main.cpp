@@ -365,305 +365,14 @@ void Application::RenderPass() {
     }
     renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
 
+    const std::array pointLights{pointLight1.get(), pointLight2.get()};
+    const std::array spotLights{spotLight1.get()};
     forwardPipeline->Render({.camera = pGameCamera,
                              .directionalLight = *directionalLight1,
-                             .pointLight = *pointLight1,
-                             .spotLight = *spotLight1,
+                             .pointLights = pointLights,
+                             .spotLights = spotLights,
                              .skybox = *skybox1,
                              .queue = renderQueue});
-}
-
-void Application::DSBeginLightPasses() {
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE);
-
-    // gBuffer1->BindForReading();
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-}
-
-void Application::DSEndLigtPasses() { glDisable(GL_BLEND); }
-
-void Application::DSLightingPass() {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    gBuffer1->BindForReading();
-
-    // GLsizei HalfWidth = (GLsizei)(width / 2.0f);
-    // GLsizei HalfHeight = (GLsizei)(height / 2.0f);
-
-    // gBuffer1->CheckTextures();
-    /*
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
-    glBlitFramebuffer(0, 0,width, height, 0, 0, HalfWidth, HalfHeight,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
-    glBlitFramebuffer(0, 0, width, height, 0, HalfHeight, HalfWidth, height,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
-    glBlitFramebuffer(0, 0, width, height, HalfWidth, HalfHeight, width, height,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);
-
-    gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
-    glBlitFramebuffer(0, 0, width, height, HalfWidth, 0, width, HalfHeight,
-    GL_COLOR_BUFFER_BIT, GL_LINEAR);*/
-    switch (renderType) {
-        case RenderType::POSITION_BUFFER:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_POSITION);
-            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
-                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
-            break;
-        case RenderType::DIFFUSE_BUFFER:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_DIFFUSE);
-            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
-                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
-            break;
-        case RenderType::NORMAL_BUFFER:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL);
-            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
-                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
-            break;
-        case RenderType::TEXCOORD_BUFFER:
-            gBuffer1->SetReadBuffer(GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD);
-            glBlitFramebuffer(0, 0, width, height, 0, 0, width, height,
-                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
-            break;
-        default:
-            // dont bind for regular rendering
-            break;
-    }
-
-    /* fLine1->Render(ConvertToString(fps).c_str(),-1.0f,0.9f,30.0f);
-     spfaces=Sphere.GetNumFaces()*100*100+TestMesh.GetNumFaces()+Plane.GetNumFaces();
-     fLine1->Render((ConvertToString(spfaces)+"
-     faces").c_str(),-1.0f,0.0f,45.0f);*/
-}
-
-void Application::DSStencilPass(Light& light) {
-    // m_nullTech.Enable();
-    // enable shader
-    DSStencilPassShader->Use();
-
-    // Disable color / depth writing and enable stencil
-    gBuffer1->BindForStencilPass();
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);  //??
-
-    glDisable(GL_CULL_FACE);
-
-    glClear(GL_STENCIL_BUFFER_BIT);
-
-    // we need stencil test, but we want it to always pass. Only depth test is
-    // important.
-    glStencilFunc(GL_ALWAYS, 0, 0);
-
-    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
-    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
-
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    // define camera variable addresses
-    gCamViewID = DSStencilPassShader->GetUniformLocation("gVC");
-    rotateID = DSStencilPassShader->GetUniformLocation("mRotate");
-    camPosID = DSStencilPassShader->GetUniformLocation("s_vCamPos");
-
-    // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-
-    light.SetMaterial(DSStencilPassMaterial);
-    light.Render(pGameCamera);
-}
-
-void Application::DSPointLightPass(PointLight& pointLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
-
-    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE);
-
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    // enable shader
-    DSPointLightShader->Use();
-
-    // define camera variable addresses
-    gCamViewID = DSPointLightShader->GetUniformLocation("gVC");
-    rotateID = DSPointLightShader->GetUniformLocation("mRotate");
-    camPosID = DSPointLightShader->GetUniformLocation("s_vCamPos");
-
-    // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-    // load the camera rotation for specular
-    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
-                pGameCamera.GetPos().z);
-
-    // load textures into shader
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSPointLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
-
-    // load buffer data
-    //  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //  glClear(/*GL_COLOR_BUFFER_BIT |*/GL_DEPTH_BUFFER_BIT);
-
-    // Define light parameters address
-    pointLightPosID =
-        DSPointLightShader->GetUniformLocation("s_vPointLightPos");
-    pointLightIntID =
-        DSPointLightShader->GetUniformLocation("pointLightIntensity");
-    pointLightColID = DSPointLightShader->GetUniformLocation("pointLightColor");
-
-    // load light parameters for source 1
-    SetLightColor(pointLightColID, pointLight.color);
-    const glm::vec3 pointLightPosition = pointLight.GetPosition();
-    glUniform3f(pointLightPosID, pointLightPosition.x, pointLightPosition.y,
-                pointLightPosition.z);
-    glUniform1f(pointLightIntID, pointLight.power);
-
-    pointLight.SetMaterial(DSPointLightMaterial);
-    pointLight.Render(pGameCamera);
-
-    glCullFace(GL_BACK);
-    glDisable(GL_BLEND);
-}
-
-void Application::DSSpotLightPass(SpotLight& spotLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
-    glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-
-    glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE);
-
-    glEnable(GL_CULL_FACE);
-    glCullFace(GL_FRONT);
-
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    // enable shader
-    DSSpotLightShader->Use();
-
-    // define camera variable addresses
-    gCamViewID = DSSpotLightShader->GetUniformLocation("gVC");
-    rotateID = DSSpotLightShader->GetUniformLocation("mRotate");
-    camPosID = DSSpotLightShader->GetUniformLocation("s_vCamPos");
-
-    // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-    // load the camera rotation for specular
-    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
-                pGameCamera.GetPos().z);
-
-    // load textures into shader
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(0), 4);  // world pos
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(1), 5);  // diffuse
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(2), 6);  // normal
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSSpotLightMaterial->SetTexture(gBuffer1->GetTexture(4), 8);  // specular
-
-    // define the address of the light parameters
-    spotLightPosID = DSSpotLightShader->GetUniformLocation("sLightPos");
-    spotLightColID = DSSpotLightShader->GetUniformLocation("sLightCol");
-    spotLightDirID = DSSpotLightShader->GetUniformLocation("sLightDir");
-    spotLightCutoffID = DSSpotLightShader->GetUniformLocation("sLightCutoff");
-
-    // Load the light parameters for source 1
-    const glm::vec3 spotLightPosition = spotLight.GetPosition();
-    glUniform3f(spotLightPosID, spotLightPosition.x, spotLightPosition.y,
-                spotLightPosition.z);
-    SetLightColor(spotLightColID, spotLight.color);
-    glUniform3f(spotLightDirID, spotLight.direction.at(0),
-                spotLight.direction.at(1), spotLight.direction.at(2));
-    glUniform1f(spotLightCutoffID, cosf(glm::radians(spotLight.Cutoff)));
-
-    // enable buffer data
-    // glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    spotLight.SetMaterial(DSSpotLightMaterial);
-    spotLight.Render(pGameCamera);
-
-    glCullFace(GL_BACK);
-    glDisable(GL_BLEND);
-}
-
-void Application::DSDirectionalLightPass(DirectionalLight& directionalLight) {
-    // gBuffer1->BindForReading();
-    gBuffer1->BindForLightPass();
-    // glDisable(GL_DEPTH_TEST);
-    glEnable(GL_BLEND);
-    glBlendEquation(GL_FUNC_ADD);
-    glBlendFunc(GL_ONE, GL_ONE);
-
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    DSDirectionalLightShader->Use();
-    // get camera parameter addresses
-    gCamViewID = DSDirectionalLightShader->GetUniformLocation("gVC");
-    rotateID = DSDirectionalLightShader->GetUniformLocation("mRotate");
-    camPosID = DSDirectionalLightShader->GetUniformLocation("s_vCamPos");
-    // Load the camera rotation for specular
-    glUniform3f(camPosID, pGameCamera.GetPos().x, pGameCamera.GetPos().y,
-                pGameCamera.GetPos().z);
-    // load the camera matrix
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-
-    // Get the address of light variables
-    dirLightColID =
-        DSDirectionalLightShader->GetUniformLocation("dirLightColor");
-    dirLightDirID =
-        DSDirectionalLightShader->GetUniformLocation("dirLightDirection");
-
-    // Load the light parameters
-    SetLightColor(dirLightColID, directionalLight.color);
-    glUniform3f(dirLightDirID, directionalLight.direction.at(0),
-                directionalLight.direction.at(1),
-                directionalLight.direction.at(2));
-
-    // Load textures into shader
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(0),
-                                           4);  // world pos
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(1),
-                                           5);  // diffuse
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(2),
-                                           6);  // normal
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(3), 7);  // UV
-    DSDirectionalLightMaterial->SetTexture(gBuffer1->GetTexture(4),
-                                           8);  // specular
-
-    directionalLight.SetMaterial(DSDirectionalLightMaterial);
-
-    /*printf("\n %f %f %f",directionalLight1->direction[0],
-                            directionalLight1->direction[1],
-                            directionalLight1->direction[2]);*/
-    // glUniform1f(pointLightIntID,pointLight1->power);
-
-    // enable data from buffer
-    //  glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    //  glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
-
-    directionalLight.Render(pGameCamera);
-    // glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-}
-
-void Application::DSFinalPass() {
-    gBuffer1->BindForFinalPass();
-    glBlitFramebuffer(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, 0, 0, WINDOW_WIDTH,
-                      WINDOW_HEIGHT, GL_COLOR_BUFFER_BIT, GL_LINEAR);
 }
 
 void Application::InterfacePass() {
@@ -708,88 +417,57 @@ void Application::InterfacePass() {
     glDisable(GL_BLEND);
 }
 
-void Application::DSGeometryPass() {
-    gBuffer1->BindForGeomPass();
-    // gBuffer1->BindForWriting();
-    // Only the geometry pass updates the depth test
-    glDepthMask(GL_TRUE);
+void Application::RenderScene() {
+    if (renderType == RenderType::FORWARD_RENDERING) {
+        RenderPass();
+        InterfacePass();
+        return;
+    }
 
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    glEnable(GL_DEPTH_TEST);
-    glDisable(GL_BLEND);
-
-    CalcFPS();
-
-    const glm::mat4 viewProjection = RenderPassViewProjection(pGameCamera);
-
-    DSGeometryPassShader->Use();
-    gCamViewID = DSGeometryPassShader->GetUniformLocation("gVC");
-
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-
-    Sphere.SetMaterial(DSGeometryPassMaterial);
+    renderQueue.Clear();
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Sphere.SetScale(0.05F, 0.05F, 0.05F);
-            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                               j);
-            Sphere.Render(pGameCamera);
+            renderQueue.SubmitOpaqueMesh(
+                Sphere,
+                Transform{
+                    .position = glm::vec3(
+                        i, static_cast<float>(noise1->GetHeight(i, j)), j),
+                    .rotationDegrees =
+                        glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
+                    .scale = glm::vec3(0.05F)},
+                DSGeometryPassMaterial);
         }
     }
 
-    // glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-    glDepthMask(GL_FALSE);
-    glDisable(GL_DEPTH_TEST);
-}
-
-void Application::RenderScene() {
-    // ShadowPass();
-    // RenderPass();
-    // DSGeometryPass();
-    // DSBeginLightPasses(); // not needed yet
-    // DSPointLightPass();
-    // DSLightingPass();
-    // normal deferred shading
+    const std::array pointLights{pointLight1.get(), pointLight2.get()};
+    const std::array spotLights{spotLight1.get()};
+    const SceneView scene{.camera = pGameCamera,
+                          .directionalLight = *directionalLight1,
+                          .pointLights = pointLights,
+                          .spotLights = spotLights,
+                          .skybox = *skybox1,
+                          .queue = renderQueue};
     if (renderType == RenderType::DEFERRED_SHADING) {
-        gBuffer1->StartFrame();
-        DSGeometryPass();
-        // To update the stencil buffer, it must be activated,
-        // and it is also required during lighting passes because light
-        // renders only when the stencil pass succeeds.
-        glEnable(GL_STENCIL_TEST);
-        // DSBeginLightPasses(); // already deprecated
-        {
-            DSStencilPass(*pointLight1);
-            DSPointLightPass(*pointLight1);
-
-            DSStencilPass(*pointLight2);
-            DSPointLightPass(*pointLight2);
-
-            DSStencilPass(*spotLight1);
-            DSSpotLightPass(*spotLight1);
-        }
-        // Directed light does not require a stencil
-        // as its effect is not distance limited.
-        glDisable(GL_STENCIL_TEST);
-
-        DSDirectionalLightPass(*directionalLight1);
-
-        DSFinalPass();
-        // DSEndLightPasses();
-    }
-    // debugging view
-    else if (std::to_underlying(renderType) <=
-             std::to_underlying(RenderType::TEXCOORD_BUFFER)) {
-        DSGeometryPass();
-        DSLightingPass();
+        deferredPipeline->Render(scene);
     } else {
-        RenderPass();
+        const GBufferDebugView debugView = [this] {
+            switch (renderType) {
+                case RenderType::POSITION_BUFFER:
+                    return GBufferDebugView::Position;
+                case RenderType::DIFFUSE_BUFFER:
+                    return GBufferDebugView::Diffuse;
+                case RenderType::NORMAL_BUFFER:
+                    return GBufferDebugView::Normal;
+                case RenderType::TEXCOORD_BUFFER:
+                    return GBufferDebugView::TextureCoordinates;
+                default:
+                    return GBufferDebugView::Position;
+            }
+        }();
+        deferredPipeline->RenderDebug(scene, debugView);
     }
     InterfacePass();
 }
@@ -1136,6 +814,23 @@ int Application::InitScene(GLFWwindow* window) {
         //************************************/
         // pGameCamera = new
         // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
+    }
+    deferredPipeline = std::make_unique<DeferredPipeline>();
+    if (!deferredPipeline->Init(
+            {.gBuffer = *gBuffer1,
+             .geometryShader = DSGeometryPassShader,
+             .stencilShader = DSStencilPassShader,
+             .pointLightShader = DSPointLightShader,
+             .spotLightShader = DSSpotLightShader,
+             .directionalLightShader = DSDirectionalLightShader,
+             .geometryMaterial = DSGeometryPassMaterial,
+             .stencilMaterial = DSStencilPassMaterial,
+             .pointLightMaterial = DSPointLightMaterial,
+             .spotLightMaterial = DSSpotLightMaterial,
+             .directionalLightMaterial = DSDirectionalLightMaterial})) {
+        spdlog::critical(
+            "Unable to initialize the deferred rendering pipeline");
+        return EXIT_FAILURE;
     }
     glFlush();
     initialized = true;

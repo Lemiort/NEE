@@ -9,22 +9,14 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "RenderQueue.hpp"
+#include "SceneView.hpp"
 #include "Shader.hpp"
 #include "Skybox.hpp"
-
-struct ForwardPipelineScene {
-    const Camera& camera;
-    const DirectionalLight& directionalLight;
-    const PointLight& pointLight;
-    const SpotLight& spotLight;
-    SkyBox& skybox;
-    const RenderQueue& queue;
-};
 
 class ForwardPipeline {
 public:
     [[nodiscard]] bool Init(std::shared_ptr<Shader> meshShader);
-    void Render(const ForwardPipelineScene& scene);
+    void Render(const SceneView& scene);
 
 private:
     void RenderMeshes(std::span<const MeshRenderCommand> commands,
