@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 
+#include <cstddef>
 #include <memory>
 #include <string>
 #include <utility>
@@ -34,9 +35,10 @@ Material::Material() {
 
     abstractMap = std::make_shared<AbstractTexture>();
 
-    for (int i = 0; i < max_texture_units; i++) {
-        abstractSamplersID[i] = 0;
-        texturesID[i] = 0;
+    for (std::size_t i = 0; i < static_cast<std::size_t>(max_texture_units);
+         ++i) {
+        abstractSamplersID.at(i) = 0;
+        texturesID.at(i) = 0;
     }
     // std::cout<<"\n Max texture units is "<<max_texture_units;
 }
@@ -79,7 +81,8 @@ bool Material::Init(const std::shared_ptr<Shader>& _sh) {
 
     std::string const abstractSamplerName("gSampler");
     for (GLint i = 4; i < max_texture_units; i++) {
-        abstractSamplersID[i] = shaderProgram->GetUniformLocation(
+        abstractSamplersID.at(static_cast<std::size_t>(i)) =
+            shaderProgram->GetUniformLocation(
             (abstractSamplerName + ConvertToString(i)).c_str());
         // std::cout<<"\nSampler name is
         // "<<(abstractSamplerName+ConvertToString(i)).c_str();
@@ -111,8 +114,9 @@ void Material::Use() {
 
     // starting from 4th, are custom texture units
     for (GLint i = 4; i < max_texture_units; i++) {
-        if (texturesID[i] != 0) {
-            abstractMap->SetTexture(texturesID[i]);
+        const auto textureIndex = static_cast<std::size_t>(i);
+        if (texturesID.at(textureIndex) != 0) {
+            abstractMap->SetTexture(texturesID.at(textureIndex));
             abstractMap->Bind(GL_TEXTURE0 + i);
             // std::cout<<"\n\ntex set as "<<texturesID[i]<<" render at unit num
             // "<<i<<"\n sampler num is "<<abstractSamplersID[i]; std::cout<<"\n
@@ -120,7 +124,7 @@ void Material::Use() {
             // is "<<normSamplerID;
 
             // assign texture to active texture unit
-            glUniform1i(abstractSamplersID[i],
+            glUniform1i(abstractSamplersID.at(textureIndex),
                         i);  // tell shader to use texture i
         }
     }
@@ -143,15 +147,17 @@ void Material::SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap) {
 }
 
 void Material::SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num) {
-    if (num <= 3) {
+    if (num <= 3 || num >= texturesID.size()) {
+        spdlog::error("Texture unit {} is outside the available range", num);
         return;
     }
-    texturesID[num] = _map->GetTextureID();
+    texturesID.at(num) = _map->GetTextureID();
 }
 
 void Material::SetTexture(GLuint _map, GLuint num) {
-    if (num <= 3) {
+    if (num <= 3 || num >= texturesID.size()) {
+        spdlog::error("Texture unit {} is outside the available range", num);
         return;
     }
-    texturesID[num] = _map;
+    texturesID.at(num) = _map;
 }

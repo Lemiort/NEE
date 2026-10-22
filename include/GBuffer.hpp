@@ -3,6 +3,8 @@
 
 #include <glad/gl.h>
 
+#include <array>
+
 class GBuffer {
 public:
     enum GBUFFER_TEXTURE_TYPE {
@@ -18,29 +20,29 @@ public:
 
     ~GBuffer() = default;
 
-    bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
+    bool Init(GLsizei windowWidth, GLsizei windowHeight);
 
     void StartFrame();
-    void BindForGeomPass();
-    void BindForStencilPass();
+    void BindForGeomPass() const;
+    static void BindForStencilPass();
     void BindForLightPass();
     void BindForFinalPass();
 
-    void BindForWriting();
-    void BindForReading();
-    void SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType);
+    void BindForWriting() const;
+    void BindForReading() const;
+    static void SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType);
 
     void CheckTextures();
 
     GLuint GetTexture(unsigned num);
 
-    GLuint GetDepthTexture() const;
+    [[nodiscard]] GLuint GetDepthTexture() const;
 
-private:
-    GLuint m_fbo;
-    GLuint m_textures[GBUFFER_NUM_TEXTURES];
-    GLuint m_depthTexture;
-    GLuint m_testTexture;
-    GLuint m_finalTexture;
+   private:
+    GLuint m_fbo{};
+    std::array<GLuint, GBUFFER_NUM_TEXTURES> m_textures{};
+    GLuint m_depthTexture{};
+    GLuint m_testTexture{};
+    GLuint m_finalTexture{};
 };
 #endif  // GBUFFER_H

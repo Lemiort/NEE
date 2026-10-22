@@ -2,22 +2,47 @@
 
 #include <glad/gl.h>
 
-#include <cstddef>
+#include <array>
+#include <cstdio>
+#include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/matrix_transform.hpp>
+#include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <limits>
 #include <memory>
 #include <new>
 #include <string>
 #include <vector>
+#ifdef _MSC_VER
+#include <stdio.h>
+#endif
 
 #include "Camera.hpp"
 #include "CubemapTexture.hpp"
 #include "Shader.hpp"
 #include "spdlog/spdlog.h"
 
-SkyBox::SkyBox(shared_ptr<Shader> shader)
+namespace {
+constexpr std::size_t kPositionComponentCount = 3;
+constexpr std::size_t kVertexComponentCount = 8;
+constexpr std::size_t kTriangleIndexCount = 3;
+
+std::FILE* OpenBinaryFile(const char* path) {
+#ifdef _MSC_VER
+    std::FILE* file = nullptr;
+    if (fopen_s(&file, path, "rb") != 0) {
+        return nullptr;
+    }
+    return file;
+#else
+    return std::fopen(path, "rb");
+#endif
+}
+}  // namespace
+
+SkyBox::SkyBox(const shared_ptr<Shader>& shader)
     : shaderProgramID(shader->GetShaderProgramId()) {
-    shaderProgram = shader;
+  shaderProgram = shader;
 }
 SkyBox::~SkyBox() = default;
 bool SkyBox::Init(const string& Directory, const string& PosXFilename,
@@ -27,43 +52,79 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     Scale = 0;
     std::vector<int> spindices;
     std::vector<float> spvertices;
-    std::vector<float> spnormals;
-    std::vector<float> spuvs;
     std::vector<float> sptangent;
     spfaces = 0;
     spverts = 0;
     try {
-        FILE* fp = nullptr;
-        fp = fopen("models/sphere.ho3d", "r+b");
+        std::unique_ptr<std::FILE, decltype(&std::fclose)> fp(
+        OpenBinaryFile("models/sphere.ho3d"), &std::fclose);
         if (fp == nullptr) {
+            spdlog::error("Unable to open skybox model: models/sphere.ho3d");
             return false;
         }
-        fread(&spverts, sizeof(int), 1, fp);
-        spvertices.resize(spverts * 3);
-        spuvs.resize(spverts * 2);
-        spnormals.resize(spverts * 3);
-        sptangent.resize(1);  // placeholder size
-        for (int i = 0; i < spverts; i++) {
-            fread(&spvertices[3 * i], sizeof(float), 1, fp);
-            fread(&spvertices[(3 * i) + 1], sizeof(float), 1, fp);
-            fread(&spvertices[(3 * i) + 2], sizeof(float), 1, fp);
-            fread(&spuvs[2 * i], sizeof(float), 1, fp);
-            fread(&spuvs[(2 * i) + 1], sizeof(float), 1, fp);
-            fread(&spnormals[3 * i], sizeof(float), 1, fp);
-            fread(&spnormals[(3 * i) + 1], sizeof(float), 1, fp);
-            fread(&spnormals[(3 * i) + 2], sizeof(float), 1, fp);
+        const auto read = [&fp]<typename T>(T* destination,
+                                             std::size_t count) {
+            return std::fread(destination, sizeof(T), count, fp.get()) == count;
+        };
+        int vertexCount = 0;
+        if (!read(&vertexCount, 1) || vertexCount <= 0) {
+            spdlog::error("Skybox model has an invalid vertex count");
+            return false;
         }
-        for (float& i : sptangent) {
-            fread(&i, sizeof(float), 1, fp);
+        const auto vertexCountSize = static_cast<std::size_t>(vertexCount);
+        if (vertexCountSize >
+                std::vector<float>{}.max_size() / kPositionComponentCount ||
+            vertexCountSize >
+                static_cast<std::size_t>(
+                    std::numeric_limits<GLsizeiptr>::max()) /
+                    (sizeof(float) * kPositionComponentCount)) {
+            spdlog::error("Skybox model vertex count is too large");
+            return false;
         }
-        fread(&spfaces, sizeof(int), 1, fp);
-        spindices.resize(spfaces * 3);
-        for (int i = 0; i < spfaces; i++) {
-            fread(&spindices[3 * i], sizeof(int), 1, fp);
-            fread(&spindices[(3 * i) + 1], sizeof(int), 1, fp);
-            fread(&spindices[(3 * i) + 2], sizeof(int), 1, fp);
+        spvertices.resize(vertexCountSize * kPositionComponentCount);
+        sptangent.resize(vertexCountSize * kPositionComponentCount);
+
+        std::array<float, kVertexComponentCount> vertex{};
+        for (std::size_t i = 0; i < vertexCountSize; ++i) {
+            if (!read(vertex.data(), vertex.size())) {
+                spdlog::error("Skybox model has truncated vertex data");
+                return false;
+            }
+            const std::size_t positionOffset = i * kPositionComponentCount;
+            spvertices.at(positionOffset) = vertex.at(0);
+            spvertices.at(positionOffset + 1) = vertex.at(1);
+            spvertices.at(positionOffset + 2) = vertex.at(2);
         }
-        fclose(fp);
+        if (!read(sptangent.data(), sptangent.size())) {
+            spdlog::error("Skybox model has truncated tangent data");
+            return false;
+        }
+        int faceCount = 0;
+        if (!read(&faceCount, 1) || faceCount <= 0) {
+            spdlog::error("Skybox model has an invalid face count");
+            return false;
+        }
+        const auto faceCountSize = static_cast<std::size_t>(faceCount);
+        if (faceCountSize >
+                std::vector<int>{}.max_size() / kTriangleIndexCount ||
+            faceCountSize >
+                static_cast<std::size_t>(
+                    std::numeric_limits<GLsizeiptr>::max()) /
+                    (sizeof(int) * kTriangleIndexCount) ||
+            faceCountSize >
+                static_cast<std::size_t>(
+                    std::numeric_limits<GLsizei>::max()) /
+                    kTriangleIndexCount) {
+            spdlog::error("Skybox model face count is too large");
+            return false;
+        }
+        spfaces = faceCount;
+        spindices.resize(faceCountSize * kTriangleIndexCount);
+        if (!read(spindices.data(), spindices.size())) {
+            spdlog::error("Skybox model has truncated index data");
+            return false;
+        }
+        spverts = vertexCount;
     } catch (const std::bad_alloc&) {
         spdlog::error("Error creating make_shared<Mesh> in Skybox");
         return false;
@@ -71,18 +132,20 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // create buffer
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * 3 * (spverts), nullptr,
-                 GL_STATIC_DRAW);
+    const auto vertexBufferBytes = static_cast<GLsizeiptr>(
+        sizeof(float) * kPositionComponentCount *
+        static_cast<std::size_t>(spverts));
+    const auto indexBufferBytes = static_cast<GLsizeiptr>(
+        sizeof(int) * kTriangleIndexCount * static_cast<std::size_t>(spfaces));
+    glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
     // load vertices into buffer
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(float) * 3 * spverts,
-                    spvertices.data());
+    glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBufferBytes, spvertices.data());
 
     // bind indices to buffer
     glGenBuffers(1, &IBO);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(int) * 3 * spfaces,
-                 spindices.data(), GL_STATIC_DRAW);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes, spindices.data(),
+                 GL_STATIC_DRAW);
 
     try {
         pCubemapTex = std::make_unique<CubemapTexture>(
@@ -103,11 +166,9 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
     glActiveTexture(GL_TEXTURE2);
     glUniform1i(textureID, 2);
-    for (int i = 0; i < 3; i++) {
-        position[i] = 0;
-        rotation[i] = 0;
-        scale[i] = 1;
-    }
+    position.fill(0.0F);
+    rotation.fill(0.0F);
+    scale.fill(1.0F);
 
     // clean up memory
     // vectors automatically cleaned up
@@ -123,8 +184,8 @@ void SkyBox::Render(const Camera& cam) {
     glDepthFunc(GL_LEQUAL);
 
     const glm::mat4 modelMatrix =
-        glm::translate(glm::mat4(1.0f), cam.GetPos()) *
-        glm::scale(glm::mat4(1.0f), glm::vec3(3.0f));
+        glm::translate(glm::mat4(1.0F), cam.GetPos()) *
+        glm::scale(glm::mat4(1.0F), glm::vec3(3.0F));
     const glm::mat4 worldViewProjection =
         cam.GetViewProjectionMatrix() * modelMatrix;
 
@@ -141,7 +202,11 @@ void SkyBox::Render(const Camera& cam) {
                        glm::value_ptr(worldViewProjection));
 
     glEnableVertexAttribArray(positionID);
-    glDrawElements(GL_TRIANGLES, spfaces * 3, GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES,
+                   static_cast<GLsizei>(
+                       static_cast<std::size_t>(spfaces) *
+                       kTriangleIndexCount),
+                   GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(positionID);
 
     glCullFace(OldCullFaceMode);

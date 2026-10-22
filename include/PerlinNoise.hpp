@@ -9,14 +9,14 @@ public:
                 int _octaves, int _randomseed);
 
     // Get Height
-    double GetHeight(double x, double y) const;
+    [[nodiscard]] double GetHeight(double x, double y) const;
 
     // Get
-    double Persistence() const { return persistence; }
-    double Frequency() const { return frequency; }
-    double Amplitude() const { return amplitude; }
-    int Octaves() const { return octaves; }
-    int RandomSeed() const { return randomseed; }
+    [[nodiscard]] double Persistence() const { return persistence; }
+    [[nodiscard]] double Frequency() const { return frequency; }
+    [[nodiscard]] double Amplitude() const { return amplitude; }
+    [[nodiscard]] int Octaves() const { return octaves; }
+    [[nodiscard]] int RandomSeed() const { return randomseed; }
 
     // Set
     void Set(double _persistence, double _frequency, double _amplitude,
@@ -29,10 +29,10 @@ public:
     void SetRandomSeed(int _randomseed) { randomseed = _randomseed; }
 
 private:
-    double Total(double i, double j) const;
-    double GetValue(double x, double y) const;
-    double Interpolate(double x, double y, double a) const;
-    double Noise(int x, int y) const;
+    [[nodiscard]] double Total(double i, double j) const;
+    [[nodiscard]] double GetValue(double x, double y) const;
+    [[nodiscard]] static double Interpolate(double x, double y, double a);
+    [[nodiscard]] static double Noise(int x, int y);
 
     double persistence, frequency, amplitude;
     int octaves, randomseed;

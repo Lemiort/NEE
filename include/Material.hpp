@@ -27,11 +27,13 @@ protected:
     std::shared_ptr<Texture2D> colorMap, normalMap, specularMap;
     std::shared_ptr<Texture2D> shadowMap;
     std::shared_ptr<AbstractTexture> abstractMap;
-    GLuint colTexID{}, texBufferID{}, normBufferID{}, normSamplerID{};
-    GLuint specBufferID{}, specSamplerID{};
-    std::vector<GLuint> abstractSamplersID;
+    GLint colTexID{}, normSamplerID{};
+    GLuint texBufferID{}, normBufferID{};
+    GLuint specBufferID{};
+    GLint specSamplerID{};
+    std::vector<GLint> abstractSamplersID;
     // GLuint colSamplerUI, normSamplerUI;
-    GLuint shadowSamplerID{};
+    GLint shadowSamplerID{};
     GLint max_texture_units{};
     std::vector<GLuint> texturesID;
 };

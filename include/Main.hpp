@@ -75,31 +75,31 @@ private:
     void RenderPass();
     void ShadowPass();
     void DSGeometryPass();
-    void DSBeginLightPasses();
+    static void DSBeginLightPasses();
     void DSStencilPass(Light& light);
     void DSSpotLightPass(SpotLight& spotLight);
     void DSPointLightPass(PointLight& pointLight);
     void DSDirectionalLightPass(DirectionalLight& directionalLight);
     void DSFinalPass();
-    void DSEndLigtPasses();
+    static void DSEndLigtPasses();
     void InterfacePass();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;
     Mouse mouse;
-    Camera pGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0f, 0.1f, 1000.0f};
-    float Scale = 0.0f;
-    float fps = 0.0f;
+    Camera pGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0F, 0.1F, 1000.0F};
+    float Scale = 0.0F;
+    float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;
     RenderType renderType = RenderType::DEFERRED_SHADING;
     bool initialized = false;
 
-    GLuint gCamViewID = 0, rotateID = 0, camPosID = 0;
-    GLuint dirLightDirID = 0, dirLightColID = 0;
-    GLuint pointLightColID = 0, pointLightIntID = 0, pointLightPosID = 0;
-    GLuint spotLightColID = 0, spotLightDirID = 0, spotLightCutoffID = 0,
-           spotLightPosID = 0;
+    GLint gCamViewID = 0, rotateID = 0, camPosID = 0;
+    GLint dirLightDirID = 0, dirLightColID = 0;
+    GLint pointLightColID = 0, pointLightIntID = 0, pointLightPosID = 0;
+    GLint spotLightColID = 0, spotLightDirID = 0, spotLightCutoffID = 0,
+          spotLightPosID = 0;
 
     std::shared_ptr<Shader> meshShader, skyboxShader, textShader, shadowShader,
         shadowMeshShader;

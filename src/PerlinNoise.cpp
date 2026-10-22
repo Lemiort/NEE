@@ -1,5 +1,7 @@
 #include "PerlinNoise.hpp"
 
+#include <cstdint>
+
 PerlinNoise::PerlinNoise()
     : persistence(0), frequency(0), amplitude(0), octaves(0), randomseed(0) {}
 
@@ -9,14 +11,14 @@ PerlinNoise::PerlinNoise(double _persistence, double _frequency,
       frequency(_frequency),
       amplitude(_amplitude),
       octaves(_octaves),
-      randomseed(2 + _randomseed * _randomseed) {
-    // strength, frequency
+      randomseed(2 + (_randomseed * _randomseed)) {
+  // strength, frequency
 
-    // frequency
+  // frequency
 
-    // amplitude
+  // amplitude
 
-    // octave
+  // octave
 }
 
 void PerlinNoise::Set(double _persistence, double _frequency, double _amplitude,
@@ -96,20 +98,22 @@ double PerlinNoise::GetValue(double x, double y) const {
     return fin;
 }
 
-double PerlinNoise::Interpolate(double x, double y, double a) const {
-    double const negA = 1.0 - a;
-    double const negASqr = negA * negA;
-    double const fac1 = (3.0 * negASqr) - (2.0 * (negASqr * negA));
-    double const aSqr = a * a;
-    double const fac2 = (3.0 * aSqr) - (2.0 * (aSqr * a));
+double PerlinNoise::Interpolate(double x, double y, double a) {
+  double const negA = 1.0 - a;
+  double const negASqr = negA * negA;
+  double const fac1 = (3.0 * negASqr) - (2.0 * (negASqr * negA));
+  double const aSqr = a * a;
+  double const fac2 = (3.0 * aSqr) - (2.0 * (aSqr * a));
 
-    return (x * fac1) + (y * fac2);  // add the weighted factors
+  return (x * fac1) + (y * fac2);  // add the weighted factors
 }
 
-double PerlinNoise::Noise(int x, int y) const {
-    int n = x + (y * 57);
-    n = (n << 13) ^ n;
-    int const t = ((n * ((n * n * 15731) + 789221)) + 1376312589) & 0x7fffffff;
-    return 1.0 - (static_cast<double>(t) *
-                  0.931322574615478515625e-9);  /// 1073741824.0);
+double PerlinNoise::Noise(int x, int y) {
+  std::uint32_t n = static_cast<std::uint32_t>(x) +
+                    (static_cast<std::uint32_t>(y) * 57U);
+  n = (n << 13U) ^ n;
+  const std::uint32_t value =
+      ((n * ((n * n * 15731U) + 789221U)) + 1376312589U) & 0x7fffffffU;
+  return 1.0 - (static_cast<double>(value) *
+                0.931322574615478515625e-9);  /// 1073741824.0);
 }

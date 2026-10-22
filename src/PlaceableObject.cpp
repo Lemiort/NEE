@@ -1,29 +1,22 @@
 #include "PlaceableObject.hpp"
 
-#include <glm/glm.hpp>
+#include <glm/ext/vector_float3.hpp>
 
-PlaceableObject::PlaceableObject() {
-    // ctor
-    position[0] = 0.0F;
-    position[1] = 0.0F;
-    position[2] = 0.0F;
-}
+PlaceableObject::PlaceableObject() = default;
 
-PlaceableObject::~PlaceableObject() {
-    // dtor
-}
+PlaceableObject::~PlaceableObject() = default;
 
 void PlaceableObject::SetPosition(float x, float y, float z) {
-    position[0] = x;
-    position[1] = y;
-    position[2] = z;
+    position.at(0) = x;
+    position.at(1) = y;
+    position.at(2) = z;
 }
 void PlaceableObject::SetPosition(glm::vec3 _pos) {
-    position[0] = _pos.x;
-    position[1] = _pos.y;
-    position[2] = _pos.z;
+    position.at(0) = _pos.x;
+    position.at(1) = _pos.y;
+    position.at(2) = _pos.z;
 }
 
 glm::vec3 PlaceableObject::GetPosition() {
-    return {position[0], position[1], position[2]};
+    return {position.at(0), position.at(1), position.at(2)};
 }

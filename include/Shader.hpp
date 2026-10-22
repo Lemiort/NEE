@@ -18,13 +18,13 @@ public:
     void AddShader(const std::string& source, ShaderType type);
 
     void Use();
-    GLuint GetAttribLocation(const char* Attribute) const;
-    GLuint GetUniformLocation(const char* Attribute) const;
+    [[nodiscard]] GLint GetAttribLocation(const char* attribute) const;
+    [[nodiscard]] GLint GetUniformLocation(const char* attribute) const;
 
-    GLuint GetShaderProgramId() const { return shaderProgramID; };
+    [[nodiscard]] GLuint GetShaderProgramId() const { return shaderProgramID; };
 
-protected:
-private:
+   protected:
+   private:
     GLuint shaderProgramID{0};
     GLuint vShader{0};
     GLuint gShader{0};

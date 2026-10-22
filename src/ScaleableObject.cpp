@@ -1,25 +1,23 @@
 #include "ScaleableObject.hpp"
 
-#include <glm/glm.hpp>
+#include <glm/ext/vector_float3.hpp>
 
-ScaleableObject::ScaleableObject() {
-    // ctor
-}
+ScaleableObject::ScaleableObject() = default;
 
-ScaleableObject::~ScaleableObject() {
-    // dtor
-}
+ScaleableObject::~ScaleableObject() = default;
 
 void ScaleableObject::SetScale(glm::vec3 v) {
-    scale[0] = v.x;
-    scale[1] = v.y;
-    scale[2] = v.z;
+    scale.at(0) = v.x;
+    scale.at(1) = v.y;
+    scale.at(2) = v.z;
 }
 
 void ScaleableObject::SetScale(float x, float y, float z) {
-    scale[0] = x;
-    scale[1] = y;
-    scale[2] = z;
+    scale.at(0) = x;
+    scale.at(1) = y;
+    scale.at(2) = z;
 }
 
-glm::vec3 ScaleableObject::GetScale() { return {scale[0], scale[1], scale[2]}; }
+glm::vec3 ScaleableObject::GetScale() {
+    return {scale.at(0), scale.at(1), scale.at(2)};
+}

@@ -2,7 +2,15 @@
 
 #include <glad/gl.h>
 
+#include <cstdio>
+#include <cstdint>
+#include <filesystem>
+#include <array>
 #include <fstream>
+#include <ios>
+#include <limits>
+#include <stdexcept>
+#include <string>
 
 #include "spdlog/spdlog.h"
 
@@ -17,14 +25,24 @@ std::string ReadFile(const std::filesystem::path& filepath) {
     }
 
     // Use std::filesystem to get the exact file size
-    auto file_size = std::filesystem::file_size(filepath);
+    const auto fileSize = std::filesystem::file_size(filepath);
 
     // Allocate the string buffer ahead of time
     std::string content;
-    content.resize(file_size);
+    if (fileSize > static_cast<std::uintmax_t>(content.max_size()) ||
+        fileSize >
+            static_cast<std::uintmax_t>(
+                std::numeric_limits<std::streamsize>::max())) {
+        throw std::length_error("File is too large to read: " +
+                                filepath.string());
+    }
+    content.resize(static_cast<std::size_t>(fileSize));
 
     // Read the file directly into the string's underlying memory buffer
-    file.read(&content[0], file_size);
+    file.read(content.data(), static_cast<std::streamsize>(fileSize));
+    if (!file) {
+        throw std::runtime_error("Failed to read file: " + filepath.string());
+    }
 
     return content;
 }
@@ -44,7 +62,7 @@ GLuint MakeShader(const std::string& source, ShaderType shaderType) {
     }
     if (shaderId == 0) {
         spdlog::error("Error creating vertex shader");
-        exit(1);
+        throw std::runtime_error("Error creating vertex shader");
     }
     const char* c_str = source.c_str();
     glShaderSource(shaderId, 1, &c_str, nullptr);
@@ -68,13 +86,13 @@ void Shader::AddShader(const std::string& source, ShaderType type) {
     }
 }
 void Shader::Init() {
-    FILE* flog = nullptr;
-    // fopen_s(&flog,"shaderbuild.log","w");
-    shaderProgramID = glCreateProgram();
-    if (shaderProgramID == 0) {
-        spdlog::error("Error creating shader program");
-        exit(1);
-    }
+  FILE const* flog = nullptr;
+  // fopen_s(&flog,"shaderbuild.log","w");
+  shaderProgramID = glCreateProgram();
+  if (shaderProgramID == 0) {
+    spdlog::error("Error creating shader program");
+    throw std::runtime_error("Error creating shader program");
+  }
     if (vShader != 0) {
         glAttachShader(shaderProgramID, vShader);
     }
@@ -88,22 +106,24 @@ void Shader::Init() {
     // check
 
     GLint Success = 0;
-    GLchar ErrorLog[1024] = {0};
+    std::array<GLchar, 1024> errorLog{};
     glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
-                            ErrorLog);
-        spdlog::error("Error linking shader program: '{}'", ErrorLog);
-        exit(1);
+        glGetProgramInfoLog(shaderProgramID,
+                            static_cast<GLsizei>(errorLog.size()), nullptr,
+                            errorLog.data());
+        spdlog::error("Error linking shader program: '{}'", errorLog.data());
+        throw std::runtime_error("Error linking shader program");
     }
 
     glValidateProgram(shaderProgramID);
     glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
     if (Success == 0) {
-        glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), nullptr,
-                            ErrorLog);
-        spdlog::error("Invalid shader program: '{}'", ErrorLog);
-        exit(1);
+        glGetProgramInfoLog(shaderProgramID,
+                            static_cast<GLsizei>(errorLog.size()), nullptr,
+                            errorLog.data());
+        spdlog::error("Invalid shader program: '{}'", errorLog.data());
+        throw std::runtime_error("Invalid shader program");
     }
     // return shaderID;
     initialized = true;
@@ -116,11 +136,11 @@ void Shader::Use() {
     glUseProgram(shaderProgramID);
 }
 
-GLuint Shader::GetAttribLocation(const char* attribute) const {
+GLint Shader::GetAttribLocation(const char* attribute) const {
     return glGetAttribLocation(shaderProgramID, attribute);
 }
 
-GLuint Shader::GetUniformLocation(const char* attribute) const {
+GLint Shader::GetUniformLocation(const char* attribute) const {
     return glGetUniformLocation(shaderProgramID, attribute);
 }
 
