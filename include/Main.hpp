@@ -76,7 +76,6 @@ private:
     void InitRender(GLFWwindow* window, std::string message);
     int InitScene(GLFWwindow* window);
     void RenderScene();
-    void RenderPass();
     void ShadowPass();
     void InterfacePass();
 

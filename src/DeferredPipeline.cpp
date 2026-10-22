@@ -62,6 +62,11 @@ void DeferredPipeline::Render(const SceneView& scene,
     }
     glDisable(GL_STENCIL_TEST);
     DirectionalLightPass(scene.directionalLight, scene.camera);
+    gBuffer_->BindForLightPass();
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
+    glDisable(GL_BLEND);
+    scene.skybox.Render(scene.camera);
     transparentPipeline.RenderTransparent(scene);
     FinalPass(scene.camera);
 }

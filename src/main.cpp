@@ -337,7 +337,7 @@ void Application::ShadowPass() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void Application::RenderPass() {
+void Application::RenderScene() {
     Scale += 0.021F;
     renderQueue.Clear();
     renderQueue.SubmitOpaqueMesh(
@@ -371,14 +371,41 @@ void Application::RenderPass() {
         mainMaterial, 0.45F);
     renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
 
-    const std::array pointLights{pointLight1.get(), pointLight2.get()};
+    const std::array pointLights{pointLight1.get()};
     const std::array spotLights{spotLight1.get()};
-    forwardPipeline->Render({.camera = pGameCamera,
-                             .directionalLight = *directionalLight1,
-                             .pointLights = pointLights,
-                             .spotLights = spotLights,
-                             .skybox = *skybox1,
-                             .queue = renderQueue});
+    const SceneView scene{.camera = pGameCamera,
+                          .directionalLight = *directionalLight1,
+                          .pointLights = pointLights,
+                          .spotLights = spotLights,
+                          .skybox = *skybox1,
+                          .queue = renderQueue};
+    switch (renderType) {
+        case RenderType::FORWARD_RENDERING:
+            forwardPipeline->Render(scene);
+            break;
+        case RenderType::DEFERRED_SHADING:
+            deferredPipeline->Render(scene, *forwardPipeline);
+            break;
+        default: {
+            const GBufferDebugView debugView = [this] {
+                switch (renderType) {
+                    case RenderType::POSITION_BUFFER:
+                        return GBufferDebugView::Position;
+                    case RenderType::DIFFUSE_BUFFER:
+                        return GBufferDebugView::Diffuse;
+                    case RenderType::NORMAL_BUFFER:
+                        return GBufferDebugView::Normal;
+                    case RenderType::TEXCOORD_BUFFER:
+                        return GBufferDebugView::TextureCoordinates;
+                    default:
+                        return GBufferDebugView::Position;
+                }
+            }();
+            deferredPipeline->RenderDebug(scene, debugView);
+            break;
+        }
+    }
+    InterfacePass();
 }
 
 void Application::InterfacePass() {
@@ -407,21 +434,17 @@ void Application::InterfacePass() {
         ConvertToString(pGameCamera.GetPos().x) + "; " +
         ConvertToString(pGameCamera.GetPos().y) + "; " +
         ConvertToString(pGameCamera.GetPos().z);
-    // fLine1->Render((strCampos).c_str(),-1.0f,0.0f,24.0f);
     fLine1->SetText(strCampos);
     fLine1->SetPosition(-1.0F, 0.0F);
     fLine1->SetFontSize(24.0F);
     renderQueue.SubmitText(*fLine1);
-    // gBuffer1->CheckTextures();
     CalcFPS();
-    // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(ConvertToString(fps));
     fLine1->SetPosition(-1.0F, 0.9F);
     fLine1->SetFontSize(24.0F);
     renderQueue.SubmitText(*fLine1);
 
     if (renderType == RenderType::DEFERRED_SHADING) {
-        // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
         fLine1->SetPosition(-1.0F, -0.2F);
         fLine1->SetFontSize(36.0F);
@@ -429,72 +452,9 @@ void Application::InterfacePass() {
     }
 
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
-
-    // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
-}
-
-void Application::RenderScene() {
-    if (renderType == RenderType::FORWARD_RENDERING) {
-        RenderPass();
-        InterfacePass();
-        return;
-    }
-
-    renderQueue.Clear();
-    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
-        const float i = static_cast<float>(row) / kGridStepsPerUnit;
-        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
-             ++column) {
-            const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            renderQueue.SubmitOpaqueMesh(
-                Sphere,
-                Transform{
-                    .position = glm::vec3(
-                        i, static_cast<float>(noise1->GetHeight(i, j)), j),
-                    .rotationDegrees =
-                        glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
-                    .scale = glm::vec3(0.05F)},
-                DSGeometryPassMaterial);
-        }
-    }
-    renderQueue.SubmitTransparentMesh(
-        transparentTeapot,
-        Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
-                  .rotationDegrees = glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
-                  .scale = glm::vec3(0.05F)},
-        mainMaterial, 0.45F);
-
-    const std::array pointLights{pointLight1.get(), pointLight2.get()};
-    const std::array spotLights{spotLight1.get()};
-    const SceneView scene{.camera = pGameCamera,
-                          .directionalLight = *directionalLight1,
-                          .pointLights = pointLights,
-                          .spotLights = spotLights,
-                          .skybox = *skybox1,
-                          .queue = renderQueue};
-    if (renderType == RenderType::DEFERRED_SHADING) {
-        deferredPipeline->Render(scene, *forwardPipeline);
-    } else {
-        const GBufferDebugView debugView = [this] {
-            switch (renderType) {
-                case RenderType::POSITION_BUFFER:
-                    return GBufferDebugView::Position;
-                case RenderType::DIFFUSE_BUFFER:
-                    return GBufferDebugView::Diffuse;
-                case RenderType::NORMAL_BUFFER:
-                    return GBufferDebugView::Normal;
-                case RenderType::TEXCOORD_BUFFER:
-                    return GBufferDebugView::TextureCoordinates;
-                default:
-                    return GBufferDebugView::Position;
-            }
-        }();
-        deferredPipeline->RenderDebug(scene, debugView);
-    }
-    InterfacePass();
 }
 void Application::PreInitScene(GLFWwindow* window) {
     Scale = 0;
