@@ -8,6 +8,7 @@
 
 #include "Camera.hpp"
 #include "FontMetrics.hpp"
+#include "RenderQueue.hpp"
 #include "Text2D.hpp"
 #include "TextLayout.hpp"
 #include "Transform.hpp"
@@ -120,6 +121,36 @@ TEST(TextModel, StoresPresentationDataWithoutRenderingDependencies) {
     EXPECT_EQ(line.GetPosition(), glm::vec2(-0.75F, 0.5F));
     EXPECT_EQ(line.GetFontSize(), 24.0F);
     EXPECT_EQ(line.GetColor(), glm::vec4(0.25F, 0.5F, 0.75F, 1.0F));
+}
+
+TEST(RenderQueue, SnapshotsTextAtSubmissionTime) {
+    RenderQueue queue;
+    FontLine2d line;
+    line.SetText("first");
+    line.SetPosition(-1.0F, 0.5F);
+    queue.SubmitText(line);
+
+    line.SetText("second");
+    line.SetPosition(0.0F, 0.0F);
+    queue.SubmitText(line);
+
+    ASSERT_EQ(queue.GetText().size(), 2U);
+    EXPECT_EQ(queue.GetText()[0].text.GetText(), "first");
+    EXPECT_EQ(queue.GetText()[0].text.GetPosition(), glm::vec2(-1.0F, 0.5F));
+    EXPECT_EQ(queue.GetText()[1].text.GetText(), "second");
+}
+
+TEST(RenderQueue, KeepsDebugDataIndependentFromDebugObjects) {
+    RenderQueue queue;
+    queue.SubmitDebugLine({.start = glm::vec3(1.0F, 2.0F, 3.0F),
+                           .end = glm::vec3(4.0F, 5.0F, 6.0F),
+                           .color = glm::vec3(1.0F, 0.0F, 0.0F)});
+
+    ASSERT_EQ(queue.GetDebugLines().size(), 1U);
+    EXPECT_EQ(queue.GetDebugLines().front().end, glm::vec3(4.0F, 5.0F, 6.0F));
+    queue.Clear();
+    EXPECT_TRUE(queue.GetDebugLines().empty());
+    EXPECT_TRUE(queue.GetText().empty());
 }
 
 TEST(CameraControls, KeyboardMovesAlongStandardAxes) {

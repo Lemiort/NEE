@@ -13,6 +13,7 @@
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "PerlinNoise.hpp"
+#include "RenderQueue.hpp"
 #include "ShadowMapFBO.hpp"
 #include "Skybox.hpp"
 #include "Text2D.hpp"
@@ -122,6 +123,7 @@ private:
     std::shared_ptr<Font2d> interfaceFont;
     std::unique_ptr<TextRenderer> textRenderer;
     std::unique_ptr<FontLine2d> fLine1;
+    RenderQueue renderQueue;
     std::unique_ptr<PerlinNoise> noise1;
     std::unique_ptr<Billboard> bb1;
     std::unique_ptr<ShadowMapFBO> smfbo1;

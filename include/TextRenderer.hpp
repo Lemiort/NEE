@@ -7,6 +7,7 @@
 #include <unordered_map>
 
 #include "Camera.hpp"
+#include "RenderQueue.hpp"
 #include "Shader.hpp"
 #include "Text2D.hpp"
 #include "Texture.hpp"
@@ -21,6 +22,8 @@ public:
     [[nodiscard]] bool Init(std::shared_ptr<Shader> shader);
     [[nodiscard]] bool RegisterFont(const std::shared_ptr<const Font2d>& font);
     void Render(const FontLine2d& line, const Camera& camera);
+    void Render(std::span<const TextRenderCommand> commands,
+                const Camera& camera);
 
 private:
     void DrawGlyph(const FontCharacter& glyph, const TextLayout& layout,

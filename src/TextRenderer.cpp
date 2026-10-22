@@ -115,6 +115,13 @@ void TextRenderer::Render(const FontLine2d& line, const Camera& camera) {
     }
 }
 
+void TextRenderer::Render(std::span<const TextRenderCommand> commands,
+                          const Camera& camera) {
+    for (const TextRenderCommand& command : commands) {
+        Render(command.text, camera);
+    }
+}
+
 void TextRenderer::DrawGlyph(const FontCharacter& glyph,
                              const TextLayout& layout, const glm::vec4& color,
                              const FontMetrics& metrics, float cursorOffset,

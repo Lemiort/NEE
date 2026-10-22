@@ -4,6 +4,7 @@ add_executable(math_migration_tests
     MathMigrationTests.cpp
     ../src/Camera.cpp
     ../src/FontMetrics.cpp
+    ../src/RenderQueue.cpp
     ../src/TextModel.cpp
     ../src/Transformable.cpp
 )

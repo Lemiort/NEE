@@ -745,6 +745,7 @@ void Application::DSFinalPass() {
 }
 
 void Application::InterfacePass() {
+    renderQueue.ClearText();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -760,22 +761,24 @@ void Application::InterfacePass() {
     fLine1->SetText(strCampos);
     fLine1->SetPosition(-1.0F, 0.0F);
     fLine1->SetFontSize(24.0F);
-    textRenderer->Render(*fLine1, pGameCamera);
+    renderQueue.SubmitText(*fLine1);
     // gBuffer1->CheckTextures();
     CalcFPS();
     // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
     fLine1->SetText(ConvertToString(fps));
     fLine1->SetPosition(-1.0F, 0.9F);
     fLine1->SetFontSize(24.0F);
-    textRenderer->Render(*fLine1, pGameCamera);
+    renderQueue.SubmitText(*fLine1);
 
     if (renderType == RenderType::DEFERRED_SHADING) {
         // fLine1->Render("Deferred shading",-1.0f,-0.2f,36.0f);
         fLine1->SetText("Deferred shading");
         fLine1->SetPosition(-1.0F, -0.2F);
         fLine1->SetFontSize(36.0F);
-        textRenderer->Render(*fLine1, pGameCamera);
+        renderQueue.SubmitText(*fLine1);
     }
+
+    textRenderer->Render(renderQueue.GetText(), pGameCamera);
 
     // pointLight1->Render(30,width, height, 1, 1000,pGameCamera);
     dirLightLine->Render(pGameCamera);
