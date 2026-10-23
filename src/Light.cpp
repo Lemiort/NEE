@@ -67,6 +67,10 @@ DirectionalLight::~DirectionalLight() = default;
 
 glm::vec3 SpotLight::GetPos() { return GetPosition(); }
 
+glm::vec3 SpotLight::GetDirection() const {
+    return glm::vec3(target.at(0), target.at(1), target.at(2)) - GetPosition();
+}
+
 SpotLight::SpotLight() = default;
 
 SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,

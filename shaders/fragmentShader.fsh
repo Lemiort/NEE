@@ -1,18 +1,18 @@
 #version 330
 
 
-in vec3 fN;//направление нормали
-in vec3 fL;//направление направленного света
-in vec3 fE;//направление взгляда
+in vec3 fN;//РЅР°РїСЂР°РІР»РµРЅРёРµ РЅРѕСЂРјР°Р»Рё
+in vec3 fL;//РЅР°РїСЂР°РІР»РµРЅРёРµ РЅР°РїСЂР°РІР»РµРЅРЅРѕРіРѕ СЃРІРµС‚Р°
+in vec3 fE;//РЅР°РїСЂР°РІР»РµРЅРёРµ РІР·РіР»СЏРґР°
 in vec2 UV;
 
- in vec3 pL;//направление точечного света
- in float power;//сила точечного света
- in vec3 sR;//направление прожектора
+ in vec3 pL;//РЅР°РїСЂР°РІР»РµРЅРёРµ С‚РѕС‡РµС‡РЅРѕРіРѕ СЃРІРµС‚Р°
+ in float power;//СЃРёР»Р° С‚РѕС‡РµС‡РЅРѕРіРѕ СЃРІРµС‚Р°
+ in vec3 sR;//РЅР°РїСЂР°РІР»РµРЅРёРµ РїСЂРѕР¶РµРєС‚РѕСЂР°
  //in vec3 sLD;
 
  in vec3 Tangent;
-// текстура
+// С‚РµРєСЃС‚СѓСЂР°
 uniform sampler2D colTexSampler;
 uniform sampler2D normTexSampler;
 uniform sampler2D specTexSampler;
@@ -32,7 +32,7 @@ vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
 	vec3 E=normalize(-fE);
 	vec3 H=normalize(E+L);
 	float diffuse_intensity=max(dot(N,L),0.0);
-	float spec_intensity=pow(max(dot(N,H),0.0),3000);
+	float spec_intensity=pow(max(dot(N,H),0.0),300);
 	vec4 result=color*(diffuse_intensity*texture2D(colTexSampler, UV)+spec_intensity*texture2D(specTexSampler, UV));
 	
 	return result;
@@ -41,14 +41,15 @@ vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
 vec4 CalcSpotLight(vec3 dir,vec3 Normal, mat4 color)
 {
 	vec3 N=(Normal);
-	vec3 L=normalize(-dir);
 	vec3 R=normalize(sR);
+	vec3 L=-R;
 	vec3 E=normalize(-fE);
 	vec3 H=normalize(E+L);
 	float diffuse_intensity=max(dot(N,L),0.0);
-	float spec_intensity=pow(max(dot(N,H),0.0),3000);
-	float d=1.0/(1.0-sLightCutoff);
-	float SpotFactor=dot(R,-L);
+	float spec_intensity=pow(max(dot(N,H),0.0),300);
+	float SpotFactor=dot(R,normalize(dir));
+	if(SpotFactor <= sLightCutoff)
+		return vec4(0.0);
 	vec4 result=color*(diffuse_intensity*texture2D(colTexSampler, UV)+spec_intensity*texture2D(specTexSampler, UV));
 	return result*(1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - sLightCutoff));
 }
@@ -73,11 +74,11 @@ void main()
 {
 	vec3 Normal=CalcBumpedNormal();
 	//vec3 Normal=normalize(fN);
-	//направленный свет
+	//РЅР°РїСЂР°РІР»РµРЅРЅС‹Р№ СЃРІРµС‚
 	vec4 dirLightColor=CalcBaseLight(fL,Normal,dLightCol);
-	//точечный свет
+	//С‚РѕС‡РµС‡РЅС‹Р№ СЃРІРµС‚
 	vec4 pointLightColor=CalcBaseLight(pL,Normal,pLightCol)*power;
-	//свет прожектора
+	//СЃРІРµС‚ РїСЂРѕР¶РµРєС‚РѕСЂР°
 	vec4 spotLightColor=CalcSpotLight(sLightDir,Normal,sLightCol);
 	fColor=pointLightColor+dirLightColor+spotLightColor;
 	fColor.a=opacity;

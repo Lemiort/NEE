@@ -72,6 +72,7 @@ public:
               shared_ptr<Material> _mat);
     ~SpotLight() override;
     glm::vec3 GetPos();
+    [[nodiscard]] glm::vec3 GetDirection() const;
     void SetPos(glm::vec3 pos);
     void SetTarget(glm::vec3 _target);
     void Render(const Camera& cam) override;

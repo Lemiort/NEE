@@ -742,7 +742,7 @@ int Application::InitScene(GLFWwindow& window) {
 
         directionalLight1 = std::make_unique<DirectionalLight>(
             -1.5F, -1.0F, -1.5F,  // direction
-            0.5F, 0.5F, 0.5F,     // color
+            0.1F, 0.1F, 0.1F,     // color
             DSDirectionalLightMaterial);
         pointLight1 = std::make_unique<PointLight>(0, 1, -0.2,     // position
                                                    1.0, 1.0, 1.0,  // color

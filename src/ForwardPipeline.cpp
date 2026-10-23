@@ -72,44 +72,53 @@ void ForwardPipeline::RenderTransparent(const SceneView& scene) {
 }
 
 void ForwardPipeline::PrepareLighting(const SceneView& scene) {
-    if (scene.pointLights.empty() || scene.spotLights.empty()) {
-        return;
-    }
-    const PointLight& pointLight = scene.pointLights.front();
-    const SpotLight& spotLight = scene.spotLights.front();
-
-    const Camera lightCamera(scene.camera.GetWidth(), scene.camera.GetHeight(),
-                             scene.camera.GetFov(), scene.camera.GetZNear(),
-                             scene.camera.GetZFar(), spotLight.GetPosition(),
-                             glm::vec3(-1.0F, -1.0F, -1.0F),
-                             glm::vec3(0.0F, 1.0F, 0.0F));
-
     meshShader_->Use();
     const glm::mat4 viewProjection = RenderPassViewProjection(scene.camera);
-    const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCamera);
     glUniformMatrix4fv(cameraViewProjectionUniform_, 1, GL_FALSE,
                        glm::value_ptr(viewProjection));
-    glUniformMatrix4fv(lightViewProjectionUniform_, 1, GL_FALSE,
-                       glm::value_ptr(lightViewProjection));
 
     SetLightColor(directionalLightColorUniform_, scene.directionalLight.color);
     glUniform3f(directionalLightDirectionUniform_,
                 scene.directionalLight.direction.at(0),
                 scene.directionalLight.direction.at(1),
                 scene.directionalLight.direction.at(2));
-    SetLightColor(pointLightColorUniform_, pointLight.color);
-    const glm::vec3 pointPosition = pointLight.GetPosition();
-    glUniform3f(pointLightPositionUniform_, pointPosition.x, pointPosition.y,
-                pointPosition.z);
-    glUniform1f(pointLightIntensityUniform_, pointLight.power);
-    SetLightColor(spotLightColorUniform_, spotLight.color);
-    glUniform3f(spotLightDirectionUniform_, spotLight.direction.at(0),
-                spotLight.direction.at(1), spotLight.direction.at(2));
-    glUniform1f(spotLightCutoffUniform_,
-                glm::cos(glm::radians(spotLight.Cutoff)));
-    const glm::vec3 spotPosition = spotLight.GetPosition();
-    glUniform3f(spotLightPositionUniform_, spotPosition.x, spotPosition.y,
-                spotPosition.z);
+
+    if (!scene.pointLights.empty()) {
+        const PointLight& pointLight = scene.pointLights.front();
+        SetLightColor(pointLightColorUniform_, pointLight.color);
+        const glm::vec3 pointPosition = pointLight.GetPosition();
+        glUniform3f(pointLightPositionUniform_, pointPosition.x,
+                    pointPosition.y, pointPosition.z);
+        glUniform1f(pointLightIntensityUniform_, pointLight.power);
+    } else {
+        glUniform1f(pointLightIntensityUniform_, 0.0F);
+    }
+
+    if (!scene.spotLights.empty()) {
+        const SpotLight& spotLight = scene.spotLights.front();
+        const glm::vec3 spotDirection = spotLight.GetDirection();
+        SetLightColor(spotLightColorUniform_, spotLight.color);
+        glUniform3f(spotLightDirectionUniform_, spotDirection.x,
+                    spotDirection.y, spotDirection.z);
+        glUniform1f(spotLightCutoffUniform_,
+                    glm::cos(glm::radians(spotLight.Cutoff)));
+        const glm::vec3 spotPosition = spotLight.GetPosition();
+        glUniform3f(spotLightPositionUniform_, spotPosition.x, spotPosition.y,
+                    spotPosition.z);
+
+        const Camera lightCamera(scene.camera.GetWidth(),
+                                 scene.camera.GetHeight(),
+                                 scene.camera.GetFov(), scene.camera.GetZNear(),
+                                 scene.camera.GetZFar(), spotPosition,
+                                 spotDirection, glm::vec3(0.0F, 1.0F, 0.0F));
+        const glm::mat4 lightViewProjection =
+            RenderPassViewProjection(lightCamera);
+        glUniformMatrix4fv(lightViewProjectionUniform_, 1, GL_FALSE,
+                           glm::value_ptr(lightViewProjection));
+    } else {
+        constexpr std::array<GLfloat, 3> noLight{0.0F, 0.0F, 0.0F};
+        SetLightColor(spotLightColorUniform_, noLight);
+    }
     glUniform3f(cameraPositionUniform_, scene.camera.GetPos().x,
                 scene.camera.GetPos().y, scene.camera.GetPos().z);
 }

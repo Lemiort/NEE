@@ -173,9 +173,9 @@ void DeferredPipeline::SpotLightPass(SpotLight& light, const Camera& camera) {
                 position.y, position.z);
     SetLightColor(spotLightShader_->GetUniformLocation("sLightCol"),
                   light.color);
-    glUniform3f(spotLightShader_->GetUniformLocation("sLightDir"),
-                light.direction.at(0), light.direction.at(1),
-                light.direction.at(2));
+    const glm::vec3 direction = light.GetDirection();
+    glUniform3f(spotLightShader_->GetUniformLocation("sLightDir"), direction.x,
+                direction.y, direction.z);
     glUniform1f(spotLightShader_->GetUniformLocation("sLightCutoff"),
                 glm::cos(glm::radians(light.Cutoff)));
     light.SetMaterial(spotLightMaterial_);
@@ -187,6 +187,8 @@ void DeferredPipeline::SpotLightPass(SpotLight& light, const Camera& camera) {
 void DeferredPipeline::DirectionalLightPass(DirectionalLight& light,
                                             const Camera& camera) {
     gBuffer_->BindForLightPass();
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
@@ -205,6 +207,7 @@ void DeferredPipeline::DirectionalLightPass(DirectionalLight& light,
     light.SetMaterial(directionalLightMaterial_);
     light.Render(camera);
     glDisable(GL_BLEND);
+    glEnable(GL_CULL_FACE);
 }
 
 void DeferredPipeline::FinalPass(const Camera& camera) {
