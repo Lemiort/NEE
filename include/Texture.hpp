@@ -28,6 +28,10 @@ public:
     [[nodiscard]] GLuint GetTextureID() const;
     explicit Texture(bool _del = true);
     virtual ~Texture();
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+    Texture(Texture&& other) noexcept;
+    Texture& operator=(Texture&& other) noexcept;
     // virtual ~Texture(bool del=true);
     std::string GetParameters() const;
     virtual void Bind(GLenum TextureUnit);
@@ -43,6 +47,8 @@ public:
     Texture2D() = default;
 
     ~Texture2D() override;
+    Texture2D(Texture2D&&) noexcept = default;
+    Texture2D& operator=(Texture2D&&) noexcept = default;
     virtual bool Load(const std::string& path);
 };
 

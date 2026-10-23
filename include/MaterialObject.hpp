@@ -11,6 +11,8 @@ class MaterialObject : public RenderableObject {
 public:
     MaterialObject();
     ~MaterialObject() override;
+    MaterialObject(MaterialObject&&) noexcept = default;
+    MaterialObject& operator=(MaterialObject&&) noexcept = default;
     virtual void SetMaterial(std::shared_ptr<Material> _mat);
     virtual std::shared_ptr<Material> GetMaterial();
 

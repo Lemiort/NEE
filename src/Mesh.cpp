@@ -37,10 +37,7 @@ const GLvoid* BufferOffset(std::size_t byteOffset) {
 }
 }  // namespace
 
-Mesh::~Mesh() {
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &IBO);
-}
+Mesh::~Mesh() = default;
 
 void Mesh::SetMaterial(shared_ptr<Material> _mat) {
     mat = _mat;

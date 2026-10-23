@@ -26,11 +26,11 @@ constexpr std::size_t kPositionComponentCount = 3;
 constexpr std::size_t kTriangleIndexCount = 3;
 }  // namespace
 
-SkyBox::SkyBox(gsl_lite::not_null<shared_ptr<Shader>> shader,
-               const string& directory, const string& positiveX,
-               const string& negativeX, const string& positiveY,
-               const string& negativeY, const string& positiveZ,
-               const string& negativeZ)
+SkyBox::SkyBox(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
+               const std::string& directory, const std::string& positiveX,
+               const std::string& negativeX, const std::string& positiveY,
+               const std::string& negativeY, const std::string& positiveZ,
+               const std::string& negativeZ)
     : shaderProgramID(shader->GetShaderProgramId()) {
     shaderProgram = shader;
     Scale = 0;
@@ -115,10 +115,7 @@ SkyBox::SkyBox(gsl_lite::not_null<shared_ptr<Shader>> shader,
     transform_ = Transform{};
 }
 
-SkyBox::~SkyBox() {
-    glDeleteBuffers(1, &VBO);
-    glDeleteBuffers(1, &IBO);
-}
+SkyBox::~SkyBox() = default;
 void SkyBox::Render(const Camera& cam) {
     GLint OldCullFaceMode = 0;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);

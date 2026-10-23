@@ -55,7 +55,7 @@ Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
 
-Billboard::~Billboard() { glDeleteBuffers(1, &VBO); }
+Billboard::~Billboard() = default;
 void Billboard::SetPos(glm::vec3 pos) {
     this->Pos = pos;
     // glUseProgram(shaderProgramID);

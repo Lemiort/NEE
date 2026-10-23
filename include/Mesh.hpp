@@ -45,6 +45,8 @@ public:
     Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
          const std::string& model);
     ~Mesh() override;
+    Mesh(Mesh&&) noexcept = default;
+    Mesh& operator=(Mesh&&) noexcept = default;
     [[nodiscard]] int GetNumFaces() const;
     [[nodiscard]] int GetNumVerts() const;
     void SetMaterial(shared_ptr<Material> _mat) override;

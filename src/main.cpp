@@ -75,23 +75,6 @@ void ConfigureLogging(const std::filesystem::path& executablePath) {
     }
 }
 
-// The scene passes historically use a 30 degree, 1..1000 projection even
-// when the interactive camera has different clipping settings.
-glm::mat4 RenderPassViewProjection(const Camera& camera) {
-    const glm::mat4 projection =
-        glm::perspectiveRH_NO(glm::radians(30.0F),
-                              static_cast<float>(camera.GetWidth()) /
-                                  static_cast<float>(camera.GetHeight()),
-                              1.0F, 1000.0F);
-    return projection * camera.GetViewMatrix();
-}
-
-void SetLightColor(GLint uniformLocation, const std::array<GLfloat, 3>& color) {
-    const glm::mat4 colorMatrix = glm::scale(
-        glm::mat4(1.0F), glm::vec3(color.at(0), color.at(1), color.at(2)));
-    glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
-                       glm::value_ptr(colorMatrix));
-}
 }  // namespace
 
 void Application::CalcFPS() {
@@ -121,23 +104,18 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
         glfwSetWindowShouldClose(&window, GL_TRUE);
     }
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-        if (key == GLFW_KEY_I) {
-            spotLight1->target.at(0) += 0.1F;
-        }
-        if (key == GLFW_KEY_K) {
-            spotLight1->target.at(0) -= 0.1F;
-        }
-        if (key == GLFW_KEY_O) {
-            spotLight1->target.at(1) += 0.1F;
-        }
-        if (key == GLFW_KEY_L) {
-            spotLight1->target.at(1) -= 0.1F;
-        }
-        if (key == GLFW_KEY_U) {
-            spotLight1->target.at(2) += 0.1F;
-        }
-        if (key == GLFW_KEY_J) {
-            spotLight1->target.at(2) -= 0.1F;
+        const auto spotLights = scene.GetSpotLights();
+        if (!spotLights.empty()) {
+            SpotLight& spotLight = spotLights.front();
+            glm::vec3 target{spotLight.target.at(0), spotLight.target.at(1),
+                             spotLight.target.at(2)};
+            if (key == GLFW_KEY_I) target.x += 0.1F;
+            if (key == GLFW_KEY_K) target.x -= 0.1F;
+            if (key == GLFW_KEY_O) target.y += 0.1F;
+            if (key == GLFW_KEY_L) target.y -= 0.1F;
+            if (key == GLFW_KEY_U) target.z += 0.1F;
+            if (key == GLFW_KEY_J) target.z -= 0.1F;
+            spotLight.SetTarget(target);
         }
         if (key == GLFW_KEY_F5) {
             renderMode = GetNextRenderMode(renderMode);
@@ -250,9 +228,6 @@ void Application::FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
 void Application::OnFrameBufferSize(int w, int h) {
     width = w;
     height = h;
-    if (smfbo1 != nullptr) {
-        smfbo1->Resize(w, h);
-    }
     if (gBuffer1 != nullptr) {
         gBuffer1->Resize(w, h);
     }
@@ -260,132 +235,18 @@ void Application::OnFrameBufferSize(int w, int h) {
     glViewport(0, 0, width, height);
 }
 
-void Application::ShadowPass() {
-    smfbo1->BindForWriting();
-    // gBuffer1->BindForWriting();
-    // Drawing stage
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // CalcFPS();
-    Scale += 0.021F;
-    TestMesh->SetRotation(0, 30 * sinf(Scale), 0);
-    TestMesh->SetScale(0.02, 0.02, 0.02);
-    TestMesh->SetPosition(0, -0.2, 0);
-    // light3->SetPos(pGameCamera.GetPos());
-    // light3->SetDir(pGameCamera.GetTarget()-pGameCamera.GetPos());
-    Camera const lightCam(width, height, 45, 1, 1000.0F, spotLight1->GetPos(),
-                          glm::vec3(-1.0F, -1.0F, -1.0F),
-                          glm::vec3(0.0F, 1.0F, 0.0F));
-
-    Plane->SetScale(30.0F, 30.0F, 30.0F);
-    Plane->SetPosition(0.0F, -3.0F, 0.0F);
-    Plane->SetRotation(0.0, 0.0, 0.0);
-    const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
-
-    shadowShader->Use();
-    gCamViewID = shadowShader->GetUniformLocation("gVC");
-    rotateID = shadowShader->GetUniformLocation("mRotate");
-    camPosID = shadowShader->GetUniformLocation("s_vCamPos");
-
-    glUniformMatrix4fv(gCamViewID, 1, GL_FALSE,
-                       glm::value_ptr(lightViewProjection));
-    // Lighting
-    {
-        // Directional light
-        SetLightColor(dirLightColID, directionalLight1->color);
-        glUniform3f(dirLightDirID, directionalLight1->direction.at(0),
-                    directionalLight1->direction.at(1),
-                    directionalLight1->direction.at(2));
-        // point light
-        SetLightColor(pointLightColID, pointLight1->color);
-        const glm::vec3 pointLightPosition = pointLight1->GetPosition();
-        glUniform3f(pointLightPosID, pointLightPosition.x, pointLightPosition.y,
-                    pointLightPosition.z);
-        glUniform1f(pointLightIntID, pointLight1->power);
-
-        // spot light
-        SetLightColor(spotLightColID, spotLight1->color);
-        glUniform3f(spotLightDirID, spotLight1->direction.at(0),
-                    spotLight1->direction.at(1), spotLight1->direction.at(2));
-        glUniform1f(spotLightCutoffID,
-                    glm::cos(glm::radians(spotLight1->Cutoff)));
-        const glm::vec3 spotLightPosition = spotLight1->GetPosition();
-        glUniform3f(spotLightPosID, spotLightPosition.x, spotLightPosition.y,
-                    spotLightPosition.z);
-    }
-
-    // camera rotation for specular
-    glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
-                lightCam.GetPos().z);
-
-    Sphere->SetMaterial(shadowMaterial);
-    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
-        const float i = static_cast<float>(row) / kGridStepsPerUnit;
-        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
-             ++column) {
-            const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Sphere->SetScale(0.05F, 0.05F, 0.05F);
-            Sphere->SetRotation(0, 30.0F * sinf(Scale), 0);
-            Sphere->SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                                j);
-            Sphere->Render(lightCam);
-        }
-    }
-    Plane->SetMaterial(shadowMaterial);
-    Plane->Render(lightCam);
-
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
 void Application::RenderScene() {
     Scale += 0.021F;
     renderQueue.Clear();
-    renderQueue.SubmitOpaqueMesh(
-        *Plane,
-        Transform{.position = glm::vec3(0.0F, -3.0F, 0.0F),
-                  .rotationDegrees = glm::vec3(0.0F),
-                  .scale = glm::vec3(30.0F)},
-        mainMaterial);
-
-    for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
-        const float i = static_cast<float>(row) / kGridStepsPerUnit;
-        for (int column = -kGridExtentSteps; column < kGridExtentSteps;
-             ++column) {
-            const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            renderQueue.SubmitOpaqueMesh(
-                *Sphere,
-                Transform{
-                    .position = glm::vec3(
-                        i, static_cast<float>(noise1->GetHeight(i, j)), j),
-                    .rotationDegrees =
-                        glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
-                    .scale = glm::vec3(0.05F)},
-                mainMaterial);
-        }
-    }
-    renderQueue.SubmitTransparentMesh(
-        *transparentTeapot,
-        Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
-                  .rotationDegrees = glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
-                  .scale = glm::vec3(0.05F)},
-        mainMaterial, 0.45F);
-    renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
-
-    const std::array<std::reference_wrapper<PointLight>, 1> pointLights{
-        *pointLight1};
-    const std::array<std::reference_wrapper<SpotLight>, 1> spotLights{
-        *spotLight1};
-    const SceneView scene{.camera = pGameCamera,
-                          .directionalLight = *directionalLight1,
-                          .pointLights = pointLights,
-                          .spotLights = spotLights,
-                          .skybox = *skybox1,
-                          .queue = renderQueue};
+    scene.SetAnimatedYaw(30.0F * sinf(Scale));
+    scene.Submit(renderQueue);
+    const SceneView sceneView = scene.CreateView(pGameCamera, renderQueue);
     switch (renderMode) {
         case RenderMode::ForwardRendering:
-            forwardPipeline->Render(scene);
+            forwardPipeline->Render(sceneView);
             break;
         case RenderMode::DeferredShading:
-            deferredPipeline->Render(scene, *forwardPipeline);
+            deferredPipeline->Render(sceneView, *forwardPipeline);
             break;
         default: {
             const GBufferDebugView debugView = [this] {
@@ -402,7 +263,7 @@ void Application::RenderScene() {
                         return GBufferDebugView::Position;
                 }
             }();
-            deferredPipeline->RenderDebug(scene, debugView);
+            deferredPipeline->RenderDebug(sceneView, debugView);
             break;
         }
     }
@@ -427,9 +288,13 @@ void Application::InterfacePass() {
     renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F, 0.0F, 1.0F),
                                  .end = glm::vec3(0.0F),
                                  .color = glm::vec3(0.0F, 0.0F, 1.0F)});
-    renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F),
-                                 .end = directionalLight1->GetDir(),
-                                 .color = directionalLight1->GetCol()});
+    const auto directionalLights = scene.GetDirectionalLights();
+    if (!directionalLights.empty()) {
+        DirectionalLight& light = directionalLights.front();
+        renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F),
+                                     .end = light.GetDir(),
+                                     .color = light.GetCol()});
+    }
     debugRenderer->Render(renderQueue.GetDebugLines(), pGameCamera);
     std::string const strCampos =
         ConvertToString(pGameCamera.GetPos().x) + "; " +
@@ -546,10 +411,6 @@ int Application::InitScene(GLFWwindow& window) {
         meshShader->AddShader(ReadFile("shaders/fragmentShader.fsh"),
                               FragmnetShader);
         meshShader->Link();
-
-        gCamViewID = meshShader->GetUniformLocation("gVC");
-        rotateID = meshShader->GetUniformLocation("mRotate");
-        camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
     forwardPipeline =
         std::make_unique<ForwardPipeline>(gsl_lite::not_null{meshShader});
@@ -568,51 +429,12 @@ int Application::InitScene(GLFWwindow& window) {
             std::make_shared<Material>(gsl_lite::not_null{meshShader});
     }
 
-    TestMesh = std::make_unique<Mesh>(gsl_lite::not_null{mainMaterial},
-                                      "models/torus1.obj");
-    transparentTeapot = std::make_unique<Mesh>(gsl_lite::not_null{mainMaterial},
-                                               "models/teapot.obj");
-
-    // shadow shader
-    {
-        InitRender(window, "Shade shader loading...");
-        shadowShader = make_shared<Shader>();
-        shadowShader->AddShader(ReadFile("shaders/fbo.vsh"), VertexShader);
-        shadowShader->AddShader(ReadFile("shaders/fbo.fsh"), FragmnetShader);
-        shadowShader->Link();
-    }
-
-    // shadow material
-    {
-        InitRender(window, "Shade Material loading...");
-        shadowMaterial =
-            std::make_shared<Material>(gsl_lite::not_null{shadowShader});
-    }
-
-    // shaded shader
-    {
-        InitRender(window, "Shaded shader loading...");
-        shadowMeshShader = make_shared<Shader>();
-        shadowMeshShader->AddShader(ReadFile("shaders/shadowed.vsh"),
-                                    VertexShader);
-        shadowMeshShader->AddShader(ReadFile("shaders/shadowed.fsh"),
-                                    FragmnetShader);
-        shadowMeshShader->Link();
-    }
-
-    // shaded material
-    {
-        InitRender(window, "Shaded material loading...");
-        shadowMeshMaterial =
-            std::make_shared<Material>(gsl_lite::not_null{shadowMeshShader});
-        whiteTexture = make_shared<Texture2D>();
-        whiteTexture->Load("Textures/white.png");
-        shadowMeshMaterial->SetColorTexture(whiteTexture);
-        Sphere = std::make_unique<Mesh>(gsl_lite::not_null{shadowMeshMaterial},
-                                        "models/normal_geosphere.obj");
-        Plane = std::make_unique<Mesh>(gsl_lite::not_null{shadowMeshMaterial},
-                                       "models/normal_plane.obj");
-    }
+    const MeshHandle transparentTeapot = scene.AddMesh(
+        Mesh(gsl_lite::not_null{mainMaterial}, "models/teapot.obj"));
+    const MeshHandle sphere = scene.AddMesh(
+        Mesh(gsl_lite::not_null{mainMaterial}, "models/normal_geosphere.obj"));
+    const MeshHandle plane = scene.AddMesh(
+        Mesh(gsl_lite::not_null{mainMaterial}, "models/normal_plane.obj"));
 
     // StencilPass material shader
     {
@@ -719,57 +541,65 @@ int Application::InitScene(GLFWwindow& window) {
     }
 
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    skybox1 =
-        std::make_unique<SkyBox>(gsl_lite::not_null{skyboxShader}, "Textures",
-                                 "sp3right.tga", "sp3left.tga", "sp3top.tga",
-                                 "sp3bot.tga", "sp3back.tga", "sp3front.tga");
+    scene.AddSkybox(SkyBox(gsl_lite::not_null{skyboxShader}, "Textures",
+                           "sp3right.tga", "sp3left.tga", "sp3top.tga",
+                           "sp3bot.tga", "sp3back.tga", "sp3front.tga"));
     // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
-        dirLightDirID = meshShader->GetUniformLocation("dLightDir");
-        dirLightColID = meshShader->GetUniformLocation("dLightCol");
-        spotLightDirID = meshShader->GetUniformLocation("sLightDir");
-        spotLightColID = meshShader->GetUniformLocation("sLightCol");
-        spotLightCutoffID = meshShader->GetUniformLocation("sLightCutoff");
-        spotLightPosID = meshShader->GetUniformLocation("sLightPos");
-
-        pointLightIntID = meshShader->GetUniformLocation("pLightInt");
-        pointLightColID = meshShader->GetUniformLocation("pLightCol");
-        pointLightPosID = meshShader->GetUniformLocation("pLightPos");
-
-        directionalLight1 = std::make_unique<DirectionalLight>(
-            -1.5F, -1.0F, -1.5F,  // direction
-            0.1F, 0.1F, 0.1F,     // color
-            DSDirectionalLightMaterial);
-        pointLight1 = std::make_unique<PointLight>(0, 1, -0.2,     // position
-                                                   1.0, 1.0, 1.0,  // color
-                                                   1.0, DSPointLightMaterial);
-        pointLight2 = std::make_unique<PointLight>(1.5, 0.4, 0.0,  // position
-                                                   0.3, 0.3, 1.0,  // color
-                                                   1.1,            // power
-                                                   DSPointLightMaterial);
-        spotLight1 = std::make_unique<SpotLight>(1.5F, 0.0F, 0.5F,  // target
-                                                 1.0F, 0.4F, 0.4F,  // color
-                                                 0.0F, 1.0F, 0.0F,  // position
-                                                 35.0F,  // cutoff in degrees
-                                                 DSSpotLightMaterial);
+        scene.AddDirectionalLight(DirectionalLight(-1.5F, -1.0F,
+                                                   -1.5F,  // direction
+                                                   0.1F, 0.1F, 0.1F,  // color
+                                                   DSDirectionalLightMaterial));
+        scene.AddPointLight(PointLight(0, 1, -0.2,     // position
+                                       1.0, 1.0, 1.0,  // color
+                                       1.0, DSPointLightMaterial));
+        scene.AddPointLight(PointLight(1.5, 0.4, 0.0,  // position
+                                       0.3, 0.3, 1.0,  // color
+                                       1.1,            // power
+                                       DSPointLightMaterial));
+        scene.AddSpotLight(SpotLight(1.5F, 0.0F, 0.5F,  // target
+                                     1.0F, 0.4F, 0.4F,  // color
+                                     0.0F, 1.0F, 0.0F,  // position
+                                     35.0F,             // cutoff in degrees
+                                     DSSpotLightMaterial));
     }
 
     // other
     {
         InitRender(window, "Final steps...");
-        bb1 = std::make_unique<Billboard>("Textures/monster_hellknight.png");
-        bb1->SetPos(glm::vec3(0, 0, 0));
+        scene.AddBillboard(Billboard("Textures/monster_hellknight.png"),
+                           glm::vec3(0.0F));
 
-        noise1 = std::make_unique<PerlinNoise>(1, 10.3, 0.5, 2, 42);
+        scene.AddMeshInstance(
+            plane,
+            Transform{.position = glm::vec3(0.0F, -3.0F, 0.0F),
+                      .rotationDegrees = glm::vec3(0.0F),
+                      .scale = glm::vec3(30.0F)},
+            mainMaterial);
+        const PerlinNoise noise(1, 10.3, 0.5, 2, 42);
+        for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
+            const float i = static_cast<float>(row) / kGridStepsPerUnit;
+            for (int column = -kGridExtentSteps; column < kGridExtentSteps;
+                 ++column) {
+                const float j = static_cast<float>(column) / kGridStepsPerUnit;
+                scene.AddMeshInstance(
+                    sphere,
+                    Transform{
+                        .position = glm::vec3(
+                            i, static_cast<float>(noise.GetHeight(i, j)), j),
+                        .rotationDegrees = glm::vec3(0.0F),
+                        .scale = glm::vec3(0.05F)},
+                    mainMaterial, RenderLayer::Opaque, 1.0F, true);
+            }
+        }
+        scene.AddMeshInstance(
+            transparentTeapot,
+            Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
+                      .rotationDegrees = glm::vec3(0.0F),
+                      .scale = glm::vec3(0.05F)},
+            mainMaterial, RenderLayer::Transparent, 0.45F, true);
         // fLine1->SetAspectRatio(width,height);
-
-        //*************Shadow MAP FBO**********/
-        // smfbo1 = new ShadowMapFBO();
-        // smfbo1->Resize(width,height);
-        //************************************/
-        // pGameCamera = new
-        // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
     deferredPipeline =
         std::make_unique<DeferredPipeline>(DeferredPipelineResources{

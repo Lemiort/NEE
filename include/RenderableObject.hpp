@@ -19,6 +19,10 @@ class RenderableObject : public IRenderable {
 public:
     RenderableObject();
     ~RenderableObject() override;
+    RenderableObject(const RenderableObject&) = delete;
+    RenderableObject& operator=(const RenderableObject&) = delete;
+    RenderableObject(RenderableObject&& other) noexcept;
+    RenderableObject& operator=(RenderableObject&& other) noexcept;
     void Render(const Camera& camera) override = 0;
     [[nodiscard]] virtual std::shared_ptr<Shader> GetShader() const;
     virtual void SetShader(std::shared_ptr<Shader> shader);

@@ -16,9 +16,9 @@
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "PerlinNoise.hpp"
-#include "RenderQueue.hpp"
 #include "RenderMode.hpp"
-#include "ShadowMapFBO.hpp"
+#include "RenderQueue.hpp"
+#include "Scene.hpp"
 #include "Skybox.hpp"
 #include "Text2D.hpp"
 #include "TextRenderer.hpp"
@@ -68,7 +68,6 @@ private:
     void InitRender(GLFWwindow& window, std::string message);
     int InitScene(GLFWwindow& window);
     void RenderScene();
-    void ShadowPass();
     void InterfacePass();
 
     int width = WINDOW_WIDTH;
@@ -82,38 +81,23 @@ private:
     RenderMode renderMode = RenderMode::DeferredShading;
     bool initialized = false;
 
-    GLint gCamViewID = 0, rotateID = 0, camPosID = 0;
-    GLint dirLightDirID = 0, dirLightColID = 0;
-    GLint pointLightColID = 0, pointLightIntID = 0, pointLightPosID = 0;
-    GLint spotLightColID = 0, spotLightDirID = 0, spotLightCutoffID = 0,
-          spotLightPosID = 0;
-
-    std::shared_ptr<Shader> meshShader, skyboxShader, textShader, debugShader,
-        shadowShader, shadowMeshShader;
+    std::shared_ptr<Shader> meshShader, skyboxShader, textShader, debugShader;
     std::shared_ptr<Shader> DSGeometryPassShader, DSPointLightShader;
     std::shared_ptr<Shader> DSDirectionalLightShader, DSSpotLightShader,
         DSStencilPassShader;
-    std::shared_ptr<Material> mainMaterial, shadowMaterial, shadowMeshMaterial;
+    std::shared_ptr<Material> mainMaterial;
     std::shared_ptr<Material> DSGeometryPassMaterial, DSPointLightMaterial;
     std::shared_ptr<Material> DSDirectionalLightMaterial, DSSpotLightMaterial,
         DSStencilPassMaterial;
-    std::shared_ptr<Texture2D> whiteTexture;
     std::shared_ptr<GBuffer> gBuffer1;
     std::unique_ptr<DeferredPipeline> deferredPipeline;
     std::unique_ptr<DebugRenderer> debugRenderer;
     std::unique_ptr<ForwardPipeline> forwardPipeline;
-    std::unique_ptr<DirectionalLight> directionalLight1;
-    std::unique_ptr<PointLight> pointLight1, pointLight2;
-    std::unique_ptr<SpotLight> spotLight1;
-    std::unique_ptr<Mesh> TestMesh, Plane, Sphere, transparentTeapot;
-    std::unique_ptr<SkyBox> skybox1;
     std::shared_ptr<Font2d> interfaceFont;
     std::unique_ptr<TextRenderer> textRenderer;
     std::unique_ptr<FontLine2d> fLine1;
+    Scene scene;
     RenderQueue renderQueue;
-    std::unique_ptr<PerlinNoise> noise1;
-    std::unique_ptr<Billboard> bb1;
-    std::unique_ptr<ShadowMapFBO> smfbo1;
 };
 
 #endif  // MAIN_H_INCLUDED

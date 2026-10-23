@@ -15,6 +15,9 @@
 
 class Light : public MaterialObject {
 public:
+    Light() = default;
+    Light(Light&&) noexcept = default;
+    Light& operator=(Light&&) noexcept = default;
     // TODO make it protected
     std::array<GLfloat, 3> color{};
 };
@@ -28,6 +31,8 @@ public:
     std::array<GLfloat, 4> direction{};
     // GLfloat	color[3];
     DirectionalLight();
+    DirectionalLight(DirectionalLight&&) noexcept = default;
+    DirectionalLight& operator=(DirectionalLight&&) noexcept = default;
     glm::vec3 GetDir();
     glm::vec3 GetCol();
     void SetDir(glm::vec3 dir);
@@ -44,6 +49,8 @@ public:
     float power;
     PointLight(float d1, float d2, float d3, float r, float g, float b, float p,
                shared_ptr<Material> _mat);
+    PointLight(PointLight&&) noexcept = default;
+    PointLight& operator=(PointLight&&) noexcept = default;
     ~PointLight() override;
     void Render(const Camera& cam) override;
     void SetPos(glm::vec3 pos);
@@ -67,6 +74,8 @@ public:
                      //  float position[3];
     std::array<float, 3> target{};
     SpotLight();
+    SpotLight(SpotLight&&) noexcept = default;
+    SpotLight& operator=(SpotLight&&) noexcept = default;
     SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
               GLfloat b, float p1, float p2, float p3, float cutoff,
               shared_ptr<Material> _mat);
