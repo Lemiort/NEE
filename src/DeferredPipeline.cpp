@@ -29,6 +29,31 @@ void SetLightColor(GLint location, const std::array<GLfloat, 3>& color) {
         glm::mat4(1.0F), glm::vec3(color.at(0), color.at(1), color.at(2)));
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
+
+Transform PointLightVolumeTransform(const PointLight& light) {
+    return {.position = light.GetPosition(),
+            .rotationDegrees = glm::vec3(0.0F),
+            .scale = glm::vec3(light.GetRadius())};
+}
+
+std::optional<Transform> SpotLightVolumeTransform(const SpotLight& light) {
+    const glm::vec3 position = light.GetPosition();
+    const glm::vec3 direction = light.GetDirection();
+    const float distance = glm::length(direction);
+    if (distance <= 1e-6F) {
+        return std::nullopt;
+    }
+
+    const glm::vec3 unit = direction / distance;
+    const float x = glm::degrees(glm::asin(glm::clamp(unit.z, -1.0F, 1.0F)));
+    const float z = glm::abs(unit.z) >= 1.0F - 1e-6F
+                        ? 0.0F
+                        : glm::degrees(glm::atan(-unit.x, unit.y));
+    const float radius = distance * glm::tan(glm::radians(light.Cutoff));
+    return Transform{.position = position,
+                     .rotationDegrees = glm::vec3(x, 0.0F, z),
+                     .scale = glm::vec3(radius, distance, radius)};
+}
 }  // namespace
 
 DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
@@ -48,8 +73,13 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       stencilMaterial_(std::move(resources.stencilMaterial)),
       pointLightMaterial_(std::move(resources.pointLightMaterial)),
       spotLightMaterial_(std::move(resources.spotLightMaterial)),
-      directionalLightMaterial_(std::move(resources.directionalLightMaterial)) {
-}
+      directionalLightMaterial_(std::move(resources.directionalLightMaterial)),
+      pointLightVolume_(gsl_lite::not_null{pointLightMaterial_},
+                        "models/normal_geosphere.obj"),
+      spotLightVolume_(gsl_lite::not_null{spotLightMaterial_},
+                       "models/cone.obj"),
+      directionalLightVolume_(gsl_lite::not_null{directionalLightMaterial_},
+                              "models/cube2x2x2.obj") {}
 
 void DeferredPipeline::Render(const SceneView& scene,
                               ForwardPipeline& transparentPipeline) {
@@ -118,7 +148,8 @@ void DeferredPipeline::StencilPass(const PointLight& light,
     const glm::mat4 matrix = RenderPassViewProjection(camera);
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
-    light.DrawVolume(*stencilMaterial_, stencilBindings_);
+    pointLightVolume_.Draw(PointLightVolumeTransform(light), *stencilMaterial_,
+                           stencilBindings_);
 }
 
 void DeferredPipeline::StencilPass(const SpotLight& light,
@@ -135,7 +166,10 @@ void DeferredPipeline::StencilPass(const SpotLight& light,
     const glm::mat4 matrix = RenderPassViewProjection(camera);
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
-    light.DrawVolume(*stencilMaterial_, stencilBindings_);
+    const std::optional<Transform> transform = SpotLightVolumeTransform(light);
+    if (transform) {
+        spotLightVolume_.Draw(*transform, *stencilMaterial_, stencilBindings_);
+    }
 }
 
 void DeferredPipeline::BindGBufferTextures(Material& material) {
@@ -168,7 +202,8 @@ void DeferredPipeline::PointLightPass(const PointLight& light,
                 position.x, position.y, position.z);
     glUniform1f(pointLightShader_->GetUniformLocation("pointLightIntensity"),
                 light.power);
-    light.DrawVolume(*pointLightMaterial_, pointLightBindings_);
+    pointLightVolume_.Draw(PointLightVolumeTransform(light),
+                           *pointLightMaterial_, pointLightBindings_);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
@@ -200,7 +235,11 @@ void DeferredPipeline::SpotLightPass(const SpotLight& light,
                 direction.y, direction.z);
     glUniform1f(spotLightShader_->GetUniformLocation("sLightCutoff"),
                 glm::cos(glm::radians(light.Cutoff)));
-    light.DrawVolume(*spotLightMaterial_, spotLightBindings_);
+    const std::optional<Transform> transform = SpotLightVolumeTransform(light);
+    if (transform) {
+        spotLightVolume_.Draw(*transform, *spotLightMaterial_,
+                              spotLightBindings_);
+    }
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
@@ -225,7 +264,8 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
         directionalLightShader_->GetUniformLocation("dirLightDirection"),
         light.direction.at(0), light.direction.at(1), light.direction.at(2));
     BindGBufferTextures(*directionalLightMaterial_);
-    light.DrawVolume(*directionalLightMaterial_, directionalLightBindings_);
+    directionalLightVolume_.Draw(Transform{}, *directionalLightMaterial_,
+                                 directionalLightBindings_);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 }

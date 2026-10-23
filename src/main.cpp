@@ -549,20 +549,17 @@ int Application::InitScene(GLFWwindow& window) {
         InitRender(window, "Init lights...");
         scene.AddDirectionalLight(DirectionalLight(-1.5F, -1.0F,
                                                    -1.5F,  // direction
-                                                   0.1F, 0.1F, 0.1F,  // color
-                                                   DSDirectionalLightMaterial));
+                                                   0.1F, 0.1F, 0.1F));
         scene.AddPointLight(PointLight(0, 1, -0.2,     // position
                                        1.0, 1.0, 1.0,  // color
-                                       1.0, DSPointLightMaterial));
-        scene.AddPointLight(PointLight(1.5, 0.4, 0.0,  // position
-                                       0.3, 0.3, 1.0,  // color
-                                       1.1,            // power
-                                       DSPointLightMaterial));
+                                       1.0));
+        scene.AddPointLight(PointLight(1.5, 0.4, 0.0,   // position
+                                       0.3, 0.3, 1.0,   // color
+                                       1.1));           // power
         scene.AddSpotLight(SpotLight(1.5F, 0.0F, 0.5F,  // target
                                      1.0F, 0.4F, 0.4F,  // color
                                      0.0F, 1.0F, 0.0F,  // position
-                                     35.0F,             // cutoff in degrees
-                                     DSSpotLightMaterial));
+                                     35.0F));           // cutoff in degrees
     }
 
     // other

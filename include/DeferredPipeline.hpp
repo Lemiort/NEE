@@ -61,6 +61,9 @@ private:
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> directionalLightMaterial_;
+    Mesh pointLightVolume_;
+    Mesh spotLightVolume_;
+    Mesh directionalLightVolume_;
     GBufferDebugPass debugPass_;
 };
 
