@@ -30,6 +30,9 @@ struct MeshShaderBindings {
     GLint tangent{};
     GLint world{};
     GLint rotation{};
+    GLint instanceWorld{-1};
+    GLint instanceRotation{-1};
+    GLint instanced{-1};
 
     [[nodiscard]] static MeshShaderBindings FromShader(const Shader& shader);
 };
@@ -46,7 +49,8 @@ public:
     void SetMaterial(std::shared_ptr<Material> material) override;
     void Render(const Camera& cam) override;
     void Draw(const Transform& transform, const Material& material,
-              const MeshShaderBindings& bindings, float opacity = 1.0F) const;
+              const MeshShaderBindings& bindings, float opacity = 1.0F,
+              GLuint instanceBuffer = 0, GLsizei instanceCount = 1) const;
 
 private:
     int faceCount_{};

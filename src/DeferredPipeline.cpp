@@ -125,10 +125,8 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glUniformMatrix4fv(geometryShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
 
-    for (const MeshRenderCommand& command : scene.queue.GetOpaqueMeshes()) {
-        command.mesh.get().Draw(command.transform, *geometryMaterial_,
-                                geometryBindings_);
-    }
+    instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), geometryBindings_,
+                             geometryMaterial_.get());
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 }

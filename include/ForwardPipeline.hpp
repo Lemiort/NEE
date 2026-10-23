@@ -10,6 +10,7 @@
 #include "Camera.hpp"
 #include "Light.hpp"
 #include "Mesh.hpp"
+#include "MeshInstanceRenderer.hpp"
 #include "RenderQueue.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
@@ -30,6 +31,7 @@ private:
 
     gsl_lite::not_null<std::shared_ptr<Shader>> meshShader_;
     MeshShaderBindings meshBindings_;
+    MeshInstanceRenderer instanceRenderer_;
     GLint cameraViewProjectionUniform_{};
     GLint lightViewProjectionUniform_{};
     GLint cameraPositionUniform_{};
