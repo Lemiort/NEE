@@ -9,7 +9,6 @@
 enum ShaderType { VertexShader, GeometryShader, FragmnetShader };
 
 std::string ReadFile(const std::filesystem::path& filepath);
-GLuint MakeShader(const std::string& source, ShaderType shaderType);
 class Shader {
 public:
     //  enum ShaderType {Vertex, Geometry, Fragmnet};
@@ -35,10 +34,17 @@ public:
 
 protected:
 private:
+    [[nodiscard]] bool TryLoadCachedProgram();
+    void CompileAndAttachShaders();
+    void SaveProgramBinary() const;
+
     GLuint shaderProgramID{0};
     GLuint vShader{0};
     GLuint gShader{0};
     GLuint fShader{0};
+    std::string vertexSource_;
+    std::string geometrySource_;
+    std::string fragmentSource_;
     bool initialized{false};
 };
 

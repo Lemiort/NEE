@@ -1,3 +1,4 @@
 build
+shader-cache/
 .vscode/*
 CMakeUserPresets.json
