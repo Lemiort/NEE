@@ -20,15 +20,15 @@ enum class RenderLayer { Opaque, Transparent, Overlay };
 // The queue does not own referenced meshes or billboards; their owners must
 // keep them alive until the frame has been executed.
 struct MeshRenderCommand {
-    std::reference_wrapper<Mesh> mesh;
+    std::reference_wrapper<const Mesh> mesh;
     Transform transform;
-    std::shared_ptr<Material> material;
+    std::shared_ptr<const Material> material;
     RenderLayer layer{RenderLayer::Opaque};
     float opacity{1.0F};
 };
 
 struct BillboardRenderCommand {
-    std::reference_wrapper<Billboard> billboard;
+    std::reference_wrapper<const Billboard> billboard;
     glm::vec3 position{0.0F};
     RenderLayer layer{RenderLayer::Transparent};
 };
@@ -47,12 +47,12 @@ struct DebugLineRenderCommand {
 
 class RenderQueue {
 public:
-    void SubmitOpaqueMesh(Mesh& mesh, const Transform& transform,
-                          std::shared_ptr<Material> material);
-    void SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
-                               std::shared_ptr<Material> material,
+    void SubmitOpaqueMesh(const Mesh& mesh, const Transform& transform,
+                          std::shared_ptr<const Material> material);
+    void SubmitTransparentMesh(const Mesh& mesh, const Transform& transform,
+                               std::shared_ptr<const Material> material,
                                float opacity);
-    void SubmitBillboard(Billboard& billboard, const glm::vec3& position);
+    void SubmitBillboard(const Billboard& billboard, const glm::vec3& position);
     void SubmitText(FontLine2d text);
     void SubmitDebugLine(const DebugLineRenderCommand& line);
 

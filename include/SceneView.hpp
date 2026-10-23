@@ -14,10 +14,10 @@ class SpotLight;
 // same scene shape and keeps its implementation-specific resources internally.
 struct SceneView {
     const Camera& camera;
-    DirectionalLight& directionalLight;
-    std::span<PointLight> pointLights;
-    std::span<SpotLight> spotLights;
-    SkyBox& skybox;
+    std::span<const DirectionalLight> directionalLights;
+    std::span<const PointLight> pointLights;
+    std::span<const SpotLight> spotLights;
+    const SkyBox* skybox{};
     const RenderQueue& queue;
 };
 

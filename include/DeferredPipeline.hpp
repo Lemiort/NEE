@@ -7,6 +7,7 @@
 #include "GBuffer.hpp"
 #include "GBufferDebugPass.hpp"
 #include "Material.hpp"
+#include "Mesh.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
 
@@ -35,10 +36,12 @@ public:
 
 private:
     void GeometryPass(const SceneView& scene);
-    void StencilPass(Light& light, const Camera& camera);
-    void PointLightPass(PointLight& light, const Camera& camera);
-    void SpotLightPass(SpotLight& light, const Camera& camera);
-    void DirectionalLightPass(DirectionalLight& light, const Camera& camera);
+    void StencilPass(const PointLight& light, const Camera& camera);
+    void StencilPass(const SpotLight& light, const Camera& camera);
+    void PointLightPass(const PointLight& light, const Camera& camera);
+    void SpotLightPass(const SpotLight& light, const Camera& camera);
+    void DirectionalLightPass(const DirectionalLight& light,
+                              const Camera& camera);
     void BindGBufferTextures(Material& material);
     void FinalPass(const Camera& camera);
 
@@ -48,6 +51,11 @@ private:
     gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader_;
     gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader_;
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader_;
+    MeshShaderBindings geometryBindings_;
+    MeshShaderBindings stencilBindings_;
+    MeshShaderBindings pointLightBindings_;
+    MeshShaderBindings spotLightBindings_;
+    MeshShaderBindings directionalLightBindings_;
     gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial_;

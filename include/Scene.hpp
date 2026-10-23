@@ -3,6 +3,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -52,12 +53,12 @@ public:
     DirectionalLight& AddDirectionalLight(DirectionalLight light);
     PointLight& AddPointLight(PointLight light);
     SpotLight& AddSpotLight(SpotLight light);
-    SkyBox& AddSkybox(SkyBox skybox);
+    SkyBox& SetSkybox(SkyBox skybox);
 
     void SetAnimatedYaw(float degrees) noexcept;
-    void Submit(RenderQueue& queue);
+    void Submit(RenderQueue& queue) const;
     [[nodiscard]] SceneView CreateView(const Camera& camera,
-                                       const RenderQueue& queue);
+                                       const RenderQueue& queue) const;
 
     [[nodiscard]] std::span<DirectionalLight> GetDirectionalLights() noexcept;
     [[nodiscard]] std::span<PointLight> GetPointLights() noexcept;
@@ -70,7 +71,7 @@ private:
     std::vector<DirectionalLight> directionalLights_;
     std::vector<PointLight> pointLights_;
     std::vector<SpotLight> spotLights_;
-    std::vector<SkyBox> skyboxes_;
+    std::optional<SkyBox> skybox_;
 };
 
 #endif  // SCENE_HPP_INCLUDED

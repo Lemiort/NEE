@@ -39,6 +39,15 @@ const GLvoid* BufferOffset(std::size_t byteOffset) {
 
 Mesh::~Mesh() = default;
 
+MeshShaderBindings MeshShaderBindings::FromShader(const Shader& shader) {
+    return {.position = shader.GetAttribLocation("s_vPosition"),
+            .normal = shader.GetAttribLocation("s_vNormal"),
+            .uv = shader.GetAttribLocation("s_vUV"),
+            .tangent = shader.GetAttribLocation("s_vTangent"),
+            .world = shader.GetUniformLocation("gWorld"),
+            .rotation = shader.GetUniformLocation("mRotate")};
+}
+
 void Mesh::SetMaterial(shared_ptr<Material> _mat) {
     mat = _mat;
     this->SetShader(mat->GetShader());
@@ -179,40 +188,46 @@ Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
     transform_ = Transform{};
 }
 void Mesh::Render(const Camera& /*cam*/) {
-    const glm::mat4 modelMatrix = transform_.ModelMatrix();
-    const glm::mat4 rotationMatrix = transform_.RotationMatrix();
+    Draw(transform_, *mat, MeshShaderBindings::FromShader(*mat->GetShader()));
+}
 
-    mat->Use();
+void Mesh::Draw(const Transform& transform, const Material& material,
+                const MeshShaderBindings& bindings, float opacity) const {
+    const glm::mat4 modelMatrix = transform.ModelMatrix();
+    const glm::mat4 rotationMatrix = transform.RotationMatrix();
+
+    material.Use(opacity);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glVertexAttribPointer(bindings.position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
     glVertexAttribPointer(
-        normalID, 3, GL_FLOAT, GL_FALSE, 0,
+        bindings.normal, 3, GL_FLOAT, GL_FALSE, 0,
         BufferOffset(sizeof(float) * 3 * static_cast<std::size_t>(spverts)));
     glVertexAttribPointer(
-        uvID, 2, GL_FLOAT, GL_FALSE, 0,
+        bindings.uv, 2, GL_FLOAT, GL_FALSE, 0,
         BufferOffset(sizeof(float) * 6 * static_cast<std::size_t>(spverts)));
     glVertexAttribPointer(
-        tangentID, 3, GL_FLOAT, GL_FALSE, 0,
+        bindings.tangent, 3, GL_FLOAT, GL_FALSE, 0,
         BufferOffset(sizeof(float) * 8 * static_cast<std::size_t>(spverts)));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
-    glUniformMatrix4fv(gWorldID, 1, GL_FALSE, glm::value_ptr(modelMatrix));
-    glUniformMatrix4fv(rotateID, 1, GL_FALSE,
+    glUniformMatrix4fv(bindings.world, 1, GL_FALSE,
+                       glm::value_ptr(modelMatrix));
+    glUniformMatrix4fv(bindings.rotation, 1, GL_FALSE,
                        glm::value_ptr(rotationMatrix));  // rotation of model
 
-    glEnableVertexAttribArray(positionID);
-    glEnableVertexAttribArray(normalID);
-    glEnableVertexAttribArray(uvID);
-    glEnableVertexAttribArray(tangentID);
+    glEnableVertexAttribArray(bindings.position);
+    glEnableVertexAttribArray(bindings.normal);
+    glEnableVertexAttribArray(bindings.uv);
+    glEnableVertexAttribArray(bindings.tangent);
     glDrawElements(GL_TRIANGLES,
                    static_cast<GLsizei>(static_cast<std::size_t>(spfaces) *
                                         kTriangleIndexCount),
                    GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
-    glDisableVertexAttribArray(normalID);
-    glDisableVertexAttribArray(uvID);
-    glDisableVertexAttribArray(tangentID);
+    glDisableVertexAttribArray(bindings.position);
+    glDisableVertexAttribArray(bindings.normal);
+    glDisableVertexAttribArray(bindings.uv);
+    glDisableVertexAttribArray(bindings.tangent);
 }
 
 int Mesh::GetNumFaces() const { return spfaces; }

@@ -81,7 +81,7 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
 
 Material::~Material() = default;
 
-void Material::Use() {
+void Material::Use(float drawOpacity) const {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
     glUniform1i(colTexID,
@@ -102,7 +102,7 @@ void Material::Use() {
     glUniform1i(shadowSamplerID,
                 3);  // tell shader to use texture unit 3
     if (opacityID >= 0) {
-        glUniform1f(opacityID, opacity);
+        glUniform1f(opacityID, drawOpacity);
     }
 
     // starting from 4th, are custom texture units
@@ -122,8 +122,6 @@ void Material::Use() {
         }
     }
 }
-
-void Material::SetOpacity(float value) noexcept { opacity = value; }
 
 void Material::SetColorTexture(std::shared_ptr<Texture2D> _colorMap) {
     colorMap = std::move(_colorMap);

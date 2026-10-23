@@ -25,6 +25,7 @@ public:
     SkyBox& operator=(SkyBox&&) noexcept = default;
 
     void Render(const Camera& cam) override;
+    void Draw(const Camera& camera) const;
 
     GLuint shaderProgramID{};
     GLint positionID{};

@@ -55,6 +55,11 @@ void DirectionalLight::Render(const Camera& cam) {
     mesh->Render(cam);
 }
 
+void DirectionalLight::DrawVolume(const Material& material,
+                                  const MeshShaderBindings& bindings) const {
+    mesh->Draw(Transform{}, material, bindings);
+}
+
 glm::vec3 DirectionalLight::GetDir() {
     return {direction.at(0), direction.at(1), direction.at(2)};
 }
@@ -122,6 +127,29 @@ void SpotLight::Render(const Camera& cam) {
     mesh->Render(cam);
 }
 
+void SpotLight::DrawVolume(const Material& material,
+                           const MeshShaderBindings& bindings) const {
+    const glm::vec3 position = GetPosition();
+    const glm::vec3 directionToTarget(target.at(0) - position.x,
+                                      target.at(1) - position.y,
+                                      target.at(2) - position.z);
+    const float distance = glm::length(directionToTarget);
+    if (distance <= 1e-6F) {
+        return;
+    }
+
+    const glm::vec3 unit = directionToTarget / distance;
+    const float x = glm::degrees(glm::asin(glm::clamp(unit.z, -1.0F, 1.0F)));
+    const float z = glm::abs(unit.z) >= 1.0F - 1e-6F
+                        ? 0.0F
+                        : glm::degrees(glm::atan(-unit.x, unit.y));
+    const float coneRadius = distance * glm::tan(glm::radians(Cutoff));
+    mesh->Draw(Transform{.position = position,
+                         .rotationDegrees = glm::vec3(x, 0.0F, z),
+                         .scale = glm::vec3(coneRadius, distance, coneRadius)},
+               material, bindings);
+}
+
 void SpotLight::SetTarget(glm::vec3 _target) {
     target.at(0) = _target.x;
     target.at(1) = _target.y;
@@ -180,6 +208,14 @@ void PointLight::Render(const Camera& cam) {
     sphere->SetScale(radius, radius, radius);
     sphere->SetPosition(GetPosition());
     sphere->Render(cam);
+}
+
+void PointLight::DrawVolume(const Material& material,
+                            const MeshShaderBindings& bindings) const {
+    sphere->Draw(Transform{.position = GetPosition(),
+                           .rotationDegrees = glm::vec3(0.0F),
+                           .scale = glm::vec3(radius)},
+                 material, bindings);
 }
 
 void PointLight::SetPos(glm::vec3 pos) { SetPosition(pos); }

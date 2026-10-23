@@ -13,15 +13,16 @@ class Material {
 public:
     explicit Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader);
     virtual ~Material();
-    void Use();
+    void Use(float drawOpacity = 1.0F) const;
     void SetColorTexture(std::shared_ptr<Texture2D> _colorMap);
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
     void SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap);
     void SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap);
-    void SetOpacity(float opacity) noexcept;
     void SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num);
     void SetTexture(GLuint _map, GLuint num);
-    std::shared_ptr<Shader> GetShader() { return shaderProgram; }
+    [[nodiscard]] std::shared_ptr<Shader> GetShader() const {
+        return shaderProgram;
+    }
 
 protected:
     gsl_lite::not_null<std::shared_ptr<Shader>> shaderProgram;
@@ -36,7 +37,6 @@ protected:
     // GLuint colSamplerUI, normSamplerUI;
     GLint shadowSamplerID{};
     GLint opacityID{-1};
-    float opacity{1.0F};
     GLint max_texture_units{};
     std::vector<GLuint> texturesID;
 };

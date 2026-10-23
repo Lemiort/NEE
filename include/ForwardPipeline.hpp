@@ -9,6 +9,7 @@
 
 #include "Camera.hpp"
 #include "Light.hpp"
+#include "Mesh.hpp"
 #include "RenderQueue.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
@@ -24,10 +25,11 @@ public:
 private:
     void PrepareLighting(const SceneView& scene);
     void RenderMeshes(std::span<const MeshRenderCommand> commands,
-                      const Camera& camera, bool applyOpacity);
+                      bool applyOpacity);
     void RenderTransparentObjects(const SceneView& scene);
 
     gsl_lite::not_null<std::shared_ptr<Shader>> meshShader_;
+    MeshShaderBindings meshBindings_;
     GLint cameraViewProjectionUniform_{};
     GLint lightViewProjectionUniform_{};
     GLint cameraPositionUniform_{};

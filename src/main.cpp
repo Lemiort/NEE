@@ -541,7 +541,7 @@ int Application::InitScene(GLFWwindow& window) {
     }
 
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    scene.AddSkybox(SkyBox(gsl_lite::not_null{skyboxShader}, "Textures",
+    scene.SetSkybox(SkyBox(gsl_lite::not_null{skyboxShader}, "Textures",
                            "sp3right.tga", "sp3left.tga", "sp3top.tga",
                            "sp3bot.tga", "sp3back.tga", "sp3front.tga"));
     // setup lights and unit vectors

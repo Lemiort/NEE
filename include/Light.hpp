@@ -40,6 +40,8 @@ public:
     DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
                      GLfloat b, shared_ptr<Material> _mat);
     void Render(const Camera& cam) override;
+    void DrawVolume(const Material& material,
+                    const MeshShaderBindings& bindings) const;
     ~DirectionalLight() override;
 };
 class PointLight : public Light, public Transformable {
@@ -53,6 +55,8 @@ public:
     PointLight& operator=(PointLight&&) noexcept = default;
     ~PointLight() override;
     void Render(const Camera& cam) override;
+    void DrawVolume(const Material& material,
+                    const MeshShaderBindings& bindings) const;
     void SetPos(glm::vec3 pos);
     void SetCol(glm::vec3 col);
 
@@ -85,6 +89,8 @@ public:
     void SetPos(glm::vec3 pos);
     void SetTarget(glm::vec3 _target);
     void Render(const Camera& cam) override;
+    void DrawVolume(const Material& material,
+                    const MeshShaderBindings& bindings) const;
 };
 
 #endif  // LIGHT_H_INCLUDED

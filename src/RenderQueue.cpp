@@ -3,16 +3,16 @@
 #include <algorithm>
 #include <utility>
 
-void RenderQueue::SubmitOpaqueMesh(Mesh& mesh, const Transform& transform,
-                                   std::shared_ptr<Material> material) {
+void RenderQueue::SubmitOpaqueMesh(const Mesh& mesh, const Transform& transform,
+                                   std::shared_ptr<const Material> material) {
     opaqueMeshes_.push_back({.mesh = mesh,
                              .transform = transform,
                              .material = std::move(material)});
 }
 
-void RenderQueue::SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
-                                        std::shared_ptr<Material> material,
-                                        float opacity) {
+void RenderQueue::SubmitTransparentMesh(
+    const Mesh& mesh, const Transform& transform,
+    std::shared_ptr<const Material> material, float opacity) {
     transparentMeshes_.push_back({.mesh = mesh,
                                   .transform = transform,
                                   .material = std::move(material),
@@ -20,7 +20,7 @@ void RenderQueue::SubmitTransparentMesh(Mesh& mesh, const Transform& transform,
                                   .opacity = std::clamp(opacity, 0.0F, 1.0F)});
 }
 
-void RenderQueue::SubmitBillboard(Billboard& billboard,
+void RenderQueue::SubmitBillboard(const Billboard& billboard,
                                   const glm::vec3& position) {
     billboards_.push_back({.billboard = billboard, .position = position});
 }

@@ -72,9 +72,9 @@ SpotLight& Scene::AddSpotLight(SpotLight light) {
     return spotLights_.back();
 }
 
-SkyBox& Scene::AddSkybox(SkyBox skybox) {
-    skyboxes_.push_back(std::move(skybox));
-    return skyboxes_.back();
+SkyBox& Scene::SetSkybox(SkyBox skybox) {
+    skybox_.emplace(std::move(skybox));
+    return *skybox_;
 }
 
 void Scene::SetAnimatedYaw(float degrees) noexcept {
@@ -85,9 +85,9 @@ void Scene::SetAnimatedYaw(float degrees) noexcept {
     }
 }
 
-void Scene::Submit(RenderQueue& queue) {
+void Scene::Submit(RenderQueue& queue) const {
     for (const MeshInstance& instance : meshInstances_) {
-        Mesh& mesh = meshes_.at(instance.mesh.index);
+        const Mesh& mesh = meshes_.at(instance.mesh.index);
         if (instance.layer == RenderLayer::Transparent) {
             queue.SubmitTransparentMesh(mesh, instance.transform,
                                         instance.material, instance.opacity);
@@ -95,21 +95,18 @@ void Scene::Submit(RenderQueue& queue) {
             queue.SubmitOpaqueMesh(mesh, instance.transform, instance.material);
         }
     }
-    for (BillboardInstance& instance : billboardInstances_) {
+    for (const BillboardInstance& instance : billboardInstances_) {
         queue.SubmitBillboard(instance.billboard, instance.position);
     }
 }
 
-SceneView Scene::CreateView(const Camera& camera, const RenderQueue& queue) {
-    if (directionalLights_.empty() || skyboxes_.empty()) {
-        throw std::logic_error(
-            "A renderable scene requires a directional light and skybox");
-    }
+SceneView Scene::CreateView(const Camera& camera,
+                            const RenderQueue& queue) const {
     return {.camera = camera,
-            .directionalLight = directionalLights_.front(),
+            .directionalLights = directionalLights_,
             .pointLights = pointLights_,
             .spotLights = spotLights_,
-            .skybox = skyboxes_.front(),
+            .skybox = skybox_ ? &*skybox_ : nullptr,
             .queue = queue};
 }
 

@@ -116,7 +116,9 @@ SkyBox::SkyBox(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
 }
 
 SkyBox::~SkyBox() = default;
-void SkyBox::Render(const Camera& cam) {
+void SkyBox::Render(const Camera& cam) { Draw(cam); }
+
+void SkyBox::Draw(const Camera& cam) const {
     GLint OldCullFaceMode = 0;
     glGetIntegerv(GL_CULL_FACE_MODE, &OldCullFaceMode);
     GLint OldDepthFuncMode = 0;

@@ -34,7 +34,7 @@ public:
     Texture& operator=(Texture&& other) noexcept;
     // virtual ~Texture(bool del=true);
     std::string GetParameters() const;
-    virtual void Bind(GLenum TextureUnit);
+    virtual void Bind(GLenum TextureUnit) const;
 };
 
 class Texture2D : public Texture {

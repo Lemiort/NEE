@@ -38,7 +38,8 @@ void SetLightColor(GLint uniformLocation, const std::array<GLfloat, 3>& color) {
 
 ForwardPipeline::ForwardPipeline(
     gsl_lite::not_null<std::shared_ptr<Shader>> meshShader)
-    : meshShader_(std::move(meshShader)) {
+    : meshShader_(std::move(meshShader)),
+      meshBindings_(MeshShaderBindings::FromShader(*meshShader_)) {
     cameraViewProjectionUniform_ = meshShader_->GetUniformLocation("gVC");
     lightViewProjectionUniform_ = meshShader_->GetUniformLocation("gLightVC");
     cameraPositionUniform_ = meshShader_->GetUniformLocation("s_vCamPos");
@@ -57,12 +58,14 @@ ForwardPipeline::ForwardPipeline(
 
 void ForwardPipeline::Render(const SceneView& scene) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    scene.skybox.Render(scene.camera);
+    if (scene.skybox != nullptr) {
+        scene.skybox->Draw(scene.camera);
+    }
     PrepareLighting(scene);
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
-    RenderMeshes(scene.queue.GetOpaqueMeshes(), scene.camera, false);
+    RenderMeshes(scene.queue.GetOpaqueMeshes(), false);
     RenderTransparentObjects(scene);
 }
 
@@ -77,11 +80,17 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     glUniformMatrix4fv(cameraViewProjectionUniform_, 1, GL_FALSE,
                        glm::value_ptr(viewProjection));
 
-    SetLightColor(directionalLightColorUniform_, scene.directionalLight.color);
-    glUniform3f(directionalLightDirectionUniform_,
-                scene.directionalLight.direction.at(0),
-                scene.directionalLight.direction.at(1),
-                scene.directionalLight.direction.at(2));
+    if (!scene.directionalLights.empty()) {
+        const DirectionalLight& directionalLight =
+            scene.directionalLights.front();
+        SetLightColor(directionalLightColorUniform_, directionalLight.color);
+        glUniform3f(
+            directionalLightDirectionUniform_, directionalLight.direction.at(0),
+            directionalLight.direction.at(1), directionalLight.direction.at(2));
+    } else {
+        constexpr std::array<GLfloat, 3> noLight{0.0F, 0.0F, 0.0F};
+        SetLightColor(directionalLightColorUniform_, noLight);
+    }
 
     if (!scene.pointLights.empty()) {
         const PointLight& pointLight = scene.pointLights.front();
@@ -124,24 +133,13 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
 }
 
 void ForwardPipeline::RenderMeshes(std::span<const MeshRenderCommand> commands,
-                                   const Camera& camera, bool applyOpacity) {
-    std::optional<std::reference_wrapper<Mesh>> previousMesh;
-    std::optional<std::reference_wrapper<Material>> previousMaterial;
+                                   bool applyOpacity) {
     for (const MeshRenderCommand& command : commands) {
-        Mesh& mesh = command.mesh.get();
-        if (command.material != nullptr &&
-            (!previousMesh || &mesh != &previousMesh->get() ||
-             !previousMaterial ||
-             command.material.get() != &previousMaterial->get())) {
-            mesh.SetMaterial(command.material);
-            previousMesh = mesh;
-            previousMaterial = *command.material;
-        }
         if (command.material != nullptr) {
-            command.material->SetOpacity(applyOpacity ? command.opacity : 1.0F);
+            command.mesh.get().Draw(command.transform, *command.material,
+                                    meshBindings_,
+                                    applyOpacity ? command.opacity : 1.0F);
         }
-        mesh.SetTransform(command.transform);
-        mesh.Render(camera);
     }
 }
 
@@ -191,10 +189,10 @@ void ForwardPipeline::RenderTransparentObjects(const SceneView& scene) {
                 if constexpr (std::same_as<Command, MeshRenderCommand>) {
                     RenderMeshes(
                         std::span<const MeshRenderCommand>(&referenced, 1),
-                        scene.camera, true);
+                        true);
                 } else {
-                    referenced.billboard.get().SetPos(referenced.position);
-                    referenced.billboard.get().Render(scene.camera);
+                    referenced.billboard.get().Draw(scene.camera,
+                                                    referenced.position);
                 }
             },
             command);

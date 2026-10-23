@@ -38,6 +38,12 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       pointLightShader_(std::move(resources.pointLightShader)),
       spotLightShader_(std::move(resources.spotLightShader)),
       directionalLightShader_(std::move(resources.directionalLightShader)),
+      geometryBindings_(MeshShaderBindings::FromShader(*geometryShader_)),
+      stencilBindings_(MeshShaderBindings::FromShader(*stencilShader_)),
+      pointLightBindings_(MeshShaderBindings::FromShader(*pointLightShader_)),
+      spotLightBindings_(MeshShaderBindings::FromShader(*spotLightShader_)),
+      directionalLightBindings_(
+          MeshShaderBindings::FromShader(*directionalLightShader_)),
       geometryMaterial_(std::move(resources.geometryMaterial)),
       stencilMaterial_(std::move(resources.stencilMaterial)),
       pointLightMaterial_(std::move(resources.pointLightMaterial)),
@@ -50,21 +56,25 @@ void DeferredPipeline::Render(const SceneView& scene,
     gBuffer_->StartFrame();
     GeometryPass(scene);
     glEnable(GL_STENCIL_TEST);
-    for (PointLight& light : scene.pointLights) {
+    for (const PointLight& light : scene.pointLights) {
         StencilPass(light, scene.camera);
         PointLightPass(light, scene.camera);
     }
-    for (SpotLight& light : scene.spotLights) {
+    for (const SpotLight& light : scene.spotLights) {
         StencilPass(light, scene.camera);
         SpotLightPass(light, scene.camera);
     }
     glDisable(GL_STENCIL_TEST);
-    DirectionalLightPass(scene.directionalLight, scene.camera);
+    for (const DirectionalLight& light : scene.directionalLights) {
+        DirectionalLightPass(light, scene.camera);
+    }
     gBuffer_->BindForLightPass();
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_FALSE);
     glDisable(GL_BLEND);
-    scene.skybox.Render(scene.camera);
+    if (scene.skybox != nullptr) {
+        scene.skybox->Draw(scene.camera);
+    }
     transparentPipeline.RenderTransparent(scene);
     FinalPass(scene.camera);
 }
@@ -86,21 +96,16 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glUniformMatrix4fv(geometryShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
 
-    std::optional<std::reference_wrapper<Mesh>> previousMesh;
     for (const MeshRenderCommand& command : scene.queue.GetOpaqueMeshes()) {
-        Mesh& mesh = command.mesh.get();
-        if (!previousMesh || &mesh != &previousMesh->get()) {
-            mesh.SetMaterial(geometryMaterial_);
-            previousMesh = mesh;
-        }
-        mesh.SetTransform(command.transform);
-        mesh.Render(scene.camera);
+        command.mesh.get().Draw(command.transform, *geometryMaterial_,
+                                geometryBindings_);
     }
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 }
 
-void DeferredPipeline::StencilPass(Light& light, const Camera& camera) {
+void DeferredPipeline::StencilPass(const PointLight& light,
+                                   const Camera& camera) {
     stencilShader_->Use();
     GBuffer::BindForStencilPass();
     glEnable(GL_DEPTH_TEST);
@@ -113,8 +118,24 @@ void DeferredPipeline::StencilPass(Light& light, const Camera& camera) {
     const glm::mat4 matrix = RenderPassViewProjection(camera);
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
-    light.SetMaterial(stencilMaterial_);
-    light.Render(camera);
+    light.DrawVolume(*stencilMaterial_, stencilBindings_);
+}
+
+void DeferredPipeline::StencilPass(const SpotLight& light,
+                                   const Camera& camera) {
+    stencilShader_->Use();
+    GBuffer::BindForStencilPass();
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_CULL_FACE);
+    glClear(GL_STENCIL_BUFFER_BIT);
+    glStencilFunc(GL_ALWAYS, 0, 0);
+    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
+    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
+    const glm::mat4 matrix = RenderPassViewProjection(camera);
+    glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
+                       glm::value_ptr(matrix));
+    light.DrawVolume(*stencilMaterial_, stencilBindings_);
 }
 
 void DeferredPipeline::BindGBufferTextures(Material& material) {
@@ -123,7 +144,8 @@ void DeferredPipeline::BindGBufferTextures(Material& material) {
     }
 }
 
-void DeferredPipeline::PointLightPass(PointLight& light, const Camera& camera) {
+void DeferredPipeline::PointLightPass(const PointLight& light,
+                                      const Camera& camera) {
     gBuffer_->BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
     glDisable(GL_DEPTH_TEST);
@@ -146,13 +168,13 @@ void DeferredPipeline::PointLightPass(PointLight& light, const Camera& camera) {
                 position.x, position.y, position.z);
     glUniform1f(pointLightShader_->GetUniformLocation("pointLightIntensity"),
                 light.power);
-    light.SetMaterial(pointLightMaterial_);
-    light.Render(camera);
+    light.DrawVolume(*pointLightMaterial_, pointLightBindings_);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
 
-void DeferredPipeline::SpotLightPass(SpotLight& light, const Camera& camera) {
+void DeferredPipeline::SpotLightPass(const SpotLight& light,
+                                     const Camera& camera) {
     gBuffer_->BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
     glDisable(GL_DEPTH_TEST);
@@ -178,13 +200,12 @@ void DeferredPipeline::SpotLightPass(SpotLight& light, const Camera& camera) {
                 direction.y, direction.z);
     glUniform1f(spotLightShader_->GetUniformLocation("sLightCutoff"),
                 glm::cos(glm::radians(light.Cutoff)));
-    light.SetMaterial(spotLightMaterial_);
-    light.Render(camera);
+    light.DrawVolume(*spotLightMaterial_, spotLightBindings_);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
 
-void DeferredPipeline::DirectionalLightPass(DirectionalLight& light,
+void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
                                             const Camera& camera) {
     gBuffer_->BindForLightPass();
     glDisable(GL_DEPTH_TEST);
@@ -204,8 +225,7 @@ void DeferredPipeline::DirectionalLightPass(DirectionalLight& light,
         directionalLightShader_->GetUniformLocation("dirLightDirection"),
         light.direction.at(0), light.direction.at(1), light.direction.at(2));
     BindGBufferTextures(*directionalLightMaterial_);
-    light.SetMaterial(directionalLightMaterial_);
-    light.Render(camera);
+    light.DrawVolume(*directionalLightMaterial_, directionalLightBindings_);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 }

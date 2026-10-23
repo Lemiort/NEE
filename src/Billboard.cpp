@@ -68,7 +68,9 @@ void Billboard::SetPos(glm::vec3 pos) {
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
 }
 
-void Billboard::Render(const Camera& cam) {
+void Billboard::Render(const Camera& cam) { Draw(cam, Pos); }
+
+void Billboard::Draw(const Camera& cam, const glm::vec3& position) const {
     // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
@@ -79,6 +81,8 @@ void Billboard::Render(const Camera& cam) {
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    const std::array<float, 3> coords = {position.x, position.y, position.z};
+    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords.data());
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 
     colorMap.Bind(GL_TEXTURE0);

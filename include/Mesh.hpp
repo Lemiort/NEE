@@ -26,6 +26,17 @@ struct Vertex {
         : Pos(pos), UV(uv), Normal(normal), Tangent(tangent) {}
 };
 
+struct MeshShaderBindings {
+    GLint position{};
+    GLint normal{};
+    GLint uv{};
+    GLint tangent{};
+    GLint world{};
+    GLint rotation{};
+
+    [[nodiscard]] static MeshShaderBindings FromShader(const Shader& shader);
+};
+
 class Mesh : public MaterialObject, public Transformable {
 public:
 protected:
@@ -52,6 +63,8 @@ public:
     void SetMaterial(shared_ptr<Material> _mat) override;
     void SetTexture(GLuint textureUnit);
     void Render(const Camera& cam) override;
+    void Draw(const Transform& transform, const Material& material,
+              const MeshShaderBindings& bindings, float opacity = 1.0F) const;
 
 private:
 };

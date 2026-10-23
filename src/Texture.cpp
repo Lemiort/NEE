@@ -323,7 +323,7 @@ std::string Texture::GetParameters() const {
     return ss.str();
 }
 
-void Texture::Bind(GLenum TextureUnit) {
+void Texture::Bind(GLenum TextureUnit) const {
     glActiveTexture(TextureUnit);
     glBindTexture(GL_TEXTURE_2D, texBufferID);
 }
