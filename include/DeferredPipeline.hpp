@@ -8,6 +8,7 @@
 #include "GBufferDebugPass.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "MeshInstanceRenderer.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
 
@@ -65,6 +66,7 @@ private:
     Mesh spotLightVolume_;
     Mesh directionalLightVolume_;
     GBufferDebugPass debugPass_;
+    MeshInstanceRenderer instanceRenderer_;
 };
 
 #endif  // DEFERRED_PIPELINE_HPP_INCLUDED

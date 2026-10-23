@@ -64,7 +64,7 @@ void ForwardPipeline::Render(const SceneView& scene) {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
-    RenderMeshes(scene.queue.GetOpaqueMeshes(), false);
+    instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), meshBindings_);
     RenderTransparentObjects(scene);
 }
 

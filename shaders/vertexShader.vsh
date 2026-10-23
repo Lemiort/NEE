@@ -3,6 +3,9 @@
 uniform mat4 gWorld;
 uniform mat4 gVC;
 uniform mat4 mRotate;
+in mat4 instanceWorld;
+in mat4 instanceRotation;
+uniform bool instanced;
 
                                                                              
 in vec3 s_vPosition;
@@ -35,9 +38,11 @@ uniform float pLightInt;
                                                                                                       
 void main()                                                                   
 {                                                                             
-	vec3 worldPosition = (gWorld * vec4(s_vPosition, 1.0)).xyz;
+	mat4 world = instanced ? instanceWorld : gWorld;
+	mat4 rotation = instanced ? instanceRotation : mRotate;
+	vec3 worldPosition = (world * vec4(s_vPosition, 1.0)).xyz;
 	gl_Position = gVC * vec4(worldPosition, 1.0);
-	fN=(mRotate*s_vNormal).xyz;
+	fN=(rotation*s_vNormal).xyz;
 	fL=-dLightDir;
 	fE=worldPosition-s_vCamPos;
 	UV=s_vUV;
@@ -48,5 +53,5 @@ void main()
 	pL=pLightPos-worldPosition;
 	sR=worldPosition-sLightPos;
 
-	Tangent=normalize((gWorld * vec4(s_vTangent, 0.0)).xyz);
+	Tangent=normalize((world * vec4(s_vTangent, 0.0)).xyz);
 }

@@ -45,7 +45,10 @@ MeshShaderBindings MeshShaderBindings::FromShader(const Shader& shader) {
             .uv = shader.GetAttribLocation("s_vUV"),
             .tangent = shader.GetAttribLocation("s_vTangent"),
             .world = shader.GetUniformLocation("gWorld"),
-            .rotation = shader.GetUniformLocation("mRotate")};
+            .rotation = shader.GetUniformLocation("mRotate"),
+            .instanceWorld = shader.GetAttribLocation("instanceWorld"),
+            .instanceRotation = shader.GetAttribLocation("instanceRotation"),
+            .instanced = shader.GetUniformLocation("instanced")};
 }
 
 void Mesh::SetMaterial(std::shared_ptr<Material> material) {
@@ -169,11 +172,13 @@ void Mesh::Render(const Camera& /*cam*/) {
 }
 
 void Mesh::Draw(const Transform& transform, const Material& material,
-                const MeshShaderBindings& bindings, float opacity) const {
+                const MeshShaderBindings& bindings, float opacity,
+                GLuint instanceBuffer, GLsizei instanceCount) const {
     const glm::mat4 modelMatrix = transform.ModelMatrix();
     const glm::mat4 rotationMatrix = transform.RotationMatrix();
 
     material.Use(opacity);
+    glUniform1i(bindings.instanced, instanceBuffer != 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(bindings.position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
@@ -197,10 +202,39 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glEnableVertexAttribArray(bindings.normal);
     glEnableVertexAttribArray(bindings.uv);
     glEnableVertexAttribArray(bindings.tangent);
-    glDrawElements(GL_TRIANGLES,
-                   static_cast<GLsizei>(static_cast<std::size_t>(faceCount_) *
-                                        kTriangleIndexCount),
-                   GL_UNSIGNED_INT, nullptr);
+    if (instanceBuffer != 0) {
+        glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
+        for (GLuint column = 0; column < 4; ++column) {
+            for (GLuint matrix = 0; matrix < 2; ++matrix) {
+                const GLuint location =
+                    static_cast<GLuint>(matrix == 0
+                                            ? bindings.instanceWorld
+                                            : bindings.instanceRotation) +
+                    column;
+                glEnableVertexAttribArray(location);
+                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE,
+                                      2 * sizeof(glm::mat4),
+                                      BufferOffset(matrix * sizeof(glm::mat4) +
+                                                   column * sizeof(glm::vec4)));
+                glVertexAttribDivisor(location, 1);
+            }
+        }
+    }
+    glDrawElementsInstanced(
+        GL_TRIANGLES,
+        static_cast<GLsizei>(static_cast<std::size_t>(faceCount_) *
+                             kTriangleIndexCount),
+        GL_UNSIGNED_INT, nullptr, instanceCount);
+    if (instanceBuffer != 0) {
+        for (GLuint column = 0; column < 4; ++column) {
+            for (const GLint base :
+                 {bindings.instanceWorld, bindings.instanceRotation}) {
+                const GLuint location = static_cast<GLuint>(base) + column;
+                glVertexAttribDivisor(location, 0);
+                glDisableVertexAttribArray(location);
+            }
+        }
+    }
     glDisableVertexAttribArray(bindings.position);
     glDisableVertexAttribArray(bindings.normal);
     glDisableVertexAttribArray(bindings.uv);
