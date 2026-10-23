@@ -8,12 +8,12 @@ message("Building ${PROJECT_NAME}")
 
 find_package(glfw3 REQUIRED)
 find_package(glad REQUIRED)
-find_package(nlohmann_json REQUIRED)
 find_package(glm REQUIRED)
 find_package(stb REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(gsl-lite CONFIG REQUIRED)
+find_package(glaze CONFIG REQUIRED)
 
 
 include(CTest)
@@ -77,10 +77,10 @@ PRIVATE
     glfw
     glm::glm
     stb::stb
-    nlohmann_json::nlohmann_json
     spdlog::spdlog
     assimp::assimp
     gsl-lite::gsl-lite
+    glaze::glaze
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

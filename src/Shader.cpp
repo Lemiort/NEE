@@ -2,10 +2,12 @@
 
 #include <glad/gl.h>
 
+#include <algorithm>
 #include <array>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <glaze/glaze.hpp>
 #include <iomanip>
 #include <limits>
 #include <sstream>
@@ -15,18 +17,41 @@
 
 #include "spdlog/spdlog.h"
 
+struct ShaderCacheManifest {
+    std::uint32_t cacheVersion{};
+    std::string vendor;
+    std::string renderer;
+    std::string driverVersion;
+
+    bool operator==(const ShaderCacheManifest&) const = default;
+};
+
 namespace {
 constexpr std::array<char, 8> kCacheMagic{'N', 'E', 'E', 'G',
                                           'L', 'B', 'I', 'N'};
 constexpr std::uint32_t kCacheVersion = 1;
+constexpr std::uintmax_t kMaximumCacheSize = 64ULL * 1024ULL * 1024ULL;
 constexpr std::uint64_t kFnvOffset = 14695981039346656037ULL;
 constexpr std::uint64_t kFnvPrime = 1099511628211ULL;
+const std::filesystem::path kCacheDirectory{"shader-cache"};
+const std::filesystem::path kCacheManifest = kCacheDirectory / "manifest.json";
 
 void HashBytes(std::uint64_t& hash, std::string_view bytes) {
     for (const unsigned char byte : bytes) {
         hash ^= byte;
         hash *= kFnvPrime;
     }
+}
+
+template <typename Value>
+bool ReadValue(std::ifstream& input, Value& value) {
+    return static_cast<bool>(
+        input.read(reinterpret_cast<char*>(&value), sizeof(value)));
+}
+
+template <typename Value>
+void WriteValue(std::ofstream& output, const Value& value) {
+    output.write(reinterpret_cast<const char*>(&value), sizeof(value));
 }
 
 std::string_view GlString(GLenum name) {
@@ -52,11 +77,112 @@ std::uint64_t ShaderFingerprint(std::string_view vertex,
     return hash;
 }
 
+ShaderCacheManifest CurrentCacheManifest() {
+    return {.cacheVersion = kCacheVersion,
+            .vendor = std::string{GlString(GL_VENDOR)},
+            .renderer = std::string{GlString(GL_RENDERER)},
+            .driverVersion = std::string{GlString(GL_VERSION)}};
+}
+
 std::filesystem::path CachePath(std::uint64_t fingerprint) {
     std::ostringstream filename;
     filename << std::hex << std::setfill('0') << std::setw(16) << fingerprint
              << ".bin";
-    return std::filesystem::path{"shader-cache"} / filename.str();
+    return kCacheDirectory / filename.str();
+}
+
+void RemoveCacheFile(const std::filesystem::path& path) {
+    std::error_code error;
+    std::filesystem::remove(path, error);
+    if (error) {
+        spdlog::warn("Cannot remove shader cache file '{}': {}", path.string(),
+                     error.message());
+    }
+}
+
+void ClearCacheFiles() {
+    std::error_code error;
+    if (!std::filesystem::exists(kCacheDirectory, error)) {
+        return;
+    }
+    for (std::filesystem::directory_iterator entry{kCacheDirectory, error}, end;
+         entry != end && !error; entry.increment(error)) {
+        if (entry->is_regular_file(error)) {
+            RemoveCacheFile(entry->path());
+        }
+    }
+    if (error) {
+        spdlog::warn("Cannot completely inspect shader cache '{}': {}",
+                     kCacheDirectory.string(), error.message());
+    }
+}
+
+void EnsureCacheIsCurrent() {
+    static const bool checked = [] {
+        const ShaderCacheManifest current = CurrentCacheManifest();
+        ShaderCacheManifest stored;
+        const auto readError =
+            glz::read_file_json(stored, kCacheManifest.string(), std::string{});
+        if (!readError && stored == current) {
+            return true;
+        }
+
+        ClearCacheFiles();
+        std::error_code error;
+        std::filesystem::create_directories(kCacheDirectory, error);
+        if (error) {
+            spdlog::warn("Cannot create shader cache directory: {}",
+                         error.message());
+            return true;
+        }
+        const auto writeError = glz::write_file_json(
+            current, kCacheManifest.string(), std::string{});
+        if (!writeError) {
+            spdlog::info("Shader cache invalidated for current GPU/driver");
+        } else {
+            spdlog::warn("Cannot write shader cache manifest '{}': {}",
+                         kCacheManifest.string(),
+                         glz::format_error(writeError));
+        }
+        return true;
+    }();
+    (void)checked;
+}
+
+void PruneShaderCache() {
+    struct CacheFile {
+        std::filesystem::path path;
+        std::filesystem::file_time_type modified;
+        std::uintmax_t size;
+    };
+
+    std::vector<CacheFile> files;
+    std::uintmax_t totalSize = 0;
+    std::error_code error;
+    for (std::filesystem::directory_iterator entry{kCacheDirectory, error}, end;
+         entry != end && !error; entry.increment(error)) {
+        if (!entry->is_regular_file(error) || error ||
+            entry->path().extension() != ".bin" ||
+            entry->path() == kCacheManifest) {
+            continue;
+        }
+        const auto size = entry->file_size(error);
+        if (error) break;
+        const auto modified = entry->last_write_time(error);
+        if (error) break;
+        files.push_back({entry->path(), modified, size});
+        totalSize += size;
+    }
+    if (error || totalSize <= kMaximumCacheSize) {
+        return;
+    }
+
+    std::ranges::sort(files, {}, &CacheFile::modified);
+    for (const auto& file : files) {
+        if (totalSize <= kMaximumCacheSize) break;
+        RemoveCacheFile(file.path);
+        totalSize -= file.size;
+    }
 }
 
 bool SupportsProgramBinaries() {
@@ -96,16 +222,6 @@ GLuint CompileShader(std::string_view source, GLenum type) {
     throw std::runtime_error("Error compiling shader");
 }
 
-template <typename Value>
-bool ReadValue(std::ifstream& input, Value& value) {
-    return static_cast<bool>(
-        input.read(reinterpret_cast<char*>(&value), sizeof(value)));
-}
-
-template <typename Value>
-void WriteValue(std::ofstream& output, const Value& value) {
-    output.write(reinterpret_cast<const char*>(&value), sizeof(value));
-}
 }  // namespace
 
 std::string ReadFile(const std::filesystem::path& filepath) {
@@ -155,6 +271,7 @@ bool Shader::TryLoadCachedProgram() {
         return false;
     }
 
+    EnsureCacheIsCurrent();
     const auto fingerprint =
         ShaderFingerprint(vertexSource_, geometrySource_, fragmentSource_);
     const auto path = CachePath(fingerprint);
@@ -175,12 +292,16 @@ bool Shader::TryLoadCachedProgram() {
         storedFingerprint != fingerprint || binarySize == 0 ||
         binarySize >
             static_cast<std::uint64_t>(std::numeric_limits<GLsizei>::max())) {
+        input.close();
+        RemoveCacheFile(path);
         return false;
     }
 
     std::vector<std::byte> binary(static_cast<std::size_t>(binarySize));
     if (!input.read(reinterpret_cast<char*>(binary.data()),
                     static_cast<std::streamsize>(binary.size()))) {
+        input.close();
+        RemoveCacheFile(path);
         return false;
     }
 
@@ -197,8 +318,7 @@ bool Shader::TryLoadCachedProgram() {
 
     glDeleteProgram(shaderProgramID);
     shaderProgramID = 0;
-    std::error_code ignored;
-    std::filesystem::remove(path, ignored);
+    RemoveCacheFile(path);
     spdlog::warn("Rejected stale shader program cache '{}'; recompiling",
                  path.string());
     return false;
@@ -224,6 +344,7 @@ void Shader::SaveProgramBinary() const {
         return;
     }
 
+    EnsureCacheIsCurrent();
     GLint binaryLength = 0;
     glGetProgramiv(shaderProgramID, GL_PROGRAM_BINARY_LENGTH, &binaryLength);
     if (binaryLength <= 0) {
@@ -262,6 +383,14 @@ void Shader::SaveProgramBinary() const {
     WriteValue(output, fingerprint);
     WriteValue(output, static_cast<std::uint64_t>(written));
     output.write(reinterpret_cast<const char*>(binary.data()), written);
+    output.close();
+    if (!output) {
+        RemoveCacheFile(path);
+        spdlog::warn("Failed while writing shader program cache '{}'",
+                     path.string());
+        return;
+    }
+    PruneShaderCache();
 }
 
 void Shader::Link() {
