@@ -28,9 +28,8 @@ glm::mat4 RenderPassViewProjection(const Camera& camera) {
     return projection * camera.GetViewMatrix();
 }
 
-void SetLightColor(GLint uniformLocation, const std::array<GLfloat, 3>& color) {
-    const glm::mat4 colorMatrix = glm::scale(
-        glm::mat4(1.0F), glm::vec3(color.at(0), color.at(1), color.at(2)));
+void SetLightColor(GLint uniformLocation, const glm::vec3& color) {
+    const glm::mat4 colorMatrix = glm::scale(glm::mat4(1.0F), color);
     glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
                        glm::value_ptr(colorMatrix));
 }
@@ -83,22 +82,23 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     if (!scene.directionalLights.empty()) {
         const DirectionalLight& directionalLight =
             scene.directionalLights.front();
-        SetLightColor(directionalLightColorUniform_, directionalLight.color);
-        glUniform3f(
-            directionalLightDirectionUniform_, directionalLight.direction.at(0),
-            directionalLight.direction.at(1), directionalLight.direction.at(2));
+        SetLightColor(directionalLightColorUniform_,
+                      directionalLight.GetColor());
+        const glm::vec3 direction = directionalLight.GetDirection();
+        glUniform3f(directionalLightDirectionUniform_, direction.x, direction.y,
+                    direction.z);
     } else {
-        constexpr std::array<GLfloat, 3> noLight{0.0F, 0.0F, 0.0F};
+        constexpr glm::vec3 noLight{0.0F};
         SetLightColor(directionalLightColorUniform_, noLight);
     }
 
     if (!scene.pointLights.empty()) {
         const PointLight& pointLight = scene.pointLights.front();
-        SetLightColor(pointLightColorUniform_, pointLight.color);
+        SetLightColor(pointLightColorUniform_, pointLight.GetColor());
         const glm::vec3 pointPosition = pointLight.GetPosition();
         glUniform3f(pointLightPositionUniform_, pointPosition.x,
                     pointPosition.y, pointPosition.z);
-        glUniform1f(pointLightIntensityUniform_, pointLight.power);
+        glUniform1f(pointLightIntensityUniform_, pointLight.GetPower());
     } else {
         glUniform1f(pointLightIntensityUniform_, 0.0F);
     }
@@ -106,11 +106,11 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     if (!scene.spotLights.empty()) {
         const SpotLight& spotLight = scene.spotLights.front();
         const glm::vec3 spotDirection = spotLight.GetDirection();
-        SetLightColor(spotLightColorUniform_, spotLight.color);
+        SetLightColor(spotLightColorUniform_, spotLight.GetColor());
         glUniform3f(spotLightDirectionUniform_, spotDirection.x,
                     spotDirection.y, spotDirection.z);
         glUniform1f(spotLightCutoffUniform_,
-                    glm::cos(glm::radians(spotLight.Cutoff)));
+                    glm::cos(glm::radians(spotLight.GetCutoff())));
         const glm::vec3 spotPosition = spotLight.GetPosition();
         glUniform3f(spotLightPositionUniform_, spotPosition.x, spotPosition.y,
                     spotPosition.z);
@@ -125,7 +125,7 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
         glUniformMatrix4fv(lightViewProjectionUniform_, 1, GL_FALSE,
                            glm::value_ptr(lightViewProjection));
     } else {
-        constexpr std::array<GLfloat, 3> noLight{0.0F, 0.0F, 0.0F};
+        constexpr glm::vec3 noLight{0.0F};
         SetLightColor(spotLightColorUniform_, noLight);
     }
     glUniform3f(cameraPositionUniform_, scene.camera.GetPos().x,

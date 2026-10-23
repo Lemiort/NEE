@@ -59,11 +59,11 @@ ParticleSystem::ParticleSystem(glm::vec3 Pos) {
 
         m_shader = std::make_unique<Shader>();
         m_shader->AddShader(ReadFile("shaders/particle.vsh"),
-                            ShaderType::VertexShader);
+                            ShaderType::Vertex);
         m_shader->AddShader(ReadFile("shaders/particle.fsh"),
-                            ShaderType::FragmnetShader);
+                            ShaderType::Fragment);
         m_shader->AddShader(ReadFile("shaders/particle.gsh"),
-                            ShaderType::GeometryShader);
+                            ShaderType::Geometry);
         m_shader->Link();
 
         if (!m_updateAssistant.Configure(*m_shader)) {

@@ -12,9 +12,6 @@
 #include "Material.hpp"
 #include "MaterialObject.hpp"
 #include "Transformable.hpp"
-// #include "Light.hpp"
-#define BUFFER_OFFSET(i) ((char*)NULL + (i))
-using namespace std;
 
 struct Vertex {
     glm::vec3 Pos;
@@ -39,33 +36,20 @@ struct MeshShaderBindings {
 
 class Mesh : public MaterialObject, public Transformable {
 public:
-protected:
-    GLint positionID{}, uvID{}, normalID{}, tangentID{};
-    GLint gWorldID{}, gCamViewID{};
-    GLint rotateID{};
-    GLint dirLightDirID{}, dirLightColID{};
-    GLint pointLightColID{}, pointLightIntID{}, pointLightPosID{};
-    GLint camtransID{}, camPosID{};
-    GLint specBufferID{}, specSamplerID{};
-    GLint colSamplerUI{}, normSamplerUI{};
-    GLuint shadowMap{};
-    int spfaces{}, spverts{};
-    int Scale{};
-
-public:
-    Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
+    Mesh(gsl_lite::not_null<std::shared_ptr<Material>> material,
          const std::string& model);
     ~Mesh() override;
     Mesh(Mesh&&) noexcept = default;
     Mesh& operator=(Mesh&&) noexcept = default;
     [[nodiscard]] int GetNumFaces() const;
     [[nodiscard]] int GetNumVerts() const;
-    void SetMaterial(shared_ptr<Material> _mat) override;
-    void SetTexture(GLuint textureUnit);
+    void SetMaterial(std::shared_ptr<Material> material) override;
     void Render(const Camera& cam) override;
     void Draw(const Transform& transform, const Material& material,
               const MeshShaderBindings& bindings, float opacity = 1.0F) const;
 
 private:
+    int faceCount_{};
+    int vertexCount_{};
 };
 #endif  // MESH_H_INCLUDED

@@ -34,7 +34,6 @@ protected:
     GLuint specBufferID{};
     GLint specSamplerID{};
     std::vector<GLint> abstractSamplersID;
-    // GLuint colSamplerUI, normSamplerUI;
     GLint shadowSamplerID{};
     GLint opacityID{-1};
     GLint max_texture_units{};

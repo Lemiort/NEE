@@ -254,13 +254,13 @@ void Shader::AddShader(const std::string& source, ShaderType type) {
         throw std::logic_error("Cannot add a shader after program linking");
     }
     switch (type) {
-        case VertexShader:
+        case ShaderType::Vertex:
             vertexSource_ = source;
             break;
-        case FragmnetShader:
+        case ShaderType::Fragment:
             fragmentSource_ = source;
             break;
-        case GeometryShader:
+        case ShaderType::Geometry:
             geometrySource_ = source;
             break;
     }

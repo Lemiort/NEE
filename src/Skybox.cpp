@@ -33,7 +33,6 @@ SkyBox::SkyBox(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
                const std::string& negativeZ)
     : shaderProgramID(shader->GetShaderProgramId()) {
     shaderProgram = shader;
-    Scale = 0;
     ModelData modelData;
     std::vector<float> spvertices;
     spfaces = 0;
@@ -133,7 +132,6 @@ void SkyBox::Draw(const Camera& cam) const {
     const glm::mat4 worldViewProjection =
         cam.GetViewProjectionMatrix() * modelMatrix;
 
-    // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);

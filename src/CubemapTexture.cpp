@@ -6,45 +6,33 @@
 #include <string>
 
 #include "Texture.hpp"
-CubemapTexture::CubemapTexture(const string& Directory,
-                               const string& PosXFilename,
-                               const string& NegXFilename,
-                               const string& PosYFilename,
-                               const string& NegYFilename,
-                               const string& PosZFilename,
-                               const string& NegZFilename) {
-    string::const_iterator it = Directory.end();
-    it--;
-    string const BaseDir = (*it == '/') ? Directory : Directory + "/";
-
-    m_fileNames[0] = BaseDir + PosXFilename;
-    m_fileNames[1] = BaseDir + NegXFilename;
-    m_fileNames[2] = BaseDir + PosYFilename;
-    m_fileNames[3] = BaseDir + NegYFilename;
-    m_fileNames[4] = BaseDir + PosZFilename;
-    m_fileNames[5] = BaseDir + NegZFilename;
+CubemapTexture::CubemapTexture(const std::string& directory,
+                               const std::string& positiveXFilename,
+                               const std::string& negativeXFilename,
+                               const std::string& positiveYFilename,
+                               const std::string& negativeYFilename,
+                               const std::string& positiveZFilename,
+                               const std::string& negativeZFilename) {
+    const std::string baseDirectory =
+        directory.ends_with('/') ? directory : directory + "/";
+    fileNames_ = {
+        baseDirectory + positiveXFilename, baseDirectory + negativeXFilename,
+        baseDirectory + positiveYFilename, baseDirectory + negativeYFilename,
+        baseDirectory + positiveZFilename, baseDirectory + negativeZFilename};
 }
 
 CubemapTexture::~CubemapTexture() {
-    if (m_textureObj != 0) {
-        glDeleteTextures(1, &m_textureObj);
+    if (textureObject_ != 0) {
+        glDeleteTextures(1, &textureObject_);
     }
 }
 
 bool CubemapTexture::Load() {
-    // Magick::Image* pImage = NULL;
-    // Magick::Blob blob;
-
-    // Load the cubemap using the helper from Texture.cpp
-    std::array<std::string, 6> const faces = {m_fileNames[0], m_fileNames[1],
-                                              m_fileNames[2], m_fileNames[3],
-                                              m_fileNames[4], m_fileNames[5]};
-
-    m_textureObj = loadCubeMap(faces);
-    if (m_textureObj == 0) {
+    textureObject_ = loadCubeMap(fileNames_);
+    if (textureObject_ == 0) {
         return false;
     }
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureObject_);
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -57,5 +45,5 @@ bool CubemapTexture::Load() {
 
 void CubemapTexture::Bind(GLenum TextureUnit) const {
     glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, textureObject_);
 }

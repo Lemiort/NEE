@@ -15,12 +15,9 @@
 
 BillboardAssistant::BillboardAssistant() {
     m_shader = std::make_unique<Shader>();
-    m_shader->AddShader(ReadFile("shaders/particle.vsh"),
-                        ShaderType::VertexShader);
-    m_shader->AddShader(ReadFile("shaders/particle.fsh"),
-                        ShaderType::FragmnetShader);
-    m_shader->AddShader(ReadFile("shaders/particle.gsh"),
-                        ShaderType::GeometryShader);
+    m_shader->AddShader(ReadFile("shaders/particle.vsh"), ShaderType::Vertex);
+    m_shader->AddShader(ReadFile("shaders/particle.fsh"), ShaderType::Fragment);
+    m_shader->AddShader(ReadFile("shaders/particle.gsh"), ShaderType::Geometry);
     m_shader->Link();
 
     m_VPLocation = m_shader->GetUniformLocation("gVP");

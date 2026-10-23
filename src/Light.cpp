@@ -12,46 +12,49 @@ float CalculateLightRadius(float red, float green, float blue, float power) {
 }
 }  // namespace
 
+const glm::vec3& Light::GetColor() const noexcept { return color_; }
+
+void Light::SetColorValue(glm::vec3 value) noexcept { color_ = value; }
+
 DirectionalLight::DirectionalLight(float d1, float d2, float d3, float r,
                                    float g, float b)
-    : direction{d1, d2, d3, 1.0F} {
-    color = {r, g, b};
+    : direction_{d1, d2, d3} {
+    SetColorValue({r, g, b});
 }
 
-glm::vec3 DirectionalLight::GetDir() const {
-    return {direction.at(0), direction.at(1), direction.at(2)};
+const glm::vec3& DirectionalLight::GetDirection() const noexcept {
+    return direction_;
 }
 
-glm::vec3 DirectionalLight::GetCol() const {
-    return {color.at(0), color.at(1), color.at(2)};
+void DirectionalLight::SetDirection(glm::vec3 value) noexcept {
+    direction_ = value;
 }
 
-void DirectionalLight::SetDir(glm::vec3 value) {
-    direction = {value.x, value.y, value.z, 1.0F};
-}
-
-void DirectionalLight::SetCol(glm::vec3 value) {
-    color = {value.x, value.y, value.z};
+void DirectionalLight::SetColor(glm::vec3 value) noexcept {
+    SetColorValue(value);
 }
 
 PointLight::PointLight(float x, float y, float z, float r, float g, float b,
                        float lightPower)
-    : power(lightPower), radius(CalculateLightRadius(r, g, b, lightPower)) {
+    : radius_(CalculateLightRadius(r, g, b, lightPower)), power_(lightPower) {
     SetPosition(x, y, z);
-    color = {r, g, b};
+    SetColorValue({r, g, b});
 }
 
 void PointLight::SetPos(glm::vec3 position) { SetPosition(position); }
 
-void PointLight::SetCol(glm::vec3 value) {
-    color = {value.x, value.y, value.z};
-    radius = CalculateRadius();
+void PointLight::SetColor(glm::vec3 value) noexcept {
+    SetColorValue(value);
+    radius_ = CalculateRadius();
 }
 
-float PointLight::GetRadius() const noexcept { return radius; }
+float PointLight::GetRadius() const noexcept { return radius_; }
+
+float PointLight::GetPower() const noexcept { return power_; }
 
 float PointLight::CalculateRadius() const {
-    return CalculateLightRadius(color.at(0), color.at(1), color.at(2), power);
+    const auto& color = GetColor();
+    return CalculateLightRadius(color.r, color.g, color.b, power_);
 }
 
 SpotLight::SpotLight(float targetX, float targetY, float targetZ, float r,
@@ -59,23 +62,27 @@ SpotLight::SpotLight(float targetX, float targetY, float targetZ, float r,
                      float positionZ, float cutoff)
     : DirectionalLight(targetX - positionX, targetY - positionY,
                        targetZ - positionZ, r, g, b),
-      Cutoff(cutoff),
-      target{targetX, targetY, targetZ} {
+      cutoff_(cutoff),
+      target_(targetX, targetY, targetZ) {
     SetPosition(positionX, positionY, positionZ);
 }
 
 glm::vec3 SpotLight::GetPos() const { return GetPosition(); }
 
 glm::vec3 SpotLight::GetDirection() const {
-    return glm::vec3(target.at(0), target.at(1), target.at(2)) - GetPosition();
+    return GetTarget() - GetPosition();
 }
+
+glm::vec3 SpotLight::GetTarget() const { return target_; }
+
+float SpotLight::GetCutoff() const noexcept { return cutoff_; }
 
 void SpotLight::SetPos(glm::vec3 position) {
     SetPosition(position);
-    SetDir(GetDirection());
+    SetDirection(GetDirection());
 }
 
 void SpotLight::SetTarget(glm::vec3 targetPosition) {
-    target = {targetPosition.x, targetPosition.y, targetPosition.z};
-    SetDir(GetDirection());
+    target_ = targetPosition;
+    SetDirection(GetDirection());
 }

@@ -31,7 +31,6 @@ public:
     GLint positionID{};
     GLint gWorldID{}, gCamViewID{};
     int spfaces{}, spverts{};
-    int Scale{};
 
 private:
     std::unique_ptr<CubemapTexture> pCubemapTex;

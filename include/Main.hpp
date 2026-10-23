@@ -74,7 +74,7 @@ private:
     int height = WINDOW_HEIGHT;
     Mouse mouse;
     Camera pGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0F, 0.1F, 1000.0F};
-    float Scale = 0.0F;
+    float animationTime_ = 0.0F;
     float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;

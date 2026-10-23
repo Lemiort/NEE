@@ -24,9 +24,8 @@ glm::mat4 RenderPassViewProjection(const Camera& camera) {
     return projection * camera.GetViewMatrix();
 }
 
-void SetLightColor(GLint location, const std::array<GLfloat, 3>& color) {
-    const glm::mat4 matrix = glm::scale(
-        glm::mat4(1.0F), glm::vec3(color.at(0), color.at(1), color.at(2)));
+void SetLightColor(GLint location, const glm::vec3& color) {
+    const glm::mat4 matrix = glm::scale(glm::mat4(1.0F), color);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 
@@ -49,7 +48,7 @@ std::optional<Transform> SpotLightVolumeTransform(const SpotLight& light) {
     const float z = glm::abs(unit.z) >= 1.0F - 1e-6F
                         ? 0.0F
                         : glm::degrees(glm::atan(-unit.x, unit.y));
-    const float radius = distance * glm::tan(glm::radians(light.Cutoff));
+    const float radius = distance * glm::tan(glm::radians(light.GetCutoff()));
     return Transform{.position = position,
                      .rotationDegrees = glm::vec3(x, 0.0F, z),
                      .scale = glm::vec3(radius, distance, radius)};
@@ -196,12 +195,12 @@ void DeferredPipeline::PointLightPass(const PointLight& light,
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
     BindGBufferTextures(*pointLightMaterial_);
     SetLightColor(pointLightShader_->GetUniformLocation("pointLightColor"),
-                  light.color);
+                  light.GetColor());
     const glm::vec3 position = light.GetPosition();
     glUniform3f(pointLightShader_->GetUniformLocation("s_vPointLightPos"),
                 position.x, position.y, position.z);
     glUniform1f(pointLightShader_->GetUniformLocation("pointLightIntensity"),
-                light.power);
+                light.GetPower());
     pointLightVolume_.Draw(PointLightVolumeTransform(light),
                            *pointLightMaterial_, pointLightBindings_);
     glCullFace(GL_BACK);
@@ -229,12 +228,12 @@ void DeferredPipeline::SpotLightPass(const SpotLight& light,
     glUniform3f(spotLightShader_->GetUniformLocation("sLightPos"), position.x,
                 position.y, position.z);
     SetLightColor(spotLightShader_->GetUniformLocation("sLightCol"),
-                  light.color);
+                  light.GetColor());
     const glm::vec3 direction = light.GetDirection();
     glUniform3f(spotLightShader_->GetUniformLocation("sLightDir"), direction.x,
                 direction.y, direction.z);
     glUniform1f(spotLightShader_->GetUniformLocation("sLightCutoff"),
-                glm::cos(glm::radians(light.Cutoff)));
+                glm::cos(glm::radians(light.GetCutoff())));
     const std::optional<Transform> transform = SpotLightVolumeTransform(light);
     if (transform) {
         spotLightVolume_.Draw(*transform, *spotLightMaterial_,
@@ -259,10 +258,11 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
     glUniform3f(directionalLightShader_->GetUniformLocation("s_vCamPos"),
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
     SetLightColor(directionalLightShader_->GetUniformLocation("dirLightColor"),
-                  light.color);
+                  light.GetColor());
+    const glm::vec3 direction = light.GetDirection();
     glUniform3f(
         directionalLightShader_->GetUniformLocation("dirLightDirection"),
-        light.direction.at(0), light.direction.at(1), light.direction.at(2));
+        direction.x, direction.y, direction.z);
     BindGBufferTextures(*directionalLightMaterial_);
     directionalLightVolume_.Draw(Transform{}, *directionalLightMaterial_,
                                  directionalLightBindings_);

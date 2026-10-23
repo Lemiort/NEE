@@ -32,7 +32,6 @@ public:
     Texture& operator=(const Texture&) = delete;
     Texture(Texture&& other) noexcept;
     Texture& operator=(Texture&& other) noexcept;
-    // virtual ~Texture(bool del=true);
     std::string GetParameters() const;
     virtual void Bind(GLenum TextureUnit) const;
 };
@@ -40,10 +39,8 @@ public:
 class Texture2D : public Texture {
 protected:
 public:
-    // abstract texture constructor
     explicit Texture2D(GLuint texBufferID, bool _del = true);
 
-    // default constructor, deletes the texture after use
     Texture2D() = default;
 
     ~Texture2D() override;

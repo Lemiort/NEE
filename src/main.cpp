@@ -16,6 +16,7 @@
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/trigonometric.hpp>
+#include <initializer_list>
 #include <memory>
 #include <string>
 #include <system_error>
@@ -40,6 +41,21 @@ constexpr int kGridExtentSteps = 50;
 constexpr float kGridStepsPerUnit = 10.0F;
 constexpr std::size_t kScreenshotFilenameCapacity = 80;
 constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
+
+struct ShaderStageSource {
+    std::filesystem::path path;
+    ShaderType type;
+};
+
+std::shared_ptr<Shader> CreateShader(
+    std::initializer_list<ShaderStageSource> stages) {
+    auto shader = std::make_shared<Shader>();
+    for (const auto& [path, type] : stages) {
+        shader->AddShader(ReadFile(path), type);
+    }
+    shader->Link();
+    return shader;
+}
 
 void ConfigureLogging(const std::filesystem::path& executablePath) {
     std::error_code pathError;
@@ -107,8 +123,7 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
         const auto spotLights = scene.GetSpotLights();
         if (!spotLights.empty()) {
             SpotLight& spotLight = spotLights.front();
-            glm::vec3 target{spotLight.target.at(0), spotLight.target.at(1),
-                             spotLight.target.at(2)};
+            glm::vec3 target = spotLight.GetTarget();
             if (key == GLFW_KEY_I) target.x += 0.1F;
             if (key == GLFW_KEY_K) target.x -= 0.1F;
             if (key == GLFW_KEY_O) target.y += 0.1F;
@@ -236,9 +251,9 @@ void Application::OnFrameBufferSize(int w, int h) {
 }
 
 void Application::RenderScene() {
-    Scale += 0.021F;
+    animationTime_ += 0.021F;
     renderQueue.Clear();
-    scene.SetAnimatedYaw(30.0F * sinf(Scale));
+    scene.SetAnimatedYaw(30.0F * sinf(animationTime_));
     scene.Submit(renderQueue);
     const SceneView sceneView = scene.CreateView(pGameCamera, renderQueue);
     switch (renderMode) {
@@ -292,8 +307,8 @@ void Application::InterfacePass() {
     if (!directionalLights.empty()) {
         DirectionalLight& light = directionalLights.front();
         renderQueue.SubmitDebugLine({.start = glm::vec3(0.0F),
-                                     .end = light.GetDir(),
-                                     .color = light.GetCol()});
+                                     .end = light.GetDirection(),
+                                     .color = light.GetColor()});
     }
     debugRenderer->Render(renderQueue.GetDebugLines(), pGameCamera);
     std::string const strCampos =
@@ -321,16 +336,15 @@ void Application::InterfacePass() {
     glEnable(GL_DEPTH_TEST);
 }
 void Application::PreInitScene(GLFWwindow& window) {
-    Scale = 0;
+    animationTime_ = 0.0F;
     lastTime = glfwGetTime();
     frameCount = 0;
 
     // text shader
     {
-        textShader = std::make_shared<Shader>();
-        textShader->AddShader(ReadFile("shaders/text2d.vsh"), VertexShader);
-        textShader->AddShader(ReadFile("shaders/text2d.fsh"), FragmnetShader);
-        textShader->Link();
+        textShader =
+            CreateShader({{"shaders/text2d.vsh", ShaderType::Vertex},
+                          {"shaders/text2d.fsh", ShaderType::Fragment}});
     }
     // Use smart pointer for automatic lifetime management
     interfaceFont = std::make_shared<Font2d>();
@@ -346,7 +360,6 @@ void Application::PreInitScene(GLFWwindow& window) {
     fLine1->SetFont(interfaceFont);
 
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    // fLine1->Render("Loading...",-1.0f,-0.1f,72.0f);
     fLine1->SetText("Loading...");
     fLine1->SetPosition(-1.0F, -0.1F);
     fLine1->SetFontSize(72.0F);
@@ -355,23 +368,15 @@ void Application::PreInitScene(GLFWwindow& window) {
     initialized = false;
 }
 
-void Application::InitRender(GLFWwindow& window, string message) {
-    // thread thr(InitScene,hiddenWindow);
-
-    // thr.detach();
-    // InitScene(window);
-
-    // while(!glfwWindowShouldClose(window) && initialized == false)
+void Application::InitRender(GLFWwindow& window, std::string message) {
     if (!initialized) {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         CalcFPS();
-        // fLine1->Render(ConvertToString(fps),-1.0f,0.9f,24.0f);
         fLine1->SetText(ConvertToString(fps));
         fLine1->SetPosition(-1.0F, 0.9F);
         fLine1->SetFontSize(24.0F);
         textRenderer->Render(*fLine1, pGameCamera);
 
-        // fLine1->Render(message,-1.0f,-0.1f,36.0f);
         fLine1->SetText(std::move(message));
         fLine1->SetPosition(-1.0F, -0.1F);
         fLine1->SetFontSize(36.0F);
@@ -380,14 +385,9 @@ void Application::InitRender(GLFWwindow& window, string message) {
         glfwSwapBuffers(&window);
         glfwPollEvents();
     }
-    // thr.join();
 }
 
 int Application::InitScene(GLFWwindow& window) {
-    /*std::thread thr(InitRender, window, string("test"));
-
-    thr.detach();*/
-
     initialized = false;
     glfwMakeContextCurrent(&window);
     // Pass the address loading function from GLFW
@@ -395,30 +395,16 @@ int Application::InitScene(GLFWwindow& window) {
         return 1;
     }
 
-    /*Scale=0;
-    lastTime = glfwGetTime();
-    frameCount=0;
-
-    pGameCamera = new Camera(WINDOW_WIDTH, WINDOW_HEIGHT);**/
-
-    // normal shader
-    //  InitRender(window, "Normal shader loading...");
-
     {
-        meshShader = make_shared<Shader>();
-        meshShader->AddShader(ReadFile("shaders/vertexShader.vsh"),
-                              VertexShader);
-        meshShader->AddShader(ReadFile("shaders/fragmentShader.fsh"),
-                              FragmnetShader);
-        meshShader->Link();
+        meshShader = CreateShader(
+            {{"shaders/vertexShader.vsh", ShaderType::Vertex},
+             {"shaders/fragmentShader.fsh", ShaderType::Fragment}});
     }
     forwardPipeline =
         std::make_unique<ForwardPipeline>(gsl_lite::not_null{meshShader});
 
-    debugShader = std::make_shared<Shader>();
-    debugShader->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
-    debugShader->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
-    debugShader->Link();
+    debugShader = CreateShader({{"shaders/lightVS.vsh", ShaderType::Vertex},
+                                {"shaders/lightFS.fsh", ShaderType::Fragment}});
     debugRenderer =
         std::make_unique<DebugRenderer>(gsl_lite::not_null{debugShader});
 
@@ -441,10 +427,8 @@ int Application::InitScene(GLFWwindow& window) {
         InitRender(window, "StencilPass shader loading...");
         // load shader
         {
-            DSStencilPassShader = make_shared<Shader>();
-            DSStencilPassShader->AddShader(
-                ReadFile("shaders/DSStencilPass.vsh"), VertexShader);
-            DSStencilPassShader->Link();
+            DSStencilPassShader = CreateShader(
+                {{"shaders/DSStencilPass.vsh", ShaderType::Vertex}});
         }
         // load material
         {
@@ -459,12 +443,9 @@ int Application::InitScene(GLFWwindow& window) {
         gBuffer1 = std::make_shared<GBuffer>(width, height);
         // load shader
         {
-            DSGeometryPassShader = make_shared<Shader>();
-            DSGeometryPassShader->AddShader(
-                ReadFile("shaders/DSGeometryPass.vsh"), VertexShader);
-            DSGeometryPassShader->AddShader(
-                ReadFile("shaders/DSGeometryPass.fsh"), FragmnetShader);
-            DSGeometryPassShader->Link();
+            DSGeometryPassShader = CreateShader(
+                {{"shaders/DSGeometryPass.vsh", ShaderType::Vertex},
+                 {"shaders/DSGeometryPass.fsh", ShaderType::Fragment}});
         }
         // load material
         {
@@ -479,12 +460,9 @@ int Application::InitScene(GLFWwindow& window) {
         // point light shader
         {  // load shader
             {
-                DSPointLightShader = make_shared<Shader>();
-                DSPointLightShader->AddShader(
-                    ReadFile("shaders/DSPointLight.vsh"), VertexShader);
-                DSPointLightShader->AddShader(
-                    ReadFile("shaders/DSPointLight.fsh"), FragmnetShader);
-                DSPointLightShader->Link();
+                DSPointLightShader = CreateShader(
+                    {{"shaders/DSPointLight.vsh", ShaderType::Vertex},
+                     {"shaders/DSPointLight.fsh", ShaderType::Fragment}});
             }
             // load material
             {
@@ -496,12 +474,9 @@ int Application::InitScene(GLFWwindow& window) {
         // directional light shader
         {  // load shader
             {
-                DSDirectionalLightShader = make_shared<Shader>();
-                DSDirectionalLightShader->AddShader(
-                    ReadFile("shaders/DSDirectionalLight.vsh"), VertexShader);
-                DSDirectionalLightShader->AddShader(
-                    ReadFile("shaders/DSDirectionalLight.fsh"), FragmnetShader);
-                DSDirectionalLightShader->Link();
+                DSDirectionalLightShader = CreateShader(
+                    {{"shaders/DSDirectionalLight.vsh", ShaderType::Vertex},
+                     {"shaders/DSDirectionalLight.fsh", ShaderType::Fragment}});
             }
             // load material
             {
@@ -514,12 +489,9 @@ int Application::InitScene(GLFWwindow& window) {
         {
             // load shader
             {
-                DSSpotLightShader = make_shared<Shader>();
-                DSSpotLightShader->AddShader(
-                    ReadFile("shaders/DSSpotLight.vsh"), VertexShader);
-                DSSpotLightShader->AddShader(
-                    ReadFile("shaders/DSSpotLight.fsh"), FragmnetShader);
-                DSSpotLightShader->Link();
+                DSSpotLightShader = CreateShader(
+                    {{"shaders/DSSpotLight.vsh", ShaderType::Vertex},
+                     {"shaders/DSSpotLight.fsh", ShaderType::Fragment}});
             }
             // load material
             {
@@ -533,11 +505,9 @@ int Application::InitScene(GLFWwindow& window) {
     {
         InitRender(window, "Skybox shader loading...");
 
-        skyboxShader = make_shared<Shader>();
-
-        skyboxShader->AddShader(ReadFile("shaders/skybox.vsh"), VertexShader);
-        skyboxShader->AddShader(ReadFile("shaders/skybox.fsh"), FragmnetShader);
-        skyboxShader->Link();
+        skyboxShader =
+            CreateShader({{"shaders/skybox.vsh", ShaderType::Vertex},
+                          {"shaders/skybox.fsh", ShaderType::Fragment}});
     }
 
     // The viewer faces -Z by default, so the front image belongs on -Z.

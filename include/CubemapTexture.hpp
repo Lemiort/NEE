@@ -2,14 +2,18 @@
 #define CUBEMAP_TEXTURE_H_INCLUDED
 #include <glad/gl.h>
 
+#include <array>
 #include <string>
-using namespace std;
+
 class CubemapTexture {
 public:
-    CubemapTexture(const string& Directory, const string& PosXFilename,
-                   const string& NegXFilename, const string& PosYFilename,
-                   const string& NegYFilename, const string& PosZFilename,
-                   const string& NegZFilename);
+    CubemapTexture(const std::string& directory,
+                   const std::string& positiveXFilename,
+                   const std::string& negativeXFilename,
+                   const std::string& positiveYFilename,
+                   const std::string& negativeYFilename,
+                   const std::string& positiveZFilename,
+                   const std::string& negativeZFilename);
 
     ~CubemapTexture();
 
@@ -17,11 +21,10 @@ public:
 
     void Bind(GLenum TextureUnit) const;
 
-   private:
-    string m_fileNames[6];
+private:
+    std::array<std::string, 6> fileNames_;
 
-public:
- GLuint m_textureObj{};
+    GLuint textureObject_{};
 };
 
 #endif  // CUBEMAP_TEXTURE_H_INCLUDED

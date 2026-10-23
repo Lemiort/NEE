@@ -6,12 +6,11 @@
 #include <filesystem>
 #include <string>
 
-enum ShaderType { VertexShader, GeometryShader, FragmnetShader };
+enum class ShaderType { Vertex, Geometry, Fragment };
 
 std::string ReadFile(const std::filesystem::path& filepath);
 class Shader {
 public:
-    //  enum ShaderType {Vertex, Geometry, Fragmnet};
     Shader();
     virtual ~Shader();
     void Link();

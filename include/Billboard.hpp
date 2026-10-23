@@ -19,14 +19,11 @@ public:
     ~Billboard() override;
     Billboard(Billboard&&) noexcept = default;
     Billboard& operator=(Billboard&&) noexcept = default;
-    // Render using a reference instead of a raw pointer for safety.
     void Render(const Camera& cam) override;
     void Draw(const Camera& camera, const glm::vec3& position) const;
     void SetPos(glm::vec3 Pos);
-    // GLuint shaderProgramID;
-protected:
+
 private:
-    // shared_ptr<Shader> shaderProgram;
     glm::vec3 Pos;
     Texture2D colorMap;
     GLint colSamplerID{};

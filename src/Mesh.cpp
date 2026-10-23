@@ -48,22 +48,12 @@ MeshShaderBindings MeshShaderBindings::FromShader(const Shader& shader) {
             .rotation = shader.GetUniformLocation("mRotate")};
 }
 
-void Mesh::SetMaterial(shared_ptr<Material> _mat) {
-    mat = _mat;
+void Mesh::SetMaterial(std::shared_ptr<Material> material) {
+    mat = std::move(material);
     this->SetShader(mat->GetShader());
-
-    // mat->Use();
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    normalID = shaderProgram->GetAttribLocation("s_vNormal");
-    uvID = shaderProgram->GetAttribLocation("s_vUV");
-    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-    // find uniform variable positions
-    gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID =
-        shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 }
 
-Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
+Mesh::Mesh(gsl_lite::not_null<std::shared_ptr<Material>> material,
            const std::string& model) {
     mat = std::move(material);
     if (model.empty()) {
@@ -72,9 +62,6 @@ Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
     }
     shaderProgram = mat->GetShader();
 
-    Scale = 0;
-    spfaces = 0;
-    spverts = 0;
     ModelData modelData;
     try {
         if (!LoadModel(model, modelData)) {
@@ -125,27 +112,27 @@ Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
         throw;
     }
 
-    spverts = static_cast<int>(vertexCount);
-    spfaces = static_cast<int>(indexCount / kTriangleIndexCount);
+    vertexCount_ = static_cast<int>(vertexCount);
+    faceCount_ = static_cast<int>(indexCount / kTriangleIndexCount);
 
     // create buffer to store everything
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     const auto positionBytes =
         static_cast<GLsizeiptr>(sizeof(float) * kPositionComponentCount *
-                                static_cast<std::size_t>(spverts));
+                                static_cast<std::size_t>(vertexCount_));
     const auto normalBytes =
         static_cast<GLsizeiptr>(sizeof(float) * kNormalComponentCount *
-                                static_cast<std::size_t>(spverts));
+                                static_cast<std::size_t>(vertexCount_));
     const auto textureCoordinateBytes = static_cast<GLsizeiptr>(
         sizeof(float) * kTextureCoordinateComponentCount *
-        static_cast<std::size_t>(spverts));
+        static_cast<std::size_t>(vertexCount_));
     const GLsizeiptr tangentBytes = normalBytes;
     const GLsizeiptr vertexBufferBytes =
         positionBytes + normalBytes + textureCoordinateBytes + tangentBytes;
     const auto indexBufferBytes =
         static_cast<GLsizeiptr>(sizeof(std::uint32_t) * kTriangleIndexCount *
-                                static_cast<std::size_t>(spfaces));
+                                static_cast<std::size_t>(faceCount_));
     glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
     // load vertices into buffer
     glBufferSubData(GL_ARRAY_BUFFER, 0, positionBytes, spvertices.data());
@@ -175,16 +162,6 @@ Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
                  modelData.indices.data(), GL_STATIC_DRAW);
 
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
-    normalID = shaderProgram->GetAttribLocation("s_vNormal");
-    uvID = shaderProgram->GetAttribLocation("s_vUV");
-    tangentID = shaderProgram->GetAttribLocation("s_vTangent");
-
-    // find uniform variable positions
-    gWorldID = shaderProgram->GetUniformLocation("gWorld");
-    rotateID =
-        shaderProgram->GetUniformLocation("mRotate");  // rotation of object
-
     transform_ = Transform{};
 }
 void Mesh::Render(const Camera& /*cam*/) {
@@ -200,15 +177,15 @@ void Mesh::Draw(const Transform& transform, const Material& material,
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glVertexAttribPointer(bindings.position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(
-        bindings.normal, 3, GL_FLOAT, GL_FALSE, 0,
-        BufferOffset(sizeof(float) * 3 * static_cast<std::size_t>(spverts)));
-    glVertexAttribPointer(
-        bindings.uv, 2, GL_FLOAT, GL_FALSE, 0,
-        BufferOffset(sizeof(float) * 6 * static_cast<std::size_t>(spverts)));
-    glVertexAttribPointer(
-        bindings.tangent, 3, GL_FLOAT, GL_FALSE, 0,
-        BufferOffset(sizeof(float) * 8 * static_cast<std::size_t>(spverts)));
+    glVertexAttribPointer(bindings.normal, 3, GL_FLOAT, GL_FALSE, 0,
+                          BufferOffset(sizeof(float) * 3 *
+                                       static_cast<std::size_t>(vertexCount_)));
+    glVertexAttribPointer(bindings.uv, 2, GL_FLOAT, GL_FALSE, 0,
+                          BufferOffset(sizeof(float) * 6 *
+                                       static_cast<std::size_t>(vertexCount_)));
+    glVertexAttribPointer(bindings.tangent, 3, GL_FLOAT, GL_FALSE, 0,
+                          BufferOffset(sizeof(float) * 8 *
+                                       static_cast<std::size_t>(vertexCount_)));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(bindings.world, 1, GL_FALSE,
@@ -221,7 +198,7 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glEnableVertexAttribArray(bindings.uv);
     glEnableVertexAttribArray(bindings.tangent);
     glDrawElements(GL_TRIANGLES,
-                   static_cast<GLsizei>(static_cast<std::size_t>(spfaces) *
+                   static_cast<GLsizei>(static_cast<std::size_t>(faceCount_) *
                                         kTriangleIndexCount),
                    GL_UNSIGNED_INT, nullptr);
     glDisableVertexAttribArray(bindings.position);
@@ -230,17 +207,6 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glDisableVertexAttribArray(bindings.tangent);
 }
 
-int Mesh::GetNumFaces() const { return spfaces; }
+int Mesh::GetNumFaces() const { return faceCount_; }
 
-int Mesh::GetNumVerts() const { return spverts; }
-
-void Mesh::SetTexture(GLuint textureUnit) { shadowMap = textureUnit; }
-
-/*shared_ptr<Shader> Mesh::GetShader()
-{
-    return shaderProgram;
-}
-void Mesh::SetShader(shared_ptr<Shader> shader)
-{
-    shaderProgram = shader;
-}*/
+int Mesh::GetNumVerts() const { return vertexCount_; }

@@ -16,9 +16,9 @@
 namespace {
 std::shared_ptr<Shader> CreateBillboardShader() {
     auto shader = std::make_shared<Shader>();
-    shader->AddShader(ReadFile("shaders/billboard.vsh"), VertexShader);
-    shader->AddShader(ReadFile("shaders/billboard.fsh"), FragmnetShader);
-    shader->AddShader(ReadFile("shaders/billboard.gsh"), GeometryShader);
+    shader->AddShader(ReadFile("shaders/billboard.vsh"), ShaderType::Vertex);
+    shader->AddShader(ReadFile("shaders/billboard.fsh"), ShaderType::Fragment);
+    shader->AddShader(ReadFile("shaders/billboard.gsh"), ShaderType::Geometry);
     shader->Link();
     return shader;
 }
@@ -46,7 +46,6 @@ Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
         throw std::runtime_error("Unable to create billboard vertex buffer");
     }
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // creating a buffer
     const std::array<float, 3> coords = {Pos.x, Pos.y, Pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
                  GL_DYNAMIC_DRAW);
@@ -58,10 +57,8 @@ Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
 Billboard::~Billboard() = default;
 void Billboard::SetPos(glm::vec3 pos) {
     this->Pos = pos;
-    // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    // creating a buffer
     const std::array<float, 3> coords = {pos.x, pos.y, pos.z};
     glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
                  GL_DYNAMIC_DRAW);
@@ -71,13 +68,10 @@ void Billboard::SetPos(glm::vec3 pos) {
 void Billboard::Render(const Camera& cam) { Draw(cam, Pos); }
 
 void Billboard::Draw(const Camera& cam, const glm::vec3& position) const {
-    // glUseProgram(shaderProgramID);
     shaderProgram->Use();
     const glm::mat4 viewProjection = cam.GetViewProjectionMatrix();
 
-    // camera projection matrix
     glUniformMatrix4fv(camViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
-    // camera position
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
