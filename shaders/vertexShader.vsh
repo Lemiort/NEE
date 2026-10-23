@@ -19,13 +19,13 @@ uniform float pLightInt;
 
 
 
- out vec3 fN; //нормаль
- out vec3 fL; //вектор направленного света
- out vec3 fE; //вектор взгляда
+ out vec3 fN; //РЅРѕСЂРјР°Р»СЊ
+ out vec3 fL; //РІРµРєС‚РѕСЂ РЅР°РїСЂР°РІР»РµРЅРЅРѕРіРѕ СЃРІРµС‚Р°
+ out vec3 fE; //РІРµРєС‚РѕСЂ РІР·РіР»СЏРґР°
  out vec2 UV;
- out vec3 pL;//вектор точечного света
- out vec3 sR;//вектор от источника до точки
- out vec3 sLD;//вектор направления источника
+ out vec3 pL;//РІРµРєС‚РѕСЂ С‚РѕС‡РµС‡РЅРѕРіРѕ СЃРІРµС‚Р°
+ out vec3 sR;//РІРµРєС‚РѕСЂ РѕС‚ РёСЃС‚РѕС‡РЅРёРєР° РґРѕ С‚РѕС‡РєРё
+ out vec3 sLD;//РІРµРєС‚РѕСЂ РЅР°РїСЂР°РІР»РµРЅРёСЏ РёСЃС‚РѕС‡РЅРёРєР°
 
  out vec3 Tangent;
  out vec3 Bitangent;
@@ -35,17 +35,18 @@ uniform float pLightInt;
                                                                                                       
 void main()                                                                   
 {                                                                             
-	gl_Position = gVC*gWorld *vec4(s_vPosition, 1.0);	
+	vec3 worldPosition = (gWorld * vec4(s_vPosition, 1.0)).xyz;
+	gl_Position = gVC * vec4(worldPosition, 1.0);
 	fN=(mRotate*s_vNormal).xyz;
 	fL=-dLightDir;
-	fE=(gVC*gWorld*vec4(s_vCamPos,1)).xyz;
+	fE=worldPosition-s_vCamPos;
 	UV=s_vUV;
 
-	//длина вектора от света до точки
-	float temp=length(-(gWorld*vec4(1,1,1,1.0)).xyz+pLightPos);
-	power=pLightInt*pow(temp,-2);
-	pL=(-(gWorld*vec4(1,1,1,1.0)).xyz+pLightPos);
-	sR=((gWorld*vec4(1,1,1,1.0)).xyz-sLightPos);
+	//РґР»РёРЅР° РІРµРєС‚РѕСЂР° РѕС‚ СЃРІРµС‚Р° РґРѕ С‚РѕС‡РєРё
+	float temp=max(length(pLightPos-worldPosition), 0.001);
+	power=pLightInt/(temp*temp);
+	pL=pLightPos-worldPosition;
+	sR=worldPosition-sLightPos;
 
 	Tangent=normalize((gWorld * vec4(s_vTangent, 0.0)).xyz);
 }

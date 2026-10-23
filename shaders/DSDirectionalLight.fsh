@@ -2,22 +2,22 @@
 
 
 
-in vec3 fN;//нормалька
-in vec2 UV;//координаты текстуры
-in vec3 fE;//направление взгляда
+in vec3 fN;//РЅРѕСЂРјР°Р»СЊРєР°
+in vec2 UV;//РєРѕРѕСЂРґРёРЅР°С‚С‹ С‚РµРєСЃС‚СѓСЂС‹
+in vec3 fE;//РЅР°РїСЂР°РІР»РµРЅРёРµ РІР·РіР»СЏРґР°
 
-in vec3 Tangent;//тангент для нормали
+in vec3 Tangent;//С‚Р°РЅРіРµРЅС‚ РґР»СЏ РЅРѕСЂРјР°Р»Рё
 
-in vec4 screenSpacePos;//позиция точки в экранных координатах
-//in vec4 pointLightPos;//позиция света в мировых координата
-
-
-
-uniform mat4 dirLightColor;//цвет
-uniform vec3 dirLightDirection;//направление света
+in vec4 screenSpacePos;//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РІ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+//in vec4 pointLightPos;//РїРѕР·РёС†РёСЏ СЃРІРµС‚Р° РІ РјРёСЂРѕРІС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°
 
 
-// текстура
+
+uniform mat4 dirLightColor;//С†РІРµС‚
+uniform vec3 dirLightDirection;//РЅР°РїСЂР°РІР»РµРЅРёРµ СЃРІРµС‚Р°
+
+
+// С‚РµРєСЃС‚СѓСЂР°
 uniform sampler2D colTexSampler;
 uniform sampler2D normTexSampler;
 uniform sampler2D specTexSampler;
@@ -35,7 +35,7 @@ layout(location = 0) out vec4 fColor0;
 
 
 
-vec2 CalcTexCoord()//считаем позицию света на текустуре
+vec2 CalcTexCoord()//СЃС‡РёС‚Р°РµРј РїРѕР·РёС†РёСЋ СЃРІРµС‚Р° РЅР° С‚РµРєСѓСЃС‚СѓСЂРµ
 {
 	//vec3 ProjCoords = position.xyz / position.w;
 	vec3 ProjCoords = screenSpacePos.xyz/screenSpacePos.w;
@@ -51,11 +51,11 @@ vec2 CalcTexCoord()//считаем позицию света на текустуре
 vec4 CalcBaseLight(mat4 color)
 {
 	vec2 screenPosUV = CalcTexCoord();
-	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	vec4 screenPos= texture(gSampler4, screenPosUV);//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РЅР° СЌРєСЂР°РЅРµ
 
-	vec3 N = texture(gSampler6, screenPosUV).xyz;//нормаль
-	vec3 L=normalize(dirLightDirection);
-	vec3 E=normalize(-fE);
+	vec3 N = texture(gSampler6, screenPosUV).xyz;//РЅРѕСЂРјР°Р»СЊ
+	vec3 L=normalize(-dirLightDirection);
+	vec3 E=normalize(fE-screenPos.xyz);
 	vec3 H=normalize(E+L);
 	
 	float diffuse_intensity=max(dot(N,L),0.0);
@@ -67,7 +67,7 @@ vec4 CalcBaseLight(mat4 color)
 void main()
 {
 	//vec2 screenPosUV = CalcTexCoord();
-	//vec4 screenPos= texture(gSampler8, screenPosUV);//позиция точки на экране
+	//vec4 screenPos= texture(gSampler8, screenPosUV);//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РЅР° СЌРєСЂР°РЅРµ
 	fColor0 = CalcBaseLight(dirLightColor);
 	//fColor0 = screenPos;
 	//fColor0 = vec4(normalize(fN), 1.0);

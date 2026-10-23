@@ -2,23 +2,23 @@
 
 
 
-in vec3 fN;//нормалька
-in vec2 UV;//координаты текстуры
-in vec3 fE;//направление взгляда
+in vec3 fN;//РЅРѕСЂРјР°Р»СЊРєР°
+in vec2 UV;//РєРѕРѕСЂРґРёРЅР°С‚С‹ С‚РµРєСЃС‚СѓСЂС‹
+in vec3 fE;//РЅР°РїСЂР°РІР»РµРЅРёРµ РІР·РіР»СЏРґР°
 
-in vec3 Tangent;//тангент для нормали
+in vec3 Tangent;//С‚Р°РЅРіРµРЅС‚ РґР»СЏ РЅРѕСЂРјР°Р»Рё
 
-in vec4 screenSpacePos;//позиция точки в экранных координатах
-//in vec4 pointLightPos;//позиция света в мировых координата
+in vec4 screenSpacePos;//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РІ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+//in vec4 pointLightPos;//РїРѕР·РёС†РёСЏ СЃРІРµС‚Р° РІ РјРёСЂРѕРІС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°
 
 
-uniform mat4 sLightCol;//цвет
-uniform vec3 sLightPos;//позиция света
-uniform vec3 sLightDir;//направление света
+uniform mat4 sLightCol;//С†РІРµС‚
+uniform vec3 sLightPos;//РїРѕР·РёС†РёСЏ СЃРІРµС‚Р°
+uniform vec3 sLightDir;//РЅР°РїСЂР°РІР»РµРЅРёРµ СЃРІРµС‚Р°
 uniform float sLightCutoff; //cutoff
 
 
-// текстура
+// С‚РµРєСЃС‚СѓСЂР°
 uniform sampler2D colTexSampler;
 uniform sampler2D normTexSampler;
 uniform sampler2D specTexSampler;
@@ -36,7 +36,7 @@ layout(location = 0) out vec4 fColor0;
 
 
 
-vec2 CalcTexCoord()//считаем позицию света на текустуре
+vec2 CalcTexCoord()//СЃС‡РёС‚Р°РµРј РїРѕР·РёС†РёСЋ СЃРІРµС‚Р° РЅР° С‚РµРєСѓСЃС‚СѓСЂРµ
 {
 	//vec3 ProjCoords = position.xyz / position.w;
 	vec3 ProjCoords = screenSpacePos.xyz/screenSpacePos.w;
@@ -53,7 +53,7 @@ vec4 CalcPointLight(mat4 lightColor)
 {
 
 	vec2 screenPosUV = CalcTexCoord();
-	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	vec4 screenPos= texture(gSampler4, screenPosUV);//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РЅР° СЌРєСЂР°РЅРµ
 	if(screenPos  == vec4 (0.0,0.0,0.0,0.0))
 		return vec4(0.0);
 	else
@@ -61,9 +61,9 @@ vec4 CalcPointLight(mat4 lightColor)
 		
 		float distance = distance(screenPos.xyz,s_vPointLightPos.xyz);
 		
-		vec3 N = texture(gSampler6, screenPosUV).xyz;//нормаль
-		vec3 L = normalize(-(screenPos.xyz - s_vPointLightPos.xyz));//направление света
-		vec3 E = normalize(-fE);//направление взгляда
+		vec3 N = texture(gSampler6, screenPosUV).xyz;//РЅРѕСЂРјР°Р»СЊ
+		vec3 L = normalize(-(screenPos.xyz - s_vPointLightPos.xyz));//РЅР°РїСЂР°РІР»РµРЅРёРµ СЃРІРµС‚Р°
+		vec3 E = normalize(-fE);//РЅР°РїСЂР°РІР»РµРЅРёРµ РІР·РіР»СЏРґР°
 		vec3 H = normalize(E+L);
 		
 		float diffuse_intensity=max(dot(N,L),0.0);
@@ -84,20 +84,19 @@ vec4 CalcSpotLight(mat4 color)
 {
 
 	vec2 screenPosUV = CalcTexCoord();
-	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране в мировых координатах
+	vec4 screenPos= texture(gSampler4, screenPosUV);//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РЅР° СЌРєСЂР°РЅРµ РІ РјРёСЂРѕРІС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
 	if(screenPos  == vec4 (0.0,0.0,0.0,0.0))
 		return vec4(0.0);
 	else
 	{
-		vec3 N = texture(gSampler6, screenPosUV).xyz;//нормаль
-		vec3 L=normalize(-sLightDir);
-		vec3 R=normalize(screenPos.xyz - sLightPos);//направление света прожектора в данной точке
-		vec3 E=normalize(-fE);
+		vec3 N = texture(gSampler6, screenPosUV).xyz;//РЅРѕСЂРјР°Р»СЊ
+		vec3 R=normalize(screenPos.xyz - sLightPos);//РЅР°РїСЂР°РІР»РµРЅРёРµ СЃРІРµС‚Р° РїСЂРѕР¶РµРєС‚РѕСЂР° РІ РґР°РЅРЅРѕР№ С‚РѕС‡РєРµ
+		vec3 L=-R;
+		vec3 E=normalize(fE-screenPos.xyz);
 		vec3 H=normalize(E+L);
 		float diffuse_intensity=max(dot(N,L),0.0);
 		float spec_intensity=pow(max(dot(N,H),0.0),300);
-		float d=1.0/(1.0-sLightCutoff);
-		float SpotFactor=dot(R,-L);
+		float SpotFactor=dot(R,normalize(sLightDir));
 		
 		if(SpotFactor > sLightCutoff)
 		{
@@ -116,10 +115,9 @@ void main()
 	
 	//fColor0= CalcBaseLight(normalize(pointLightPos-gl_FragCoord).xyz, fN, pointLightColor);
 	fColor0 = CalcSpotLight(sLightCol);
-	fColor0.xyz += vec3(0.0,0.1,0.0);
 	
 	/*vec2 screenPosUV = CalcTexCoord();
-	vec4 screenPos= texture(gSampler4, screenPosUV);//позиция точки на экране
+	vec4 screenPos= texture(gSampler4, screenPosUV);//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РЅР° СЌРєСЂР°РЅРµ
 	fColor0 = vec4(normalize(screenPos.xyz - sLightPos),1.0);*/
 	fColor0.a = 1.0;
 

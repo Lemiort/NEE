@@ -26,7 +26,7 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
     m_target = glm::normalize(m_target);
     m_up = glm::vec3(0.0F, 1.0F, 0.0F);
 
-    Init();
+    ResetInteractionState();
 }
 
 Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
@@ -44,10 +44,10 @@ Camera::Camera(int WindowWidth, int WindowHeight, float fov, float znear,
 
     m_up = glm::normalize(m_up);
 
-    Init();
+    ResetInteractionState();
 }
 
-void Camera::Init() {
+void Camera::ResetInteractionState() {
     // Zero yaw faces -Z; positive yaw turns toward +X.
     m_AngleH = glm::degrees(std::atan2(m_target.x, -m_target.z));
     m_AngleV = glm::degrees(std::asin(std::clamp(m_target.y, -1.0F, 1.0F)));
@@ -147,13 +147,13 @@ void Camera::OnRender() {
 
     if (m_OnUpperEdge) {
         if (m_AngleV < 89.0F) {
-          m_AngleV = std::min(89.0F, m_AngleV + 0.1F);
-          ShouldUpdate = true;
+            m_AngleV = std::min(89.0F, m_AngleV + 0.1F);
+            ShouldUpdate = true;
         }
     } else if (m_OnLowerEdge) {
         if (m_AngleV > -89.0F) {
-          m_AngleV = std::max(-89.0F, m_AngleV - 0.1F);
-          ShouldUpdate = true;
+            m_AngleV = std::max(-89.0F, m_AngleV - 0.1F);
+            ShouldUpdate = true;
         }
     }
 
@@ -208,7 +208,7 @@ void Camera::SetZFar(float zfar) { zFar = zfar; }
 void Camera::OnViewportResize(int width, int height) {
     m_windowHeight = height;
     m_windowWidth = width;
-    Init();
+    ResetInteractionState();
 }
 
 int Camera::GetWidth() const { return m_windowWidth; }

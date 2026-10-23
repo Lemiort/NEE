@@ -1,12 +1,13 @@
 [requires]
 glfw/3.4
 glad/2.0.8
-nlohmann_json/3.12.0
 glm/1.0.3
 gtest/1.14.0
 stb/cci.20230920
 spdlog/1.17.0
 assimp/6.0.5
+gsl-lite/1.1.0
+glaze/8.4.0
 
 [generators]
 CMakeDeps

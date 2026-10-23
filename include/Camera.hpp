@@ -48,12 +48,12 @@ public:
 
     [[nodiscard]] int GetHeight() const;
 
-   private:
+private:
     float FOV;
     float zNear;
     float zFar;
 
-    void Init();
+    void ResetInteractionState();
     void Update();
 
     glm::vec3 m_pos;

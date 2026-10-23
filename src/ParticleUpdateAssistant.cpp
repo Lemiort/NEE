@@ -10,13 +10,13 @@
 ParticleUpdateAssistant::ParticleUpdateAssistant() = default;
 
 ParticleUpdateAssistant::~ParticleUpdateAssistant() = default;
-bool ParticleUpdateAssistant::Init(const Shader& shader) {
+bool ParticleUpdateAssistant::Configure(const Shader& shader) {
     shaderProgramID = shader.GetShaderProgramId();
-    const std::array<const GLchar*, 4> varyings = {
-        "Type1", "Position1", "Velocity1", "Age1"};
-    glTransformFeedbackVaryings(
-        shader.GetShaderProgramId(), static_cast<GLsizei>(varyings.size()),
-        varyings.data(), GL_INTERLEAVED_ATTRIBS);
+    const std::array<const GLchar*, 4> varyings = {"Type1", "Position1",
+                                                   "Velocity1", "Age1"};
+    glTransformFeedbackVaryings(shader.GetShaderProgramId(),
+                                static_cast<GLsizei>(varyings.size()),
+                                varyings.data(), GL_INTERLEAVED_ATTRIBS);
 
     /*if (!Finalize()) {
         return false;
@@ -42,26 +42,25 @@ bool ParticleUpdateAssistant::Init(const Shader& shader) {
 void ParticleUpdateAssistant::Enable() const { glUseProgram(shaderProgramID); }
 
 void ParticleUpdateAssistant::SetDeltaTimeMillis(float DeltaTimeMillis) const {
-  glUniform1f(m_deltaTimeMillisLocation, DeltaTimeMillis);
+    glUniform1f(m_deltaTimeMillisLocation, DeltaTimeMillis);
 }
 
 void ParticleUpdateAssistant::SetTime(int Time) const {
-  glUniform1f(m_timeLocation, static_cast<float>(Time));
+    glUniform1f(m_timeLocation, static_cast<float>(Time));
 }
 
-void ParticleUpdateAssistant::SetRandomTextureUnit(
-    GLint textureUnit) const {
-  glUniform1i(m_randomTextureLocation, textureUnit);
+void ParticleUpdateAssistant::SetRandomTextureUnit(GLint textureUnit) const {
+    glUniform1i(m_randomTextureLocation, textureUnit);
 }
 
 void ParticleUpdateAssistant::SetLauncherLifetime(float Lifetime) const {
-  glUniform1f(m_launcherLifetimeLocation, Lifetime);
+    glUniform1f(m_launcherLifetimeLocation, Lifetime);
 }
 
 void ParticleUpdateAssistant::SetShellLifetime(float Lifetime) const {
-  glUniform1f(m_shellLifetimeLocation, Lifetime);
+    glUniform1f(m_shellLifetimeLocation, Lifetime);
 }
 
 void ParticleUpdateAssistant::SetSecondaryShellLifetime(float Lifetime) const {
-  glUniform1f(m_secondaryShellLifetimeLocation, Lifetime);
+    glUniform1f(m_secondaryShellLifetimeLocation, Lifetime);
 }

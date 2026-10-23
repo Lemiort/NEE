@@ -16,11 +16,10 @@ public:
         GBUFFER_NUM_TEXTURES
     };
 
-    GBuffer() = default;
+    GBuffer(GLsizei windowWidth, GLsizei windowHeight);
+    ~GBuffer();
 
-    ~GBuffer() = default;
-
-    bool Init(GLsizei windowWidth, GLsizei windowHeight);
+    bool Resize(GLsizei windowWidth, GLsizei windowHeight);
 
     void StartFrame();
     void BindForGeomPass() const;
@@ -38,7 +37,7 @@ public:
 
     [[nodiscard]] GLuint GetDepthTexture() const;
 
-   private:
+private:
     GLuint m_fbo{};
     std::array<GLuint, GBUFFER_NUM_TEXTURES> m_textures{};
     GLuint m_depthTexture{};

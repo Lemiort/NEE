@@ -12,9 +12,8 @@
 #include "Util.hpp"
 #include "spdlog/spdlog.h"
 
-Material::Material() {
-    // ctor
-
+Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
+    : shaderProgram(std::move(shader)) {
     colorMap = std::make_shared<Texture2D>();
     auto tempMap = colorMap;
     tempMap->Load("Textures/checker.tga");
@@ -40,16 +39,6 @@ Material::Material() {
         abstractSamplersID.at(i) = 0;
         texturesID.at(i) = 0;
     }
-    // std::cout<<"\n Max texture units is "<<max_texture_units;
-}
-
-Material::~Material() = default;
-
-bool Material::Init(const std::shared_ptr<Shader>& _sh) {
-    if (_sh == nullptr) {
-        return false;
-    }
-    shaderProgram = _sh;
     shaderProgram->Use();
 
     // set default value
@@ -59,7 +48,7 @@ bool Material::Init(const std::shared_ptr<Shader>& _sh) {
     // activate texture unit 0
     colorMap->Bind(GL_TEXTURE0);
     std::string const colName("colTexSampler");
-    colTexID = shaderProgram->GetUniformLocation(colName.c_str());
+    colTexID = shaderProgram->GetUniformLocation(colName);
     spdlog::info("color sampler num is {}", colTexID);
     // tell shader to use as texture 0
     glUniform1i(colTexID, 0);
@@ -78,20 +67,21 @@ bool Material::Init(const std::shared_ptr<Shader>& _sh) {
     shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
     // tell shader to use texture unit 3 for shadow map
     glUniform1i(shadowSamplerID, 3);
+    opacityID = shaderProgram->GetUniformLocation("opacity");
 
     std::string const abstractSamplerName("gSampler");
     for (GLint i = 4; i < max_texture_units; i++) {
         abstractSamplersID.at(static_cast<std::size_t>(i)) =
-            shaderProgram->GetUniformLocation(
-            (abstractSamplerName + ConvertToString(i)).c_str());
+            shaderProgram->GetUniformLocation(abstractSamplerName +
+                                              ConvertToString(i));
         // std::cout<<"\nSampler name is
         // "<<(abstractSamplerName+ConvertToString(i)).c_str();
     }
-
-    return true;
 }
 
-void Material::Use() {
+Material::~Material() = default;
+
+void Material::Use(float drawOpacity) const {
     shaderProgram->Use();
     colorMap->Bind(GL_TEXTURE0);
     glUniform1i(colTexID,
@@ -111,6 +101,9 @@ void Material::Use() {
     // assign texture to active texture unit
     glUniform1i(shadowSamplerID,
                 3);  // tell shader to use texture unit 3
+    if (opacityID >= 0) {
+        glUniform1f(opacityID, drawOpacity);
+    }
 
     // starting from 4th, are custom texture units
     for (GLint i = 4; i < max_texture_units; i++) {

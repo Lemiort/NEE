@@ -20,38 +20,33 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces);
 
 class Texture {
 protected:
- GLuint texBufferID{};
- bool del;
- static std::string ConvertInternalFormatToString(GLenum format);
+    GLuint texBufferID{};
+    bool del;
+    static std::string ConvertInternalFormatToString(GLenum format);
 
 public:
- [[nodiscard]] GLuint GetTextureID() const;
- explicit Texture(bool _del = true);
- virtual ~Texture();
- // virtual ~Texture(bool del=true);
- std::string GetParameters() const;
- virtual void Bind(GLenum TextureUnit);
+    [[nodiscard]] GLuint GetTextureID() const;
+    explicit Texture(bool _del = true);
+    virtual ~Texture();
+    Texture(const Texture&) = delete;
+    Texture& operator=(const Texture&) = delete;
+    Texture(Texture&& other) noexcept;
+    Texture& operator=(Texture&& other) noexcept;
+    std::string GetParameters() const;
+    virtual void Bind(GLenum TextureUnit) const;
 };
 
 class Texture2D : public Texture {
 protected:
 public:
-    // abstract texture constructor
     explicit Texture2D(GLuint texBufferID, bool _del = true);
 
-    // default constructor, deletes the texture after use
     Texture2D() = default;
 
     ~Texture2D() override;
+    Texture2D(Texture2D&&) noexcept = default;
+    Texture2D& operator=(Texture2D&&) noexcept = default;
     virtual bool Load(const std::string& path);
-};
-
-class ShadowTexture : public Texture2D {
-private:
-public:
-    ShadowTexture();
-    ~ShadowTexture() override;
-    bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 };
 
 class AbstractTexture : public Texture {

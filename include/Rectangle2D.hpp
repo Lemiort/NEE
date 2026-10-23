@@ -1,9 +1,9 @@
 #ifndef RECTANGLE2D_H
 #define RECTANGLE2D_H
-#include "PlaceableObject.hpp"
 #include "RenderableObject.hpp"
+#include "Transformable.hpp"
 
-class Rectangle2D : public RenderableObject, public PlaceableObject {
+class Rectangle2D : public RenderableObject, public Transformable {
 public:
     Rectangle2D();
     ~Rectangle2D() override;

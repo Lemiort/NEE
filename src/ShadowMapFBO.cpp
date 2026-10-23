@@ -4,31 +4,52 @@
 
 #include <array>
 #include <cstddef>
+#include <stdexcept>
 #include <string>
 
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
 
-ShadowMapFBO::ShadowMapFBO() = default;
+ShadowMapFBO::ShadowMapFBO(GLsizei windowWidth, GLsizei windowHeight) {
+    if (!Resize(windowWidth, windowHeight)) {
+        glDeleteFramebuffers(1, &m_fbo);
+        glDeleteRenderbuffers(1, &m_rbo);
+        glDeleteTextures(1, &m_shadowMap);
+        glDeleteTextures(static_cast<GLsizei>(m_textures.size()),
+                         m_textures.data());
+        throw std::runtime_error("Unable to create shadow-map framebuffer");
+    }
+}
 
 ShadowMapFBO::~ShadowMapFBO() {
     if (m_fbo != 0) {
         glDeleteFramebuffers(1, &m_fbo);
     }
     if (m_rbo != 0) {
-        glDeleteFramebuffers(1, &m_rbo);
+        glDeleteRenderbuffers(1, &m_rbo);
     }
 
     if (m_shadowMap != 0) {
-        glDeleteFramebuffers(1, &m_shadowMap);
+        glDeleteTextures(1, &m_shadowMap);
     }
+    glDeleteTextures(static_cast<GLsizei>(m_textures.size()),
+                     m_textures.data());
 }
 
-bool ShadowMapFBO::Init(GLsizei windowWidth, GLsizei windowHeight) {
+bool ShadowMapFBO::Resize(GLsizei windowWidth, GLsizei windowHeight) {
     if (windowWidth <= 0 || windowHeight <= 0) {
         spdlog::error("Shadow-map dimensions must be positive");
         return false;
     }
+    glDeleteFramebuffers(1, &m_fbo);
+    glDeleteRenderbuffers(1, &m_rbo);
+    glDeleteTextures(1, &m_shadowMap);
+    glDeleteTextures(static_cast<GLsizei>(m_textures.size()),
+                     m_textures.data());
+    m_fbo = 0;
+    m_rbo = 0;
+    m_shadowMap = 0;
+    m_textures.fill(0);
     // Create depth buffer
     glGenTextures(1, &m_shadowMap);
     glBindTexture(GL_TEXTURE_2D, m_shadowMap);
@@ -56,18 +77,16 @@ bool ShadowMapFBO::Init(GLsizei windowWidth, GLsizei windowHeight) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, windowWidth, windowHeight, 0,
                      GL_RGB, GL_FLOAT, nullptr);
 
-        glFramebufferTexture2D(
-            GL_DRAW_FRAMEBUFFER,
-            GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i), GL_TEXTURE_2D,
-            m_textures.at(i), 0);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
+                               GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i),
+                               GL_TEXTURE_2D, m_textures.at(i), 0);
     }
 
     const std::array<GLenum, 4> drawBuffers = {
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
         GL_COLOR_ATTACHMENT3};
 
-    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()),
-                  drawBuffers.data());
+    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
 
     // check FBO status
     GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);

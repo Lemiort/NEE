@@ -8,7 +8,7 @@ class ParticleUpdateAssistant {
 public:
     ParticleUpdateAssistant();
     virtual ~ParticleUpdateAssistant();
-    virtual bool Init(const Shader& shader);
+    bool Configure(const Shader& shader);
     void Enable() const;
 
     void SetParticleLifetime(float Lifetime);
@@ -25,8 +25,8 @@ public:
 
     void SetSecondaryShellLifetime(float Lifetime) const;
 
-   protected:
-   private:
+protected:
+private:
     GLuint shaderProgramID{};
 
     GLint m_deltaTimeMillisLocation{};
