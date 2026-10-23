@@ -99,6 +99,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     }
     pCubemapTex->Load();
 
+    shaderProgram->Use();
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     // find uniform variable addresses
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
