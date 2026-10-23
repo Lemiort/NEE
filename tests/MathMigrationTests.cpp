@@ -9,6 +9,7 @@
 #include "Camera.hpp"
 #include "FontMetrics.hpp"
 #include "RenderQueue.hpp"
+#include "RenderMode.hpp"
 #include "Text2D.hpp"
 #include "TextLayout.hpp"
 #include "Transform.hpp"
@@ -23,6 +24,18 @@ glm::vec3 rotate(float x, float y, float z, const glm::vec3& direction) {
     return {transform.ModelMatrix() * glm::vec4(direction, 0.0F)};
 }
 }  // namespace
+
+TEST(RenderMode, HasDescriptionForEveryModeAndCyclesInDisplayOrder) {
+    RenderMode mode = RenderMode::DeferredShading;
+
+    for (const auto& descriptor : kRenderModes) {
+        EXPECT_EQ(mode, descriptor.mode);
+        EXPECT_FALSE(GetRenderModeDescription(mode).empty());
+        mode = GetNextRenderMode(mode);
+    }
+
+    EXPECT_EQ(mode, RenderMode::DeferredShading);
+}
 
 TEST(MathMigration, DefaultVectorsAreZeroInitialized) {
     const glm::vec3 value;

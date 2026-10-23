@@ -140,8 +140,7 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
             spotLight1->target.at(2) -= 0.1F;
         }
         if (key == GLFW_KEY_F5) {
-            renderType = static_cast<RenderType>(
-                (std::to_underlying(renderType) + 1) % 6);
+            renderMode = GetNextRenderMode(renderMode);
         }
         if (key == GLFW_KEY_F12) {
             const std::time_t rawTime = std::time(nullptr);
@@ -381,23 +380,23 @@ void Application::RenderScene() {
                           .spotLights = spotLights,
                           .skybox = *skybox1,
                           .queue = renderQueue};
-    switch (renderType) {
-        case RenderType::FORWARD_RENDERING:
+    switch (renderMode) {
+        case RenderMode::ForwardRendering:
             forwardPipeline->Render(scene);
             break;
-        case RenderType::DEFERRED_SHADING:
+        case RenderMode::DeferredShading:
             deferredPipeline->Render(scene, *forwardPipeline);
             break;
         default: {
             const GBufferDebugView debugView = [this] {
-                switch (renderType) {
-                    case RenderType::POSITION_BUFFER:
+                switch (renderMode) {
+                    case RenderMode::PositionBuffer:
                         return GBufferDebugView::Position;
-                    case RenderType::DIFFUSE_BUFFER:
+                    case RenderMode::DiffuseBuffer:
                         return GBufferDebugView::Diffuse;
-                    case RenderType::NORMAL_BUFFER:
+                    case RenderMode::NormalBuffer:
                         return GBufferDebugView::Normal;
-                    case RenderType::TEXCOORD_BUFFER:
+                    case RenderMode::TextureCoordinateBuffer:
                         return GBufferDebugView::TextureCoordinates;
                     default:
                         return GBufferDebugView::Position;
@@ -446,12 +445,10 @@ void Application::InterfacePass() {
     fLine1->SetFontSize(24.0F);
     renderQueue.SubmitText(*fLine1);
 
-    if (renderType == RenderType::DEFERRED_SHADING) {
-        fLine1->SetText("Deferred shading");
-        fLine1->SetPosition(-1.0F, -0.2F);
-        fLine1->SetFontSize(36.0F);
-        renderQueue.SubmitText(*fLine1);
-    }
+    fLine1->SetText(std::string{GetRenderModeDescription(renderMode)});
+    fLine1->SetPosition(-1.0F, -0.2F);
+    fLine1->SetFontSize(36.0F);
+    renderQueue.SubmitText(*fLine1);
 
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
     glDisable(GL_BLEND);

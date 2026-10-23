@@ -17,6 +17,7 @@
 #include "Mesh.hpp"
 #include "PerlinNoise.hpp"
 #include "RenderQueue.hpp"
+#include "RenderMode.hpp"
 #include "ShadowMapFBO.hpp"
 #include "Skybox.hpp"
 #include "Text2D.hpp"
@@ -24,15 +25,6 @@
 
 constexpr int WINDOW_WIDTH = 1366;
 constexpr int WINDOW_HEIGHT = 768;
-
-enum class RenderType : int {
-    DEFERRED_SHADING = 0,
-    POSITION_BUFFER = 1,
-    DIFFUSE_BUFFER = 2,
-    NORMAL_BUFFER = 3,
-    TEXCOORD_BUFFER = 4,
-    FORWARD_RENDERING = 5
-};
 
 class Application {
 public:
@@ -87,7 +79,7 @@ private:
     float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;
-    RenderType renderType = RenderType::DEFERRED_SHADING;
+    RenderMode renderMode = RenderMode::DeferredShading;
     bool initialized = false;
 
     GLint gCamViewID = 0, rotateID = 0, camPosID = 0;
