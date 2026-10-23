@@ -45,8 +45,8 @@ DirectionalLight::DirectionalLight(GLfloat d1, GLfloat d2, GLfloat d3,
     color.at(1) = g;
     color.at(2) = b;
 
-    mesh = make_shared<Mesh>();
-    mesh->Init(std::move(_mat), "models/cube2x2x2.obj");
+    mesh = std::make_shared<Mesh>(gsl_lite::not_null{std::move(_mat)},
+                                  "models/cube2x2x2.obj");
 }
 
 void DirectionalLight::Render(const Camera& cam) {
@@ -85,8 +85,8 @@ SpotLight::SpotLight(GLfloat t1, GLfloat t2, GLfloat t3, GLfloat r, GLfloat g,
     direction.at(2) = t3 - p3;
     direction.at(3) = 1;
 
-    mesh = make_shared<Mesh>();
-    mesh->Init(std::move(_mat), "models/cone.obj");
+    mesh = std::make_shared<Mesh>(gsl_lite::not_null{std::move(_mat)},
+                                  "models/cone.obj");
 }
 
 void SpotLight::Render(const Camera& cam) {
@@ -130,18 +130,6 @@ void SpotLight::SetTarget(glm::vec3 _target) {
 }
 
 SpotLight::~SpotLight() = default;
-void SpotLight::Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
-                     GLfloat b, float p1, float p2, float p3, float cut) {
-    direction.at(0) = d1;
-    direction.at(1) = d2;
-    direction.at(2) = d3;
-    direction.at(3) = 1;
-    color.at(0) = r;
-    color.at(1) = g;
-    color.at(2) = b;
-    SetPosition(p1, p2, p3);
-    Cutoff = cut;
-}
 
 void SpotLight::SetPos(glm::vec3 pos) {
     SetPosition(pos);
@@ -167,7 +155,7 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     shaderProgram = std::make_unique<Shader>();
     shaderProgram->AddShader(vertexShaderSorceCode,VertexShader);
     shaderProgram->AddShader(fragmentShaderSourceCode,FragmnetShader);
-    shaderProgram->Init();
+    shaderProgram->Link();
 
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -178,8 +166,8 @@ PointLight::PointLight(float d1, float d2, float d3, float r, float g, float b,
     PixelColorID=   shaderProgram->GetUniformLocation("PixelColor");
     PointSizeID=    shaderProgram->GetUniformLocation("size");*/
 
-    sphere = make_shared<Mesh>();
-    sphere->Init(std::move(_mat), "models/normal_geosphere.obj");
+    sphere = std::make_shared<Mesh>(gsl_lite::not_null{std::move(_mat)},
+                                    "models/normal_geosphere.obj");
 
     spdlog::info("Light radius is {}", radius);
 }

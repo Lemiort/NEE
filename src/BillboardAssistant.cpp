@@ -6,16 +6,14 @@
 #include <glm/ext/vector_float3.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <stdexcept>
 
 #include "EngineCommon.hpp"
 #include "Shader.hpp"
 #include "Util.hpp"
+#include "spdlog/spdlog.h"
 
-BillboardAssistant::BillboardAssistant() = default;
-
-BillboardAssistant::~BillboardAssistant() = default;
-
-bool BillboardAssistant::Init() {
+BillboardAssistant::BillboardAssistant() {
     m_shader = std::make_unique<Shader>();
     m_shader->AddShader(ReadFile("shaders/particle.vsh"),
                         ShaderType::VertexShader);
@@ -23,7 +21,7 @@ bool BillboardAssistant::Init() {
                         ShaderType::FragmnetShader);
     m_shader->AddShader(ReadFile("shaders/particle.gsh"),
                         ShaderType::GeometryShader);
-    m_shader->Init();
+    m_shader->Link();
 
     m_VPLocation = m_shader->GetUniformLocation("gVP");
     m_cameraPosLocation = m_shader->GetUniformLocation("gCameraPos");
@@ -34,18 +32,22 @@ bool BillboardAssistant::Init() {
         m_cameraPosLocation == INVALID_UNIFORM_LOCATION ||
         m_billboardSizeLocation == INVALID_UNIFORM_LOCATION ||
         m_colorMapLocation == INVALID_UNIFORM_LOCATION) {
-        return false;
+        spdlog::error("Required billboard shader uniforms are unavailable");
+        throw std::runtime_error(
+            "Required billboard shader uniforms are unavailable");
     }
 
-    return GLCheckError();
+    if (!GLCheckError()) {
+        spdlog::error("OpenGL error while constructing billboard assistant");
+        throw std::runtime_error(
+            "OpenGL error while constructing billboard assistant");
+    }
 }
+
+BillboardAssistant::~BillboardAssistant() = default;
 
 void BillboardAssistant::SetVP(const glm::mat4& VP) const {
     glUniformMatrix4fv(m_VPLocation, 1, GL_FALSE, glm::value_ptr(VP));
-}
-
-void BillboardAssistant::SetVP(const GLfloat* VP) const {
-    glUniformMatrix4fv(m_VPLocation, 1, GL_FALSE, VP);
 }
 
 void BillboardAssistant::SetCameraPosition(const glm::vec3& Pos) const {

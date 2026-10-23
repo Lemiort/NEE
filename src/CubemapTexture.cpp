@@ -32,9 +32,6 @@ CubemapTexture::~CubemapTexture() {
 }
 
 bool CubemapTexture::Load() {
-    glGenTextures(1, &m_textureObj);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
-
     // Magick::Image* pImage = NULL;
     // Magick::Blob blob;
 
@@ -47,6 +44,7 @@ bool CubemapTexture::Load() {
     if (m_textureObj == 0) {
         return false;
     }
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -58,6 +56,6 @@ bool CubemapTexture::Load() {
 }
 
 void CubemapTexture::Bind(GLenum TextureUnit) const {
-  glActiveTexture(TextureUnit);
-  glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
+    glActiveTexture(TextureUnit);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, m_textureObj);
 }

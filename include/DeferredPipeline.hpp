@@ -1,6 +1,7 @@
 #ifndef DEFERRED_PIPELINE_HPP_INCLUDED
 #define DEFERRED_PIPELINE_HPP_INCLUDED
 
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 
 #include "GBuffer.hpp"
@@ -13,22 +14,22 @@ class Light;
 class ForwardPipeline;
 
 struct DeferredPipelineResources {
-    GBuffer& gBuffer;
-    std::shared_ptr<Shader> geometryShader;
-    std::shared_ptr<Shader> stencilShader;
-    std::shared_ptr<Shader> pointLightShader;
-    std::shared_ptr<Shader> spotLightShader;
-    std::shared_ptr<Shader> directionalLightShader;
-    std::shared_ptr<Material> geometryMaterial;
-    std::shared_ptr<Material> stencilMaterial;
-    std::shared_ptr<Material> pointLightMaterial;
-    std::shared_ptr<Material> spotLightMaterial;
-    std::shared_ptr<Material> directionalLightMaterial;
+    gsl_lite::not_null<std::shared_ptr<GBuffer>> gBuffer;
+    gsl_lite::not_null<std::shared_ptr<Shader>> geometryShader;
+    gsl_lite::not_null<std::shared_ptr<Shader>> stencilShader;
+    gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader;
+    gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader;
+    gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader;
+    gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial;
+    gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial;
+    gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial;
+    gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial;
+    gsl_lite::not_null<std::shared_ptr<Material>> directionalLightMaterial;
 };
 
 class DeferredPipeline {
 public:
-    [[nodiscard]] bool Init(DeferredPipelineResources resources);
+    explicit DeferredPipeline(DeferredPipelineResources resources);
     void Render(const SceneView& scene, ForwardPipeline& transparentPipeline);
     void RenderDebug(const SceneView& scene, GBufferDebugView view);
 
@@ -41,17 +42,17 @@ private:
     void BindGBufferTextures(Material& material);
     void FinalPass(const Camera& camera);
 
-    GBuffer* gBuffer_{};
-    std::shared_ptr<Shader> geometryShader_;
-    std::shared_ptr<Shader> stencilShader_;
-    std::shared_ptr<Shader> pointLightShader_;
-    std::shared_ptr<Shader> spotLightShader_;
-    std::shared_ptr<Shader> directionalLightShader_;
-    std::shared_ptr<Material> geometryMaterial_;
-    std::shared_ptr<Material> stencilMaterial_;
-    std::shared_ptr<Material> pointLightMaterial_;
-    std::shared_ptr<Material> spotLightMaterial_;
-    std::shared_ptr<Material> directionalLightMaterial_;
+    gsl_lite::not_null<std::shared_ptr<GBuffer>> gBuffer_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> geometryShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> stencilShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader_;
+    gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial_;
+    gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial_;
+    gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial_;
+    gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial_;
+    gsl_lite::not_null<std::shared_ptr<Material>> directionalLightMaterial_;
     GBufferDebugPass debugPass_;
 };
 

@@ -3,6 +3,7 @@
 
 #include <glad/gl.h>
 
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 #include <span>
 
@@ -15,7 +16,8 @@
 
 class ForwardPipeline {
 public:
-    [[nodiscard]] bool Init(std::shared_ptr<Shader> meshShader);
+    explicit ForwardPipeline(
+        gsl_lite::not_null<std::shared_ptr<Shader>> meshShader);
     void Render(const SceneView& scene);
     void RenderTransparent(const SceneView& scene);
 
@@ -25,7 +27,7 @@ private:
                       const Camera& camera, bool applyOpacity);
     void RenderTransparentObjects(const SceneView& scene);
 
-    std::shared_ptr<Shader> meshShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> meshShader_;
     GLint cameraViewProjectionUniform_{};
     GLint lightViewProjectionUniform_{};
     GLint cameraPositionUniform_{};

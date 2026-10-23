@@ -1,10 +1,12 @@
 #include "DeferredPipeline.hpp"
 
 #include <array>
+#include <functional>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/trigonometric.hpp>
+#include <optional>
 #include <utility>
 
 #include "ForwardPipeline.hpp"
@@ -29,22 +31,18 @@ void SetLightColor(GLint location, const std::array<GLfloat, 3>& color) {
 }
 }  // namespace
 
-bool DeferredPipeline::Init(DeferredPipelineResources resources) {
-    gBuffer_ = &resources.gBuffer;
-    geometryShader_ = std::move(resources.geometryShader);
-    stencilShader_ = std::move(resources.stencilShader);
-    pointLightShader_ = std::move(resources.pointLightShader);
-    spotLightShader_ = std::move(resources.spotLightShader);
-    directionalLightShader_ = std::move(resources.directionalLightShader);
-    geometryMaterial_ = std::move(resources.geometryMaterial);
-    stencilMaterial_ = std::move(resources.stencilMaterial);
-    pointLightMaterial_ = std::move(resources.pointLightMaterial);
-    spotLightMaterial_ = std::move(resources.spotLightMaterial);
-    directionalLightMaterial_ = std::move(resources.directionalLightMaterial);
-    return gBuffer_ != nullptr && geometryShader_ && stencilShader_ &&
-           pointLightShader_ && spotLightShader_ && directionalLightShader_ &&
-           geometryMaterial_ && stencilMaterial_ && pointLightMaterial_ &&
-           spotLightMaterial_ && directionalLightMaterial_;
+DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
+    : gBuffer_(std::move(resources.gBuffer)),
+      geometryShader_(std::move(resources.geometryShader)),
+      stencilShader_(std::move(resources.stencilShader)),
+      pointLightShader_(std::move(resources.pointLightShader)),
+      spotLightShader_(std::move(resources.spotLightShader)),
+      directionalLightShader_(std::move(resources.directionalLightShader)),
+      geometryMaterial_(std::move(resources.geometryMaterial)),
+      stencilMaterial_(std::move(resources.stencilMaterial)),
+      pointLightMaterial_(std::move(resources.pointLightMaterial)),
+      spotLightMaterial_(std::move(resources.spotLightMaterial)),
+      directionalLightMaterial_(std::move(resources.directionalLightMaterial)) {
 }
 
 void DeferredPipeline::Render(const SceneView& scene,
@@ -52,13 +50,13 @@ void DeferredPipeline::Render(const SceneView& scene,
     gBuffer_->StartFrame();
     GeometryPass(scene);
     glEnable(GL_STENCIL_TEST);
-    for (PointLight* light : scene.pointLights) {
-        StencilPass(*light, scene.camera);
-        PointLightPass(*light, scene.camera);
+    for (PointLight& light : scene.pointLights) {
+        StencilPass(light, scene.camera);
+        PointLightPass(light, scene.camera);
     }
-    for (SpotLight* light : scene.spotLights) {
-        StencilPass(*light, scene.camera);
-        SpotLightPass(*light, scene.camera);
+    for (SpotLight& light : scene.spotLights) {
+        StencilPass(light, scene.camera);
+        SpotLightPass(light, scene.camera);
     }
     glDisable(GL_STENCIL_TEST);
     DirectionalLightPass(scene.directionalLight, scene.camera);
@@ -88,12 +86,12 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glUniformMatrix4fv(geometryShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
 
-    Mesh* previousMesh = nullptr;
+    std::optional<std::reference_wrapper<Mesh>> previousMesh;
     for (const MeshRenderCommand& command : scene.queue.GetOpaqueMeshes()) {
         Mesh& mesh = command.mesh.get();
-        if (&mesh != previousMesh) {
+        if (!previousMesh || &mesh != &previousMesh->get()) {
             mesh.SetMaterial(geometryMaterial_);
-            previousMesh = &mesh;
+            previousMesh = mesh;
         }
         mesh.SetTransform(command.transform);
         mesh.Render(scene.camera);

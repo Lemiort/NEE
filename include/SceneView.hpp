@@ -1,6 +1,7 @@
 #ifndef SCENE_VIEW_HPP_INCLUDED
 #define SCENE_VIEW_HPP_INCLUDED
 
+#include <functional>
 #include <span>
 
 class Camera;
@@ -15,8 +16,8 @@ class SpotLight;
 struct SceneView {
     const Camera& camera;
     DirectionalLight& directionalLight;
-    std::span<PointLight* const> pointLights;
-    std::span<SpotLight* const> spotLights;
+    std::span<const std::reference_wrapper<PointLight>> pointLights;
+    std::span<const std::reference_wrapper<SpotLight>> spotLights;
     SkyBox& skybox;
     const RenderQueue& queue;
 };

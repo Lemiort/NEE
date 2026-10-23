@@ -13,6 +13,7 @@ find_package(glm REQUIRED)
 find_package(stb REQUIRED)
 find_package(spdlog REQUIRED)
 find_package(assimp CONFIG REQUIRED)
+find_package(gsl-lite CONFIG REQUIRED)
 
 
 include(CTest)
@@ -79,6 +80,7 @@ PRIVATE
     nlohmann_json::nlohmann_json
     spdlog::spdlog
     assimp::assimp
+    gsl-lite::gsl-lite
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

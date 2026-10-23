@@ -3,10 +3,13 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <glm/ext/vector_float2.hpp>
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+#include "spdlog/spdlog.h"
 
 namespace {
 const GLvoid* BufferOffset(std::size_t byteOffset) {
@@ -27,14 +30,17 @@ TextRenderer::~TextRenderer() {
     glDeleteBuffers(1, &indexBuffer_);
 }
 
-bool TextRenderer::Init(std::shared_ptr<Shader> shader) {
-    shader_ = std::move(shader);
-    if (shader_ == nullptr) {
-        return false;
-    }
-
+TextRenderer::TextRenderer(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
+    : shader_(std::move(shader)) {
     glGenBuffers(1, &vertexBuffer_);
     glGenBuffers(1, &indexBuffer_);
+
+    if (vertexBuffer_ == 0 || indexBuffer_ == 0) {
+        glDeleteBuffers(1, &vertexBuffer_);
+        glDeleteBuffers(1, &indexBuffer_);
+        spdlog::error("Unable to create text renderer buffers");
+        throw std::runtime_error("Unable to create text renderer buffers");
+    }
 
     positionAttribute_ = shader_->GetAttribLocation("Position");
     uvAttribute_ = shader_->GetAttribLocation("UV");
@@ -43,56 +49,57 @@ bool TextRenderer::Init(std::shared_ptr<Shader> shader) {
     sizeUniform_ = shader_->GetUniformLocation("size");
     textureUniform_ = shader_->GetUniformLocation("texSampler");
     colorUniform_ = shader_->GetUniformLocation("textColor");
-    return true;
 }
 
-bool TextRenderer::RegisterFont(const std::shared_ptr<const Font2d>& font) {
-    if (font == nullptr || font->GetAtlasFilename().empty()) {
+bool TextRenderer::RegisterFont(const Font2d& font) {
+    if (font.GetAtlasFilename().empty()) {
         return false;
     }
-    if (atlases_.contains(font.get())) {
+    if (atlases_.contains(font.GetAtlasFilename())) {
         return true;
     }
 
     auto texture = std::make_unique<Texture2D>();
-    if (!texture->Load(font->GetAtlasFilename())) {
+    if (!texture->Load(font.GetAtlasFilename())) {
         return false;
     }
-    atlases_.emplace(font.get(), std::move(texture));
+    atlases_.emplace(font.GetAtlasFilename(), std::move(texture));
     return true;
 }
 
 void TextRenderer::Render(const FontLine2d& line, const Camera& camera) {
-    const std::array lines{&line};
+    const std::array<std::reference_wrapper<const FontLine2d>, 1> lines{line};
     RenderBatch(lines, camera);
 }
 
 void TextRenderer::Render(std::span<const TextRenderCommand> commands,
                           const Camera& camera) {
-    std::vector<const FontLine2d*> batch;
+    std::vector<std::reference_wrapper<const FontLine2d>> batch;
     for (const TextRenderCommand& command : commands) {
         const FontLine2d& line = command.text;
-        if (!batch.empty() && (batch.front()->GetFont() != line.GetFont() ||
-                               batch.front()->GetColor() != line.GetColor())) {
+        if (!batch.empty() &&
+            (batch.front().get().GetFont() != line.GetFont() ||
+             batch.front().get().GetColor() != line.GetColor())) {
             RenderBatch(batch, camera);
             batch.clear();
         }
-        batch.push_back(&line);
+        batch.emplace_back(line);
     }
     RenderBatch(batch, camera);
 }
 
-void TextRenderer::RenderBatch(std::span<const FontLine2d* const> lines,
-                               const Camera& camera) {
-    if (shader_ == nullptr || lines.empty()) {
+void TextRenderer::RenderBatch(
+    std::span<const std::reference_wrapper<const FontLine2d>> lines,
+    const Camera& camera) {
+    if (lines.empty()) {
         return;
     }
-    const FontLine2d& firstLine = *lines.front();
+    const FontLine2d& firstLine = lines.front();
     const auto& font = firstLine.GetFont();
     if (font == nullptr) {
         return;
     }
-    const auto atlas = atlases_.find(font.get());
+    const auto atlas = atlases_.find(font->GetAtlasFilename());
     if (atlas == atlases_.end()) {
         return;
     }
@@ -113,20 +120,20 @@ void TextRenderer::RenderBatch(std::span<const FontLine2d* const> lines,
     std::vector<TextVertex> vertices;
     std::vector<uint32_t> indices;
 
-    for (const FontLine2d* line : lines) {
+    for (const FontLine2d& line : lines) {
         float cursorOffset = 0.0F;
         char16_t previous{};
-        for (const char value : line->GetText()) {
+        for (const char value : line.GetText()) {
             const auto current = static_cast<char16_t>(value);
             cursorOffset += metrics.GetKerning(previous, current);
             if (current == u' ') {
-                cursorOffset += line->GetFontSize() * spaceWidth;
+                cursorOffset += line.GetFontSize() * spaceWidth;
             }
 
             try {
                 const FontCharacter& glyph = metrics.GetCharacter(current);
                 const float fontScale =
-                    line->GetFontSize() /
+                    line.GetFontSize() /
                     static_cast<float>(metrics.GetFontHeight());
                 const float width = 2.0F * static_cast<float>(glyph.width) /
                                     static_cast<float>(viewportWidth) *
@@ -134,11 +141,11 @@ void TextRenderer::RenderBatch(std::span<const FontLine2d* const> lines,
                 const float height = 2.0F * static_cast<float>(glyph.height) /
                                      static_cast<float>(viewportHeight) *
                                      fontScale;
-                const float x = line->GetPosition().x + cursorOffset +
+                const float x = line.GetPosition().x + cursorOffset +
                                 fontScale * 2.0F *
                                     static_cast<float>(glyph.xOffset) /
                                     static_cast<float>(viewportWidth);
-                const float y = line->GetPosition().y +
+                const float y = line.GetPosition().y +
                                 fontScale * -2.0F *
                                     static_cast<float>(glyph.yOffset) /
                                     static_cast<float>(viewportHeight);
@@ -165,7 +172,7 @@ void TextRenderer::RenderBatch(std::span<const FontLine2d* const> lines,
                                                baseVertex + 2, baseVertex + 3});
 
                 cursorOffset +=
-                    width + (line->GetFontSize() * spaceWidth / 4.0F);
+                    width + (line.GetFontSize() * spaceWidth / 4.0F);
                 previous = current;
             } catch (const std::out_of_range&) {
                 // Unsupported characters are intentionally skipped.

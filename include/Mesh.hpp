@@ -4,7 +4,9 @@
 
 #include <cstddef>
 #include <glm/ext/vector_float3.hpp>
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
+#include <string>
 
 #include "Camera.hpp"
 #include "Material.hpp"
@@ -40,12 +42,12 @@ protected:
     int Scale{};
 
 public:
-    Mesh();
+    Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
+         const std::string& model);
     ~Mesh() override;
     [[nodiscard]] int GetNumFaces() const;
     [[nodiscard]] int GetNumVerts() const;
     void SetMaterial(shared_ptr<Material> _mat) override;
-    bool Init(shared_ptr<Material> _mat, const char* model);
     void SetTexture(GLuint textureUnit);
     void Render(const Camera& cam) override;
 

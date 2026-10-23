@@ -40,7 +40,7 @@ public:
     Application(const Application&) = delete;
     Application& operator=(const Application&) = delete;
 
-    int Run(GLFWwindow* window);
+    int Run(GLFWwindow& window);
     static void ErrorCallback(int error, const char* description);
 
 private:
@@ -67,14 +67,14 @@ private:
                                     int mods);
     static void FrameBufferSizeCallback(GLFWwindow* window, int w, int h);
 
-    void OnKey(GLFWwindow* window, int key, int action);
+    void OnKey(GLFWwindow& window, int key, int action);
     void OnMousePos(double x, double y);
     void OnMouseButton(int button, int action);
     void OnFrameBufferSize(int w, int h);
     void CalcFPS();
-    void PreInitScene(GLFWwindow* window);
-    void InitRender(GLFWwindow* window, std::string message);
-    int InitScene(GLFWwindow* window);
+    void PreInitScene(GLFWwindow& window);
+    void InitRender(GLFWwindow& window, std::string message);
+    int InitScene(GLFWwindow& window);
     void RenderScene();
     void ShadowPass();
     void InterfacePass();
@@ -106,14 +106,14 @@ private:
     std::shared_ptr<Material> DSDirectionalLightMaterial, DSSpotLightMaterial,
         DSStencilPassMaterial;
     std::shared_ptr<Texture2D> whiteTexture;
-    std::unique_ptr<GBuffer> gBuffer1;
+    std::shared_ptr<GBuffer> gBuffer1;
     std::unique_ptr<DeferredPipeline> deferredPipeline;
     std::unique_ptr<DebugRenderer> debugRenderer;
     std::unique_ptr<ForwardPipeline> forwardPipeline;
     std::unique_ptr<DirectionalLight> directionalLight1;
     std::unique_ptr<PointLight> pointLight1, pointLight2;
     std::unique_ptr<SpotLight> spotLight1;
-    Mesh TestMesh, Plane, Sphere, transparentTeapot;
+    std::unique_ptr<Mesh> TestMesh, Plane, Sphere, transparentTeapot;
     std::unique_ptr<SkyBox> skybox1;
     std::shared_ptr<Font2d> interfaceFont;
     std::unique_ptr<TextRenderer> textRenderer;

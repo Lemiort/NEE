@@ -9,6 +9,7 @@
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/trigonometric.hpp>
+#include <optional>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -35,12 +36,9 @@ void SetLightColor(GLint uniformLocation, const std::array<GLfloat, 3>& color) {
 }
 }  // namespace
 
-bool ForwardPipeline::Init(std::shared_ptr<Shader> meshShader) {
-    meshShader_ = std::move(meshShader);
-    if (meshShader_ == nullptr) {
-        return false;
-    }
-
+ForwardPipeline::ForwardPipeline(
+    gsl_lite::not_null<std::shared_ptr<Shader>> meshShader)
+    : meshShader_(std::move(meshShader)) {
     cameraViewProjectionUniform_ = meshShader_->GetUniformLocation("gVC");
     lightViewProjectionUniform_ = meshShader_->GetUniformLocation("gLightVC");
     cameraPositionUniform_ = meshShader_->GetUniformLocation("s_vCamPos");
@@ -55,7 +53,6 @@ bool ForwardPipeline::Init(std::shared_ptr<Shader> meshShader) {
     spotLightDirectionUniform_ = meshShader_->GetUniformLocation("sLightDir");
     spotLightColorUniform_ = meshShader_->GetUniformLocation("sLightCol");
     spotLightCutoffUniform_ = meshShader_->GetUniformLocation("sLightCutoff");
-    return true;
 }
 
 void ForwardPipeline::Render(const SceneView& scene) {
@@ -78,8 +75,8 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     if (scene.pointLights.empty() || scene.spotLights.empty()) {
         return;
     }
-    const PointLight& pointLight = *scene.pointLights.front();
-    const SpotLight& spotLight = *scene.spotLights.front();
+    const PointLight& pointLight = scene.pointLights.front();
+    const SpotLight& spotLight = scene.spotLights.front();
 
     const Camera lightCamera(scene.camera.GetWidth(), scene.camera.GetHeight(),
                              scene.camera.GetFov(), scene.camera.GetZNear(),
@@ -119,16 +116,17 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
 
 void ForwardPipeline::RenderMeshes(std::span<const MeshRenderCommand> commands,
                                    const Camera& camera, bool applyOpacity) {
-    Mesh* previousMesh = nullptr;
-    Material* previousMaterial = nullptr;
+    std::optional<std::reference_wrapper<Mesh>> previousMesh;
+    std::optional<std::reference_wrapper<Material>> previousMaterial;
     for (const MeshRenderCommand& command : commands) {
         Mesh& mesh = command.mesh.get();
         if (command.material != nullptr &&
-            (&mesh != previousMesh ||
-             command.material.get() != previousMaterial)) {
+            (!previousMesh || &mesh != &previousMesh->get() ||
+             !previousMaterial ||
+             command.material.get() != &previousMaterial->get())) {
             mesh.SetMaterial(command.material);
-            previousMesh = &mesh;
-            previousMaterial = command.material.get();
+            previousMesh = mesh;
+            previousMaterial = *command.material;
         }
         if (command.material != nullptr) {
             command.material->SetOpacity(applyOpacity ? command.opacity : 1.0F);
@@ -140,28 +138,30 @@ void ForwardPipeline::RenderMeshes(std::span<const MeshRenderCommand> commands,
 
 void ForwardPipeline::RenderTransparentObjects(const SceneView& scene) {
     using TransparentCommand =
-        std::variant<const MeshRenderCommand*, const BillboardRenderCommand*>;
+        std::variant<std::reference_wrapper<const MeshRenderCommand>,
+                     std::reference_wrapper<const BillboardRenderCommand>>;
     std::vector<TransparentCommand> sortedCommands;
     sortedCommands.reserve(scene.queue.GetTransparentMeshes().size() +
                            scene.queue.GetBillboards().size());
     for (const MeshRenderCommand& command :
          scene.queue.GetTransparentMeshes()) {
-        sortedCommands.emplace_back(&command);
+        sortedCommands.emplace_back(command);
     }
     for (const BillboardRenderCommand& command : scene.queue.GetBillboards()) {
-        sortedCommands.emplace_back(&command);
+        sortedCommands.emplace_back(command);
     }
     const glm::vec3 cameraPosition = scene.camera.GetPos();
     std::ranges::stable_sort(
         sortedCommands, std::greater{},
         [cameraPosition](const TransparentCommand& command) {
             const glm::vec3 position = std::visit(
-                [](const auto* value) {
-                    using Command = std::remove_cvref_t<decltype(*value)>;
+                [](const auto value) {
+                    const auto& referenced = value.get();
+                    using Command = std::remove_cvref_t<decltype(referenced)>;
                     if constexpr (std::same_as<Command, MeshRenderCommand>) {
-                        return value->transform.position;
+                        return referenced.transform.position;
                     } else {
-                        return value->position;
+                        return referenced.position;
                     }
                 },
                 command);
@@ -176,13 +176,16 @@ void ForwardPipeline::RenderTransparentObjects(const SceneView& scene) {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     for (const TransparentCommand& command : sortedCommands) {
         std::visit(
-            [this, &scene](const auto* value) {
-                using Command = std::remove_cvref_t<decltype(*value)>;
+            [this, &scene](const auto value) {
+                const auto& referenced = value.get();
+                using Command = std::remove_cvref_t<decltype(referenced)>;
                 if constexpr (std::same_as<Command, MeshRenderCommand>) {
-                    RenderMeshes(std::span(value, 1), scene.camera, true);
+                    RenderMeshes(
+                        std::span<const MeshRenderCommand>(&referenced, 1),
+                        scene.camera, true);
                 } else {
-                    value->billboard.get().SetPos(value->position);
-                    value->billboard.get().Render(scene.camera);
+                    referenced.billboard.get().SetPos(referenced.position);
+                    referenced.billboard.get().Render(scene.camera);
                 }
             },
             command);

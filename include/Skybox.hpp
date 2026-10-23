@@ -4,6 +4,7 @@
 #include <glad/gl.h>
 
 #include <cstddef>
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 #include <string>
 
@@ -15,13 +16,12 @@
 #define BUFFER_OFFSET(i) ((char*)NULL + (i))
 class SkyBox : public RenderableObject, public Transformable {
 public:
-    explicit SkyBox(const shared_ptr<Shader>& shader);
+    SkyBox(gsl_lite::not_null<shared_ptr<Shader>> shader,
+           const string& directory, const string& positiveX,
+           const string& negativeX, const string& positiveY,
+           const string& negativeY, const string& positiveZ,
+           const string& negativeZ);
     ~SkyBox() override;
-
-    bool Init(const string& Directory, const string& PosXFilename,
-              const string& NegXFilename, const string& PosYFilename,
-              const string& NegYFilename, const string& PosZFilename,
-              const string& NegZFilename);
 
     void Render(const Camera& cam) override;
     GLuint shaderProgramID;
@@ -31,7 +31,6 @@ public:
     GLint gWorldID{}, gCamViewID{};
     int spfaces{}, spverts{};
     int Scale{};
-    void Init(GLuint shader, const char* model);
 
 private:
     std::unique_ptr<CubemapTexture> pCubemapTex;

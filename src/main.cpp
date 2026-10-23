@@ -41,7 +41,7 @@ constexpr float kGridStepsPerUnit = 10.0F;
 constexpr std::size_t kScreenshotFilenameCapacity = 80;
 constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
 
-void ConfigureLogging(const char* executablePath) {
+void ConfigureLogging(const std::filesystem::path& executablePath) {
     std::error_code pathError;
     const auto absoluteExecutablePath =
         std::filesystem::absolute(executablePath, pathError);
@@ -112,13 +112,13 @@ void Application::KeyCallback(GLFWwindow* window, int key, int /*scancode*/,
                               int action, int /*mods*/) {
     auto* app = static_cast<Application*>(glfwGetWindowUserPointer(window));
     if (app != nullptr) {
-        app->OnKey(window, key, action);
+        app->OnKey(*window, key, action);
     }
 }
 
-void Application::OnKey(GLFWwindow* window, int key, int action) {
+void Application::OnKey(GLFWwindow& window, int key, int action) {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-        glfwSetWindowShouldClose(window, GL_TRUE);
+        glfwSetWindowShouldClose(&window, GL_TRUE);
     }
     if (action == GLFW_PRESS || action == GLFW_REPEAT) {
         if (key == GLFW_KEY_I) {
@@ -252,10 +252,10 @@ void Application::OnFrameBufferSize(int w, int h) {
     width = w;
     height = h;
     if (smfbo1 != nullptr) {
-        smfbo1->Init(w, h);
+        smfbo1->Resize(w, h);
     }
     if (gBuffer1 != nullptr) {
-        gBuffer1->Init(w, h);
+        gBuffer1->Resize(w, h);
     }
     pGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
@@ -268,18 +268,18 @@ void Application::ShadowPass() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     // CalcFPS();
     Scale += 0.021F;
-    TestMesh.SetRotation(0, 30 * sinf(Scale), 0);
-    TestMesh.SetScale(0.02, 0.02, 0.02);
-    TestMesh.SetPosition(0, -0.2, 0);
+    TestMesh->SetRotation(0, 30 * sinf(Scale), 0);
+    TestMesh->SetScale(0.02, 0.02, 0.02);
+    TestMesh->SetPosition(0, -0.2, 0);
     // light3->SetPos(pGameCamera.GetPos());
     // light3->SetDir(pGameCamera.GetTarget()-pGameCamera.GetPos());
     Camera const lightCam(width, height, 45, 1, 1000.0F, spotLight1->GetPos(),
                           glm::vec3(-1.0F, -1.0F, -1.0F),
                           glm::vec3(0.0F, 1.0F, 0.0F));
 
-    Plane.SetScale(30.0F, 30.0F, 30.0F);
-    Plane.SetPosition(0.0F, -3.0F, 0.0F);
-    Plane.SetRotation(0.0, 0.0, 0.0);
+    Plane->SetScale(30.0F, 30.0F, 30.0F);
+    Plane->SetPosition(0.0F, -3.0F, 0.0F);
+    Plane->SetRotation(0.0, 0.0, 0.0);
     const glm::mat4 lightViewProjection = RenderPassViewProjection(lightCam);
 
     shadowShader->Use();
@@ -318,21 +318,21 @@ void Application::ShadowPass() {
     glUniform3f(camPosID, lightCam.GetPos().x, lightCam.GetPos().y,
                 lightCam.GetPos().z);
 
-    Sphere.SetMaterial(shadowMaterial);
+    Sphere->SetMaterial(shadowMaterial);
     for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
         const float i = static_cast<float>(row) / kGridStepsPerUnit;
         for (int column = -kGridExtentSteps; column < kGridExtentSteps;
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
-            Sphere.SetScale(0.05F, 0.05F, 0.05F);
-            Sphere.SetRotation(0, 30.0F * sinf(Scale), 0);
-            Sphere.SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
-                               j);
-            Sphere.Render(lightCam);
+            Sphere->SetScale(0.05F, 0.05F, 0.05F);
+            Sphere->SetRotation(0, 30.0F * sinf(Scale), 0);
+            Sphere->SetPosition(i, static_cast<float>(noise1->GetHeight(i, j)),
+                                j);
+            Sphere->Render(lightCam);
         }
     }
-    Plane.SetMaterial(shadowMaterial);
-    Plane.Render(lightCam);
+    Plane->SetMaterial(shadowMaterial);
+    Plane->Render(lightCam);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
@@ -341,7 +341,7 @@ void Application::RenderScene() {
     Scale += 0.021F;
     renderQueue.Clear();
     renderQueue.SubmitOpaqueMesh(
-        Plane,
+        *Plane,
         Transform{.position = glm::vec3(0.0F, -3.0F, 0.0F),
                   .rotationDegrees = glm::vec3(0.0F),
                   .scale = glm::vec3(30.0F)},
@@ -353,7 +353,7 @@ void Application::RenderScene() {
              ++column) {
             const float j = static_cast<float>(column) / kGridStepsPerUnit;
             renderQueue.SubmitOpaqueMesh(
-                Sphere,
+                *Sphere,
                 Transform{
                     .position = glm::vec3(
                         i, static_cast<float>(noise1->GetHeight(i, j)), j),
@@ -364,15 +364,17 @@ void Application::RenderScene() {
         }
     }
     renderQueue.SubmitTransparentMesh(
-        transparentTeapot,
+        *transparentTeapot,
         Transform{.position = glm::vec3(0.0F, -1.0F, -3.0F),
                   .rotationDegrees = glm::vec3(0.0F, 30.0F * sinf(Scale), 0.0F),
                   .scale = glm::vec3(0.05F)},
         mainMaterial, 0.45F);
     renderQueue.SubmitBillboard(*bb1, glm::vec3(0.0F));
 
-    const std::array pointLights{pointLight1.get()};
-    const std::array spotLights{spotLight1.get()};
+    const std::array<std::reference_wrapper<PointLight>, 1> pointLights{
+        *pointLight1};
+    const std::array<std::reference_wrapper<SpotLight>, 1> spotLights{
+        *spotLight1};
     const SceneView scene{.camera = pGameCamera,
                           .directionalLight = *directionalLight1,
                           .pointLights = pointLights,
@@ -456,7 +458,7 @@ void Application::InterfacePass() {
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
 }
-void Application::PreInitScene(GLFWwindow* window) {
+void Application::PreInitScene(GLFWwindow& window) {
     Scale = 0;
     lastTime = glfwGetTime();
     frameCount = 0;
@@ -466,16 +468,16 @@ void Application::PreInitScene(GLFWwindow* window) {
         textShader = std::make_shared<Shader>();
         textShader->AddShader(ReadFile("shaders/text2d.vsh"), VertexShader);
         textShader->AddShader(ReadFile("shaders/text2d.fsh"), FragmnetShader);
-        textShader->Init();
+        textShader->Link();
     }
     // Use smart pointer for automatic lifetime management
     interfaceFont = std::make_shared<Font2d>();
     if (!interfaceFont->Load("fonts/MagistralIC_UTF-8.fnt")) {
         return;
     }
-    textRenderer = std::make_unique<TextRenderer>();
-    if (!textRenderer->Init(textShader) ||
-        !textRenderer->RegisterFont(interfaceFont)) {
+    textRenderer =
+        std::make_unique<TextRenderer>(gsl_lite::not_null{textShader});
+    if (!textRenderer->RegisterFont(*interfaceFont)) {
         return;
     }
     fLine1 = std::make_unique<FontLine2d>();
@@ -487,11 +489,11 @@ void Application::PreInitScene(GLFWwindow* window) {
     fLine1->SetPosition(-1.0F, -0.1F);
     fLine1->SetFontSize(72.0F);
     textRenderer->Render(*fLine1, pGameCamera);
-    glfwSwapBuffers(window);
+    glfwSwapBuffers(&window);
     initialized = false;
 }
 
-void Application::InitRender(GLFWwindow* window, string message) {
+void Application::InitRender(GLFWwindow& window, string message) {
     // thread thr(InitScene,hiddenWindow);
 
     // thr.detach();
@@ -513,19 +515,19 @@ void Application::InitRender(GLFWwindow* window, string message) {
         fLine1->SetFontSize(36.0F);
         textRenderer->Render(*fLine1, pGameCamera);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(&window);
         glfwPollEvents();
     }
     // thr.join();
 }
 
-int Application::InitScene(GLFWwindow* window) {
+int Application::InitScene(GLFWwindow& window) {
     /*std::thread thr(InitRender, window, string("test"));
 
     thr.detach();*/
 
     initialized = false;
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(&window);
     // Pass the address loading function from GLFW
     if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
         return 1;
@@ -546,51 +548,33 @@ int Application::InitScene(GLFWwindow* window) {
                               VertexShader);
         meshShader->AddShader(ReadFile("shaders/fragmentShader.fsh"),
                               FragmnetShader);
-        meshShader->Init();
+        meshShader->Link();
 
         gCamViewID = meshShader->GetUniformLocation("gVC");
         rotateID = meshShader->GetUniformLocation("mRotate");
         camPosID = meshShader->GetUniformLocation("s_vCamPos");
     }
-    forwardPipeline = std::make_unique<ForwardPipeline>();
-    if (!forwardPipeline->Init(meshShader)) {
-        spdlog::critical("Unable to initialize the forward rendering pipeline");
-        return EXIT_FAILURE;
-    }
+    forwardPipeline =
+        std::make_unique<ForwardPipeline>(gsl_lite::not_null{meshShader});
 
     debugShader = std::make_shared<Shader>();
     debugShader->AddShader(ReadFile("shaders/lightVS.vsh"), VertexShader);
     debugShader->AddShader(ReadFile("shaders/lightFS.fsh"), FragmnetShader);
-    debugShader->Init();
-    debugRenderer = std::make_unique<DebugRenderer>();
-    if (!debugRenderer->Init(debugShader)) {
-        spdlog::critical("Unable to initialize the debug renderer");
-        return EXIT_FAILURE;
-    }
+    debugShader->Link();
+    debugRenderer =
+        std::make_unique<DebugRenderer>(gsl_lite::not_null{debugShader});
 
     // main material
     {
         InitRender(window, "Main material loading...");
-        mainMaterial = make_shared<Material>();
-        mainMaterial->Init(meshShader);
+        mainMaterial =
+            std::make_shared<Material>(gsl_lite::not_null{meshShader});
     }
 
-    // Sphere.Init(mainMaterial, "models/sphere.obj");
-    if (!TestMesh.Init(mainMaterial, "models/torus1.obj")) {
-        spdlog::critical(
-            "Scene initialization aborted: required model '{}' failed to "
-            "initialize",
-            "models/torus1.obj");
-        return EXIT_FAILURE;
-    }
-    if (!transparentTeapot.Init(mainMaterial, "models/teapot.obj")) {
-        spdlog::critical(
-            "Scene initialization aborted: required model '{}' failed to "
-            "initialize",
-            "models/teapot.obj");
-        return EXIT_FAILURE;
-    }
-    // Plane.Init(mainMaterial, "models/normal_plane.obj");
+    TestMesh = std::make_unique<Mesh>(gsl_lite::not_null{mainMaterial},
+                                      "models/torus1.obj");
+    transparentTeapot = std::make_unique<Mesh>(gsl_lite::not_null{mainMaterial},
+                                               "models/teapot.obj");
 
     // shadow shader
     {
@@ -598,14 +582,14 @@ int Application::InitScene(GLFWwindow* window) {
         shadowShader = make_shared<Shader>();
         shadowShader->AddShader(ReadFile("shaders/fbo.vsh"), VertexShader);
         shadowShader->AddShader(ReadFile("shaders/fbo.fsh"), FragmnetShader);
-        shadowShader->Init();
+        shadowShader->Link();
     }
 
     // shadow material
     {
         InitRender(window, "Shade Material loading...");
-        shadowMaterial = make_shared<Material>();
-        shadowMaterial->Init(shadowShader);
+        shadowMaterial =
+            std::make_shared<Material>(gsl_lite::not_null{shadowShader});
     }
 
     // shaded shader
@@ -616,31 +600,21 @@ int Application::InitScene(GLFWwindow* window) {
                                     VertexShader);
         shadowMeshShader->AddShader(ReadFile("shaders/shadowed.fsh"),
                                     FragmnetShader);
-        shadowMeshShader->Init();
+        shadowMeshShader->Link();
     }
 
     // shaded material
     {
         InitRender(window, "Shaded material loading...");
-        shadowMeshMaterial = make_shared<Material>();
-        shadowMeshMaterial->Init(shadowMeshShader);
+        shadowMeshMaterial =
+            std::make_shared<Material>(gsl_lite::not_null{shadowMeshShader});
         whiteTexture = make_shared<Texture2D>();
         whiteTexture->Load("Textures/white.png");
         shadowMeshMaterial->SetColorTexture(whiteTexture);
-        if (!Sphere.Init(shadowMeshMaterial, "models/normal_geosphere.obj")) {
-            spdlog::critical(
-                "Scene initialization aborted: required model '{}' failed to "
-                "initialize",
-                "models/normal_geosphere.obj");
-            return EXIT_FAILURE;
-        }
-        if (!Plane.Init(shadowMeshMaterial, "models/normal_plane.obj")) {
-            spdlog::critical(
-                "Scene initialization aborted: required model '{}' failed to "
-                "initialize",
-                "models/normal_plane.obj");
-            return EXIT_FAILURE;
-        }
+        Sphere = std::make_unique<Mesh>(gsl_lite::not_null{shadowMeshMaterial},
+                                        "models/normal_geosphere.obj");
+        Plane = std::make_unique<Mesh>(gsl_lite::not_null{shadowMeshMaterial},
+                                       "models/normal_plane.obj");
     }
 
     // StencilPass material shader
@@ -651,20 +625,19 @@ int Application::InitScene(GLFWwindow* window) {
             DSStencilPassShader = make_shared<Shader>();
             DSStencilPassShader->AddShader(
                 ReadFile("shaders/DSStencilPass.vsh"), VertexShader);
-            DSStencilPassShader->Init();
+            DSStencilPassShader->Link();
         }
         // load material
         {
-            DSStencilPassMaterial = make_shared<Material>();
-            DSStencilPassMaterial->Init(DSStencilPassShader);
+            DSStencilPassMaterial = std::make_shared<Material>(
+                gsl_lite::not_null{DSStencilPassShader});
         }
     }
 
     // GBuffer shader and buffer, material
     {
         InitRender(window, "Gbuffer shader loading...");
-        gBuffer1 = std::make_unique<GBuffer>();
-        gBuffer1->Init(width, height);
+        gBuffer1 = std::make_shared<GBuffer>(width, height);
         // load shader
         {
             DSGeometryPassShader = make_shared<Shader>();
@@ -672,12 +645,12 @@ int Application::InitScene(GLFWwindow* window) {
                 ReadFile("shaders/DSGeometryPass.vsh"), VertexShader);
             DSGeometryPassShader->AddShader(
                 ReadFile("shaders/DSGeometryPass.fsh"), FragmnetShader);
-            DSGeometryPassShader->Init();
+            DSGeometryPassShader->Link();
         }
         // load material
         {
-            DSGeometryPassMaterial = make_shared<Material>();
-            DSGeometryPassMaterial->Init(DSGeometryPassShader);
+            DSGeometryPassMaterial = std::make_shared<Material>(
+                gsl_lite::not_null{DSGeometryPassShader});
         }
     }
 
@@ -692,12 +665,12 @@ int Application::InitScene(GLFWwindow* window) {
                     ReadFile("shaders/DSPointLight.vsh"), VertexShader);
                 DSPointLightShader->AddShader(
                     ReadFile("shaders/DSPointLight.fsh"), FragmnetShader);
-                DSPointLightShader->Init();
+                DSPointLightShader->Link();
             }
             // load material
             {
-                DSPointLightMaterial = make_shared<Material>();
-                DSPointLightMaterial->Init(DSPointLightShader);
+                DSPointLightMaterial = std::make_shared<Material>(
+                    gsl_lite::not_null{DSPointLightShader});
             }
         }
 
@@ -709,12 +682,12 @@ int Application::InitScene(GLFWwindow* window) {
                     ReadFile("shaders/DSDirectionalLight.vsh"), VertexShader);
                 DSDirectionalLightShader->AddShader(
                     ReadFile("shaders/DSDirectionalLight.fsh"), FragmnetShader);
-                DSDirectionalLightShader->Init();
+                DSDirectionalLightShader->Link();
             }
             // load material
             {
-                DSDirectionalLightMaterial = make_shared<Material>();
-                DSDirectionalLightMaterial->Init(DSDirectionalLightShader);
+                DSDirectionalLightMaterial = std::make_shared<Material>(
+                    gsl_lite::not_null{DSDirectionalLightShader});
             }
         }
 
@@ -727,12 +700,12 @@ int Application::InitScene(GLFWwindow* window) {
                     ReadFile("shaders/DSSpotLight.vsh"), VertexShader);
                 DSSpotLightShader->AddShader(
                     ReadFile("shaders/DSSpotLight.fsh"), FragmnetShader);
-                DSSpotLightShader->Init();
+                DSSpotLightShader->Link();
             }
             // load material
             {
-                DSSpotLightMaterial = make_shared<Material>();
-                DSSpotLightMaterial->Init(DSSpotLightShader);
+                DSSpotLightMaterial = std::make_shared<Material>(
+                    gsl_lite::not_null{DSSpotLightShader});
             }
         }
     }
@@ -745,18 +718,14 @@ int Application::InitScene(GLFWwindow* window) {
 
         skyboxShader->AddShader(ReadFile("shaders/skybox.vsh"), VertexShader);
         skyboxShader->AddShader(ReadFile("shaders/skybox.fsh"), FragmnetShader);
-        skyboxShader->Init();
+        skyboxShader->Link();
     }
 
-    skybox1 = std::make_unique<SkyBox>(skyboxShader);
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    if (!skybox1->Init("Textures", "sp3right.tga", "sp3left.tga", "sp3top.tga",
-                       "sp3bot.tga", "sp3back.tga", "sp3front.tga")) {
-        spdlog::critical(
-            "Scene initialization aborted: required skybox model "
-            "'models/sphere.obj' failed to initialize");
-        return EXIT_FAILURE;
-    }
+    skybox1 =
+        std::make_unique<SkyBox>(gsl_lite::not_null{skyboxShader}, "Textures",
+                                 "sp3right.tga", "sp3left.tga", "sp3top.tga",
+                                 "sp3bot.tga", "sp3back.tga", "sp3front.tga");
     // setup lights and unit vectors
     {
         InitRender(window, "Init lights...");
@@ -792,50 +761,46 @@ int Application::InitScene(GLFWwindow* window) {
     // other
     {
         InitRender(window, "Final steps...");
-        bb1 = std::make_unique<Billboard>();
-        bb1->Init("Textures/monster_hellknight.png");
+        bb1 = std::make_unique<Billboard>("Textures/monster_hellknight.png");
         bb1->SetPos(glm::vec3(0, 0, 0));
 
         noise1 = std::make_unique<PerlinNoise>(1, 10.3, 0.5, 2, 42);
-        // fLine1->Init(string("fonts/MagistralIC_UTF-8.fnt"),textShader);
         // fLine1->SetAspectRatio(width,height);
 
         //*************Shadow MAP FBO**********/
         // smfbo1 = new ShadowMapFBO();
-        // smfbo1->Init(width,height);
+        // smfbo1->Resize(width,height);
         //************************************/
         // pGameCamera = new
         // Camera(width,height,light3->GetPos(),glm::vec3(-1.0,-1.0,-1.0),glm::vec3(0.0,1.0,0.0));
     }
-    deferredPipeline = std::make_unique<DeferredPipeline>();
-    if (!deferredPipeline->Init(
-            {.gBuffer = *gBuffer1,
-             .geometryShader = DSGeometryPassShader,
-             .stencilShader = DSStencilPassShader,
-             .pointLightShader = DSPointLightShader,
-             .spotLightShader = DSSpotLightShader,
-             .directionalLightShader = DSDirectionalLightShader,
-             .geometryMaterial = DSGeometryPassMaterial,
-             .stencilMaterial = DSStencilPassMaterial,
-             .pointLightMaterial = DSPointLightMaterial,
-             .spotLightMaterial = DSSpotLightMaterial,
-             .directionalLightMaterial = DSDirectionalLightMaterial})) {
-        spdlog::critical(
-            "Unable to initialize the deferred rendering pipeline");
-        return EXIT_FAILURE;
-    }
+    deferredPipeline =
+        std::make_unique<DeferredPipeline>(DeferredPipelineResources{
+            .gBuffer = gsl_lite::not_null{gBuffer1},
+            .geometryShader = gsl_lite::not_null{DSGeometryPassShader},
+            .stencilShader = gsl_lite::not_null{DSStencilPassShader},
+            .pointLightShader = gsl_lite::not_null{DSPointLightShader},
+            .spotLightShader = gsl_lite::not_null{DSSpotLightShader},
+            .directionalLightShader =
+                gsl_lite::not_null{DSDirectionalLightShader},
+            .geometryMaterial = gsl_lite::not_null{DSGeometryPassMaterial},
+            .stencilMaterial = gsl_lite::not_null{DSStencilPassMaterial},
+            .pointLightMaterial = gsl_lite::not_null{DSPointLightMaterial},
+            .spotLightMaterial = gsl_lite::not_null{DSSpotLightMaterial},
+            .directionalLightMaterial =
+                gsl_lite::not_null{DSDirectionalLightMaterial}});
     glFlush();
     initialized = true;
     return 0;
 }
 
-int Application::Run(GLFWwindow* window) {
-    glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, &FrameBufferSizeCallback);
-    glfwSetKeyCallback(window, &KeyCallback);
-    glfwSetCursorPosCallback(window, &MousePosCallBack);
-    glfwSetMouseButtonCallback(window, &MouseButtonCallback);
-    glfwMakeContextCurrent(window);
+int Application::Run(GLFWwindow& window) {
+    glfwSetWindowUserPointer(&window, this);
+    glfwSetFramebufferSizeCallback(&window, &FrameBufferSizeCallback);
+    glfwSetKeyCallback(&window, &KeyCallback);
+    glfwSetCursorPosCallback(&window, &MousePosCallBack);
+    glfwSetMouseButtonCallback(&window, &MouseButtonCallback);
+    glfwMakeContextCurrent(&window);
 
     int result = EXIT_SUCCESS;
     {
@@ -854,20 +819,21 @@ int Application::Run(GLFWwindow* window) {
         if (InitScene(window) != 0) {
             result = EXIT_FAILURE;
         } else {
-            while (glfwWindowShouldClose(window) == 0) {
+            while (glfwWindowShouldClose(&window) == 0) {
                 RenderScene();
-                glfwSwapBuffers(window);
+                glfwSwapBuffers(&window);
                 glfwPollEvents();
             }
         }
     }
 
-    glfwSetWindowUserPointer(window, nullptr);
+    glfwSetWindowUserPointer(&window, nullptr);
     return result;
 }
 
 int main(int argc, char* argv[]) {
-    ConfigureLogging(argc > 0 ? argv[0] : "NEE");
+    ConfigureLogging(argc > 0 ? std::filesystem::path(argv[0])
+                              : std::filesystem::path("NEE"));
     glfwSetErrorCallback(&Application::ErrorCallback);
     if (glfwInit() == 0) {
         return EXIT_FAILURE;
@@ -932,7 +898,7 @@ int main(int argc, char* argv[]) {
     int result = 0;
     {
         Application app;
-        result = app.Run(window);
+        result = app.Run(*window);
     }  // Destroy GL resources while the window's context still exists.
     glfwDestroyWindow(window);
     glfwTerminate();

@@ -75,10 +75,6 @@ public:
     void SetPos(glm::vec3 pos);
     void SetTarget(glm::vec3 _target);
     void Render(const Camera& cam) override;
-
-private:
-    void Init(GLfloat d1, GLfloat d2, GLfloat d3, GLfloat r, GLfloat g,
-              GLfloat b, float p1, float p2, float p3, float cutoff);
 };
 
 #endif  // LIGHT_H_INCLUDED

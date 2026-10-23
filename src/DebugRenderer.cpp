@@ -7,29 +7,24 @@
 #include "Camera.hpp"
 #include "Shader.hpp"
 
+DebugRenderer::DebugRenderer(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
+    : shader_(std::move(shader)) {
+    positionAttribute_ = shader_->GetAttribLocation("position");
+    viewProjectionUniform_ = shader_->GetUniformLocation("gWVCP");
+    colorUniform_ = shader_->GetUniformLocation("PixelColor");
+    pointSizeUniform_ = shader_->GetUniformLocation("size");
+    glGenBuffers(1, &vertexBuffer_);
+}
+
 DebugRenderer::~DebugRenderer() {
     if (vertexBuffer_ != 0) {
         glDeleteBuffers(1, &vertexBuffer_);
     }
 }
 
-bool DebugRenderer::Init(std::shared_ptr<Shader> shader) {
-    shader_ = std::move(shader);
-    if (shader_ == nullptr) {
-        return false;
-    }
-
-    positionAttribute_ = shader_->GetAttribLocation("position");
-    viewProjectionUniform_ = shader_->GetUniformLocation("gWVCP");
-    colorUniform_ = shader_->GetUniformLocation("PixelColor");
-    pointSizeUniform_ = shader_->GetUniformLocation("size");
-    glGenBuffers(1, &vertexBuffer_);
-    return vertexBuffer_ != 0;
-}
-
 void DebugRenderer::Render(std::span<const DebugLineRenderCommand> lines,
                            const Camera& camera) {
-    if (shader_ == nullptr || lines.empty()) {
+    if (lines.empty()) {
         return;
     }
 

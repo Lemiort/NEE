@@ -2,10 +2,10 @@
 
 #include <glad/gl.h>
 
-#include <cstdio>
-#include <cstdint>
-#include <filesystem>
 #include <array>
+#include <cstdint>
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <limits>
@@ -30,9 +30,8 @@ std::string ReadFile(const std::filesystem::path& filepath) {
     // Allocate the string buffer ahead of time
     std::string content;
     if (fileSize > static_cast<std::uintmax_t>(content.max_size()) ||
-        fileSize >
-            static_cast<std::uintmax_t>(
-                std::numeric_limits<std::streamsize>::max())) {
+        fileSize > static_cast<std::uintmax_t>(
+                       std::numeric_limits<std::streamsize>::max())) {
         throw std::length_error("File is too large to read: " +
                                 filepath.string());
     }
@@ -85,14 +84,14 @@ void Shader::AddShader(const std::string& source, ShaderType type) {
             break;
     }
 }
-void Shader::Init() {
-  FILE const* flog = nullptr;
-  // fopen_s(&flog,"shaderbuild.log","w");
-  shaderProgramID = glCreateProgram();
-  if (shaderProgramID == 0) {
-    spdlog::error("Error creating shader program");
-    throw std::runtime_error("Error creating shader program");
-  }
+void Shader::Link() {
+    FILE const* flog = nullptr;
+    // fopen_s(&flog,"shaderbuild.log","w");
+    shaderProgramID = glCreateProgram();
+    if (shaderProgramID == 0) {
+        spdlog::error("Error creating shader program");
+        throw std::runtime_error("Error creating shader program");
+    }
     if (vShader != 0) {
         glAttachShader(shaderProgramID, vShader);
     }
@@ -131,17 +130,17 @@ void Shader::Init() {
 
 void Shader::Use() {
     if (!initialized) {
-        Init();
+        Link();
     }
     glUseProgram(shaderProgramID);
 }
 
-GLint Shader::GetAttribLocation(const char* attribute) const {
-    return glGetAttribLocation(shaderProgramID, attribute);
+GLint Shader::GetAttribLocation(const std::string& attribute) const {
+    return glGetAttribLocation(shaderProgramID, attribute.c_str());
 }
 
-GLint Shader::GetUniformLocation(const char* attribute) const {
-    return glGetUniformLocation(shaderProgramID, attribute);
+GLint Shader::GetUniformLocation(const std::string& attribute) const {
+    return glGetUniformLocation(shaderProgramID, attribute.c_str());
 }
 
 Shader::~Shader() {

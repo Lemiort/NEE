@@ -20,17 +20,17 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces);
 
 class Texture {
 protected:
- GLuint texBufferID{};
- bool del;
- static std::string ConvertInternalFormatToString(GLenum format);
+    GLuint texBufferID{};
+    bool del;
+    static std::string ConvertInternalFormatToString(GLenum format);
 
 public:
- [[nodiscard]] GLuint GetTextureID() const;
- explicit Texture(bool _del = true);
- virtual ~Texture();
- // virtual ~Texture(bool del=true);
- std::string GetParameters() const;
- virtual void Bind(GLenum TextureUnit);
+    [[nodiscard]] GLuint GetTextureID() const;
+    explicit Texture(bool _del = true);
+    virtual ~Texture();
+    // virtual ~Texture(bool del=true);
+    std::string GetParameters() const;
+    virtual void Bind(GLenum TextureUnit);
 };
 
 class Texture2D : public Texture {
@@ -44,14 +44,6 @@ public:
 
     ~Texture2D() override;
     virtual bool Load(const std::string& path);
-};
-
-class ShadowTexture : public Texture2D {
-private:
-public:
-    ShadowTexture();
-    ~ShadowTexture() override;
-    bool Init(unsigned int WindowWidth, unsigned int WindowHeight);
 };
 
 class AbstractTexture : public Texture {

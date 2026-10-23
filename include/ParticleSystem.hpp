@@ -23,31 +23,30 @@ inline constexpr float PARTICLE_TYPE_SECONDARY_SHELL = 2.0F;
 
 class ParticleSystem {
 public:
-    ParticleSystem();
+    explicit ParticleSystem(glm::vec3 position);
     ~ParticleSystem();
-    bool Init(glm::vec3 Pos);
     void Render(int DeltaTimeMillis, const Camera& cam);
 
 private:
- bool m_isFirst{};
- unsigned int m_currVB{};
- unsigned int m_currTFB{};
- std::array<GLuint, 2> m_particleBuffer{};
- std::array<GLuint, 2> m_transformFeedback{};
- RandomTexture m_randomTexture;
- glm::vec3 m_Pos;
- Texture2D m_colorTexture;
- ParticleUpdateAssistant m_updateAssistant;
- BillboardAssistant m_billboardAssistant;
- int m_time{};
- void RenderParticles(const Camera& cam);
- void UpdateParticles(int DeltaTimeMillis);
- struct Particle {
-   float Type{};
-   glm::vec3 Pos;
-   glm::vec3 Vel;
-   float LifetimeMillis{};
- };
+    bool m_isFirst{};
+    unsigned int m_currVB{};
+    unsigned int m_currTFB{};
+    std::array<GLuint, 2> m_particleBuffer{};
+    std::array<GLuint, 2> m_transformFeedback{};
+    RandomTexture m_randomTexture;
+    glm::vec3 m_Pos;
+    Texture2D m_colorTexture;
+    ParticleUpdateAssistant m_updateAssistant;
+    BillboardAssistant m_billboardAssistant;
+    int m_time{};
+    void RenderParticles(const Camera& cam);
+    void UpdateParticles(int DeltaTimeMillis);
+    struct Particle {
+        float Type{};
+        glm::vec3 Pos;
+        glm::vec3 Vel;
+        float LifetimeMillis{};
+    };
     std::unique_ptr<Shader> m_shader;
 };
 

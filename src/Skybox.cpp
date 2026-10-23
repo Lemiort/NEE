@@ -11,6 +11,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -25,15 +26,13 @@ constexpr std::size_t kPositionComponentCount = 3;
 constexpr std::size_t kTriangleIndexCount = 3;
 }  // namespace
 
-SkyBox::SkyBox(const shared_ptr<Shader>& shader)
+SkyBox::SkyBox(gsl_lite::not_null<shared_ptr<Shader>> shader,
+               const string& directory, const string& positiveX,
+               const string& negativeX, const string& positiveY,
+               const string& negativeY, const string& positiveZ,
+               const string& negativeZ)
     : shaderProgramID(shader->GetShaderProgramId()) {
     shaderProgram = shader;
-}
-SkyBox::~SkyBox() = default;
-bool SkyBox::Init(const string& Directory, const string& PosXFilename,
-                  const string& NegXFilename, const string& PosYFilename,
-                  const string& NegYFilename, const string& PosZFilename,
-                  const string& NegZFilename) {
     Scale = 0;
     ModelData modelData;
     std::vector<float> spvertices;
@@ -41,7 +40,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     spverts = 0;
     try {
         if (!LoadModel("models/sphere.obj", modelData)) {
-            return false;
+            throw std::runtime_error("Unable to load skybox model");
         }
         const std::size_t vertexCount = modelData.vertices.size();
         const std::size_t indexCount = modelData.indices.size();
@@ -56,7 +55,7 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
             indexCount > maxBufferSize / sizeof(std::uint32_t) ||
             indexCount % kTriangleIndexCount != 0) {
             spdlog::error("Skybox model exceeds supported mesh limits");
-            return false;
+            throw std::length_error("Skybox model exceeds supported limits");
         }
 
         spvertices.reserve(vertexCount * kPositionComponentCount);
@@ -68,7 +67,14 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
         spfaces = static_cast<int>(indexCount / kTriangleIndexCount);
     } catch (const std::bad_alloc&) {
         spdlog::error("Unable to allocate data for skybox model");
-        return false;
+        throw;
+    }
+    pCubemapTex = std::make_unique<CubemapTexture>(
+        directory, positiveX, negativeX, positiveY, negativeY, positiveZ,
+        negativeZ);
+    if (!pCubemapTex->Load()) {
+        spdlog::error("Unable to load required skybox cubemap");
+        throw std::runtime_error("Unable to load skybox cubemap");
     }
     // create buffer to store everything
     glGenBuffers(1, &VBO);
@@ -85,21 +91,18 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
 
     // bind indices to buffer
     glGenBuffers(1, &IBO);
+    if (VBO == 0 || IBO == 0) {
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &IBO);
+        VBO = 0;
+        IBO = 0;
+        spdlog::error("Unable to create skybox GPU buffers");
+        throw std::runtime_error("Unable to create skybox GPU buffers");
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
                  modelData.indices.data(), GL_STATIC_DRAW);
 
-    try {
-        pCubemapTex = std::make_unique<CubemapTexture>(
-            Directory, PosXFilename, NegXFilename, PosYFilename, NegYFilename,
-            PosZFilename, NegZFilename);
-    } catch (const std::bad_alloc&) {
-        spdlog::error("Error creating new Cubemap");
-        return false;
-    }
-    pCubemapTex->Load();
-
-    shaderProgram->Use();
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
     // find uniform variable addresses
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
@@ -110,10 +113,11 @@ bool SkyBox::Init(const string& Directory, const string& PosXFilename,
     glActiveTexture(GL_TEXTURE2);
     glUniform1i(textureID, 2);
     transform_ = Transform{};
+}
 
-    // clean up memory
-    // vectors automatically cleaned up
-    return true;
+SkyBox::~SkyBox() {
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &IBO);
 }
 void SkyBox::Render(const Camera& cam) {
     GLint OldCullFaceMode = 0;

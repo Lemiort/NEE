@@ -2,6 +2,7 @@
 #define MATERIAL_H
 #include <glad/gl.h>
 
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 #include <vector>
 
@@ -10,9 +11,8 @@
 
 class Material {
 public:
-    Material();
+    explicit Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader);
     virtual ~Material();
-    bool Init(const std::shared_ptr<Shader>& _sh);
     void Use();
     void SetColorTexture(std::shared_ptr<Texture2D> _colorMap);
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
@@ -24,7 +24,7 @@ public:
     std::shared_ptr<Shader> GetShader() { return shaderProgram; }
 
 protected:
-    std::shared_ptr<Shader> shaderProgram;
+    gsl_lite::not_null<std::shared_ptr<Shader>> shaderProgram;
     std::shared_ptr<Texture2D> colorMap, normalMap, specularMap;
     std::shared_ptr<Texture2D> shadowMap;
     std::shared_ptr<AbstractTexture> abstractMap;

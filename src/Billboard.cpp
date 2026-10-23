@@ -6,39 +6,45 @@
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <stdexcept>
 #include <utility>
 
 #include "Camera.hpp"
 #include "Shader.hpp"
+#include "spdlog/spdlog.h"
 
-Billboard::Billboard() { Pos = glm::vec3(1, 1, 1); }
-
-Billboard::Billboard(std::shared_ptr<Shader> _shader) {
-    Pos = glm::vec3(0, 0, 0);
-    shaderProgram = std::move(_shader);
-    // shaderProgramID=_shader->shaderProgramID;
+namespace {
+std::shared_ptr<Shader> CreateBillboardShader() {
+    auto shader = std::make_shared<Shader>();
+    shader->AddShader(ReadFile("shaders/billboard.vsh"), VertexShader);
+    shader->AddShader(ReadFile("shaders/billboard.fsh"), FragmnetShader);
+    shader->AddShader(ReadFile("shaders/billboard.gsh"), GeometryShader);
+    shader->Link();
+    return shader;
 }
+}  // namespace
 
-Billboard::~Billboard() = default;
+Billboard::Billboard(const std::string& textureFilename)
+    : Billboard(gsl_lite::not_null{CreateBillboardShader()}, textureFilename) {}
 
-void Billboard::Init(const char* TexFilename) {
-    if (!shaderProgram) {
-        shaderProgram = std::make_shared<Shader>();
-        shaderProgram->AddShader(ReadFile("shaders/billboard.vsh"),
-                                 VertexShader);
-        shaderProgram->AddShader(ReadFile("shaders/billboard.fsh"),
-                                 FragmnetShader);
-        shaderProgram->AddShader(ReadFile("shaders/billboard.gsh"),
-                                 GeometryShader);
-        shaderProgram->Init();
+Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
+                     const std::string& textureFilename)
+    : Pos(0.0F) {
+    shaderProgram = std::move(shader);
+    if (!colorMap.Load(textureFilename)) {
+        spdlog::error("Unable to load billboard texture '{}'", textureFilename);
+        throw std::runtime_error("Unable to load billboard texture: " +
+                                 textureFilename);
     }
-    shaderProgram->Use();
-    colorMap.Load(TexFilename);
     colorMap.Bind(GL_TEXTURE0);
     colSamplerID = shaderProgram->GetUniformLocation("colTexSampler");
     glUniform1i(colSamplerID, 0);
 
     glGenBuffers(1, &VBO);
+    if (VBO == 0) {
+        spdlog::error("Unable to create billboard vertex buffer");
+        throw std::runtime_error("Unable to create billboard vertex buffer");
+    }
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     // creating a buffer
     const std::array<float, 3> coords = {Pos.x, Pos.y, Pos.z};
@@ -48,6 +54,8 @@ void Billboard::Init(const char* TexFilename) {
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
+
+Billboard::~Billboard() { glDeleteBuffers(1, &VBO); }
 void Billboard::SetPos(glm::vec3 pos) {
     this->Pos = pos;
     // glUseProgram(shaderProgramID);

@@ -9,6 +9,7 @@
 #include <limits>
 #include <memory>
 #include <new>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -36,11 +37,6 @@ const GLvoid* BufferOffset(std::size_t byteOffset) {
 }
 }  // namespace
 
-Mesh::Mesh() {
-    VBO = 0;
-    IBO = 0;
-}
-
 Mesh::~Mesh() {
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &IBO);
@@ -61,17 +57,14 @@ void Mesh::SetMaterial(shared_ptr<Material> _mat) {
         shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 }
 
-bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
-    mat = std::move(_mat);
-    if (mat == nullptr || model == nullptr) {
-        spdlog::error("Cannot initialize mesh without a material and model");
-        return false;
+Mesh::Mesh(gsl_lite::not_null<shared_ptr<Material>> material,
+           const std::string& model) {
+    mat = std::move(material);
+    if (model.empty()) {
+        spdlog::error("Cannot construct mesh without a model");
+        throw std::invalid_argument("Mesh model path must not be empty");
     }
     shaderProgram = mat->GetShader();
-
-    if (shaderProgram == nullptr) {
-        return false;
-    }
 
     Scale = 0;
     spfaces = 0;
@@ -79,11 +72,11 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
     ModelData modelData;
     try {
         if (!LoadModel(model, modelData)) {
-            return false;
+            throw std::runtime_error("Unable to load mesh model: " + model);
         }
     } catch (const std::bad_alloc&) {
         spdlog::error("Unable to allocate data for mesh model '{}'", model);
-        return false;
+        throw;
     }
 
     const std::size_t vertexCount = modelData.vertices.size();
@@ -99,7 +92,8 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         indexCount > maxBufferSize / sizeof(std::uint32_t) ||
         indexCount % kTriangleIndexCount != 0) {
         spdlog::error("Model '{}' exceeds supported mesh limits", model);
-        return false;
+        throw std::length_error("Mesh model exceeds supported limits: " +
+                                model);
     }
 
     std::vector<float> spvertices;
@@ -122,7 +116,7 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         }
     } catch (const std::bad_alloc&) {
         spdlog::error("Unable to allocate GPU data for mesh model '{}'", model);
-        return false;
+        throw;
     }
 
     spverts = static_cast<int>(vertexCount);
@@ -162,6 +156,15 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
 
     // bind indices to buffer
     glGenBuffers(1, &IBO);
+    if (VBO == 0 || IBO == 0) {
+        glDeleteBuffers(1, &VBO);
+        glDeleteBuffers(1, &IBO);
+        VBO = 0;
+        IBO = 0;
+        spdlog::error("Unable to create GPU buffers for mesh model '{}'",
+                      model);
+        throw std::runtime_error("Unable to create mesh GPU buffers: " + model);
+    }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
                  modelData.indices.data(), GL_STATIC_DRAW);
@@ -177,8 +180,6 @@ bool Mesh::Init(shared_ptr<Material> _mat, const char* model) {
         shaderProgram->GetUniformLocation("mRotate");  // rotation of object
 
     transform_ = Transform{};
-
-    return true;
 }
 void Mesh::Render(const Camera& /*cam*/) {
     const glm::mat4 modelMatrix = transform_.ModelMatrix();

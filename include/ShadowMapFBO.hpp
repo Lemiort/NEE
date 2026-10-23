@@ -8,9 +8,9 @@
 
 class ShadowMapFBO {
 public:
-    ShadowMapFBO();
+    ShadowMapFBO(GLsizei windowWidth, GLsizei windowHeight);
     virtual ~ShadowMapFBO();
-    bool Init(GLsizei windowWidth, GLsizei windowHeight);
+    bool Resize(GLsizei windowWidth, GLsizei windowHeight);
 
     [[nodiscard]] GLuint GetTexture() const;
 
@@ -30,7 +30,7 @@ public:
 
     [[nodiscard]] std::string CheckShadowTexture() const;
 
-   private:
+private:
     GLuint m_fbo{0};
     GLuint m_rbo{0};
     GLuint m_shadowMap{0};
