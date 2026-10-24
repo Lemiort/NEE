@@ -245,6 +245,57 @@ void SaveImage(const std::string& name, const Image& image) {
                        3);
 }
 
+TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
+    constexpr auto fragment = R"(#version 330
+        in vec3 fE;
+        in vec3 fN;
+        in vec3 Tangent;
+        in vec2 UV;
+        uniform float preserveAttributes;
+        out vec4 color;
+        void main() {
+            vec3 attributes = fN + Tangent + vec3(UV, 0.0);
+            color = vec4(fE / 10.0 + preserveAttributes * attributes, 1.0);
+        })";
+    auto shader = std::make_shared<Shader>();
+    shader->AddShader(ReadFile(Asset("shaders/DSSpotLight.vsh")),
+                      ShaderType::Vertex);
+    shader->AddShader(fragment, ShaderType::Fragment);
+    shader->Link();
+    auto material = std::make_shared<Material>(gsl_lite::not_null{shader});
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+
+    RenderTarget target;
+    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    shader->Use();
+    const glm::mat4 projection =
+        glm::orthoRH_NO(-2.0F, 2.0F, -2.0F, 2.0F, 0.1F, 10.0F);
+    glUniformMatrix4fv(shader->GetUniformLocation("gVC"), 1, GL_FALSE,
+                       glm::value_ptr(projection));
+    glUniform3f(shader->GetUniformLocation("s_vCamPos"), 2.0F, 3.0F, 4.0F);
+    glUniform1f(shader->GetUniformLocation("preserveAttributes"), 0.0F);
+    mesh.Draw(Transform{.position = {0.0F, 0.0F, -2.0F}}, *material,
+              MeshShaderBindings::FromShader(*shader));
+
+    const Image image = target.Read();
+    const std::size_t center =
+        static_cast<std::size_t>((kSize / 2 * kSize + kSize / 2) * 4);
+    EXPECT_NEAR(image.at(center), 51, 1);
+    EXPECT_NEAR(image.at(center + 1), 77, 1);
+    EXPECT_NEAR(image.at(center + 2), 102, 1);
+    EXPECT_EQ(image.at(center + 3), 255);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
 TEST_F(OpenGLRender, DirectionalLightFullscreenTriangleDrawsEachPixelOnce) {
     constexpr auto fragment = R"(#version 330
         out vec4 color;
