@@ -73,11 +73,13 @@ TEST_F(MaterialTextureOwnership, DestructionPreservesBorrowedAttachments) {
         material.SetTexture(positionTexture, 4);
         material.SetTexture(normalTexture, 5);
         material.Use();
-        EXPECT_NE(std::ranges::find(textureBindings,
-                                    std::pair{GL_TEXTURE4, positionTexture}),
+        EXPECT_NE(std::ranges::find(
+                      textureBindings,
+                      std::pair<GLenum, GLuint>{GL_TEXTURE4, positionTexture}),
                   textureBindings.end());
-        EXPECT_NE(std::ranges::find(textureBindings,
-                                    std::pair{GL_TEXTURE5, normalTexture}),
+        EXPECT_NE(std::ranges::find(
+                      textureBindings,
+                      std::pair<GLenum, GLuint>{GL_TEXTURE5, normalTexture}),
                   textureBindings.end());
     }
     EXPECT_FALSE(WasDeleted(positionTexture));
