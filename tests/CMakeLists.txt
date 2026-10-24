@@ -35,3 +35,37 @@ set_target_properties(material_texture_ownership_tests PROPERTIES
     CXX_EXTENSIONS NO
 )
 gtest_discover_tests(material_texture_ownership_tests)
+
+add_executable(opengl_render_tests
+    OpenGLRenderTests.cpp
+    ../src/Camera.cpp
+    ../src/CubemapTexture.cpp
+    ../src/GBuffer.cpp
+    ../src/Material.cpp
+    ../src/MaterialObject.cpp
+    ../src/Mesh.cpp
+    ../src/MeshInstanceRenderer.cpp
+    ../src/ModelLoader.cpp
+    ../src/RenderableObject.cpp
+    ../src/RenderQueue.cpp
+    ../src/Shader.cpp
+    ../src/Texture.cpp
+    ../src/Transformable.cpp
+    ../src/util.cpp
+)
+target_include_directories(opengl_render_tests PRIVATE ${PROJECT_SOURCE_DIR}/include)
+target_compile_definitions(opengl_render_tests PRIVATE
+    GLM_FORCE_CTOR_INIT
+    GLFW_INCLUDE_NONE
+    NEE_TEST_ASSET_ROOT="${PROJECT_SOURCE_DIR}"
+    NEE_TEST_ARTIFACT_ROOT="${CMAKE_CURRENT_BINARY_DIR}/render-artifacts"
+)
+target_link_libraries(opengl_render_tests PRIVATE
+    glad::glad glfw glm::glm gsl-lite::gsl-lite stb::stb spdlog::spdlog
+    assimp::assimp glaze::glaze GTest::gtest_main
+)
+set_target_properties(opengl_render_tests PROPERTIES
+    CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO
+)
+# Discovery only lists tests. GLFW is initialized inside each test, under Xvfb in CI.
+gtest_discover_tests(opengl_render_tests PROPERTIES LABELS opengl TIMEOUT 60)
