@@ -56,7 +56,6 @@ private:
     MeshShaderBindings stencilBindings_;
     MeshShaderBindings pointLightBindings_;
     MeshShaderBindings spotLightBindings_;
-    MeshShaderBindings directionalLightBindings_;
     gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial_;
@@ -64,7 +63,6 @@ private:
     gsl_lite::not_null<std::shared_ptr<Material>> directionalLightMaterial_;
     Mesh pointLightVolume_;
     Mesh spotLightVolume_;
-    Mesh directionalLightVolume_;
     GBufferDebugPass debugPass_;
     MeshInstanceRenderer instanceRenderer_;
 };

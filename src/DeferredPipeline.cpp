@@ -66,8 +66,6 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       stencilBindings_(MeshShaderBindings::FromShader(*stencilShader_)),
       pointLightBindings_(MeshShaderBindings::FromShader(*pointLightShader_)),
       spotLightBindings_(MeshShaderBindings::FromShader(*spotLightShader_)),
-      directionalLightBindings_(
-          MeshShaderBindings::FromShader(*directionalLightShader_)),
       geometryMaterial_(std::move(resources.geometryMaterial)),
       stencilMaterial_(std::move(resources.stencilMaterial)),
       pointLightMaterial_(std::move(resources.pointLightMaterial)),
@@ -76,9 +74,7 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       pointLightVolume_(gsl_lite::not_null{pointLightMaterial_},
                         "models/normal_geosphere.obj"),
       spotLightVolume_(gsl_lite::not_null{spotLightMaterial_},
-                       "models/cone.obj"),
-      directionalLightVolume_(gsl_lite::not_null{directionalLightMaterial_},
-                              "models/cube2x2x2.obj") {}
+                       "models/cone.obj") {}
 
 void DeferredPipeline::Render(const SceneView& scene,
                               ForwardPipeline& transparentPipeline) {
@@ -249,10 +245,8 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
-    directionalLightShader_->Use();
-    const glm::mat4 matrix = RenderPassViewProjection(camera);
-    glUniformMatrix4fv(directionalLightShader_->GetUniformLocation("gVC"), 1,
-                       GL_FALSE, glm::value_ptr(matrix));
+    BindGBufferTextures(*directionalLightMaterial_);
+    directionalLightMaterial_->Use();
     glUniform3f(directionalLightShader_->GetUniformLocation("s_vCamPos"),
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
     SetLightColor(directionalLightShader_->GetUniformLocation("dirLightColor"),
@@ -261,9 +255,7 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
     glUniform3f(
         directionalLightShader_->GetUniformLocation("dirLightDirection"),
         direction.x, direction.y, direction.z);
-    BindGBufferTextures(*directionalLightMaterial_);
-    directionalLightVolume_.Draw(Transform{}, *directionalLightMaterial_,
-                                 directionalLightBindings_);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);
 }

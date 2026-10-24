@@ -187,6 +187,42 @@ void SaveImage(const std::string& name, const Image& image) {
                        3);
 }
 
+TEST_F(OpenGLRender, DirectionalLightFullscreenTriangleDrawsEachPixelOnce) {
+    constexpr auto fragment = R"(#version 330
+        out vec4 color;
+        void main() {
+            color = vec4(0.25, 0.0, 0.0, 1.0);
+        })";
+    auto shader = std::make_shared<Shader>();
+    shader->AddShader(ReadFile(Asset("shaders/DSDirectionalLight.vsh")),
+                      ShaderType::Vertex);
+    shader->AddShader(fragment, ShaderType::Fragment);
+    shader->Link();
+
+    RenderTarget target;
+    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
+    glBlendFunc(GL_ONE, GL_ONE);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT);
+    shader->Use();
+    glUniform3f(shader->GetUniformLocation("s_vCamPos"), 0.0F, 0.0F, 0.0F);
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
+    const Image image = target.Read();
+    for (std::size_t index = 0; index < image.size(); index += 4) {
+        EXPECT_NEAR(image[index], 64, 1);
+        EXPECT_EQ(image[index + 1], 0);
+        EXPECT_EQ(image[index + 2], 0);
+        EXPECT_EQ(image[index + 3], 255);
+    }
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
 TEST_F(OpenGLRender, InstancedAndIndividualTransformsProduceMatchingImages) {
     // Both production vertex paths must produce the same geometry. The
     // diagnostic fragment consumes every geometry attribute without lighting
