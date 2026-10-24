@@ -21,6 +21,7 @@ gtest_discover_tests(math_migration_tests)
 
 add_executable(material_texture_ownership_tests
     MaterialTextureOwnershipTests.cpp
+    GpuResourceOwnershipTests.cpp
     ../src/Material.cpp
     ../src/Texture.cpp
     ../src/util.cpp

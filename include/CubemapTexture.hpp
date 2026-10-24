@@ -16,6 +16,10 @@ public:
                    const std::string& negativeZFilename);
 
     ~CubemapTexture();
+    CubemapTexture(const CubemapTexture&) = delete;
+    CubemapTexture& operator=(const CubemapTexture&) = delete;
+    CubemapTexture(CubemapTexture&&) = delete;
+    CubemapTexture& operator=(CubemapTexture&&) = delete;
 
     bool Load();
 

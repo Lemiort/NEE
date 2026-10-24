@@ -10,6 +10,10 @@ class ShadowMapFBO {
 public:
     ShadowMapFBO(GLsizei windowWidth, GLsizei windowHeight);
     virtual ~ShadowMapFBO();
+    ShadowMapFBO(const ShadowMapFBO&) = delete;
+    ShadowMapFBO& operator=(const ShadowMapFBO&) = delete;
+    ShadowMapFBO(ShadowMapFBO&&) = delete;
+    ShadowMapFBO& operator=(ShadowMapFBO&&) = delete;
     bool Resize(GLsizei windowWidth, GLsizei windowHeight);
 
     [[nodiscard]] GLuint GetTexture() const;
