@@ -241,11 +241,17 @@ void Application::FrameBufferSizeCallback(GLFWwindow* window, int w, int h) {
 }
 
 void Application::OnFrameBufferSize(int w, int h) {
+    if (w <= 0 || h <= 0) {
+        width = 0;
+        height = 0;
+        return;
+    }
+    if (gBuffer1 != nullptr && !gBuffer1->Resize(w, h)) {
+        spdlog::error("Keeping the previous framebuffer after resize failure");
+        return;
+    }
     width = w;
     height = h;
-    if (gBuffer1 != nullptr) {
-        gBuffer1->Resize(w, h);
-    }
     pGameCamera.OnViewportResize(width, height);
     glViewport(0, 0, width, height);
 }
@@ -614,6 +620,10 @@ int Application::Run(GLFWwindow& window) {
             result = EXIT_FAILURE;
         } else {
             while (glfwWindowShouldClose(&window) == 0) {
+                if (width <= 0 || height <= 0) {
+                    glfwWaitEvents();
+                    continue;
+                }
                 RenderScene();
                 glfwSwapBuffers(&window);
                 glfwPollEvents();
