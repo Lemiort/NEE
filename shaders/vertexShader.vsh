@@ -39,10 +39,10 @@ uniform float pLightInt;
 void main()                                                                   
 {                                                                             
 	mat4 world = instanced ? instanceWorld : gWorld;
-	mat4 rotation = instanced ? instanceRotation : mRotate;
+	mat4 normalMatrix = instanced ? instanceRotation : mRotate;
 	vec3 worldPosition = (world * vec4(s_vPosition, 1.0)).xyz;
 	gl_Position = gVC * vec4(worldPosition, 1.0);
-	fN=(rotation*s_vNormal).xyz;
+	fN = (normalMatrix * vec4(s_vNormal.xyz, 0.0)).xyz;
 	fL=-dLightDir;
 	fE=worldPosition-s_vCamPos;
 	UV=s_vUV;

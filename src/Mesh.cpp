@@ -175,7 +175,7 @@ void Mesh::Draw(const Transform& transform, const Material& material,
                 const MeshShaderBindings& bindings, float opacity,
                 GLuint instanceBuffer, GLsizei instanceCount) const {
     const glm::mat4 modelMatrix = transform.ModelMatrix();
-    const glm::mat4 rotationMatrix = transform.RotationMatrix();
+    const glm::mat4 normalMatrix = transform.NormalMatrix();
 
     material.Use(opacity);
     glUniform1i(bindings.instanced, instanceBuffer != 0);
@@ -196,7 +196,7 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glUniformMatrix4fv(bindings.world, 1, GL_FALSE,
                        glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(bindings.rotation, 1, GL_FALSE,
-                       glm::value_ptr(rotationMatrix));  // rotation of model
+                       glm::value_ptr(normalMatrix));
 
     glEnableVertexAttribArray(bindings.position);
     glEnableVertexAttribArray(bindings.normal);

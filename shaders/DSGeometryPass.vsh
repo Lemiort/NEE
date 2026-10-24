@@ -21,10 +21,10 @@ in vec3 s_vTangent;
 void main()                                                                   
 {                                                                             
 	mat4 world = instanced ? instanceWorld : gWorld;
-	mat4 rotation = instanced ? instanceRotation : mRotate;
+	mat4 normalMatrix = instanced ? instanceRotation : mRotate;
 	gl_Position = gVC*world *vec4(s_vPosition, 1.0);
 	//gl_Position = gWorld *vec4(s_vPosition, 1.0);	
-	fN=(rotation*s_vNormal).xyz;
+	fN = (normalMatrix * vec4(s_vNormal.xyz, 0.0)).xyz;
 	//fL=-dLightDir;
 	//fE=(gVC*gWorld*vec4(s_vCamPos,1)).xyz;
 	UV=s_vUV;

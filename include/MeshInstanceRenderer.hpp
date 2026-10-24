@@ -25,7 +25,7 @@ public:
 private:
     struct InstanceData {
         glm::mat4 world;
-        glm::mat4 rotation;
+        glm::mat4 normal;
     };
     GLuint buffer_{};
     std::vector<const MeshRenderCommand*> sorted_;
