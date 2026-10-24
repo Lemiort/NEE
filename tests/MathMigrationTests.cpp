@@ -1,6 +1,7 @@
 #include <GLFW/glfw3.h>
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <glm/ext/matrix_float4x4.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <glm/geometric.hpp>
@@ -8,8 +9,8 @@
 
 #include "Camera.hpp"
 #include "FontMetrics.hpp"
-#include "RenderQueue.hpp"
 #include "RenderMode.hpp"
+#include "RenderQueue.hpp"
 #include "Text2D.hpp"
 #include "TextLayout.hpp"
 #include "Transform.hpp"
@@ -77,6 +78,36 @@ TEST(ObjectTransform, RotationMatrixOmitsTranslationAndScale) {
     EXPECT_NEAR(rotated.y, 0.0F, kTolerance);
     EXPECT_NEAR(rotated.z, -1.0F, kTolerance);
     EXPECT_NEAR(rotated.w, 1.0F, kTolerance);
+}
+
+TEST(ObjectTransform,
+     NormalMatrixPreservesPerpendicularityAfterNonuniformScale) {
+    const Transform transform{.rotationDegrees = glm::vec3(20, 35, 10),
+                              .scale = glm::vec3(2.0F, 1.0F, 0.5F)};
+    const glm::vec3 localNormal = glm::normalize(glm::vec3(1, 1, 0));
+    const glm::vec3 localTangent = glm::normalize(glm::vec3(1, -1, 0));
+
+    const glm::vec3 worldNormal = glm::normalize(
+        glm::vec3(transform.NormalMatrix() * glm::vec4(localNormal, 0.0F)));
+    const glm::vec3 worldTangent = glm::normalize(
+        glm::vec3(transform.ModelMatrix() * glm::vec4(localTangent, 0.0F)));
+
+    EXPECT_NEAR(glm::dot(worldNormal, worldTangent), 0.0F, kTolerance);
+}
+
+TEST(ObjectTransform, NormalMatrixUsesFiniteRotationFallbackForCollapsedScale) {
+    const Transform transform{.rotationDegrees = glm::vec3(20, 35, 10),
+                              .scale = glm::vec3(0.0F, 2.0F, 3.0F)};
+    const glm::mat4 normalMatrix = transform.NormalMatrix();
+    const glm::mat4 rotationMatrix = transform.RotationMatrix();
+
+    for (glm::length_t column = 0; column < 4; ++column) {
+        for (glm::length_t row = 0; row < 4; ++row) {
+            EXPECT_TRUE(std::isfinite(normalMatrix[column][row]));
+            EXPECT_NEAR(normalMatrix[column][row], rotationMatrix[column][row],
+                        kTolerance);
+        }
+    }
 }
 
 TEST(ObjectTransform, TransformableKeepsSpatialStateTogether) {

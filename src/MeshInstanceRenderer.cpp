@@ -44,7 +44,7 @@ void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
             for (std::size_t index = begin; index < end; ++index) {
                 const auto& transform = sorted_[index]->transform;
                 instances_.push_back(
-                    {transform.ModelMatrix(), transform.RotationMatrix()});
+                    {transform.ModelMatrix(), transform.NormalMatrix()});
             }
             if (instances_.size() > static_cast<std::size_t>(
                                         std::numeric_limits<GLsizei>::max()) ||
