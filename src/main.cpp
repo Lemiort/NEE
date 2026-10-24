@@ -511,7 +511,7 @@ int Application::InitScene(GLFWwindow& window) {
     }
 
     // The viewer faces -Z by default, so the front image belongs on -Z.
-    scene.SetSkybox(SkyBox(gsl_lite::not_null{skyboxShader}, "Textures",
+    scene.SetSkybox(SkyBox(gsl_lite::not_null{skyboxShader}, "textures",
                            "sp3right.tga", "sp3left.tga", "sp3top.tga",
                            "sp3bot.tga", "sp3back.tga", "sp3front.tga"));
     // setup lights and unit vectors
@@ -535,7 +535,7 @@ int Application::InitScene(GLFWwindow& window) {
     // other
     {
         InitRender(window, "Final steps...");
-        scene.AddBillboard(Billboard("Textures/monster_hellknight.png"),
+        scene.AddBillboard(Billboard("textures/monster_hellknight.png"),
                            glm::vec3(0.0F));
 
         scene.AddMeshInstance(

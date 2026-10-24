@@ -87,7 +87,7 @@ ParticleSystem::ParticleSystem(glm::vec3 Pos) {
         }
 
         m_randomTexture.Bind(RANDOM_TEXTURE_UNIT);
-        if (!m_colorTexture.Load("Textures/fireworks_red.png")) {
+        if (!m_colorTexture.Load("textures/fireworks_red.png")) {
             spdlog::error("Unable to load particle color texture");
             throw std::runtime_error("Unable to load particle color texture");
         }

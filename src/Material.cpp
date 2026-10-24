@@ -4,6 +4,7 @@
 
 #include <cstddef>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -12,20 +13,24 @@
 #include "Util.hpp"
 #include "spdlog/spdlog.h"
 
+namespace {
+std::shared_ptr<Texture2D> LoadRequiredTexture(const std::string& path) {
+    auto texture = std::make_shared<Texture2D>();
+    if (!texture->Load(path)) {
+        spdlog::error("Unable to load required material texture '{}'", path);
+        throw std::runtime_error("Unable to load required material texture: " +
+                                 path);
+    }
+    return texture;
+}
+}  // namespace
+
 Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     : shaderProgram(std::move(shader)) {
-    colorMap = std::make_shared<Texture2D>();
-    auto tempMap = colorMap;
-    tempMap->Load("Textures/checker.tga");
-
-    normalMap = std::make_shared<Texture2D>();
-    normalMap->Load("Textures/normal_map.tga");
-
-    specularMap = std::make_shared<Texture2D>();
-    specularMap->Load("Textures/specular.tga");
-
-    shadowMap = std::make_shared<Texture2D>();
-    shadowMap->Load("Textures/white.png");
+    colorMap = LoadRequiredTexture("textures/checker.tga");
+    normalMap = LoadRequiredTexture("textures/normal_map.tga");
+    specularMap = LoadRequiredTexture("textures/specular.tga");
+    shadowMap = LoadRequiredTexture("textures/white.png");
 
     // abstract texture
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
