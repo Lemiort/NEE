@@ -40,15 +40,21 @@ const GLvoid* BufferOffset(std::size_t byteOffset) {
 Mesh::~Mesh() = default;
 
 MeshShaderBindings MeshShaderBindings::FromShader(const Shader& shader) {
-    return {.position = shader.GetAttribLocation("s_vPosition"),
-            .normal = shader.GetAttribLocation("s_vNormal"),
-            .uv = shader.GetAttribLocation("s_vUV"),
-            .tangent = shader.GetAttribLocation("s_vTangent"),
-            .world = shader.GetUniformLocation("gWorld"),
-            .rotation = shader.GetUniformLocation("mRotate"),
-            .instanceWorld = shader.GetAttribLocation("instanceWorld"),
-            .instanceRotation = shader.GetAttribLocation("instanceRotation"),
-            .instanced = shader.GetUniformLocation("instanced")};
+    MeshShaderBindings bindings{
+        .position = shader.GetAttribLocation("s_vPosition"),
+        .normal = shader.GetAttribLocation("s_vNormal"),
+        .uv = shader.GetAttribLocation("s_vUV"),
+        .tangent = shader.GetAttribLocation("s_vTangent"),
+        .world = shader.GetUniformLocation("gWorld"),
+        .rotation = shader.GetUniformLocation("mRotate"),
+        .instanceWorld = shader.GetAttribLocation("instanceWorld"),
+        .instanceRotation = shader.GetAttribLocation("instanceRotation"),
+        .instanced = shader.GetUniformLocation("instanced")};
+    if (bindings.position < 0) {
+        throw std::invalid_argument(
+            "Mesh shader must declare an active s_vPosition attribute");
+    }
+    return bindings;
 }
 
 void Mesh::SetMaterial(std::shared_ptr<Material> material) {
@@ -181,16 +187,24 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glUniform1i(bindings.instanced, instanceBuffer != 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(bindings.position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(bindings.normal, 3, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 3 *
-                                       static_cast<std::size_t>(vertexCount_)));
-    glVertexAttribPointer(bindings.uv, 2, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 6 *
-                                       static_cast<std::size_t>(vertexCount_)));
-    glVertexAttribPointer(bindings.tangent, 3, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 8 *
-                                       static_cast<std::size_t>(vertexCount_)));
+    const auto configureAttribute = [](GLint location, GLint componentCount,
+                                       const GLvoid* offset) {
+        if (location < 0) return;
+        const auto attribute = static_cast<GLuint>(location);
+        glVertexAttribPointer(attribute, componentCount, GL_FLOAT, GL_FALSE, 0,
+                              offset);
+        glEnableVertexAttribArray(attribute);
+    };
+    configureAttribute(bindings.position, 3, nullptr);
+    configureAttribute(bindings.normal, 3,
+                       BufferOffset(sizeof(float) * 3 *
+                                    static_cast<std::size_t>(vertexCount_)));
+    configureAttribute(bindings.uv, 2,
+                       BufferOffset(sizeof(float) * 6 *
+                                    static_cast<std::size_t>(vertexCount_)));
+    configureAttribute(bindings.tangent, 3,
+                       BufferOffset(sizeof(float) * 8 *
+                                    static_cast<std::size_t>(vertexCount_)));
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
     glUniformMatrix4fv(bindings.world, 1, GL_FALSE,
@@ -198,10 +212,6 @@ void Mesh::Draw(const Transform& transform, const Material& material,
     glUniformMatrix4fv(bindings.rotation, 1, GL_FALSE,
                        glm::value_ptr(rotationMatrix));  // rotation of model
 
-    glEnableVertexAttribArray(bindings.position);
-    glEnableVertexAttribArray(bindings.normal);
-    glEnableVertexAttribArray(bindings.uv);
-    glEnableVertexAttribArray(bindings.tangent);
     if (instanceBuffer != 0) {
         glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
         for (GLuint column = 0; column < 4; ++column) {
@@ -235,10 +245,11 @@ void Mesh::Draw(const Transform& transform, const Material& material,
             }
         }
     }
-    glDisableVertexAttribArray(bindings.position);
-    glDisableVertexAttribArray(bindings.normal);
-    glDisableVertexAttribArray(bindings.uv);
-    glDisableVertexAttribArray(bindings.tangent);
+    for (const GLint location :
+         {bindings.position, bindings.normal, bindings.uv, bindings.tangent}) {
+        if (location >= 0)
+            glDisableVertexAttribArray(static_cast<GLuint>(location));
+    }
 }
 
 int Mesh::GetNumFaces() const { return faceCount_; }
