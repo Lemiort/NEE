@@ -70,5 +70,9 @@ target_link_libraries(opengl_render_tests PRIVATE
 set_target_properties(opengl_render_tests PROPERTIES
     CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO
 )
-# Discovery only lists tests. GLFW is initialized inside each test, under Xvfb in CI.
-gtest_discover_tests(opengl_render_tests PROPERTIES LABELS opengl TIMEOUT 60)
+# Discovery only lists tests. GLFW is initialized inside each test, under Xvfb
+# in CI. Run from the application build root, where runtime assets are copied.
+gtest_discover_tests(opengl_render_tests
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    PROPERTIES LABELS opengl TIMEOUT 60
+)
