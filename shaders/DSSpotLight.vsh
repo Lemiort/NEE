@@ -15,11 +15,11 @@ uniform vec3 s_vCamPos;
 
  out vec3 Tangent;
  out vec2 UV;
- out vec3 fN; //нормаль
- out vec3 fE; //направление взгляда
+ out vec3 fN; //РЅРѕСЂРјР°Р»СЊ
+ out vec3 fE; //РЅР°РїСЂР°РІР»РµРЅРёРµ РІР·РіР»СЏРґР°
  
- //out vec4 pointLightPos; //позиция света в мировых координатах
- out vec4 screenSpacePos;//позиция точки в экранных координатах
+ //out vec4 pointLightPos; //РїРѕР·РёС†РёСЏ СЃРІРµС‚Р° РІ РјРёСЂРѕРІС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
+ out vec4 screenSpacePos;//РїРѕР·РёС†РёСЏ С‚РѕС‡РєРё РІ СЌРєСЂР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
  
 void main()                                                                   
 {                  
@@ -31,7 +31,7 @@ void main()
 	
 	fN=(mRotate*s_vNormal).xyz;
 	//fL=-dLightDir;
-	fE=(gVC*gWorld*vec4(s_vCamPos,1)).xyz;
+	fE = s_vCamPos;
 	UV=s_vUV;
 
 	/*float temp=length(-(gWorld*vec4(1,1,1,1.0)).xyz+pLightPos);
