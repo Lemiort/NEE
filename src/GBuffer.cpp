@@ -68,22 +68,13 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
                                GL_TEXTURE_2D, m_textures.at(i), 0);
     }
 
-    // create depth texture
+    // Create a combined depth/stencil texture. The external format and type
+    // must match GL_DEPTH32F_STENCIL8 even when no initial data is supplied.
     glGenTextures(1, &m_depthTexture);
-    // initialize depth map
     glBindTexture(GL_TEXTURE_2D, m_depthTexture);
-    // glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT32F, WindowWidth,
-    // WindowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, windowWidth,
-                 windowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    // TODO set these parameters correctly
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-    // glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-    // GL_TEXTURE_2D, m_depthTexture, 0);
+                 windowHeight, 0, GL_DEPTH_STENCIL,
+                 GL_FLOAT_32_UNSIGNED_INT_24_8_REV, nullptr);
     glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
                            GL_TEXTURE_2D, m_depthTexture, 0);
 
