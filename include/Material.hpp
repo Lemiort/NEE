@@ -18,6 +18,7 @@ public:
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
     void SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap);
     void SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap);
+    // Custom texture units borrow handles; their owners must outlive use.
     void SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num);
     void SetTexture(GLuint _map, GLuint num);
     [[nodiscard]] std::shared_ptr<Shader> GetShader() const {
@@ -28,7 +29,6 @@ protected:
     gsl_lite::not_null<std::shared_ptr<Shader>> shaderProgram;
     std::shared_ptr<Texture2D> colorMap, normalMap, specularMap;
     std::shared_ptr<Texture2D> shadowMap;
-    std::shared_ptr<AbstractTexture> abstractMap;
     GLint colTexID{}, normSamplerID{};
     GLuint texBufferID{}, normBufferID{};
     GLuint specBufferID{};

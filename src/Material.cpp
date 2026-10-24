@@ -32,8 +32,6 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     texturesID.resize(max_texture_units);
     abstractSamplersID.resize(max_texture_units);
 
-    abstractMap = std::make_shared<AbstractTexture>();
-
     for (std::size_t i = 0; i < static_cast<std::size_t>(max_texture_units);
          ++i) {
         abstractSamplersID.at(i) = 0;
@@ -109,12 +107,8 @@ void Material::Use(float drawOpacity) const {
     for (GLint i = 4; i < max_texture_units; i++) {
         const auto textureIndex = static_cast<std::size_t>(i);
         if (texturesID.at(textureIndex) != 0) {
-            abstractMap->SetTexture(texturesID.at(textureIndex));
-            abstractMap->Bind(GL_TEXTURE0 + i);
-            // std::cout<<"\n\ntex set as "<<texturesID[i]<<" render at unit num
-            // "<<i<<"\n sampler num is "<<abstractSamplersID[i]; std::cout<<"\n
-            // color sampler num is "<<colTexID; std::cout<<"\n norm sampler num
-            // is "<<normSamplerID;
+            glActiveTexture(GL_TEXTURE0 + i);
+            glBindTexture(GL_TEXTURE_2D, texturesID.at(textureIndex));
 
             // assign texture to active texture unit
             glUniform1i(abstractSamplersID.at(textureIndex),

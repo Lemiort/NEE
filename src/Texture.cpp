@@ -338,5 +338,3 @@ bool Texture2D::Load(const std::string& path) {
     texBufferID = loadTexture(path);
     return texBufferID != 0;
 }
-
-void AbstractTexture::SetTexture(GLuint _texID) { texBufferID = _texID; }

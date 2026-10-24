@@ -49,14 +49,4 @@ public:
     virtual bool Load(const std::string& path);
 };
 
-class AbstractTexture : public Texture {
-public:
-    AbstractTexture() { texBufferID = 0; }
-    ~AbstractTexture() override = default;
-
-    void SetTexture(GLuint _texID);
-
-protected:
-};
-
 #endif  // TEXTURE_H_INCLUDED
