@@ -2,7 +2,6 @@
 
 #include <array>
 #include <functional>
-#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/trigonometric.hpp>
@@ -15,15 +14,6 @@
 #include "RenderQueue.hpp"
 
 namespace {
-glm::mat4 RenderPassViewProjection(const Camera& camera) {
-    const glm::mat4 projection =
-        glm::perspectiveRH_NO(glm::radians(30.0F),
-                              static_cast<float>(camera.GetWidth()) /
-                                  static_cast<float>(camera.GetHeight()),
-                              1.0F, 1000.0F);
-    return projection * camera.GetViewMatrix();
-}
-
 void SetLightColor(GLint location, const glm::vec3& color) {
     const glm::mat4 matrix = glm::scale(glm::mat4(1.0F), color);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
@@ -117,7 +107,7 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glEnable(GL_DEPTH_TEST);
     glDisable(GL_BLEND);
     geometryShader_->Use();
-    const glm::mat4 matrix = RenderPassViewProjection(scene.camera);
+    const glm::mat4 matrix = scene.camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(geometryShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
 
@@ -138,7 +128,7 @@ void DeferredPipeline::StencilPass(const PointLight& light,
     glStencilFunc(GL_ALWAYS, 0, 0);
     glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
     glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
-    const glm::mat4 matrix = RenderPassViewProjection(camera);
+    const glm::mat4 matrix = camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
     pointLightVolume_.Draw(PointLightVolumeTransform(light), *stencilMaterial_,
@@ -156,7 +146,7 @@ void DeferredPipeline::StencilPass(const SpotLight& light,
     glStencilFunc(GL_ALWAYS, 0, 0);
     glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
     glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
-    const glm::mat4 matrix = RenderPassViewProjection(camera);
+    const glm::mat4 matrix = camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
     const std::optional<Transform> transform = SpotLightVolumeTransform(light);
@@ -182,7 +172,7 @@ void DeferredPipeline::PointLightPass(const PointLight& light,
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     pointLightShader_->Use();
-    const glm::mat4 matrix = RenderPassViewProjection(camera);
+    const glm::mat4 matrix = camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(pointLightShader_->GetUniformLocation("gVC"), 1,
                        GL_FALSE, glm::value_ptr(matrix));
     glUniform3f(pointLightShader_->GetUniformLocation("s_vCamPos"),
@@ -212,7 +202,7 @@ void DeferredPipeline::SpotLightPass(const SpotLight& light,
     glEnable(GL_CULL_FACE);
     glCullFace(GL_FRONT);
     spotLightShader_->Use();
-    const glm::mat4 matrix = RenderPassViewProjection(camera);
+    const glm::mat4 matrix = camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(spotLightShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
     glUniform3f(spotLightShader_->GetUniformLocation("s_vCamPos"),

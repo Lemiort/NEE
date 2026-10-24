@@ -4,7 +4,6 @@
 #include <array>
 #include <concepts>
 #include <functional>
-#include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_transform.hpp>
 #include <glm/geometric.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -19,15 +18,6 @@
 #include "Mesh.hpp"
 
 namespace {
-glm::mat4 RenderPassViewProjection(const Camera& camera) {
-    const glm::mat4 projection =
-        glm::perspectiveRH_NO(glm::radians(30.0F),
-                              static_cast<float>(camera.GetWidth()) /
-                                  static_cast<float>(camera.GetHeight()),
-                              1.0F, 1000.0F);
-    return projection * camera.GetViewMatrix();
-}
-
 void SetLightColor(GLint uniformLocation, const glm::vec3& color) {
     const glm::mat4 colorMatrix = glm::scale(glm::mat4(1.0F), color);
     glUniformMatrix4fv(uniformLocation, 1, GL_FALSE,
@@ -75,7 +65,7 @@ void ForwardPipeline::RenderTransparent(const SceneView& scene) {
 
 void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     meshShader_->Use();
-    const glm::mat4 viewProjection = RenderPassViewProjection(scene.camera);
+    const glm::mat4 viewProjection = scene.camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(cameraViewProjectionUniform_, 1, GL_FALSE,
                        glm::value_ptr(viewProjection));
 
@@ -121,7 +111,7 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
                                  scene.camera.GetZFar(), spotPosition,
                                  spotDirection, glm::vec3(0.0F, 1.0F, 0.0F));
         const glm::mat4 lightViewProjection =
-            RenderPassViewProjection(lightCamera);
+            lightCamera.GetViewProjectionMatrix();
         glUniformMatrix4fv(lightViewProjectionUniform_, 1, GL_FALSE,
                            glm::value_ptr(lightViewProjection));
     } else {

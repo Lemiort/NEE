@@ -244,6 +244,28 @@ TEST(CameraProjection, MapsNearAndFarPlanesToOpenGLDepth) {
     EXPECT_NEAR(farClip.z / farClip.w, 1.0F, kTolerance);
 }
 
+TEST(CameraProjection, FieldOfViewChangesProjectedGeometrySize) {
+    Camera camera(800, 600, 60, 1, 100);
+    const glm::vec4 point(1, 0, -3, 1);
+    const glm::vec4 wideClip = camera.GetViewProjectionMatrix() * point;
+
+    camera.SetFOV(30.0F);
+    const glm::vec4 narrowClip = camera.GetViewProjectionMatrix() * point;
+
+    EXPECT_GT(narrowClip.x / narrowClip.w, wideClip.x / wideClip.w);
+}
+
+TEST(CameraProjection, UpdatedNearPlaneControlsClipping) {
+    Camera camera(800, 600, 60, 1, 100);
+    camera.SetZNear(2.0F);
+    const glm::mat4 projectionView = camera.GetViewProjectionMatrix();
+    const glm::vec4 beforeNear = projectionView * glm::vec4(0, 0, -1, 1);
+    const glm::vec4 onNear = projectionView * glm::vec4(0, 0, -2, 1);
+
+    EXPECT_LT(beforeNear.z / beforeNear.w, -1.0F);
+    EXPECT_NEAR(onNear.z / onNear.w, -1.0F, kTolerance);
+}
+
 TEST(CameraProjection, ViewMatrixUsesPositionAndForwardDirection) {
     Camera const camera(800, 600, 60, 1, 100, glm::vec3(2, 3, 4),
                         glm::vec3(0, 0, -1), glm::vec3(0, 1, 0));
