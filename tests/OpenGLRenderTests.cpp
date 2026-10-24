@@ -298,10 +298,22 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     GBuffer buffer(kSize, kSize);
     EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
               GL_FRAMEBUFFER_COMPLETE);
+    glBindTexture(GL_TEXTURE_2D, buffer.GetDepthTexture());
+    GLint internalFormat = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                             &internalFormat);
+    EXPECT_EQ(internalFormat, GL_DEPTH32F_STENCIL8);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
     ASSERT_TRUE(buffer.Resize(64, 64));
     EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
               GL_FRAMEBUFFER_COMPLETE);
+    glBindTexture(GL_TEXTURE_2D, buffer.GetDepthTexture());
+    GLint width = 0;
+    GLint height = 0;
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
+    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
+    EXPECT_EQ(width, 64);
+    EXPECT_EQ(height, 64);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 }  // namespace
