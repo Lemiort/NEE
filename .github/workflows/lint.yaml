@@ -45,3 +45,8 @@ jobs:
           # repository-wide summary that exceeds GitHub's 1 MiB limit.
           ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false
           ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          # These validators inspect unchanged files or the whole repository,
+          # so keep their existing findings out of changed-file PR checks.
+          VALIDATE_CHECKOV: false
+          VALIDATE_GITHUB_ACTIONS_ZIZMOR: false
+          VALIDATE_JSCPD: false
