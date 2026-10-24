@@ -28,10 +28,10 @@ CubemapTexture::~CubemapTexture() {
 }
 
 bool CubemapTexture::Load() {
-    textureObject_ = loadCubeMap(fileNames_);
-    if (textureObject_ == 0) {
-        return false;
-    }
+    const GLuint replacement = loadCubeMap(fileNames_);
+    if (replacement == 0) return false;
+    if (textureObject_ != 0) glDeleteTextures(1, &textureObject_);
+    textureObject_ = replacement;
     glBindTexture(GL_TEXTURE_CUBE_MAP, textureObject_);
 
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

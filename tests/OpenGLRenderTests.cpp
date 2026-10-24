@@ -31,6 +31,27 @@ std::filesystem::path Asset(const std::string& path) {
     return std::filesystem::path(NEE_TEST_ASSET_ROOT) / path;
 }
 
+std::filesystem::path WriteTga(const std::string& name, int channels) {
+    const auto directory = std::filesystem::path(NEE_TEST_ARTIFACT_ROOT);
+    std::filesystem::create_directories(directory);
+    const auto path = directory / name;
+    constexpr int width = 3;
+    constexpr int height = 2;
+    std::vector<std::uint8_t> bytes(18 + width * height * channels, 0);
+    bytes[2] = channels <= 2 ? 3 : 2;
+    bytes[12] = width;
+    bytes[14] = height;
+    bytes[16] = static_cast<std::uint8_t>(channels * 8);
+    bytes[17] = 0x20;
+    for (std::size_t i = 18; i < bytes.size(); ++i) {
+        bytes[i] = static_cast<std::uint8_t>((i * 17) % 251);
+    }
+    std::ofstream file(path, std::ios::binary);
+    file.write(reinterpret_cast<const char*>(bytes.data()),
+               static_cast<std::streamsize>(bytes.size()));
+    return path;
+}
+
 std::shared_ptr<Shader> LoadShader(const std::string& vertex,
                                    const std::string& fragment,
                                    const std::string& geometry = {}) {
@@ -92,6 +113,15 @@ TEST_F(OpenGLRender, AssetLoadersReadRepositoryTexturesAndModels) {
                            "sp3left.tga", "sp3top.tga", "sp3bot.tga",
                            "sp3front.tga", "sp3back.tga");
     ASSERT_TRUE(cubemap.Load());
+    cubemap.Bind(GL_TEXTURE0);
+    GLint previousCubemap = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &previousCubemap);
+    ASSERT_TRUE(cubemap.Load());
+    cubemap.Bind(GL_TEXTURE0);
+    GLint replacementCubemap = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_CUBE_MAP, &replacementCubemap);
+    EXPECT_NE(replacementCubemap, previousCubemap);
+    EXPECT_FALSE(glIsTexture(static_cast<GLuint>(previousCubemap)));
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
     for (const auto* path : {"models/normal_geosphere.obj",
                              "models/normal_plane.obj", "models/teapot.obj"}) {
@@ -101,6 +131,34 @@ TEST_F(OpenGLRender, AssetLoadersReadRepositoryTexturesAndModels) {
         EXPECT_FALSE(model.vertices.empty());
         EXPECT_FALSE(model.indices.empty());
     }
+}
+
+TEST_F(OpenGLRender, TextureUploadsHandleAllChannelCountsAndReloadSafely) {
+    const std::array formats{GL_RED, GL_RG, GL_RGB, GL_RGBA};
+    Texture2D texture;
+    GLuint previousTexture = 0;
+    for (int channels = 1; channels <= 4; ++channels) {
+        SCOPED_TRACE(channels);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 8);
+        ASSERT_TRUE(texture.Load(
+            WriteTga("channels-" + std::to_string(channels) + ".tga", channels)
+                .string()));
+        if (previousTexture != 0) EXPECT_FALSE(glIsTexture(previousTexture));
+        previousTexture = texture.GetTextureID();
+        GLint internalFormat = 0;
+        GLint unpackAlignment = 0;
+        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                                 &internalFormat);
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignment);
+        EXPECT_EQ(internalFormat, formats.at(channels - 1));
+        EXPECT_EQ(unpackAlignment, 8);
+        EXPECT_EQ(glGetError(), GL_NO_ERROR);
+    }
+
+    const GLuint retainedTexture = texture.GetTextureID();
+    EXPECT_FALSE(texture.Load(Asset("textures/missing-image.png").string()));
+    EXPECT_EQ(texture.GetTextureID(), retainedTexture);
+    EXPECT_TRUE(glIsTexture(retainedTexture));
 }
 
 TEST_F(OpenGLRender, ProductionShaderProgramsLinkWithoutGlErrors) {
