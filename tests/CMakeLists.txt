@@ -35,7 +35,9 @@ set_target_properties(material_texture_ownership_tests PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
-gtest_discover_tests(material_texture_ownership_tests)
+gtest_discover_tests(material_texture_ownership_tests
+    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+)
 
 add_executable(opengl_render_tests
     OpenGLRenderTests.cpp
