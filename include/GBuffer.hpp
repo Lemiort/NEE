@@ -18,6 +18,10 @@ public:
 
     GBuffer(GLsizei windowWidth, GLsizei windowHeight);
     ~GBuffer();
+    GBuffer(const GBuffer&) = delete;
+    GBuffer& operator=(const GBuffer&) = delete;
+    GBuffer(GBuffer&&) = delete;
+    GBuffer& operator=(GBuffer&&) = delete;
 
     bool Resize(GLsizei windowWidth, GLsizei windowHeight);
 
