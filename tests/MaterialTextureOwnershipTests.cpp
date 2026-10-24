@@ -44,7 +44,10 @@ protected:
         glad_glDeleteTextures = DeleteTextures;
         glad_glBindTexture = BindTexture;
         glad_glActiveTexture = [](GLenum unit) { activeUnit = unit; };
-        glad_glGetIntegerv = [](GLenum, GLint* value) { *value = 16; };
+        glad_glGetIntegerv = [](GLenum parameter, GLint* value) {
+            *value = parameter == GL_UNPACK_ALIGNMENT ? 4 : 16;
+        };
+        glad_glPixelStorei = [](GLenum, GLint) {};
         glad_glGetUniformLocation = [](GLuint, const GLchar*) -> GLint {
             return 0;
         };

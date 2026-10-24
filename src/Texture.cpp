@@ -14,6 +14,37 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+namespace {
+class UnpackAlignmentGuard {
+public:
+    UnpackAlignmentGuard() {
+        glGetIntegerv(GL_UNPACK_ALIGNMENT, &previousAlignment_);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    }
+    ~UnpackAlignmentGuard() {
+        glPixelStorei(GL_UNPACK_ALIGNMENT, previousAlignment_);
+    }
+
+private:
+    GLint previousAlignment_{};
+};
+
+GLenum ImageFormat(int channels) {
+    switch (channels) {
+        case 1:
+            return GL_RED;
+        case 2:
+            return GL_RG;
+        case 3:
+            return GL_RGB;
+        case 4:
+            return GL_RGBA;
+        default:
+            return 0;
+    }
+}
+}  // namespace
+
 /**
  * Load an image file using stb_image and create an OpenGL 2D texture.
  * The function generates mipmaps, flips the image vertically (OpenGL
@@ -37,19 +68,18 @@ GLuint loadTexture(const std::string& path) {
         return 0;
     }
 
+    const GLenum format = ImageFormat(channels);
+    if (format == 0) {
+        spdlog::error("Unsupported channel count {} in texture {}", channels,
+                      path);
+        stbi_image_free(data);
+        return 0;
+    }
+
+    const UnpackAlignmentGuard unpackAlignment;
     GLuint texID = 0;
     glGenTextures(1, &texID);
     glBindTexture(GL_TEXTURE_2D, texID);
-    // Determine internal format
-    GLenum format = GL_RGB;
-    if (channels == 1) {
-        format = GL_RED;
-    } else if (channels == 3) {
-        format = GL_RGB;
-    } else if (channels == 4) {
-        format = GL_RGBA;
-    }
-
     glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0,
                  format, GL_UNSIGNED_BYTE, data);
     // Generate mipmaps
@@ -71,6 +101,7 @@ GLuint loadTexture(const std::string& path) {
 // returns its ID.  It also sets common parameters (linear filtering,
 // clamp‑to‑edge).
 GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
+    const UnpackAlignmentGuard unpackAlignment;
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
@@ -85,10 +116,14 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
             return 0;  // failure
         }
 
-        GLenum const format = (ch == 4 ? GL_RGBA : GL_RGB);
-        GLenum const internal = (ch == 4 ? GL_RGBA8 : GL_RGB8);
+        const GLenum format = ImageFormat(ch);
+        if (format == 0) {
+            stbi_image_free(data);
+            glDeleteTextures(1, &tex);
+            return 0;
+        }
         glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i), 0,
-                     static_cast<GLint>(internal), w, h, 0, format,
+                     static_cast<GLint>(format), w, h, 0, format,
                      GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
     }
@@ -335,6 +370,10 @@ Texture2D::Texture2D(GLuint _texBufferID, bool _del) {
 Texture2D::~Texture2D() = default;
 
 bool Texture2D::Load(const std::string& path) {
-    texBufferID = loadTexture(path);
-    return texBufferID != 0;
+    const GLuint replacement = loadTexture(path);
+    if (replacement == 0) return false;
+    if (del && texBufferID != 0) glDeleteTextures(1, &texBufferID);
+    texBufferID = replacement;
+    del = true;
+    return true;
 }
