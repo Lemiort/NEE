@@ -50,7 +50,8 @@ public:
     void Render(const Camera& cam) override;
     void Draw(const Transform& transform, const Material& material,
               const MeshShaderBindings& bindings, float opacity = 1.0F,
-              GLuint instanceBuffer = 0, GLsizei instanceCount = 1) const;
+              GLuint instanceBuffer = 0, GLsizei instanceCount = 1,
+              Shader* passShader = nullptr) const;
 
 private:
     int faceCount_{};

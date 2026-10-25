@@ -56,7 +56,6 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       stencilBindings_(MeshShaderBindings::FromShader(*stencilShader_)),
       pointLightBindings_(MeshShaderBindings::FromShader(*pointLightShader_)),
       spotLightBindings_(MeshShaderBindings::FromShader(*spotLightShader_)),
-      geometryMaterial_(std::move(resources.geometryMaterial)),
       stencilMaterial_(std::move(resources.stencilMaterial)),
       pointLightMaterial_(std::move(resources.pointLightMaterial)),
       spotLightMaterial_(std::move(resources.spotLightMaterial)),
@@ -112,7 +111,7 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
                        glm::value_ptr(matrix));
 
     instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), geometryBindings_,
-                             geometryMaterial_.get());
+                             geometryShader_.get());
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 }

@@ -16,11 +16,11 @@ public:
     MeshInstanceRenderer(const MeshInstanceRenderer&) = delete;
     MeshInstanceRenderer& operator=(const MeshInstanceRenderer&) = delete;
 
-    // A pass material overrides all instance materials (e.g. the G-buffer
-    // pass).
+    // A pass shader overrides shader selection while each command retains its
+    // surface material and textures.
     void Render(std::span<const MeshRenderCommand> commands,
                 const MeshShaderBindings& bindings,
-                const Material* passMaterial = nullptr);
+                Shader* passShader = nullptr);
 
 private:
     struct InstanceData {

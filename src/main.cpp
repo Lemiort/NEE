@@ -447,11 +447,6 @@ int Application::InitScene(GLFWwindow& window) {
                 {{"shaders/DSGeometryPass.vsh", ShaderType::Vertex},
                  {"shaders/DSGeometryPass.fsh", ShaderType::Fragment}});
         }
-        // load material
-        {
-            DSGeometryPassMaterial = std::make_shared<Material>(
-                gsl_lite::not_null{DSGeometryPassShader});
-        }
     }
 
     // light shaders
@@ -577,7 +572,6 @@ int Application::InitScene(GLFWwindow& window) {
             .spotLightShader = gsl_lite::not_null{DSSpotLightShader},
             .directionalLightShader =
                 gsl_lite::not_null{DSDirectionalLightShader},
-            .geometryMaterial = gsl_lite::not_null{DSGeometryPassMaterial},
             .stencilMaterial = gsl_lite::not_null{DSStencilPassMaterial},
             .pointLightMaterial = gsl_lite::not_null{DSPointLightMaterial},
             .spotLightMaterial = gsl_lite::not_null{DSSpotLightMaterial},

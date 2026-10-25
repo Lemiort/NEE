@@ -22,7 +22,6 @@ struct DeferredPipelineResources {
     gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader;
     gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader;
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader;
-    gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial;
@@ -56,7 +55,6 @@ private:
     MeshShaderBindings stencilBindings_;
     MeshShaderBindings pointLightBindings_;
     MeshShaderBindings spotLightBindings_;
-    gsl_lite::not_null<std::shared_ptr<Material>> geometryMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial_;
     gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial_;

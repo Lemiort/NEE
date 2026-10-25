@@ -65,6 +65,18 @@ std::shared_ptr<Shader> LoadShader(const std::string& vertex,
     return shader;
 }
 
+std::shared_ptr<Texture2D> SolidTexture(
+    const std::array<std::uint8_t, 4>& color) {
+    GLuint texture = 0;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 color.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    return std::make_shared<Texture2D>(texture);
+}
+
 class OpenGLRender : public testing::Test {
 protected:
     void SetUp() override {
@@ -437,6 +449,103 @@ TEST_F(OpenGLRender, InstancedAndIndividualTransformsProduceMatchingImages) {
         SaveImage("forward-geometry", pipelineImages[0]);
         SaveImage("deferred-geometry", pipelineImages[1]);
     }
+}
+
+TEST_F(OpenGLRender, PassShaderPreservesPerInstanceSurfaceMaterials) {
+    constexpr auto surfaceVertex = R"(#version 330
+        in vec3 s_vPosition;
+        void main() { gl_Position = vec4(s_vPosition, 1.0); })";
+    constexpr auto surfaceFragment = R"(#version 330
+        out vec4 color;
+        void main() { color = vec4(1.0); })";
+    auto surfaceShader = std::make_shared<Shader>();
+    surfaceShader->AddShader(surfaceVertex, ShaderType::Vertex);
+    surfaceShader->AddShader(surfaceFragment, ShaderType::Fragment);
+    surfaceShader->Link();
+
+    constexpr auto passFragment = R"(#version 330
+        in vec3 fN;
+        in vec3 Tangent;
+        in vec2 UV;
+        uniform float attributeWeight;
+        uniform sampler2D colTexSampler;
+        uniform sampler2D normTexSampler;
+        uniform sampler2D specTexSampler;
+        out vec4 color;
+        void main() {
+            vec3 surface = vec3(texture(colTexSampler, UV).r,
+                                texture(normTexSampler, UV).g,
+                                texture(specTexSampler, UV).b);
+            color = vec4(surface + attributeWeight * (fN + Tangent), 1.0);
+        })";
+    auto passShader = std::make_shared<Shader>();
+    passShader->AddShader(ReadFile(Asset("shaders/DSGeometryPass.vsh")),
+                          ShaderType::Vertex);
+    passShader->AddShader(passFragment, ShaderType::Fragment);
+    passShader->Link();
+
+    auto leftMaterial =
+        std::make_shared<Material>(gsl_lite::not_null{surfaceShader});
+    auto rightMaterial =
+        std::make_shared<Material>(gsl_lite::not_null{surfaceShader});
+    const auto leftTexture = SolidTexture({51, 76, 102, 255});
+    const auto rightTexture = SolidTexture({204, 178, 153, 255});
+    for (const auto& [material, texture] :
+         {std::pair{leftMaterial, leftTexture},
+          std::pair{rightMaterial, rightTexture}}) {
+        material->SetColorTexture(texture);
+        material->SetNormalTexture(texture);
+        material->SetSpecularTexture(texture);
+    }
+
+    Mesh mesh(gsl_lite::not_null{leftMaterial},
+              Asset("models/cube2x2x2.obj").string());
+    RenderQueue queue;
+    for (const float y : {-0.5F, 0.5F}) {
+        queue.SubmitOpaqueMesh(
+            mesh,
+            Transform{.position = {-0.8F, y, -3.0F}, .scale = glm::vec3(0.35F)},
+            leftMaterial);
+        queue.SubmitOpaqueMesh(
+            mesh,
+            Transform{.position = {0.8F, y, -3.0F}, .scale = glm::vec3(0.35F)},
+            rightMaterial);
+    }
+
+    RenderTarget target;
+    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
+    glDisable(GL_BLEND);
+    glDisable(GL_CULL_FACE);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    passShader->Use();
+    const glm::mat4 projection =
+        glm::orthoRH_NO(-2.0F, 2.0F, -2.0F, 2.0F, 0.1F, 10.0F);
+    glUniformMatrix4fv(passShader->GetUniformLocation("gVC"), 1, GL_FALSE,
+                       glm::value_ptr(projection));
+    glUniform1f(passShader->GetUniformLocation("attributeWeight"), 0.0F);
+    MeshInstanceRenderer renderer;
+    renderer.Render(queue.GetOpaqueMeshes(),
+                    MeshShaderBindings::FromShader(*passShader),
+                    passShader.get());
+
+    const Image image = target.Read();
+    const auto pixel = [&image](int x, int y, int channel) {
+        return image.at(
+            static_cast<std::size_t>((y * kSize + x) * 4 + channel));
+    };
+    for (const int y : {48, 80}) {
+        EXPECT_NEAR(pixel(38, y, 0), 51, 1);
+        EXPECT_NEAR(pixel(38, y, 1), 76, 1);
+        EXPECT_NEAR(pixel(38, y, 2), 102, 1);
+        EXPECT_NEAR(pixel(90, y, 0), 204, 1);
+        EXPECT_NEAR(pixel(90, y, 1), 178, 1);
+        EXPECT_NEAR(pixel(90, y, 2), 153, 1);
+    }
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
 TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {

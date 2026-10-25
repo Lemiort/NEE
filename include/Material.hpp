@@ -14,6 +14,7 @@ public:
     explicit Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader);
     virtual ~Material();
     void Use(float drawOpacity = 1.0F) const;
+    void UseWithShader(Shader& shader, float drawOpacity = 1.0F) const;
     void SetColorTexture(std::shared_ptr<Texture2D> _colorMap);
     void SetNormalTexture(std::shared_ptr<Texture2D> _normalMap);
     void SetSpecularTexture(std::shared_ptr<Texture2D> _specularMap);

@@ -11,34 +11,31 @@ MeshInstanceRenderer::~MeshInstanceRenderer() {
 
 void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
                                   const MeshShaderBindings& bindings,
-                                  const Material* passMaterial) {
+                                  Shader* passShader) {
     static_assert(sizeof(InstanceData) == 2 * sizeof(glm::mat4));
     sorted_.clear();
     for (const auto& command : commands) {
-        if (passMaterial != nullptr || command.material != nullptr)
-            sorted_.push_back(&command);
+        if (command.material != nullptr) sorted_.push_back(&command);
     }
-    const auto materialFor = [passMaterial](const MeshRenderCommand* command) {
-        return passMaterial != nullptr ? passMaterial : command->material.get();
-    };
     std::ranges::stable_sort(sorted_, [&](const auto* a, const auto* b) {
         if (&a->mesh.get() != &b->mesh.get())
             return std::less<const Mesh*>{}(&a->mesh.get(), &b->mesh.get());
-        return std::less<const Material*>{}(materialFor(a), materialFor(b));
+        return std::less<const Material*>{}(a->material.get(),
+                                            b->material.get());
     });
     for (std::size_t begin = 0; begin < sorted_.size();) {
         std::size_t end = begin + 1;
         while (end < sorted_.size() &&
                &sorted_[end]->mesh.get() == &sorted_[begin]->mesh.get() &&
-               materialFor(sorted_[end]) == materialFor(sorted_[begin]))
+               sorted_[end]->material == sorted_[begin]->material)
             ++end;
         const auto& first = *sorted_[begin];
-        const Material& material = *materialFor(&first);
+        const Material& material = *first.material;
         if (end - begin == 1 || bindings.instanceWorld < 0 ||
             bindings.instanceRotation < 0 || bindings.instanced < 0) {
             for (std::size_t index = begin; index < end; ++index)
                 first.mesh.get().Draw(sorted_[index]->transform, material,
-                                      bindings);
+                                      bindings, 1.0F, 0, 1, passShader);
         } else {
             instances_.clear();
             for (std::size_t index = begin; index < end; ++index) {
@@ -65,9 +62,9 @@ void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
                          static_cast<GLsizeiptr>(instances_.size() *
                                                  sizeof(InstanceData)),
                          instances_.data(), GL_STREAM_DRAW);
-            first.mesh.get().Draw(first.transform, material, bindings, 1.0F,
-                                  buffer_,
-                                  static_cast<GLsizei>(instances_.size()));
+            first.mesh.get().Draw(
+                first.transform, material, bindings, 1.0F, buffer_,
+                static_cast<GLsizei>(instances_.size()), passShader);
         }
         begin = end;
     }
