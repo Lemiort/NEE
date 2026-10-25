@@ -569,5 +569,20 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     EXPECT_EQ(width, 64);
     EXPECT_EQ(height, 64);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
+
+    const GLuint previousDepthTexture = buffer.GetDepthTexture();
+    EXPECT_FALSE(buffer.Resize(0, 64));
+    EXPECT_EQ(buffer.GetDepthTexture(), previousDepthTexture);
+    buffer.BindForWriting();
+    EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+
+    for (GLsizei size : {32, 96, 48}) {
+        ASSERT_TRUE(buffer.Resize(size, size));
+        EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
+                  GL_FRAMEBUFFER_COMPLETE);
+        EXPECT_EQ(glGetError(), GL_NO_ERROR);
+    }
 }
 }  // namespace
