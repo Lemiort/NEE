@@ -11,6 +11,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -260,14 +261,9 @@ void SaveImage(const std::string& name, const Image& image) {
 TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
     constexpr auto fragment = R"(#version 330
         in vec3 fE;
-        in vec3 fN;
-        in vec3 Tangent;
-        in vec2 UV;
-        uniform float preserveAttributes;
         out vec4 color;
         void main() {
-            vec3 attributes = fN + Tangent + vec3(UV, 0.0);
-            color = vec4(fE / 10.0 + preserveAttributes * attributes, 1.0);
+            color = vec4(fE / 10.0, 1.0);
         })";
     auto shader = std::make_shared<Shader>();
     shader->AddShader(ReadFile(Asset("shaders/DSSpotLight.vsh")),
@@ -294,7 +290,6 @@ TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
     glUniformMatrix4fv(shader->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(projection));
     glUniform3f(shader->GetUniformLocation("s_vCamPos"), 2.0F, 3.0F, 4.0F);
-    glUniform1f(shader->GetUniformLocation("preserveAttributes"), 0.0F);
     mesh.Draw(Transform{.position = {0.0F, 0.0F, -2.0F}}, *material,
               MeshShaderBindings::FromShader(*shader));
 
@@ -305,6 +300,53 @@ TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
     EXPECT_NEAR(image.at(center + 1), 77, 1);
     EXPECT_NEAR(image.at(center + 2), 102, 1);
     EXPECT_EQ(image.at(center + 3), 255);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, MeshBindingsRejectMissingPositionAttribute) {
+    constexpr auto vertex = R"(#version 330
+        void main() {
+            gl_Position = vec4(0.0);
+        })";
+    constexpr auto fragment = R"(#version 330
+        out vec4 color;
+        void main() {
+            color = vec4(1.0);
+        })";
+    auto shader = std::make_shared<Shader>();
+    shader->AddShader(vertex, ShaderType::Vertex);
+    shader->AddShader(fragment, ShaderType::Fragment);
+    shader->Link();
+
+    EXPECT_THROW(static_cast<void>(MeshShaderBindings::FromShader(*shader)),
+                 std::invalid_argument);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, StencilMeshDrawSkipsAbsentOptionalAttributes) {
+    constexpr auto fragment = R"(#version 330
+        out vec4 color;
+        void main() {
+            color = vec4(1.0);
+        })";
+    auto shader = std::make_shared<Shader>();
+    shader->AddShader(ReadFile(Asset("shaders/DSStencilPass.vsh")),
+                      ShaderType::Vertex);
+    shader->AddShader(fragment, ShaderType::Fragment);
+    shader->Link();
+    auto material = std::make_shared<Material>(gsl_lite::not_null{shader});
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+
+    RenderTarget target;
+    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    shader->Use();
+    const glm::mat4 projection(1.0F);
+    glUniformMatrix4fv(shader->GetUniformLocation("gVC"), 1, GL_FALSE,
+                       glm::value_ptr(projection));
+    mesh.Draw(Transform{}, *material, MeshShaderBindings::FromShader(*shader));
+
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
