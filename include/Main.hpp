@@ -86,7 +86,7 @@ private:
     std::shared_ptr<Shader> DSDirectionalLightShader, DSSpotLightShader,
         DSStencilPassShader;
     std::shared_ptr<Material> mainMaterial;
-    std::shared_ptr<Material> DSGeometryPassMaterial, DSPointLightMaterial;
+    std::shared_ptr<Material> DSPointLightMaterial;
     std::shared_ptr<Material> DSDirectionalLightMaterial, DSSpotLightMaterial,
         DSStencilPassMaterial;
     std::shared_ptr<GBuffer> gBuffer1;

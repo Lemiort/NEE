@@ -122,6 +122,29 @@ void Material::Use(float drawOpacity) const {
     }
 }
 
+void Material::UseWithShader(Shader& shader, float drawOpacity) const {
+    shader.Use();
+    colorMap->Bind(GL_TEXTURE0);
+    glUniform1i(shader.GetUniformLocation("colTexSampler"), 0);
+    normalMap->Bind(GL_TEXTURE1);
+    glUniform1i(shader.GetUniformLocation("normTexSampler"), 1);
+    specularMap->Bind(GL_TEXTURE2);
+    glUniform1i(shader.GetUniformLocation("specTexSampler"), 2);
+    shadowMap->Bind(GL_TEXTURE3);
+    glUniform1i(shader.GetUniformLocation("shadowTexSampler"), 3);
+    glUniform1f(shader.GetUniformLocation("opacity"), drawOpacity);
+
+    for (GLint unit = 4; unit < max_texture_units; ++unit) {
+        const auto textureIndex = static_cast<std::size_t>(unit);
+        if (texturesID.at(textureIndex) == 0) continue;
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glBindTexture(GL_TEXTURE_2D, texturesID.at(textureIndex));
+        glUniform1i(
+            shader.GetUniformLocation("gSampler" + ConvertToString(unit)),
+            unit);
+    }
+}
+
 void Material::SetColorTexture(std::shared_ptr<Texture2D> _colorMap) {
     colorMap = std::move(_colorMap);
 }

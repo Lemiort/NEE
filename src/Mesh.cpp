@@ -173,11 +173,15 @@ void Mesh::Render(const Camera& /*cam*/) {
 
 void Mesh::Draw(const Transform& transform, const Material& material,
                 const MeshShaderBindings& bindings, float opacity,
-                GLuint instanceBuffer, GLsizei instanceCount) const {
+                GLuint instanceBuffer, GLsizei instanceCount,
+                Shader* passShader) const {
     const glm::mat4 modelMatrix = transform.ModelMatrix();
     const glm::mat4 normalMatrix = transform.NormalMatrix();
 
-    material.Use(opacity);
+    if (passShader != nullptr)
+        material.UseWithShader(*passShader, opacity);
+    else
+        material.Use(opacity);
     glUniform1i(bindings.instanced, instanceBuffer != 0);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
