@@ -52,16 +52,15 @@ void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
                 throw std::length_error(
                     "Mesh instance batch exceeds GPU limits");
             if (buffer_ == 0) {
-                glGenBuffers(1, &buffer_);
+                glCreateBuffers(1, &buffer_);
                 if (buffer_ == 0)
                     throw std::runtime_error(
                         "Cannot create mesh instance buffer");
             }
-            glBindBuffer(GL_ARRAY_BUFFER, buffer_);
-            glBufferData(GL_ARRAY_BUFFER,
-                         static_cast<GLsizeiptr>(instances_.size() *
-                                                 sizeof(InstanceData)),
-                         instances_.data(), GL_STREAM_DRAW);
+            glNamedBufferData(buffer_,
+                              static_cast<GLsizeiptr>(instances_.size() *
+                                                      sizeof(InstanceData)),
+                              instances_.data(), GL_STREAM_DRAW);
             first.mesh.get().Draw(
                 first.transform, material, bindings, 1.0F, buffer_,
                 static_cast<GLsizei>(instances_.size()), passShader);

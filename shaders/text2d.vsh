@@ -1,6 +1,6 @@
-#version 330  
-in vec2 Position;//координата точки
-uniform vec2 s_Position;//положение на экране
+#version 460 core
+in vec2 Position;//РєРѕРѕСЂРґРёРЅР°С‚Р° С‚РѕС‡РєРё
+uniform vec2 s_Position;//РїРѕР»РѕР¶РµРЅРёРµ РЅР° СЌРєСЂР°РЅРµ
 uniform vec2 s_UV;
 uniform float size;
 in vec2 UV;

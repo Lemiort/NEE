@@ -41,8 +41,11 @@ gtest_discover_tests(material_texture_ownership_tests
 
 add_executable(opengl_render_tests
     OpenGLRenderTests.cpp
+    ../src/Billboard.cpp
     ../src/Camera.cpp
     ../src/CubemapTexture.cpp
+    ../src/DebugRenderer.cpp
+    ../src/FontMetrics.cpp
     ../src/GBuffer.cpp
     ../src/Material.cpp
     ../src/MaterialObject.cpp
@@ -51,7 +54,13 @@ add_executable(opengl_render_tests
     ../src/ModelLoader.cpp
     ../src/RenderableObject.cpp
     ../src/RenderQueue.cpp
+    ../src/RandomTexture.cpp
     ../src/Shader.cpp
+    ../src/ShadowMapFBO.cpp
+    ../src/Skybox.cpp
+    ../src/Text2D.cpp
+    ../src/TextModel.cpp
+    ../src/TextRenderer.cpp
     ../src/Texture.cpp
     ../src/Transformable.cpp
     ../src/util.cpp

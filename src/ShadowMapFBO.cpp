@@ -50,46 +50,37 @@ bool ShadowMapFBO::Resize(GLsizei windowWidth, GLsizei windowHeight) {
     m_rbo = 0;
     m_shadowMap = 0;
     m_textures.fill(0);
-    // Create depth buffer
-    glGenTextures(1, &m_shadowMap);
-    glBindTexture(GL_TEXTURE_2D, m_shadowMap);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, windowWidth,
-                 windowHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, nullptr);
-    // glTexImage2D(GL_TEXTURE_2D, 0,GL_RGBA8,WindowWidth, WindowHeight,
-    // 0,GL_RGBA8, GL_UNSIGNED_BYTE, 0);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_shadowMap);
+    glTextureStorage2D(m_shadowMap, 1, GL_DEPTH_COMPONENT24, windowWidth,
+                       windowHeight);
+    glTextureParameteri(m_shadowMap, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(m_shadowMap, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(m_shadowMap, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_shadowMap, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-    // Create FBO
-    glGenFramebuffers(1, &m_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
-
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
-                           GL_TEXTURE_2D, m_shadowMap, 0);
-
-    // Disable color buffer writing
-    // glDrawBuffer(GL_NONE);
-    glGenTextures(static_cast<GLsizei>(m_textures.size()), m_textures.data());
+    glCreateFramebuffers(1, &m_fbo);
+    glNamedFramebufferTexture(m_fbo, GL_DEPTH_ATTACHMENT, m_shadowMap, 0);
+    glCreateTextures(GL_TEXTURE_2D, static_cast<GLsizei>(m_textures.size()),
+                     m_textures.data());
     for (std::size_t i = 0; i < m_textures.size(); ++i) {
-        glBindTexture(GL_TEXTURE_2D, m_textures.at(i));
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, windowWidth, windowHeight, 0,
-                     GL_RGB, GL_FLOAT, nullptr);
-
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i),
-                               GL_TEXTURE_2D, m_textures.at(i), 0);
+        const GLuint texture = m_textures.at(i);
+        glTextureStorage2D(texture, 1, GL_RGBA32F, windowWidth, windowHeight);
+        glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glNamedFramebufferTexture(
+            m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i), texture, 0);
     }
 
     const std::array<GLenum, 4> drawBuffers = {
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
         GL_COLOR_ATTACHMENT3};
 
-    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
+    glNamedFramebufferDrawBuffers(
+        m_fbo, static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
 
     // check FBO status
-    GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum const status =
+        glCheckNamedFramebufferStatus(m_fbo, GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
             spdlog::info("Framebuffer complete.");
@@ -139,6 +130,5 @@ std::string ShadowMapFBO::CheckShadowTexture() const {
 }
 
 void ShadowMapFBO::BindForReading(GLenum TextureUnit) const {
-    glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_2D, m_shadowMap);
+    glBindTextureUnit(TextureUnit - GL_TEXTURE0, m_shadowMap);
 }

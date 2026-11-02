@@ -76,20 +76,17 @@ SkyBox::SkyBox(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
         throw std::runtime_error("Unable to load skybox cubemap");
     }
     // create buffer to store everything
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glCreateBuffers(1, &VBO);
     const auto vertexBufferBytes =
         static_cast<GLsizeiptr>(sizeof(float) * kPositionComponentCount *
                                 static_cast<std::size_t>(spverts));
     const auto indexBufferBytes =
         static_cast<GLsizeiptr>(sizeof(std::uint32_t) * kTriangleIndexCount *
                                 static_cast<std::size_t>(spfaces));
-    glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
-    // load vertices into buffer
-    glBufferSubData(GL_ARRAY_BUFFER, 0, vertexBufferBytes, spvertices.data());
+    glNamedBufferStorage(VBO, vertexBufferBytes, spvertices.data(), 0);
 
     // bind indices to buffer
-    glGenBuffers(1, &IBO);
+    glCreateBuffers(1, &IBO);
     if (VBO == 0 || IBO == 0) {
         glDeleteBuffers(1, &VBO);
         glDeleteBuffers(1, &IBO);
@@ -98,19 +95,17 @@ SkyBox::SkyBox(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
         spdlog::error("Unable to create skybox GPU buffers");
         throw std::runtime_error("Unable to create skybox GPU buffers");
     }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
-                 modelData.indices.data(), GL_STATIC_DRAW);
+    glNamedBufferStorage(IBO, indexBufferBytes, modelData.indices.data(), 0);
 
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    vertexArray_.SetBuffer(0, VBO, 3 * sizeof(float));
+    vertexArray_.SetIndices(IBO);
+    vertexArray_.SetAttribute(positionID, 0, 3);
     // find uniform variable addresses
     gWorldID = shaderProgram->GetUniformLocation("gWVP");
 
-    // do the same thing
-    pCubemapTex->Bind(GL_TEXTURE2);
     textureID = shaderProgram->GetUniformLocation("gCubemapTexture");
-    glActiveTexture(GL_TEXTURE2);
-    glUniform1i(textureID, 2);
+    glProgramUniform1i(shaderProgramID, textureID, 2);
     transform_ = Transform{};
 }
 
@@ -133,9 +128,7 @@ void SkyBox::Draw(const Camera& cam) const {
         cam.GetViewProjectionMatrix() * modelMatrix;
 
     shaderProgram->Use();
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    vertexArray_.Bind();
 
     pCubemapTex->Bind(GL_TEXTURE2);
     glUniform1i(textureID, 2);
@@ -143,12 +136,10 @@ void SkyBox::Draw(const Camera& cam) const {
     glUniformMatrix4fv(gWorldID, 1, GL_FALSE,
                        glm::value_ptr(worldViewProjection));
 
-    glEnableVertexAttribArray(positionID);
     glDrawElements(GL_TRIANGLES,
                    static_cast<GLsizei>(static_cast<std::size_t>(spfaces) *
                                         kTriangleIndexCount),
                    GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionID);
 
     glCullFace(OldCullFaceMode);
     glDepthFunc(OldDepthFuncMode);

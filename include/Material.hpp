@@ -27,6 +27,7 @@ public:
     }
 
 protected:
+    void BindTextures() const;
     gsl_lite::not_null<std::shared_ptr<Shader>> shaderProgram;
     std::shared_ptr<Texture2D> colorMap, normalMap, specularMap;
     std::shared_ptr<Texture2D> shadowMap;

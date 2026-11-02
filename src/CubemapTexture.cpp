@@ -32,18 +32,10 @@ bool CubemapTexture::Load() {
     if (replacement == 0) return false;
     if (textureObject_ != 0) glDeleteTextures(1, &textureObject_);
     textureObject_ = replacement;
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureObject_);
-
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return true;
 }
 
 void CubemapTexture::Bind(GLenum TextureUnit) const {
-    glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, textureObject_);
+    glBindTextureUnit(TextureUnit - GL_TEXTURE0, textureObject_);
 }

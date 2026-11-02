@@ -14,14 +14,21 @@
 #include <string>
 #include <vector>
 
+#include "Billboard.hpp"
 #include "CubemapTexture.hpp"
+#include "DebugRenderer.hpp"
 #include "GBuffer.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
 #include "ModelLoader.hpp"
+#include "RandomTexture.hpp"
 #include "Shader.hpp"
+#include "ShadowMapFBO.hpp"
+#include "Skybox.hpp"
+#include "TextRenderer.hpp"
 #include "Texture.hpp"
+#include "VertexArray.hpp"
 
 namespace {
 constexpr int kSize = 128;
@@ -86,15 +93,33 @@ protected:
         ASSERT_TRUE(glfwInit())
             << "A display is required; use xvfb-run on Linux.";
         glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_COMPAT_PROFILE);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+        glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+        glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, GLFW_TRUE);
         glfwWindowHint(GLFW_SAMPLES, 0);
         window_ = glfwCreateWindow(kSize, kSize, "NEE rendering tests", nullptr,
                                    nullptr);
         ASSERT_NE(window_, nullptr);
         glfwMakeContextCurrent(window_);
         ASSERT_NE(gladLoadGL(glfwGetProcAddress), 0);
+        ASSERT_TRUE(GLAD_GL_VERSION_4_6);
+        GLint profile = 0;
+        glGetIntegerv(GL_CONTEXT_PROFILE_MASK, &profile);
+        ASSERT_NE(profile & GL_CONTEXT_CORE_PROFILE_BIT, 0);
+        glEnable(GL_DEBUG_OUTPUT);
+        glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+        glDebugMessageCallback(
+            [](GLenum, GLenum type, GLuint, GLenum, GLsizei,
+               const GLchar* message, const void*) {
+                if (type == GL_DEBUG_TYPE_ERROR ||
+                    type == GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR)
+                    ADD_FAILURE() << "OpenGL: " << message;
+            },
+            nullptr);
+        // Fullscreen procedural draws still require a VAO in a core context.
+        emptyVertexArray_ = std::make_unique<VertexArray>();
+        emptyVertexArray_->Bind();
         glViewport(0, 0, kSize, kSize);
         glDisable(GL_DITHER);
         glDisable(GL_MULTISAMPLE);
@@ -103,12 +128,14 @@ protected:
 
     void TearDown() override {
         // Test-local resources are destroyed before the context.
+        emptyVertexArray_.reset();
         if (window_ != nullptr) glfwDestroyWindow(window_);
         glfwTerminate();
     }
 
 private:
     GLFWwindow* window_{};
+    std::unique_ptr<VertexArray> emptyVertexArray_;
 };
 
 TEST_F(OpenGLRender, AssetLoadersReadRepositoryTexturesAndModels) {
@@ -146,7 +173,7 @@ TEST_F(OpenGLRender, AssetLoadersReadRepositoryTexturesAndModels) {
 }
 
 TEST_F(OpenGLRender, TextureUploadsHandleAllChannelCountsAndReloadSafely) {
-    const std::array formats{GL_RED, GL_RG, GL_RGB, GL_RGBA};
+    const std::array formats{GL_R8, GL_RG8, GL_RGB8, GL_RGBA8};
     Texture2D texture;
     GLuint previousTexture = 0;
     for (int channels = 1; channels <= 4; ++channels) {
@@ -159,8 +186,9 @@ TEST_F(OpenGLRender, TextureUploadsHandleAllChannelCountsAndReloadSafely) {
         previousTexture = texture.GetTextureID();
         GLint internalFormat = 0;
         GLint unpackAlignment = 0;
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
-                                 &internalFormat);
+        glGetTextureLevelParameteriv(texture.GetTextureID(), 0,
+                                     GL_TEXTURE_INTERNAL_FORMAT,
+                                     &internalFormat);
         glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpackAlignment);
         EXPECT_EQ(internalFormat, formats.at(channels - 1));
         EXPECT_EQ(unpackAlignment, 8);
@@ -174,6 +202,8 @@ TEST_F(OpenGLRender, TextureUploadsHandleAllChannelCountsAndReloadSafely) {
 }
 
 TEST_F(OpenGLRender, ProductionShaderProgramsLinkWithoutGlErrors) {
+    // Shader linking must also work before any draw input has been bound.
+    glBindVertexArray(0);
     const std::array pairs{
         std::pair{"vertexShader.vsh", "fragmentShader.fsh"},
         std::pair{"DSGeometryPass.vsh", "DSGeometryPass.fsh"},
@@ -258,7 +288,7 @@ void SaveImage(const std::string& name, const Image& image) {
 }
 
 TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
-    constexpr auto fragment = R"(#version 330
+    constexpr auto fragment = R"(#version 460 core
         in vec3 fE;
         in vec3 fN;
         in vec3 Tangent;
@@ -309,7 +339,7 @@ TEST_F(OpenGLRender, DeferredSpotlightKeepsCameraPositionInWorldSpace) {
 }
 
 TEST_F(OpenGLRender, DirectionalLightFullscreenTriangleDrawsEachPixelOnce) {
-    constexpr auto fragment = R"(#version 330
+    constexpr auto fragment = R"(#version 460 core
         out vec4 color;
         void main() {
             color = vec4(0.25, 0.0, 0.0, 1.0);
@@ -348,7 +378,7 @@ TEST_F(OpenGLRender, InstancedAndIndividualTransformsProduceMatchingImages) {
     // Both production vertex paths must produce the same geometry. The
     // diagnostic fragment consumes every geometry attribute without lighting
     // differences.
-    constexpr auto fragment = R"(#version 330
+    constexpr auto fragment = R"(#version 460 core
         in vec3 fN;
         in vec3 Tangent;
         in vec2 UV;
@@ -452,10 +482,10 @@ TEST_F(OpenGLRender, InstancedAndIndividualTransformsProduceMatchingImages) {
 }
 
 TEST_F(OpenGLRender, PassShaderPreservesPerInstanceSurfaceMaterials) {
-    constexpr auto surfaceVertex = R"(#version 330
+    constexpr auto surfaceVertex = R"(#version 460 core
         in vec3 s_vPosition;
         void main() { gl_Position = vec4(s_vPosition, 1.0); })";
-    constexpr auto surfaceFragment = R"(#version 330
+    constexpr auto surfaceFragment = R"(#version 460 core
         out vec4 color;
         void main() { color = vec4(1.0); })";
     auto surfaceShader = std::make_shared<Shader>();
@@ -463,7 +493,7 @@ TEST_F(OpenGLRender, PassShaderPreservesPerInstanceSurfaceMaterials) {
     surfaceShader->AddShader(surfaceFragment, ShaderType::Fragment);
     surfaceShader->Link();
 
-    constexpr auto passFragment = R"(#version 330
+    constexpr auto passFragment = R"(#version 460 core
         in vec3 fN;
         in vec3 Tangent;
         in vec2 UV;
@@ -550,6 +580,7 @@ TEST_F(OpenGLRender, PassShaderPreservesPerInstanceSurfaceMaterials) {
 
 TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     GBuffer buffer(kSize, kSize);
+    buffer.BindForWriting();
     EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
               GL_FRAMEBUFFER_COMPLETE);
     glBindTexture(GL_TEXTURE_2D, buffer.GetDepthTexture());
@@ -559,6 +590,7 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     EXPECT_EQ(internalFormat, GL_DEPTH32F_STENCIL8);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
     ASSERT_TRUE(buffer.Resize(64, 64));
+    buffer.BindForWriting();
     EXPECT_EQ(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER),
               GL_FRAMEBUFFER_COMPLETE);
     glBindTexture(GL_TEXTURE_2D, buffer.GetDepthTexture());
@@ -568,6 +600,99 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
     EXPECT_EQ(width, 64);
     EXPECT_EQ(height, 64);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {
+    const auto sentinel = SolidTexture({255, 0, 0, 255});
+    glActiveTexture(GL_TEXTURE3);
+    sentinel->Bind(GL_TEXTURE3);
+    RenderTarget target;
+    GLint textureBinding = 0;
+    GLint drawBinding = 0;
+    GLint readBinding = 0;
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &textureBinding);
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &drawBinding);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &readBinding);
+
+    Texture2D texture;
+    ASSERT_TRUE(texture.Load(Asset("textures/checker.tga").string()));
+    EXPECT_FALSE(texture.GetParameters().empty());
+    GBuffer gbuffer(kSize, kSize);
+    ShadowMapFBO shadow(kSize, kSize);
+    ASSERT_TRUE(gbuffer.Resize(64, 32));
+    ASSERT_TRUE(shadow.Resize(64, 32));
+    RandomTexture random;
+    ASSERT_TRUE(random.InitRandomTexture(32));
+    ASSERT_TRUE(random.InitRandomTexture(16));
+
+    GLint actual = 0;
+    glGetIntegerv(GL_ACTIVE_TEXTURE, &actual);
+    EXPECT_EQ(actual, GL_TEXTURE3);
+    glGetIntegerv(GL_TEXTURE_BINDING_2D, &actual);
+    EXPECT_EQ(actual, textureBinding);
+    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &actual);
+    EXPECT_EQ(actual, drawBinding);
+    glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &actual);
+    EXPECT_EQ(actual, readBinding);
+    GLint immutable = 0;
+    glGetTextureParameteriv(texture.GetTextureID(), GL_TEXTURE_IMMUTABLE_FORMAT,
+                            &immutable);
+    EXPECT_EQ(immutable, GL_TRUE);
+    glGetTextureParameteriv(texture.GetTextureID(), GL_TEXTURE_IMMUTABLE_LEVELS,
+                            &actual);
+    EXPECT_GT(actual, 1);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, RenderersOwnTheirVertexInputInCoreProfile) {
+    RenderTarget target;
+    Camera camera(kSize, kSize, 60.0F, 0.1F, 100.0F);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
+    glClearColor(0, 0, 0, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    const auto billboardShader =
+        LoadShader("shaders/billboard.vsh", "shaders/billboard.fsh",
+                   "shaders/billboard.gsh");
+    Billboard billboard(gsl_lite::not_null{billboardShader},
+                        Asset("textures/white.png").string());
+    billboard.SetPos({0, 0, -3});
+    glBindVertexArray(0);
+    billboard.Draw(camera, {0, 0, -3});
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+
+    const auto debugShader =
+        LoadShader("shaders/lightVS.vsh", "shaders/lightFS.fsh");
+    DebugRenderer debug(gsl_lite::not_null{debugShader});
+    const std::array lines{DebugLineRenderCommand{
+        .start = {-1, 0, -2}, .end = {1, 0, -2}, .color = {1, 0, 0}}};
+    glBindVertexArray(0);
+    debug.Render(lines, camera);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+
+    const auto textShader =
+        LoadShader("shaders/text2d.vsh", "shaders/text2d.fsh");
+    TextRenderer text(gsl_lite::not_null{textShader});
+    auto font = std::make_shared<Font2d>();
+    ASSERT_TRUE(font->Load(Asset("fonts/MagistralIC_UTF-8.fnt").string()));
+    ASSERT_TRUE(text.RegisterFont(*font));
+    FontLine2d line;
+    line.SetFont(font);
+    line.SetText("OpenGL 4.6");
+    line.SetFontSize(24);
+    glBindVertexArray(0);
+    text.Render(line, camera);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+
+    const auto skyboxShader =
+        LoadShader("shaders/skybox.vsh", "shaders/skybox.fsh");
+    SkyBox skybox(gsl_lite::not_null{skyboxShader}, Asset("textures").string(),
+                  "sp3right.tga", "sp3left.tga", "sp3top.tga", "sp3bot.tga",
+                  "sp3front.tga", "sp3back.tga");
+    glBindVertexArray(0);
+    skybox.Draw(camera);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 }  // namespace
