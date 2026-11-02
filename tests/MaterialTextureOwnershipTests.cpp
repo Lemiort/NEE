@@ -16,12 +16,12 @@
 Shader::Shader() = default;
 Shader::~Shader() = default;
 void Shader::Use() {}
+void Shader::Link() {}
 GLint Shader::GetUniformLocation(const std::string&) const { return 0; }
 
 namespace {
 std::vector<GLuint> deletedTextures;
 std::vector<std::pair<GLenum, GLuint>> textureBindings;
-GLenum activeUnit = GL_TEXTURE0;
 GLuint nextTexture = 1;
 
 void GLAD_API_PTR DeleteTextures(GLsizei count, const GLuint* textures) {
@@ -30,20 +30,19 @@ void GLAD_API_PTR DeleteTextures(GLsizei count, const GLuint* textures) {
     }
 }
 
-void GLAD_API_PTR BindTexture(GLenum, GLuint texture) {
-    textureBindings.emplace_back(activeUnit, texture);
-}
-
 class MaterialTextureOwnership : public testing::Test {
 protected:
     void SetUp() override {
         deletedTextures.clear();
         textureBindings.clear();
         nextTexture = 1;
-        activeUnit = GL_TEXTURE0;
         glad_glDeleteTextures = DeleteTextures;
-        glad_glBindTexture = BindTexture;
-        glad_glActiveTexture = [](GLenum unit) { activeUnit = unit; };
+        glad_glBindTextures = [](GLuint first, GLsizei count,
+                                 const GLuint* textures) {
+            for (GLsizei i = 0; i < count; ++i)
+                textureBindings.emplace_back(GL_TEXTURE0 + first + i,
+                                             textures[i]);
+        };
         glad_glGetIntegerv = [](GLenum parameter, GLint* value) {
             *value = parameter == GL_UNPACK_ALIGNMENT ? 4 : 16;
         };
@@ -51,15 +50,17 @@ protected:
         glad_glGetUniformLocation = [](GLuint, const GLchar*) -> GLint {
             return 0;
         };
-        glad_glUniform1i = [](GLint, GLint) {};
-        glad_glUniform1f = [](GLint, GLfloat) {};
-        glad_glGenTextures = [](GLsizei count, GLuint* textures) {
+        glad_glProgramUniform1i = [](GLuint, GLint, GLint) {};
+        glad_glProgramUniform1f = [](GLuint, GLint, GLfloat) {};
+        glad_glCreateTextures = [](GLenum, GLsizei count, GLuint* textures) {
             for (GLsizei i = 0; i < count; ++i) textures[i] = nextTexture++;
         };
-        glad_glTexImage2D = [](GLenum, GLint, GLint, GLsizei, GLsizei, GLint,
-                               GLenum, GLenum, const void*) {};
-        glad_glGenerateMipmap = [](GLenum) {};
-        glad_glTexParameteri = [](GLenum, GLenum, GLint) {};
+        glad_glTextureStorage2D = [](GLuint, GLsizei, GLenum, GLsizei,
+                                     GLsizei) {};
+        glad_glTextureSubImage2D = [](GLuint, GLint, GLint, GLint, GLsizei,
+                                      GLsizei, GLenum, GLenum, const void*) {};
+        glad_glGenerateTextureMipmap = [](GLuint) {};
+        glad_glTextureParameteri = [](GLuint, GLenum, GLint) {};
     }
 
     static bool WasDeleted(GLuint texture) {

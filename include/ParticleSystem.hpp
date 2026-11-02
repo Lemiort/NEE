@@ -14,6 +14,7 @@
 #include "RandomTexture.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "VertexArray.hpp"
 
 inline constexpr std::size_t MAX_PARTICLES = 1000;
 inline constexpr float PARTICLE_LIFETIME = 10.0F;
@@ -28,6 +29,8 @@ public:
     void Render(int DeltaTimeMillis, const Camera& cam);
 
 private:
+    VertexArray updateVertexArray_;
+    VertexArray renderVertexArray_;
     bool m_isFirst{};
     unsigned int m_currVB{};
     unsigned int m_currTFB{};

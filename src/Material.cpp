@@ -2,6 +2,7 @@
 
 #include <glad/gl.h>
 
+#include <array>
 #include <cstddef>
 #include <memory>
 #include <stdexcept>
@@ -32,114 +33,61 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     specularMap = LoadRequiredTexture("textures/specular.tga");
     shadowMap = LoadRequiredTexture("textures/white.png");
 
-    // abstract texture
+    shaderProgram->Link();
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
     texturesID.resize(max_texture_units);
-    abstractSamplersID.resize(max_texture_units);
-
-    for (std::size_t i = 0; i < static_cast<std::size_t>(max_texture_units);
-         ++i) {
-        abstractSamplersID.at(i) = 0;
-        texturesID.at(i) = 0;
-    }
-    shaderProgram->Use();
-
-    // set default value
-
-    // load into shader
-
-    // activate texture unit 0
-    colorMap->Bind(GL_TEXTURE0);
-    std::string const colName("colTexSampler");
-    colTexID = shaderProgram->GetUniformLocation(colName);
-    spdlog::info("color sampler num is {}", colTexID);
-    // tell shader to use as texture 0
-    glUniform1i(colTexID, 0);
-
-    normalMap->Bind(GL_TEXTURE1);
+    abstractSamplersID.resize(max_texture_units, -1);
+    const GLuint program = shaderProgram->GetShaderProgramId();
+    colTexID = shaderProgram->GetUniformLocation("colTexSampler");
     normSamplerID = shaderProgram->GetUniformLocation("normTexSampler");
-    // tell shader to use as texture #1
-    glUniform1i(normSamplerID, 1);
-
-    specularMap->Bind(GL_TEXTURE2);
     specSamplerID = shaderProgram->GetUniformLocation("specTexSampler");
-    // tell shader to use texture unit 2 for specular map
-    glUniform1i(specSamplerID, 2);
-
-    shadowMap->Bind(GL_TEXTURE3);
     shadowSamplerID = shaderProgram->GetUniformLocation("shadowTexSampler");
-    // tell shader to use texture unit 3 for shadow map
-    glUniform1i(shadowSamplerID, 3);
+    glProgramUniform1i(program, colTexID, 0);
+    glProgramUniform1i(program, normSamplerID, 1);
+    glProgramUniform1i(program, specSamplerID, 2);
+    glProgramUniform1i(program, shadowSamplerID, 3);
     opacityID = shaderProgram->GetUniformLocation("opacity");
-
-    std::string const abstractSamplerName("gSampler");
-    for (GLint i = 4; i < max_texture_units; i++) {
-        abstractSamplersID.at(static_cast<std::size_t>(i)) =
-            shaderProgram->GetUniformLocation(abstractSamplerName +
-                                              ConvertToString(i));
-        // std::cout<<"\nSampler name is
-        // "<<(abstractSamplerName+ConvertToString(i)).c_str();
+    for (GLint unit = 4; unit < max_texture_units; ++unit) {
+        auto& location = abstractSamplersID.at(static_cast<std::size_t>(unit));
+        location = shaderProgram->GetUniformLocation("gSampler" +
+                                                     ConvertToString(unit));
+        glProgramUniform1i(program, location, unit);
     }
 }
 
 Material::~Material() = default;
 
+void Material::BindTextures() const {
+    const std::array textures{
+        colorMap->GetTextureID(), normalMap->GetTextureID(),
+        specularMap->GetTextureID(), shadowMap->GetTextureID()};
+    glBindTextures(0, static_cast<GLsizei>(textures.size()), textures.data());
+    if (max_texture_units > 4)
+        glBindTextures(4, max_texture_units - 4, texturesID.data() + 4);
+}
+
 void Material::Use(float drawOpacity) const {
     shaderProgram->Use();
-    colorMap->Bind(GL_TEXTURE0);
-    glUniform1i(colTexID,
-                0);  // tell shader to use texture unit 0
-
-    normalMap->Bind(GL_TEXTURE1);
-    // Assign texture to active texture unit
-    glUniform1i(normSamplerID,
-                1);  // tell shader to use texture unit 1
-
-    specularMap->Bind(GL_TEXTURE2);
-    // assign texture to active texture unit
-    glUniform1i(specSamplerID,
-                2);  // tell shader to use texture unit 2
-
-    shadowMap->Bind(GL_TEXTURE3);
-    // assign texture to active texture unit
-    glUniform1i(shadowSamplerID,
-                3);  // tell shader to use texture unit 3
-    if (opacityID >= 0) {
-        glUniform1f(opacityID, drawOpacity);
-    }
-
-    // starting from 4th, are custom texture units
-    for (GLint i = 4; i < max_texture_units; i++) {
-        const auto textureIndex = static_cast<std::size_t>(i);
-        if (texturesID.at(textureIndex) != 0) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_2D, texturesID.at(textureIndex));
-
-            // assign texture to active texture unit
-            glUniform1i(abstractSamplersID.at(textureIndex),
-                        i);  // tell shader to use texture i
-        }
-    }
+    BindTextures();
+    glProgramUniform1f(shaderProgram->GetShaderProgramId(), opacityID,
+                       drawOpacity);
 }
 
 void Material::UseWithShader(Shader& shader, float drawOpacity) const {
     shader.Use();
-    colorMap->Bind(GL_TEXTURE0);
-    glUniform1i(shader.GetUniformLocation("colTexSampler"), 0);
-    normalMap->Bind(GL_TEXTURE1);
-    glUniform1i(shader.GetUniformLocation("normTexSampler"), 1);
-    specularMap->Bind(GL_TEXTURE2);
-    glUniform1i(shader.GetUniformLocation("specTexSampler"), 2);
-    shadowMap->Bind(GL_TEXTURE3);
-    glUniform1i(shader.GetUniformLocation("shadowTexSampler"), 3);
-    glUniform1f(shader.GetUniformLocation("opacity"), drawOpacity);
-
+    BindTextures();
+    const GLuint program = shader.GetShaderProgramId();
+    glProgramUniform1i(program, shader.GetUniformLocation("colTexSampler"), 0);
+    glProgramUniform1i(program, shader.GetUniformLocation("normTexSampler"), 1);
+    glProgramUniform1i(program, shader.GetUniformLocation("specTexSampler"), 2);
+    glProgramUniform1i(program, shader.GetUniformLocation("shadowTexSampler"),
+                       3);
+    glProgramUniform1f(program, shader.GetUniformLocation("opacity"),
+                       drawOpacity);
     for (GLint unit = 4; unit < max_texture_units; ++unit) {
-        const auto textureIndex = static_cast<std::size_t>(unit);
-        if (texturesID.at(textureIndex) == 0) continue;
-        glActiveTexture(GL_TEXTURE0 + unit);
-        glBindTexture(GL_TEXTURE_2D, texturesID.at(textureIndex));
-        glUniform1i(
+        if (texturesID.at(static_cast<std::size_t>(unit)) == 0) continue;
+        glProgramUniform1i(
+            program,
             shader.GetUniformLocation("gSampler" + ConvertToString(unit)),
             unit);
     }

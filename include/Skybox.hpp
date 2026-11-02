@@ -12,6 +12,7 @@
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
 #include "Transformable.hpp"
+#include "VertexArray.hpp"
 
 class SkyBox : public RenderableObject, public Transformable {
 public:
@@ -33,6 +34,7 @@ public:
     int spfaces{}, spverts{};
 
 private:
+    VertexArray vertexArray_;
     std::unique_ptr<CubemapTexture> pCubemapTex;
     GLint WVPID{};
     GLint textureID{};

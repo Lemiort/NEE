@@ -1,4 +1,4 @@
-#version 330   
+#version 460 core
 
 uniform mat4 gWorld;
 uniform mat4 gVC;

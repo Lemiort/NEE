@@ -2,7 +2,9 @@
 
 #include <glad/gl.h>
 
+#include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <ios>
 #include <ostream>
@@ -43,12 +45,16 @@ GLenum ImageFormat(int channels) {
             return 0;
     }
 }
+GLenum ImageStorageFormat(int channels) {
+    constexpr std::array<GLenum, 4> formats{GL_R8, GL_RG8, GL_RGB8, GL_RGBA8};
+    return formats.at(static_cast<std::size_t>(channels - 1));
+}
 }  // namespace
 
 /**
  * Load an image file using stb_image and create an OpenGL 2D texture.
  * The function generates mipmaps, flips the image vertically (OpenGL
- * expects top‑left origin) and compresses to DXT if supported.
+ * expects bottom-left origin). Storage uses sized, uncompressed formats.
  *
  * @param path Path to the image file.
  * @return GLuint texture ID or 0 on failure.
@@ -78,18 +84,18 @@ GLuint loadTexture(const std::string& path) {
 
     const UnpackAlignmentGuard unpackAlignment;
     GLuint texID = 0;
-    glGenTextures(1, &texID);
-    glBindTexture(GL_TEXTURE_2D, texID);
-    glTexImage2D(GL_TEXTURE_2D, 0, static_cast<GLint>(format), width, height, 0,
-                 format, GL_UNSIGNED_BYTE, data);
-    // Generate mipmaps
-    glGenerateMipmap(GL_TEXTURE_2D);
-    // Set texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-                    GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glCreateTextures(GL_TEXTURE_2D, 1, &texID);
+    const auto levels = static_cast<GLsizei>(
+        std::bit_width(static_cast<unsigned int>(std::max(width, height))));
+    glTextureStorage2D(texID, levels, ImageStorageFormat(channels), width,
+                       height);
+    glTextureSubImage2D(texID, 0, 0, 0, width, height, format, GL_UNSIGNED_BYTE,
+                        data);
+    glGenerateTextureMipmap(texID);
+    glTextureParameteri(texID, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texID, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTextureParameteri(texID, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTextureParameteri(texID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
     stbi_image_free(data);
     return texID;
@@ -103,8 +109,8 @@ GLuint loadTexture(const std::string& path) {
 GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
     const UnpackAlignmentGuard unpackAlignment;
     GLuint tex = 0;
-    glGenTextures(1, &tex);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, tex);
+    glCreateTextures(GL_TEXTURE_CUBE_MAP, 1, &tex);
+    int faceSize = 0;
 
     for (size_t i = 0; i < faces.size(); ++i) {
         int w{};
@@ -122,18 +128,29 @@ GLuint loadCubeMap(const std::array<std::string, 6>& faces) {
             glDeleteTextures(1, &tex);
             return 0;
         }
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + static_cast<GLenum>(i), 0,
-                     static_cast<GLint>(format), w, h, 0, format,
-                     GL_UNSIGNED_BYTE, data);
+        if (w != h || (i != 0 && w != faceSize)) {
+            spdlog::error("Cubemap faces must be square and equally sized: {}",
+                          faces.at(i));
+            stbi_image_free(data);
+            glDeleteTextures(1, &tex);
+            return 0;
+        }
+        if (i == 0) {
+            faceSize = w;
+            glTextureStorage2D(tex, 1, GL_RGBA8, w, h);
+        }
+        // DSA addresses cubemap faces as layers of a 3D subimage upload.
+        glTextureSubImage3D(tex, 0, 0, 0, static_cast<GLint>(i), w, h, 1,
+                            format, GL_UNSIGNED_BYTE, data);
         stbi_image_free(data);
     }
 
     // common parameters
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(tex, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(tex, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(tex, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(tex, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(tex, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
     return tex;
 }
@@ -182,77 +199,20 @@ std::string Texture::ConvertInternalFormatToString(GLenum format) {
         case GL_ALPHA:  // 0x1906
             formatName = "GL_ALPHA";
             break;
+        case GL_R8:
+            return "GL_R8";
+        case GL_RG8:
+            return "GL_RG8";
+        case GL_DEPTH32F_STENCIL8:
+            return "GL_DEPTH32F_STENCIL8";
         case GL_RGB:  // 0x1907
             formatName = "GL_RGB";
             break;
         case GL_RGBA:  // 0x1908
             formatName = "GL_RGBA";
             break;
-        case GL_LUMINANCE:  // 0x1909
-            formatName = "GL_LUMINANCE";
-            break;
-        case GL_LUMINANCE_ALPHA:  // 0x190A
-            formatName = "GL_LUMINANCE_ALPHA";
-            break;
         case GL_R3_G3_B2:  // 0x2A10
             formatName = "GL_R3_G3_B2";
-            break;
-        case GL_ALPHA4:  // 0x803B
-            formatName = "GL_ALPHA4";
-            break;
-        case GL_ALPHA8:  // 0x803C
-            formatName = "GL_ALPHA8";
-            break;
-        case GL_ALPHA12:  // 0x803D
-            formatName = "GL_ALPHA12";
-            break;
-        case GL_ALPHA16:  // 0x803E
-            formatName = "GL_ALPHA16";
-            break;
-        case GL_LUMINANCE4:  // 0x803F
-            formatName = "GL_LUMINANCE4";
-            break;
-        case GL_LUMINANCE8:  // 0x8040
-            formatName = "GL_LUMINANCE8";
-            break;
-        case GL_LUMINANCE12:  // 0x8041
-            formatName = "GL_LUMINANCE12";
-            break;
-        case GL_LUMINANCE16:  // 0x8042
-            formatName = "GL_LUMINANCE16";
-            break;
-        case GL_LUMINANCE4_ALPHA4:  // 0x8043
-            formatName = "GL_LUMINANCE4_ALPHA4";
-            break;
-        case GL_LUMINANCE6_ALPHA2:  // 0x8044
-            formatName = "GL_LUMINANCE6_ALPHA2";
-            break;
-        case GL_LUMINANCE8_ALPHA8:  // 0x8045
-            formatName = "GL_LUMINANCE8_ALPHA8";
-            break;
-        case GL_LUMINANCE12_ALPHA4:  // 0x8046
-            formatName = "GL_LUMINANCE12_ALPHA4";
-            break;
-        case GL_LUMINANCE12_ALPHA12:  // 0x8047
-            formatName = "GL_LUMINANCE12_ALPHA12";
-            break;
-        case GL_LUMINANCE16_ALPHA16:  // 0x8048
-            formatName = "GL_LUMINANCE16_ALPHA16";
-            break;
-        case GL_INTENSITY:  // 0x8049
-            formatName = "GL_INTENSITY";
-            break;
-        case GL_INTENSITY4:  // 0x804A
-            formatName = "GL_INTENSITY4";
-            break;
-        case GL_INTENSITY8:  // 0x804B
-            formatName = "GL_INTENSITY8";
-            break;
-        case GL_INTENSITY12:  // 0x804C
-            formatName = "GL_INTENSITY12";
-            break;
-        case GL_INTENSITY16:  // 0x804D
-            formatName = "GL_INTENSITY16";
             break;
         case GL_RGB4:  // 0x804F
             formatName = "GL_RGB4";
@@ -330,7 +290,7 @@ std::string Texture::ConvertInternalFormatToString(GLenum format) {
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// return texture parameters as string using glGetTexLevelParameteriv()
+// Query the texture directly without changing texture-unit bindings.
 ///////////////////////////////////////////////////////////////////////////////
 std::string Texture::GetParameters() const {
     GLuint const id = texBufferID;
@@ -342,14 +302,12 @@ std::string Texture::GetParameters() const {
     int height = 0;
     int format = 0;
     std::string formatName;
-    glBindTexture(GL_TEXTURE_2D, id);
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH,
-                             &width);  // get texture width
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT,
-                             &height);  // get texture height
-    glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
-                             &format);  // get texture internal format
-    glBindTexture(GL_TEXTURE_2D, 0);
+    glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_WIDTH,
+                                 &width);  // get texture width
+    glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_HEIGHT,
+                                 &height);  // get texture height
+    glGetTextureLevelParameteriv(id, 0, GL_TEXTURE_INTERNAL_FORMAT,
+                                 &format);  // get texture internal format
 
     formatName = ConvertInternalFormatToString(format);
 
@@ -359,8 +317,7 @@ std::string Texture::GetParameters() const {
 }
 
 void Texture::Bind(GLenum TextureUnit) const {
-    glActiveTexture(TextureUnit);
-    glBindTexture(GL_TEXTURE_2D, texBufferID);
+    glBindTextureUnit(TextureUnit - GL_TEXTURE0, texBufferID);
 }
 
 Texture2D::Texture2D(GLuint _texBufferID, bool _del) {

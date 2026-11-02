@@ -422,19 +422,8 @@ void Shader::Link() {
         throw std::runtime_error("Error linking shader program");
     }
 
-    glValidateProgram(shaderProgramID);
-    glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &success);
-    if (success != GL_TRUE) {
-        GLint logLength = 0;
-        glGetProgramiv(shaderProgramID, GL_INFO_LOG_LENGTH, &logLength);
-        std::vector<GLchar> errorLog(
-            static_cast<std::size_t>(logLength > 0 ? logLength : 1));
-        glGetProgramInfoLog(shaderProgramID, logLength, nullptr,
-                            errorLog.data());
-        spdlog::error("Invalid shader program: '{}'", errorLog.data());
-        throw std::runtime_error("Invalid shader program");
-    }
-
+    // Program validation examines current draw state. DSA setup deliberately
+    // leaves VAOs and textures unbound, so validate linking here, not draw state.
     initialized = true;
     SaveProgramBinary();
 }

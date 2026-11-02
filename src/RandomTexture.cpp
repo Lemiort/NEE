@@ -35,13 +35,14 @@ bool RandomTexture::InitRandomTexture(GLsizei size) {
         randomVector.z = randomFloat();
     }
 
-    glGenTextures(1, &textureID);
-    glBindTexture(GL_TEXTURE_1D, textureID);
-    glTexImage1D(GL_TEXTURE_1D, 0, GL_RGB, size, 0.0F, GL_RGB, GL_FLOAT,
-                 pRandomData.data());
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameterf(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    if (textureID != 0) glDeleteTextures(1, &textureID);
+    glCreateTextures(GL_TEXTURE_1D, 1, &textureID);
+    glTextureStorage1D(textureID, 1, GL_RGB32F, size);
+    glTextureSubImage1D(textureID, 0, 0, size, GL_RGB, GL_FLOAT,
+                        pRandomData.data());
+    glTextureParameteri(textureID, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(textureID, GL_TEXTURE_WRAP_S, GL_REPEAT);
 
     // vector cleans up automatically
 
@@ -49,6 +50,5 @@ bool RandomTexture::InitRandomTexture(GLsizei size) {
 }
 
 void RandomTexture::Bind(GLenum TextureUnit) const {
-  glActiveTexture(TextureUnit);
-  glBindTexture(GL_TEXTURE_1D, textureID);
+    glBindTextureUnit(TextureUnit - GL_TEXTURE0, textureID);
 }

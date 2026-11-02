@@ -390,10 +390,6 @@ void Application::InitRender(GLFWwindow& window, std::string message) {
 int Application::InitScene(GLFWwindow& window) {
     initialized = false;
     glfwMakeContextCurrent(&window);
-    // Pass the address loading function from GLFW
-    if (gladLoadGL(static_cast<GLADloadfunc>(glfwGetProcAddress)) == 0) {
-        return 1;
-    }
 
     {
         meshShader = CreateShader(
@@ -627,9 +623,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     }
     glfwWindowHint(GLFW_SAMPLES, 4);
-    // GLFW's default 1.0 request attempts the highest available backwards-
-    // compatible context. The renderers do not yet bind VAOs, so do not
-    // request a core profile here.
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     std::string title("HOGL ");
     title += AutoVersion::STATUS;
@@ -669,15 +665,14 @@ int main(int argc, char* argv[]) {
     spdlog::info("OpenGL {}.{} [{}] ({}), renderer: {}", glMajor, glMinor,
                  profileName, version != nullptr ? version : "unknown",
                  renderer != nullptr ? renderer : "unknown");
-    if (glMajor < 3 || (glMajor == 3 && glMinor < 3)) {
-        spdlog::critical("OpenGL 3.3 or newer is required by the shaders");
+    if (!GLAD_GL_VERSION_4_6) {
+        spdlog::critical("OpenGL 4.6 or newer is required");
         glfwDestroyWindow(window);
         glfwTerminate();
         return EXIT_FAILURE;
     }
-    if (profile == GLFW_OPENGL_CORE_PROFILE) {
-        spdlog::critical(
-            "This renderer requires an OpenGL compatibility context");
+    if (profile != GLFW_OPENGL_CORE_PROFILE) {
+        spdlog::critical("This renderer requires an OpenGL core context");
         glfwDestroyWindow(window);
         glfwTerminate();
         return EXIT_FAILURE;

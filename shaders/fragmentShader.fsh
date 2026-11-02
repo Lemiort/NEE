@@ -1,4 +1,4 @@
-#version 330
+#version 460 core
 
 
 in vec3 fN;//направление нормали
@@ -33,7 +33,7 @@ vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
 	vec3 H=normalize(E+L);
 	float diffuse_intensity=max(dot(N,L),0.0);
 	float spec_intensity=pow(max(dot(N,H),0.0),300);
-	vec4 result=color*(diffuse_intensity*texture2D(colTexSampler, UV)+spec_intensity*texture2D(specTexSampler, UV));
+	vec4 result=color*(diffuse_intensity*texture(colTexSampler, UV)+spec_intensity*texture(specTexSampler, UV));
 	
 	return result;
 }
@@ -50,7 +50,7 @@ vec4 CalcSpotLight(vec3 dir,vec3 Normal, mat4 color)
 	float SpotFactor=dot(R,normalize(dir));
 	if(SpotFactor <= sLightCutoff)
 		return vec4(0.0);
-	vec4 result=color*(diffuse_intensity*texture2D(colTexSampler, UV)+spec_intensity*texture2D(specTexSampler, UV));
+	vec4 result=color*(diffuse_intensity*texture(colTexSampler, UV)+spec_intensity*texture(specTexSampler, UV));
 	return result*(1.0 - (1.0 - SpotFactor) * 1.0/(1.0 - sLightCutoff));
 }
 

@@ -47,56 +47,44 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
     m_depthTexture = 0;
     m_testTexture = 0;
     m_finalTexture = 0;
-    // Create FBO
-    glGenFramebuffers(1, &m_fbo);
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
-
-    // create and initialize color maps and others
-    glGenTextures(static_cast<GLsizei>(m_textures.size()), m_textures.data());
+    glCreateFramebuffers(1, &m_fbo);
+    glCreateTextures(GL_TEXTURE_2D, static_cast<GLsizei>(m_textures.size()),
+                     m_textures.data());
     for (std::size_t i = 0; i < m_textures.size(); ++i) {
-        glBindTexture(GL_TEXTURE_2D, m_textures.at(i));
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, windowWidth, windowHeight, 0,
-                     GL_RGB, GL_FLOAT, nullptr);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-        // glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-        glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER,
-                               GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i),
-                               GL_TEXTURE_2D, m_textures.at(i), 0);
+        const GLuint texture = m_textures.at(i);
+        glTextureStorage2D(texture, 1, GL_RGBA32F, windowWidth, windowHeight);
+        glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+        glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+        glNamedFramebufferTexture(
+            m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i), texture, 0);
     }
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_depthTexture);
+    glTextureStorage2D(m_depthTexture, 1, GL_DEPTH32F_STENCIL8, windowWidth,
+                       windowHeight);
+    glNamedFramebufferTexture(m_fbo, GL_DEPTH_STENCIL_ATTACHMENT,
+                              m_depthTexture, 0);
 
-    // Create a combined depth/stencil texture. The external format and type
-    // must match GL_DEPTH32F_STENCIL8 even when no initial data is supplied.
-    glGenTextures(1, &m_depthTexture);
-    glBindTexture(GL_TEXTURE_2D, m_depthTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH32F_STENCIL8, windowWidth,
-                 windowHeight, 0, GL_DEPTH_STENCIL,
-                 GL_FLOAT_32_UNSIGNED_INT_24_8_REV, nullptr);
-    glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT,
-                           GL_TEXTURE_2D, m_depthTexture, 0);
-
-    // create and initialize final color buffer
-    glGenTextures(1, &m_finalTexture);
-    glBindTexture(GL_TEXTURE_2D, m_finalTexture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, windowWidth, windowHeight, 0,
-                 GL_RGB, GL_FLOAT, nullptr);
-    glFramebufferTexture2D(
-        GL_DRAW_FRAMEBUFFER,
-        GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()),
-        GL_TEXTURE_2D, m_finalTexture, 0);
+    glCreateTextures(GL_TEXTURE_2D, 1, &m_finalTexture);
+    glTextureStorage2D(m_finalTexture, 1, GL_RGBA8, windowWidth, windowHeight);
+    glTextureParameteri(m_finalTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(m_finalTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glNamedFramebufferTexture(
+        m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()),
+        m_finalTexture, 0);
 
     const std::array<GLenum, 5> drawBuffers = {
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
         GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
+    glNamedFramebufferDrawBuffers(
+        m_fbo, static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
     spdlog::info("draw buffers: {}", drawBuffers.size());
 
     // check FBO status
-    GLenum const status = glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER);
+    GLenum const status =
+        glCheckNamedFramebufferStatus(m_fbo, GL_DRAW_FRAMEBUFFER);
     switch (status) {
         case GL_FRAMEBUFFER_COMPLETE:
             spdlog::info("Framebuffer (GBuffer) complete.");
@@ -129,11 +117,6 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
             spdlog::error("Framebuffer incomplete: Unknown error.");
             return false;
     }
-
-    // returning standard FBO
-    glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
-
-    return true;
 }
 
 void GBuffer::BindForWriting() const {
@@ -142,12 +125,6 @@ void GBuffer::BindForWriting() const {
 
 void GBuffer::BindForReading() const {
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
-
-    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
-    i]);
-    }*/
 }
 
 void GBuffer::SetReadBuffer(GBUFFER_TEXTURE_TYPE TextureType) {
@@ -178,7 +155,8 @@ void GBuffer::BindForGeomPass() const {
         GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
         GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
 
-    glDrawBuffers(static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
+    glNamedFramebufferDrawBuffers(
+        m_fbo, static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
 }
 
 void GBuffer::BindForStencilPass() {
@@ -188,12 +166,6 @@ void GBuffer::BindForStencilPass() {
 
 void GBuffer::BindForLightPass() {
     glDrawBuffer(GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()));
-
-    /*for (unsigned int i = 0 ; i < ARRAY_SIZE_IN_ELEMENTS(m_textures); i++) {
-        glActiveTexture(GL_TEXTURE0 + i);
-        glBindTexture(GL_TEXTURE_2D, m_textures[GBUFFER_TEXTURE_TYPE_POSITION +
-    i]);
-    }*/
 }
 
 void GBuffer::BindForFinalPass() {

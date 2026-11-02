@@ -87,6 +87,10 @@ jobs:
     - name: Run headless OpenGL tests
       env:
         LIBGL_ALWAYS_SOFTWARE: '1'
+        # llvmpipe provides the DSA APIs used here, but some Mesa releases
+        # advertise 4.5. Exercise the 4.6 context/GLSL path in software CI.
+        MESA_GL_VERSION_OVERRIDE: '4.6'
+        MESA_GLSL_VERSION_OVERRIDE: '460'
       run: xvfb-run -a -s "-screen 0 1280x720x24" ctest --test-dir build -C Release --output-on-failure --no-tests=error -L opengl
 
     - name: Upload test diagnostics

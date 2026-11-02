@@ -36,20 +36,20 @@ Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
         throw std::runtime_error("Unable to load billboard texture: " +
                                  textureFilename);
     }
-    colorMap.Bind(GL_TEXTURE0);
     colSamplerID = shaderProgram->GetUniformLocation("colTexSampler");
-    glUniform1i(colSamplerID, 0);
+    glProgramUniform1i(shaderProgram->GetShaderProgramId(), colSamplerID, 0);
 
-    glGenBuffers(1, &VBO);
+    glCreateBuffers(1, &VBO);
     if (VBO == 0) {
         spdlog::error("Unable to create billboard vertex buffer");
         throw std::runtime_error("Unable to create billboard vertex buffer");
     }
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     const std::array<float, 3> coords = {Pos.x, Pos.y, Pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
-                 GL_DYNAMIC_DRAW);
+    glNamedBufferStorage(VBO, sizeof(coords), coords.data(),
+                         GL_DYNAMIC_STORAGE_BIT);
     positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    vertexArray_.SetBuffer(0, VBO, 3 * sizeof(float));
+    vertexArray_.SetAttribute(positionID, 0, 3);
     camViewID = shaderProgram->GetUniformLocation("gVP");
     camPosID = shaderProgram->GetUniformLocation("gCameraPos");
 }
@@ -57,12 +57,8 @@ Billboard::Billboard(gsl_lite::not_null<std::shared_ptr<Shader>> shader,
 Billboard::~Billboard() = default;
 void Billboard::SetPos(glm::vec3 pos) {
     this->Pos = pos;
-    shaderProgram->Use();
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     const std::array<float, 3> coords = {pos.x, pos.y, pos.z};
-    glBufferData(GL_ARRAY_BUFFER, sizeof(coords), coords.data(),
-                 GL_DYNAMIC_DRAW);
-    positionID = shaderProgram->GetAttribLocation("s_vPosition");
+    glNamedBufferSubData(VBO, 0, sizeof(coords), coords.data());
 }
 
 void Billboard::Render(const Camera& cam) { Draw(cam, Pos); }
@@ -74,18 +70,13 @@ void Billboard::Draw(const Camera& cam, const glm::vec3& position) const {
     glUniformMatrix4fv(camViewID, 1, GL_FALSE, glm::value_ptr(viewProjection));
     glUniform3f(camPosID, cam.GetPos().x, cam.GetPos().y, cam.GetPos().z);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
     const std::array<float, 3> coords = {position.x, position.y, position.z};
-    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(coords), coords.data());
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glNamedBufferSubData(VBO, 0, sizeof(coords), coords.data());
 
     colorMap.Bind(GL_TEXTURE0);
     glUniform1i(colSamplerID,
                 0);  // tell shader to use as texture 0
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glEnableVertexAttribArray(positionID);
+    vertexArray_.Bind();
     glDrawArrays(GL_POINTS, 0, 1);
-    glDisableVertexAttribArray(positionID);
 }

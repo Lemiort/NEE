@@ -12,13 +12,6 @@
 #include "spdlog/spdlog.h"
 
 namespace {
-const GLvoid* BufferOffset(std::size_t byteOffset) {
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,
-    // performance-no-int-to-ptr)
-    return reinterpret_cast<const GLvoid*>(
-        static_cast<std::uintptr_t>(byteOffset));
-}
-
 struct TextVertex {
     glm::vec2 position;
     glm::vec2 uv;
@@ -32,8 +25,8 @@ TextRenderer::~TextRenderer() {
 
 TextRenderer::TextRenderer(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     : shader_(std::move(shader)) {
-    glGenBuffers(1, &vertexBuffer_);
-    glGenBuffers(1, &indexBuffer_);
+    glCreateBuffers(1, &vertexBuffer_);
+    glCreateBuffers(1, &indexBuffer_);
 
     if (vertexBuffer_ == 0 || indexBuffer_ == 0) {
         glDeleteBuffers(1, &vertexBuffer_);
@@ -49,6 +42,11 @@ TextRenderer::TextRenderer(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     sizeUniform_ = shader_->GetUniformLocation("size");
     textureUniform_ = shader_->GetUniformLocation("texSampler");
     colorUniform_ = shader_->GetUniformLocation("textColor");
+    vertexArray_.SetBuffer(0, vertexBuffer_, sizeof(TextVertex));
+    vertexArray_.SetIndices(indexBuffer_);
+    vertexArray_.SetAttribute(positionAttribute_, 0, 2,
+                              offsetof(TextVertex, position));
+    vertexArray_.SetAttribute(uvAttribute_, 0, 2, offsetof(TextVertex, uv));
 }
 
 bool TextRenderer::RegisterFont(const Font2d& font) {
@@ -191,23 +189,15 @@ void TextRenderer::RenderBatch(
     glUniform1f(sizeUniform_, 1.0F);
     const glm::vec4 color = firstLine.GetColor();
     glUniform4f(colorUniform_, color.r, color.g, color.b, color.a);
-    glBindBuffer(GL_ARRAY_BUFFER, vertexBuffer_);
-    glBufferData(GL_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(vertices.size() * sizeof(TextVertex)),
-                 vertices.data(), GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(positionAttribute_, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(TextVertex), nullptr);
-    glVertexAttribPointer(uvAttribute_, 2, GL_FLOAT, GL_FALSE,
-                          sizeof(TextVertex),
-                          BufferOffset(offsetof(TextVertex, uv)));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuffer_);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER,
-                 static_cast<GLsizeiptr>(indices.size() * sizeof(uint32_t)),
-                 indices.data(), GL_DYNAMIC_DRAW);
-    glEnableVertexAttribArray(positionAttribute_);
-    glEnableVertexAttribArray(uvAttribute_);
+    glNamedBufferData(
+        vertexBuffer_,
+        static_cast<GLsizeiptr>(vertices.size() * sizeof(TextVertex)),
+        vertices.data(), GL_STREAM_DRAW);
+    glNamedBufferData(
+        indexBuffer_,
+        static_cast<GLsizeiptr>(indices.size() * sizeof(uint32_t)),
+        indices.data(), GL_STREAM_DRAW);
+    vertexArray_.Bind();
     glDrawElements(GL_TRIANGLES, static_cast<GLsizei>(indices.size()),
                    GL_UNSIGNED_INT, nullptr);
-    glDisableVertexAttribArray(positionAttribute_);
-    glDisableVertexAttribArray(uvAttribute_);
 }

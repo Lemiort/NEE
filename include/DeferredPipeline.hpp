@@ -63,6 +63,7 @@ private:
     Mesh spotLightVolume_;
     GBufferDebugPass debugPass_;
     MeshInstanceRenderer instanceRenderer_;
+    VertexArray fullscreenVertexArray_;
 };
 
 #endif  // DEFERRED_PIPELINE_HPP_INCLUDED

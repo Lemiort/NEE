@@ -2,9 +2,11 @@
 #define MESH_H_INCLUDED
 #include <glad/gl.h>
 
+#include <array>
 #include <cstddef>
 #include <glm/ext/vector_float3.hpp>
 #include <gsl-lite/gsl-lite.hpp>
+#include <map>
 #include <memory>
 #include <string>
 
@@ -12,6 +14,7 @@
 #include "Material.hpp"
 #include "MaterialObject.hpp"
 #include "Transformable.hpp"
+#include "VertexArray.hpp"
 
 struct Vertex {
     glm::vec3 Pos;
@@ -54,6 +57,9 @@ public:
               Shader* passShader = nullptr) const;
 
 private:
+    // Attribute locations can differ for custom pass shaders. Cache each layout
+    // once, including separate layouts for individual and instanced draws.
+    mutable std::map<std::array<GLint, 6>, VertexArray> vertexArrays_;
     int faceCount_{};
     int vertexCount_{};
 };

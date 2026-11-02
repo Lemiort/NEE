@@ -8,6 +8,7 @@
 #include <span>
 
 #include "RenderQueue.hpp"
+#include "VertexArray.hpp"
 
 class Camera;
 class Shader;
@@ -24,6 +25,7 @@ public:
                 const Camera& camera);
 
 private:
+    VertexArray vertexArray_;
     gsl_lite::not_null<std::shared_ptr<Shader>> shader_;
     GLuint vertexBuffer_{};
     GLint positionAttribute_{};

@@ -1,4 +1,4 @@
-#version 330                   
+#version 460 core
 
 
 
@@ -71,9 +71,9 @@ vec4 CalcPointLight(mat4 lightColor)
 		float attenuation = distance * distance;
 		//attenuation = max(1.0, attenuation);
 		
-		//vec4 result =texture2D(gSampler8, screenPosUV);
+		//vec4 result =texture(gSampler8, screenPosUV);
 		vec4 result;
-		result=pointLightIntensity*lightColor*(diffuse_intensity*texture2D(gSampler5, screenPosUV)+spec_intensity*texture2D(gSampler8, screenPosUV));
+		result=pointLightIntensity*lightColor*(diffuse_intensity*texture(gSampler5, screenPosUV)+spec_intensity*texture(gSampler8, screenPosUV));
 
 		return result / attenuation;
 	}

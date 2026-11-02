@@ -244,6 +244,7 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
     glUniform3f(
         directionalLightShader_->GetUniformLocation("dirLightDirection"),
         direction.x, direction.y, direction.z);
+    fullscreenVertexArray_.Bind();
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisable(GL_BLEND);
     glEnable(GL_CULL_FACE);

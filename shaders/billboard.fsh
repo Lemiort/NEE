@@ -1,4 +1,4 @@
-#version 330 
+#version 460 core
 
 uniform sampler2D colTexSampler; 
 
@@ -7,7 +7,7 @@ out vec4 FragColor;
 
 void main() 
 { 
-FragColor = texture2D(colTexSampler, TexCoord); 
+FragColor = texture(colTexSampler, TexCoord);
 
 	if (FragColor.r == 0 && FragColor.g == 0 && FragColor.b == 0) 
 	{ 

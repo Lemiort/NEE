@@ -1,4 +1,4 @@
-#version 330                                                                  
+#version 460 core
 
 uniform mat4 gWorld;
 uniform mat4 gVC;
@@ -21,13 +21,13 @@ uniform float pLightInt;
 
 
 
- out vec3 fN; //нормаль
- out vec3 fL; //вектор направленного света
- out vec3 fE; //вектор взгляда
+ out vec3 fN; //РЅРѕСЂРјР°Р»СЊ
+ out vec3 fL; //РІРµРєС‚РѕСЂ РЅР°РїСЂР°РІР»РµРЅРЅРѕРіРѕ СЃРІРµС‚Р°
+ out vec3 fE; //РІРµРєС‚РѕСЂ РІР·РіР»СЏРґР°
  out vec2 UV;
- out vec3 pL;//вектор точечного света
- out vec3 sR;//вектор от источника до точки
- out vec3 sLD;//вектор направления источника
+ out vec3 pL;//РІРµРєС‚РѕСЂ С‚РѕС‡РµС‡РЅРѕРіРѕ СЃРІРµС‚Р°
+ out vec3 sR;//РІРµРєС‚РѕСЂ РѕС‚ РёСЃС‚РѕС‡РЅРёРєР° РґРѕ С‚РѕС‡РєРё
+ out vec3 sLD;//РІРµРєС‚РѕСЂ РЅР°РїСЂР°РІР»РµРЅРёСЏ РёСЃС‚РѕС‡РЅРёРєР°
 
  out vec3 Tangent;
  out vec3 Bitangent;

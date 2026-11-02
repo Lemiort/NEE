@@ -2,6 +2,10 @@ cmake_minimum_required (VERSION 3.15 FATAL_ERROR)
 set(PROJECT_NAME "NEE")
 project (${PROJECT_NAME})
 
+# GLAD owns all OpenGL declarations, including on platforms where GLFW would
+# otherwise include the system's legacy OpenGL header.
+add_compile_definitions(GLFW_INCLUDE_NONE)
+
 
 message("Building ${PROJECT_NAME}")
 

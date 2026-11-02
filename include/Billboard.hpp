@@ -11,6 +11,7 @@
 #include "RenderableObject.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
+#include "VertexArray.hpp"
 class Billboard : public RenderableObject {
 public:
     explicit Billboard(const std::string& textureFilename);
@@ -24,6 +25,7 @@ public:
     void SetPos(glm::vec3 Pos);
 
 private:
+    VertexArray vertexArray_;
     glm::vec3 Pos;
     Texture2D colorMap;
     GLint colSamplerID{};

@@ -10,6 +10,7 @@
 #include <memory>
 #include <new>
 #include <stdexcept>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -20,21 +21,7 @@
 #include "spdlog/spdlog.h"
 
 namespace {
-constexpr std::size_t kPositionComponentCount = 3;
-constexpr std::size_t kTextureCoordinateComponentCount = 2;
-constexpr std::size_t kNormalComponentCount = 3;
-constexpr std::size_t kGpuVertexComponentCount =
-    kPositionComponentCount + kNormalComponentCount +
-    kTextureCoordinateComponentCount + kNormalComponentCount;
 constexpr std::size_t kTriangleIndexCount = 3;
-
-const GLvoid* BufferOffset(std::size_t byteOffset) {
-    // With a VBO bound, OpenGL interprets this pointer value as a byte offset.
-    // NOLINTNEXTLINE(cppcoreguidelines-pro-type-reinterpret-cast,
-    // performance-no-int-to-ptr)
-    return reinterpret_cast<const GLvoid*>(
-        static_cast<std::uintptr_t>(byteOffset));
-}
 }  // namespace
 
 Mesh::~Mesh() = default;
@@ -83,8 +70,7 @@ Mesh::Mesh(gsl_lite::not_null<std::shared_ptr<Material>> material,
             static_cast<std::size_t>(std::numeric_limits<int>::max()) ||
         indexCount >
             static_cast<std::size_t>(std::numeric_limits<GLsizei>::max()) ||
-        vertexCount >
-            maxBufferSize / (sizeof(float) * kGpuVertexComponentCount) ||
+        vertexCount > maxBufferSize / sizeof(ModelVertex) ||
         indexCount > maxBufferSize / sizeof(std::uint32_t) ||
         indexCount % kTriangleIndexCount != 0) {
         spdlog::error("Model '{}' exceeds supported mesh limits", model);
@@ -92,78 +78,22 @@ Mesh::Mesh(gsl_lite::not_null<std::shared_ptr<Material>> material,
                                 model);
     }
 
-    std::vector<float> spvertices;
-    std::vector<float> spnormals;
-    std::vector<float> spuvs;
-    std::vector<float> sptangent;
-    try {
-        spvertices.reserve(vertexCount * kPositionComponentCount);
-        spnormals.reserve(vertexCount * kNormalComponentCount);
-        spuvs.reserve(vertexCount * kTextureCoordinateComponentCount);
-        sptangent.reserve(vertexCount * kNormalComponentCount);
-        for (const ModelVertex& vertex : modelData.vertices) {
-            spvertices.insert(spvertices.end(), vertex.position.begin(),
-                              vertex.position.end());
-            spnormals.insert(spnormals.end(), vertex.normal.begin(),
-                             vertex.normal.end());
-            spuvs.insert(spuvs.end(), vertex.uv.begin(), vertex.uv.end());
-            sptangent.insert(sptangent.end(), vertex.tangent.begin(),
-                             vertex.tangent.end());
-        }
-    } catch (const std::bad_alloc&) {
-        spdlog::error("Unable to allocate GPU data for mesh model '{}'", model);
-        throw;
-    }
-
     vertexCount_ = static_cast<int>(vertexCount);
     faceCount_ = static_cast<int>(indexCount / kTriangleIndexCount);
 
-    // create buffer to store everything
-    glGenBuffers(1, &VBO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    const auto positionBytes =
-        static_cast<GLsizeiptr>(sizeof(float) * kPositionComponentCount *
-                                static_cast<std::size_t>(vertexCount_));
-    const auto normalBytes =
-        static_cast<GLsizeiptr>(sizeof(float) * kNormalComponentCount *
-                                static_cast<std::size_t>(vertexCount_));
-    const auto textureCoordinateBytes = static_cast<GLsizeiptr>(
-        sizeof(float) * kTextureCoordinateComponentCount *
-        static_cast<std::size_t>(vertexCount_));
-    const GLsizeiptr tangentBytes = normalBytes;
-    const GLsizeiptr vertexBufferBytes =
-        positionBytes + normalBytes + textureCoordinateBytes + tangentBytes;
-    const auto indexBufferBytes =
-        static_cast<GLsizeiptr>(sizeof(std::uint32_t) * kTriangleIndexCount *
-                                static_cast<std::size_t>(faceCount_));
-    glBufferData(GL_ARRAY_BUFFER, vertexBufferBytes, nullptr, GL_STATIC_DRAW);
-    // load vertices into buffer
-    glBufferSubData(GL_ARRAY_BUFFER, 0, positionBytes, spvertices.data());
-    // normals
-    glBufferSubData(GL_ARRAY_BUFFER, positionBytes, normalBytes,
-                    spnormals.data());
-    // texture coordinates
-    glBufferSubData(GL_ARRAY_BUFFER, positionBytes + normalBytes,
-                    textureCoordinateBytes, spuvs.data());
-    // tangent
-    glBufferSubData(GL_ARRAY_BUFFER,
-                    positionBytes + normalBytes + textureCoordinateBytes,
-                    tangentBytes, sptangent.data());
-
-    // bind indices to buffer
-    glGenBuffers(1, &IBO);
+    static_assert(std::is_standard_layout_v<ModelVertex>);
+    // Upload the loader's interleaved vertices directly into immutable storage.
+    glCreateBuffers(1, &VBO);
+    glCreateBuffers(1, &IBO);
     if (VBO == 0 || IBO == 0) {
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &IBO);
-        VBO = 0;
-        IBO = 0;
-        spdlog::error("Unable to create GPU buffers for mesh model '{}'",
-                      model);
         throw std::runtime_error("Unable to create mesh GPU buffers: " + model);
     }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, indexBufferBytes,
-                 modelData.indices.data(), GL_STATIC_DRAW);
+    glNamedBufferStorage(
+        VBO, static_cast<GLsizeiptr>(vertexCount * sizeof(ModelVertex)),
+        modelData.vertices.data(), 0);
+    glNamedBufferStorage(
+        IBO, static_cast<GLsizeiptr>(indexCount * sizeof(std::uint32_t)),
+        modelData.indices.data(), 0);
 
     transform_ = Transform{};
 }
@@ -184,65 +114,49 @@ void Mesh::Draw(const Transform& transform, const Material& material,
         material.Use(opacity);
     glUniform1i(bindings.instanced, instanceBuffer != 0);
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glVertexAttribPointer(bindings.position, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-    glVertexAttribPointer(bindings.normal, 3, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 3 *
-                                       static_cast<std::size_t>(vertexCount_)));
-    glVertexAttribPointer(bindings.uv, 2, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 6 *
-                                       static_cast<std::size_t>(vertexCount_)));
-    glVertexAttribPointer(bindings.tangent, 3, GL_FLOAT, GL_FALSE, 0,
-                          BufferOffset(sizeof(float) * 8 *
-                                       static_cast<std::size_t>(vertexCount_)));
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
+    const std::array<GLint, 6> layout{
+        bindings.position,
+        bindings.normal,
+        bindings.uv,
+        bindings.tangent,
+        instanceBuffer != 0 ? bindings.instanceWorld : -1,
+        instanceBuffer != 0 ? bindings.instanceRotation : -1};
+    auto [entry, created] = vertexArrays_.try_emplace(layout);
+    auto& vao = entry->second;
+    if (created) {
+        vao.SetBuffer(0, VBO, sizeof(ModelVertex));
+        vao.SetIndices(IBO);
+        vao.SetAttribute(bindings.position, 0, 3,
+                         offsetof(ModelVertex, position));
+        vao.SetAttribute(bindings.normal, 0, 3, offsetof(ModelVertex, normal));
+        vao.SetAttribute(bindings.uv, 0, 2, offsetof(ModelVertex, uv));
+        vao.SetAttribute(bindings.tangent, 0, 3,
+                         offsetof(ModelVertex, tangent));
+        if (instanceBuffer != 0) {
+            for (GLint column = 0; column < 4; ++column) {
+                vao.SetAttribute(bindings.instanceWorld + column, 1, 4,
+                                 column * sizeof(glm::vec4));
+                vao.SetAttribute(
+                    bindings.instanceRotation + column, 1, 4,
+                    sizeof(glm::mat4) + column * sizeof(glm::vec4));
+            }
+            vao.SetDivisor(1, 1);
+        }
+    }
+    if (instanceBuffer != 0)
+        vao.SetBuffer(1, instanceBuffer, 2 * sizeof(glm::mat4));
+    vao.Bind();
 
     glUniformMatrix4fv(bindings.world, 1, GL_FALSE,
                        glm::value_ptr(modelMatrix));
     glUniformMatrix4fv(bindings.rotation, 1, GL_FALSE,
                        glm::value_ptr(normalMatrix));
 
-    glEnableVertexAttribArray(bindings.position);
-    glEnableVertexAttribArray(bindings.normal);
-    glEnableVertexAttribArray(bindings.uv);
-    glEnableVertexAttribArray(bindings.tangent);
-    if (instanceBuffer != 0) {
-        glBindBuffer(GL_ARRAY_BUFFER, instanceBuffer);
-        for (GLuint column = 0; column < 4; ++column) {
-            for (GLuint matrix = 0; matrix < 2; ++matrix) {
-                const GLuint location =
-                    static_cast<GLuint>(matrix == 0
-                                            ? bindings.instanceWorld
-                                            : bindings.instanceRotation) +
-                    column;
-                glEnableVertexAttribArray(location);
-                glVertexAttribPointer(location, 4, GL_FLOAT, GL_FALSE,
-                                      2 * sizeof(glm::mat4),
-                                      BufferOffset(matrix * sizeof(glm::mat4) +
-                                                   column * sizeof(glm::vec4)));
-                glVertexAttribDivisor(location, 1);
-            }
-        }
-    }
     glDrawElementsInstanced(
         GL_TRIANGLES,
         static_cast<GLsizei>(static_cast<std::size_t>(faceCount_) *
                              kTriangleIndexCount),
         GL_UNSIGNED_INT, nullptr, instanceCount);
-    if (instanceBuffer != 0) {
-        for (GLuint column = 0; column < 4; ++column) {
-            for (const GLint base :
-                 {bindings.instanceWorld, bindings.instanceRotation}) {
-                const GLuint location = static_cast<GLuint>(base) + column;
-                glVertexAttribDivisor(location, 0);
-                glDisableVertexAttribArray(location);
-            }
-        }
-    }
-    glDisableVertexAttribArray(bindings.position);
-    glDisableVertexAttribArray(bindings.normal);
-    glDisableVertexAttribArray(bindings.uv);
-    glDisableVertexAttribArray(bindings.tangent);
 }
 
 int Mesh::GetNumFaces() const { return faceCount_; }

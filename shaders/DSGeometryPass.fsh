@@ -1,13 +1,13 @@
-#version 330                   
+#version 460 core
 
 
 
-in vec3 fN;//нормаль
+in vec3 fN;//РЅРѕСЂРјР°Р»СЊ
 in vec2 UV;
-in vec4 Position; //позиция в мировых координатах
+in vec4 Position; //РїРѕР·РёС†РёСЏ РІ РјРёСЂРѕРІС‹С… РєРѕРѕСЂРґРёРЅР°С‚Р°С…
 
 in vec3 Tangent;
-// текстура
+// С‚РµРєСЃС‚СѓСЂР°
 uniform sampler2D colTexSampler;
 uniform sampler2D normTexSampler;
 uniform sampler2D specTexSampler;

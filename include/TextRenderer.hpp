@@ -13,6 +13,7 @@
 #include "Shader.hpp"
 #include "Text2D.hpp"
 #include "Texture.hpp"
+#include "VertexArray.hpp"
 
 class TextRenderer {
 public:
@@ -27,6 +28,7 @@ public:
                 const Camera& camera);
 
 private:
+    VertexArray vertexArray_;
     void RenderBatch(
         std::span<const std::reference_wrapper<const FontLine2d>> lines,
         const Camera& camera);

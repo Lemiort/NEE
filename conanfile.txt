@@ -13,5 +13,9 @@ glaze/8.4.0
 CMakeDeps
 CMakeToolchain
 
+[options]
+glad/*:gl_version=4.6
+glad/*:gl_profile=core
+
 [layout]
 cmake_layout
