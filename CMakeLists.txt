@@ -15,12 +15,12 @@ find_package(spdlog REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(gsl-lite CONFIG REQUIRED)
 find_package(glaze CONFIG REQUIRED)
-find_package(volk CONFIG REQUIRED)
+find_package(VulkanHeaders CONFIG REQUIRED)
 
 # Keep Vulkan independent of the OpenGL renderer while the backend is built out.
 add_library(nee_vulkan STATIC src/VulkanBackend.cpp)
 target_include_directories(nee_vulkan PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
-target_link_libraries(nee_vulkan PUBLIC volk::volk PRIVATE glfw spdlog::spdlog)
+target_link_libraries(nee_vulkan PUBLIC Vulkan::Headers PRIVATE glfw spdlog::spdlog ${CMAKE_DL_LIBS})
 target_compile_definitions(nee_vulkan PUBLIC VK_NO_PROTOTYPES PRIVATE GLFW_INCLUDE_NONE)
 set_target_properties(nee_vulkan PROPERTIES
     CXX_STANDARD 23 CXX_STANDARD_REQUIRED YES CXX_EXTENSIONS NO

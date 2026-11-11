@@ -37,15 +37,26 @@ int main() {
                         backend.GetInstance() == VK_NULL_HANDLE &&
                         backend.GetSurface() == VK_NULL_HANDLE &&
                         backend.GetPhysicalDevice() == VK_NULL_HANDLE &&
+                        backend.GetDevice() == VK_NULL_HANDLE &&
+                        backend.GetGraphicsQueueFamily() ==
+                            VK_QUEUE_FAMILY_IGNORED &&
+                        backend.GetPresentQueueFamily() ==
+                            VK_QUEUE_FAMILY_IGNORED &&
                         backend.GetGraphicsQueue() == VK_NULL_HANDLE &&
                         backend.GetPresentQueue() == VK_NULL_HANDLE) {
-                        spdlog::info("Vulkan bootstrap smoke test passed");
-                        result = EXIT_SUCCESS;
+                        // Leave resources live to exercise destructor cleanup
+                        // too.
+                        if (backend.Initialize(*window) == VK_SUCCESS) {
+                            result = EXIT_SUCCESS;
+                        }
                     }
                 }
             }
         }
     }  // Destroy Vulkan resources and the window before terminating GLFW.
     glfwTerminate();
+    if (result == EXIT_SUCCESS) {
+        spdlog::info("Vulkan bootstrap smoke test passed");
+    }
     return result;
 }

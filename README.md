@@ -24,8 +24,13 @@ graphics/presentation queues, with `VK_KHR_swapchain` enabled for future renderi
 before calling `glfwTerminate`. Create the window with `GLFW_CLIENT_API` set to
 `GLFW_NO_API`. The existing `NEE` executable still uses OpenGL.
 
-Conan supplies `volk/1.4.357.0` and its matching Vulkan headers. Volk dynamically
-loads the system Vulkan runtime, so compiling does not require a Vulkan SDK.
+Conan supplies `vulkan-headers/1.4.357.0`, including Vulkan-Hpp's `vk::raii` wrappers.
+The backend owns its instance, surface and device through these wrappers; their
+destructors release resources in dependency order. A private implementation keeps
+the C++ wrappers out of the public header, which exposes borrowed C handles for
+interoperability. Vulkan-Hpp exceptions are translated to `VkResult` at the
+`Initialize` boundary. `vk::raii::Context` dynamically loads the system Vulkan
+runtime, so compiling does not require a Vulkan SDK or Volk.
 Running requires a Vulkan-capable GPU driver and a display. No validation layers
 are required or enabled. This bootstrap currently targets Windows and Linux;
 macOS/MoltenVK portability support is not set up.

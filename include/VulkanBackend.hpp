@@ -1,18 +1,18 @@
 #pragma once
 
-#include <volk.h>
+#include <vulkan/vulkan.h>
 
 #include <cstdint>
+#include <memory>
 
 struct GLFWwindow;
 
-// Owns Vulkan bootstrap resources, independently of the OpenGL pipelines.
+// Owns Vulkan bootstrap resources through Vulkan-Hpp's vk::raii wrappers.
 // GLFW must be initialized and the GLFW_NO_API window must outlive this object.
-// Call Initialize/Shutdown on the GLFW main thread. Swapchain/rendering comes
-// later.
+// Call Initialize/Shutdown on the GLFW main thread.
 class VulkanBackend {
 public:
-    VulkanBackend() = default;
+    VulkanBackend();
     ~VulkanBackend();
 
     VulkanBackend(const VulkanBackend&) = delete;
@@ -20,53 +20,22 @@ public:
     VulkanBackend(VulkanBackend&&) = delete;
     VulkanBackend& operator=(VulkanBackend&&) = delete;
 
-    // Releases previous resources first; failure leaves the backend empty.
+    // Releases previous resources first; a returned failure leaves the backend
+    // empty.
     [[nodiscard]] VkResult Initialize(GLFWwindow& window);
     void Shutdown() noexcept;
-
     [[nodiscard]] bool IsInitialized() const noexcept;
-    // Borrowed handles, valid until Shutdown or the next Initialize call.
-    [[nodiscard]] VkInstance GetInstance() const noexcept { return instance_; }
-    [[nodiscard]] VkSurfaceKHR GetSurface() const noexcept { return surface_; }
-    [[nodiscard]] VkPhysicalDevice GetPhysicalDevice() const noexcept {
-        return physicalDevice_;
-    }
-    [[nodiscard]] VkDevice GetDevice() const noexcept { return device_; }
-    [[nodiscard]] VkQueue GetGraphicsQueue() const noexcept {
-        return graphicsQueue_;
-    }
-    [[nodiscard]] VkQueue GetPresentQueue() const noexcept {
-        return presentQueue_;
-    }
-    [[nodiscard]] std::uint32_t GetGraphicsQueueFamily() const noexcept {
-        return graphicsQueueFamily_;
-    }
-    [[nodiscard]] std::uint32_t GetPresentQueueFamily() const noexcept {
-        return presentQueueFamily_;
-    }
+    // Borrowed C handles for interoperability; never destroy these yourself.
+    [[nodiscard]] VkInstance GetInstance() const noexcept;
+    [[nodiscard]] VkSurfaceKHR GetSurface() const noexcept;
+    [[nodiscard]] VkPhysicalDevice GetPhysicalDevice() const noexcept;
+    [[nodiscard]] VkDevice GetDevice() const noexcept;
+    [[nodiscard]] VkQueue GetGraphicsQueue() const noexcept;
+    [[nodiscard]] VkQueue GetPresentQueue() const noexcept;
+    [[nodiscard]] std::uint32_t GetGraphicsQueueFamily() const noexcept;
+    [[nodiscard]] std::uint32_t GetPresentQueueFamily() const noexcept;
 
 private:
-    struct QueueFamilies {
-        std::uint32_t graphics = VK_QUEUE_FAMILY_IGNORED;
-        std::uint32_t present = VK_QUEUE_FAMILY_IGNORED;
-    };
-
-    [[nodiscard]] VkResult CreateInstance();
-    [[nodiscard]] VkResult SelectPhysicalDevice();
-    [[nodiscard]] VkResult FindQueueFamilies(VkPhysicalDevice candidate,
-                                             QueueFamilies& queues) const;
-    [[nodiscard]] VkResult CreateDevice();
-
-    // Per-instance/device dispatch avoids overwriting another backend's
-    // functions.
-    VolkInstanceTable instanceFunctions_{};
-    VolkDeviceTable deviceFunctions_{};
-    VkInstance instance_ = VK_NULL_HANDLE;
-    VkSurfaceKHR surface_ = VK_NULL_HANDLE;
-    VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
-    VkDevice device_ = VK_NULL_HANDLE;
-    VkQueue graphicsQueue_ = VK_NULL_HANDLE;
-    VkQueue presentQueue_ = VK_NULL_HANDLE;
-    std::uint32_t graphicsQueueFamily_ = VK_QUEUE_FAMILY_IGNORED;
-    std::uint32_t presentQueueFamily_ = VK_QUEUE_FAMILY_IGNORED;
+    struct Resources;
+    std::unique_ptr<Resources> resources_;
 };
