@@ -61,6 +61,14 @@ bool TextRenderer::RegisterFont(const Font2d& font) {
     if (!texture->Load(font.GetAtlasFilename())) {
         return false;
     }
+    // Atlases are distance fields: sample the full-resolution level only.
+    // Smaller mip levels average neighbouring glyphs in the tightly packed
+    // atlas together, which smears small text; the shader antialiases.
+    const GLuint id = texture->GetTextureID();
+    glTextureParameteri(id, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(id, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(id, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(id, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     atlases_.emplace(font.GetAtlasFilename(), std::move(texture));
     return true;
 }
