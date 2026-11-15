@@ -7,6 +7,14 @@ NEE is a C++23 graphics engine using OpenGL 4.6 core and Conan 2.
 Running it requires a desktop driver supporting OpenGL 4.6 and GLSL 4.60.
 The system OpenGL implementation on macOS does not meet this requirement.
 
+## Project layout
+
+The engine builds as the static library target `nee` (alias `nee::nee`) from
+`src/` and `include/`. Its public include directory, compile definitions, and
+header-level dependencies (GLAD, GLM, gsl-lite) propagate to anything linking
+it. The demo executable `NEE` lives in `app/`, and the unit tests in `tests/`
+link the same library instead of compiling engine sources themselves.
+
 ## OpenGL resource setup
 
 The renderer uses [Direct State Access](https://wikis.khronos.org/opengl/Direct_State_Access)

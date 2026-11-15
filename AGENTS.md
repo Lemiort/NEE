@@ -58,8 +58,9 @@ The following Mermaid diagram provides a high‑level view of the main component
 
 ```mermaid
 graph TD
-	src[Source]
-	inc[Headers]
+	app[Demo app: app/ -> NEE.exe]
+	src[Engine sources: src/ -> nee library]
+	inc[Engine headers: include/]
 	cfg[Configuration]
 	conan[Conanfile]
 	cmake[CMakeLists]
@@ -69,11 +70,12 @@ graph TD
 	models[Models]
 	textures[Textures]
 
+	app --> src
+	test --> src
 	src --> inc
 	src --> shaders
 	src --> models
 	src --> textures
-	src --> test
 	cmake --> build
 	conan --> build
 ```
