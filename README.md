@@ -1,11 +1,20 @@
-New Exprience Engine
+# NEE: New Experience Engine
 
 [![CMake and Conan 2 CI](https://github.com/Lemiort/NEE/actions/workflows/build.yaml/badge.svg)](https://github.com/Lemiort/NEE/actions/workflows/build.yaml)
 
-# README #
+## Overview
+
 NEE is a C++23 graphics engine using OpenGL 4.6 core and Conan 2.
 Running it requires a desktop driver supporting OpenGL 4.6 and GLSL 4.60.
 The system OpenGL implementation on macOS does not meet this requirement.
+
+## Project layout
+
+The engine builds as the static library target `nee` (alias `nee::nee`) from
+`src/` and `include/`. Its public include directory, compile definitions, and
+header-level dependencies (GLAD, GLM, gsl-lite) propagate to anything linking
+it. The demo executable `NEE` lives in `app/`, and the unit tests in `tests/`
+link the same library instead of compiling engine sources themselves.
 
 ## OpenGL resource setup
 
@@ -39,12 +48,11 @@ when authoring scene values. Imported model coordinates are used as stored.
 ## Runtime diagnostics
 
 The application writes logs to `NEE.log` beside the executable and to standard
-error. 
+error.
 
 ![Screenshot 22.08.2015](screenshots/demo_screenshot_26-08-2015.jpg)
 
-
-# Building
+## Building
 
 Resolve dependencies and build Release:
 

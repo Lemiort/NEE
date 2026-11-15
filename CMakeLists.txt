@@ -2,6 +2,18 @@ cmake_minimum_required (VERSION 3.15 FATAL_ERROR)
 set(PROJECT_NAME "NEE")
 project (${PROJECT_NAME})
 
+# When NEE is consumed with add_subdirectory (for example as a git submodule of
+# a game), only the engine library is built by default.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(NEE_IS_TOP_LEVEL ON)
+else()
+    set(NEE_IS_TOP_LEVEL OFF)
+endif()
+option(NEE_BUILD_DEMO "Build the NEE demo application" ${NEE_IS_TOP_LEVEL})
+option(NEE_BUILD_TESTS "Build the NEE unit tests" ${NEE_IS_TOP_LEVEL})
+# Directory holding the engine's runtime assets (shaders, models, fonts, ...).
+set(NEE_ASSET_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NEE asset root")
+
 # GLAD owns all OpenGL declarations, including on platforms where GLFW would
 # otherwise include the system's legacy OpenGL header.
 add_compile_definitions(GLFW_INCLUDE_NONE)
@@ -22,17 +34,53 @@ find_package(glaze CONFIG REQUIRED)
 
 include(CTest)
 
-if(BUILD_TESTING)
+file(GLOB_RECURSE ENGINE_SOURCES CONFIGURE_DEPENDS "src/*.cpp")
+file(GLOB_RECURSE ENGINE_HEADERS CONFIGURE_DEPENDS "include/*.hpp")
+file(GLOB_RECURSE APP_SOURCES CONFIGURE_DEPENDS "app/*.cpp")
+file(GLOB_RECURSE APP_HEADERS CONFIGURE_DEPENDS "app/*.hpp")
+set(SOURCES_LIST ${ENGINE_SOURCES} ${APP_SOURCES})
+set(HEADERS_LIST ${ENGINE_HEADERS} ${APP_HEADERS})
+
+# --- Engine library ---------------------------------------------------
+# Applications and tests link this target instead of compiling engine sources
+# themselves. Dependencies that appear in public headers are PUBLIC; the rest
+# stay PRIVATE and still reach the final link through the static library.
+add_library(nee STATIC ${ENGINE_SOURCES} ${ENGINE_HEADERS})
+add_library(nee::nee ALIAS nee)
+target_include_directories(nee PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+target_compile_definitions(nee PUBLIC GLM_FORCE_CTOR_INIT GLFW_INCLUDE_NONE)
+target_compile_features(nee PUBLIC cxx_std_23)
+set_target_properties(nee PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
+target_link_libraries(nee
+PUBLIC
+    glad::glad
+    glm::glm
+    gsl-lite::gsl-lite
+PRIVATE
+    glfw
+    stb::stb
+    spdlog::spdlog
+    assimp::assimp
+    glaze::glaze
+)
+
+if(NEE_BUILD_TESTS AND BUILD_TESTING)
     add_subdirectory(tests)
 endif()
 
-include_directories(include)
-# include_directories(src)
-file(GLOB_RECURSE SOURCES_LIST CONFIGURE_DEPENDS "src/*.cpp")
-file(GLOB_RECURSE HEADERS_LIST CONFIGURE_DEPENDS "include/*.hpp")
+if(NOT NEE_BUILD_DEMO)
+    return()
+endif()
 
-add_executable(${PROJECT_NAME} ${SOURCES_LIST})
-target_compile_definitions(${PROJECT_NAME} PRIVATE GLM_FORCE_CTOR_INIT)
+# --- Demo application -------------------------------------------------
+add_executable(${PROJECT_NAME} ${APP_SOURCES} ${APP_HEADERS})
+target_include_directories(${PROJECT_NAME} PRIVATE app)
 
 set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD 23
@@ -75,16 +123,12 @@ add_custom_target(clang_tidy
 # link soil first to dismiss soil linking errors
 # target_link_libraries(${PROJECT_NAME} ${SOIL_LIBRARIES})
 
-target_link_libraries(${PROJECT_NAME} 
-PRIVATE 
-    glad::glad
+target_link_libraries(${PROJECT_NAME}
+PRIVATE
+    nee::nee
     glfw
-    glm::glm
     stb::stb
     spdlog::spdlog
-    assimp::assimp
-    gsl-lite::gsl-lite
-    glaze::glaze
 )
 
 file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
