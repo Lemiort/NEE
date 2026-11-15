@@ -129,7 +129,6 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
     nee::nee
     glfw
-    stb::stb
     spdlog::spdlog
 )
 

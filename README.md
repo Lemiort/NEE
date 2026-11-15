@@ -72,6 +72,9 @@ step while paused.
 The application writes logs to `NEE.log` beside the executable and to standard
 error.
 
+`SaveScreenshot` (`include/Screenshot.hpp`) writes the current framebuffer to
+a PNG or JPEG file; the demo saves one to `screenshots/` when you press F12.
+
 ![Screenshot 22.08.2015](screenshots/demo_screenshot_26-08-2015.jpg)
 
 ## Building
