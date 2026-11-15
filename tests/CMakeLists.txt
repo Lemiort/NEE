@@ -15,6 +15,9 @@ nee_add_test(math_migration_tests MathMigrationTests.cpp)
 target_link_libraries(math_migration_tests PRIVATE glfw)
 gtest_discover_tests(math_migration_tests)
 
+nee_add_test(fixed_step_clock_tests FixedStepClockTests.cpp)
+gtest_discover_tests(fixed_step_clock_tests)
+
 nee_add_test(material_texture_ownership_tests
     MaterialTextureOwnershipTests.cpp
     GpuResourceOwnershipTests.cpp

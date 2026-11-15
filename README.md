@@ -45,6 +45,20 @@ object Euler angles, and spotlight cutoff are specified in degrees at the engine
 API; GLM calculations use radians internally. Treat one world unit as one meter
 when authoring scene values. Imported model coordinates are used as stored.
 
+## Fixed-step updates
+
+`FixedStepClock` turns variable frame times into a fixed number of
+simulation steps (60 per second by default), so simulation results do not
+depend on frame rate. Each frame, pass the elapsed real time to `Advance`,
+run the reported number of steps with `GetStepSeconds()`, then render with the
+returned `alpha` interpolating between the previous and latest step. The clock
+supports pausing, single-stepping and a time scale, caps the steps per frame,
+and clamps long frames such as a debugger break. It reads no time source
+itself, so it is unit-tested on the CPU.
+
+In the demo, P pauses or resumes the animation and N advances it one step
+while paused.
+
 ## Runtime diagnostics
 
 The application writes logs to `NEE.log` beside the executable and to standard

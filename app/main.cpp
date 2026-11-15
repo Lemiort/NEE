@@ -41,6 +41,9 @@ constexpr int kGridExtentSteps = 50;
 constexpr float kGridStepsPerUnit = 10.0F;
 constexpr std::size_t kScreenshotFilenameCapacity = 80;
 constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
+// The demo animation originally advanced 0.021 rad per frame at ~60 FPS.
+constexpr double kAnimationRadiansPerSecond = 0.021 * 60.0;
+constexpr double kAnimationYawAmplitudeDegrees = 30.0;
 
 struct ShaderStageSource {
     std::filesystem::path path;
@@ -134,6 +137,12 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
         }
         if (key == GLFW_KEY_F5) {
             renderMode = GetNextRenderMode(renderMode);
+        }
+        if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+            clock_.SetPaused(!clock_.IsPaused());
+        }
+        if (key == GLFW_KEY_N) {
+            clock_.RequestSingleStep();
         }
         if (key == GLFW_KEY_F12) {
             const std::time_t rawTime = std::time(nullptr);
@@ -250,10 +259,16 @@ void Application::OnFrameBufferSize(int w, int h) {
     glViewport(0, 0, width, height);
 }
 
-void Application::RenderScene() {
-    animationTime_ += 0.021F;
+void Application::UpdateSimulation(double stepSeconds) {
+    animationTime_ += stepSeconds * kAnimationRadiansPerSecond;
+    previousYaw_ = currentYaw_;
+    currentYaw_ = static_cast<float>(kAnimationYawAmplitudeDegrees *
+                                     std::sin(animationTime_));
+}
+
+void Application::RenderScene(float alpha) {
     renderQueue.Clear();
-    scene.SetAnimatedYaw(30.0F * sinf(animationTime_));
+    scene.SetAnimatedYaw(std::lerp(previousYaw_, currentYaw_, alpha));
     scene.Submit(renderQueue);
     const SceneView sceneView = scene.CreateView(pGameCamera, renderQueue);
     switch (renderMode) {
@@ -330,13 +345,20 @@ void Application::InterfacePass() {
     fLine1->SetFontSize(36.0F);
     renderQueue.SubmitText(*fLine1);
 
+    if (clock_.IsPaused()) {
+        fLine1->SetText("Paused (P resume, N step)");
+        fLine1->SetPosition(-1.0F, 0.8F);
+        fLine1->SetFontSize(24.0F);
+        renderQueue.SubmitText(*fLine1);
+    }
+
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
 }
 void Application::PreInitScene(GLFWwindow& window) {
-    animationTime_ = 0.0F;
+    animationTime_ = 0.0;
     lastTime = glfwGetTime();
     frameCount = 0;
 
@@ -603,8 +625,16 @@ int Application::Run(GLFWwindow& window) {
         if (InitScene(window) != 0) {
             result = EXIT_FAILURE;
         } else {
+            lastFrameTime_ = glfwGetTime();
             while (glfwWindowShouldClose(&window) == 0) {
-                RenderScene();
+                const double now = glfwGetTime();
+                const ClockAdvance advance =
+                    clock_.Advance(now - lastFrameTime_);
+                lastFrameTime_ = now;
+                for (std::uint32_t step = 0; step < advance.steps; ++step) {
+                    UpdateSimulation(clock_.GetStepSeconds());
+                }
+                RenderScene(static_cast<float>(advance.alpha));
                 glfwSwapBuffers(&window);
                 glfwPollEvents();
             }

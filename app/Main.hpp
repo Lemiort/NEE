@@ -10,6 +10,7 @@
 #include "Billboard.hpp"
 #include "DebugRenderer.hpp"
 #include "DeferredPipeline.hpp"
+#include "FixedStepClock.hpp"
 #include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
 #include "Light.hpp"
@@ -67,14 +68,20 @@ private:
     void PreInitScene(GLFWwindow& window);
     void InitRender(GLFWwindow& window, std::string message);
     int InitScene(GLFWwindow& window);
-    void RenderScene();
+    void UpdateSimulation(double stepSeconds);
+    void RenderScene(float alpha);
     void InterfacePass();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;
     Mouse mouse;
     Camera pGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0F, 0.1F, 1000.0F};
-    float animationTime_ = 0.0F;
+    FixedStepClock clock_;
+    double lastFrameTime_ = 0.0;
+    double animationTime_ = 0.0;
+    // Yaw at the previous and latest fixed step; frames interpolate them.
+    float previousYaw_ = 0.0F;
+    float currentYaw_ = 0.0F;
     float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;
