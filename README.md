@@ -45,19 +45,27 @@ object Euler angles, and spotlight cutoff are specified in degrees at the engine
 API; GLM calculations use radians internally. Treat one world unit as one meter
 when authoring scene values. Imported model coordinates are used as stored.
 
-## Fixed-step updates
+## Simulation thread
 
-`FixedStepClock` turns variable frame times into a fixed number of
-simulation steps (60 per second by default), so simulation results do not
-depend on frame rate. Each frame, pass the elapsed real time to `Advance`,
-run the reported number of steps with `GetStepSeconds()`, then render with the
-returned `alpha` interpolating between the previous and latest step. The clock
-supports pausing, single-stepping and a time scale, caps the steps per frame,
-and clamps long frames such as a debugger break. It reads no time source
-itself, so it is unit-tested on the CPU.
+Simulation runs on its own thread at a fixed rate, so its results do not
+depend on frame rate and a slow simulation step never stalls rendering.
 
-In the demo, P pauses or resumes the animation and N advances it one step
-while paused.
+- `FixedStepClock` turns elapsed real time into a whole number of fixed steps.
+  It supports pausing, single-stepping and a time scale, caps the steps run at
+  once, and clamps long gaps such as a debugger break. It reads no time source
+  itself, so it is unit-tested on the CPU.
+- `SimulationThread` runs a step function on a worker thread, paced by the
+  clock. The step function receives only the step index and duration. Pause,
+  single-step and time-scale commands are thread-safe, and an exception thrown
+  by a step stops the worker and is kept for the owner to report.
+- `SnapshotBuffer<T>` passes immutable snapshots from the simulation to the
+  renderer. Publish one after each step; each frame, sample it one step behind
+  `SimulationThread::GetTiming().estimatedSeconds` and interpolate between the
+  two snapshots it returns.
+
+The demo animates its spheres on a 20 Hz simulation thread and interpolates
+the rendered rotation. P pauses or resumes the simulation and N advances it one
+step while paused.
 
 ## Runtime diagnostics
 

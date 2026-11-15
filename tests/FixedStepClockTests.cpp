@@ -39,8 +39,8 @@ TEST(FixedStepClock, DefaultsToSixtyStepsPerSecond) {
 
 TEST(FixedStepClock, RejectsInvalidSettings) {
     constexpr double kNaN = std::numeric_limits<double>::quiet_NaN();
-    constexpr double kInf = std::numeric_limits<double>::infinity();
-    for (const double step : {0.0, -1.0, kNaN, kInf}) {
+    constexpr double kInfinity = std::numeric_limits<double>::infinity();
+    for (const double step : {0.0, -1.0, kNaN, kInfinity}) {
         EXPECT_THROW(FixedStepClock(FixedStepClockSettings{.stepSeconds = step}),
                      std::invalid_argument)
             << "step " << step;
@@ -48,7 +48,7 @@ TEST(FixedStepClock, RejectsInvalidSettings) {
     EXPECT_THROW(
         FixedStepClock(FixedStepClockSettings{.maxStepsPerAdvance = 0}),
         std::invalid_argument);
-    for (const double maxFrame : {0.0, -1.0, kNaN, kInf}) {
+    for (const double maxFrame : {0.0, -1.0, kNaN, kInfinity}) {
         EXPECT_THROW(
             FixedStepClock(FixedStepClockSettings{.maxFrameSeconds = maxFrame}),
             std::invalid_argument)
