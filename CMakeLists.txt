@@ -2,6 +2,18 @@ cmake_minimum_required (VERSION 3.15 FATAL_ERROR)
 set(PROJECT_NAME "NEE")
 project (${PROJECT_NAME})
 
+# When NEE is consumed with add_subdirectory (for example as a git submodule of
+# a game), only the engine library is built by default.
+if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    set(NEE_IS_TOP_LEVEL ON)
+else()
+    set(NEE_IS_TOP_LEVEL OFF)
+endif()
+option(NEE_BUILD_DEMO "Build the NEE demo application" ${NEE_IS_TOP_LEVEL})
+option(NEE_BUILD_TESTS "Build the NEE unit tests" ${NEE_IS_TOP_LEVEL})
+# Directory holding the engine's runtime assets (shaders, models, fonts, ...).
+set(NEE_ASSET_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "NEE asset root")
+
 # GLAD owns all OpenGL declarations, including on platforms where GLFW would
 # otherwise include the system's legacy OpenGL header.
 add_compile_definitions(GLFW_INCLUDE_NONE)
@@ -58,6 +70,14 @@ PRIVATE
     glaze::glaze
 )
 
+if(NEE_BUILD_TESTS AND BUILD_TESTING)
+    add_subdirectory(tests)
+endif()
+
+if(NOT NEE_BUILD_DEMO)
+    return()
+endif()
+
 # --- Demo application -------------------------------------------------
 add_executable(${PROJECT_NAME} ${APP_SOURCES} ${APP_HEADERS})
 target_include_directories(${PROJECT_NAME} PRIVATE app)
@@ -67,10 +87,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
     CXX_STANDARD_REQUIRED YES
     CXX_EXTENSIONS NO
 )
-
-if(BUILD_TESTING)
-    add_subdirectory(tests)
-endif()
 
 # # Enable compiler warnings and treat them as errors for CI safety
 # if(MSVC)
