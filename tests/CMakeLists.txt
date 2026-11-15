@@ -15,6 +15,13 @@ nee_add_test(math_migration_tests MathMigrationTests.cpp)
 target_link_libraries(math_migration_tests PRIVATE glfw)
 gtest_discover_tests(math_migration_tests)
 
+nee_add_test(fixed_step_clock_tests FixedStepClockTests.cpp)
+gtest_discover_tests(fixed_step_clock_tests)
+
+# Exercises a real worker thread and wall-clock pacing; waits are bounded.
+nee_add_test(simulation_thread_tests SimulationThreadTests.cpp)
+gtest_discover_tests(simulation_thread_tests PROPERTIES TIMEOUT 60)
+
 nee_add_test(material_texture_ownership_tests
     MaterialTextureOwnershipTests.cpp
     GpuResourceOwnershipTests.cpp

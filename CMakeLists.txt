@@ -30,6 +30,7 @@ find_package(spdlog REQUIRED)
 find_package(assimp CONFIG REQUIRED)
 find_package(gsl-lite CONFIG REQUIRED)
 find_package(glaze CONFIG REQUIRED)
+find_package(Threads REQUIRED)
 
 
 include(CTest)
@@ -62,6 +63,7 @@ PUBLIC
     glad::glad
     glm::glm
     gsl-lite::gsl-lite
+    Threads::Threads
 PRIVATE
     glfw
     stb::stb

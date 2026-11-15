@@ -19,7 +19,9 @@
 #include "RenderMode.hpp"
 #include "RenderQueue.hpp"
 #include "Scene.hpp"
+#include "SimulationThread.hpp"
 #include "Skybox.hpp"
+#include "SnapshotBuffer.hpp"
 #include "Text2D.hpp"
 #include "TextRenderer.hpp"
 
@@ -67,6 +69,10 @@ private:
     void PreInitScene(GLFWwindow& window);
     void InitRender(GLFWwindow& window, std::string message);
     int InitScene(GLFWwindow& window);
+    void StartSimulation();
+    // Runs on the simulation thread.
+    void UpdateSimulation(const SimulationStep& step);
+    [[nodiscard]] float SampleAnimatedYaw() const;
     void RenderScene();
     void InterfacePass();
 
@@ -74,7 +80,11 @@ private:
     int height = WINDOW_HEIGHT;
     Mouse mouse;
     Camera pGameCamera{WINDOW_WIDTH, WINDOW_HEIGHT, 30.0F, 0.1F, 1000.0F};
-    float animationTime_ = 0.0F;
+    // Owned by the simulation thread while it runs.
+    double animationPhase_ = 0.0;
+    // Yaw published after every simulation step; frames interpolate the
+    // latest two.
+    SnapshotBuffer<float> yawSnapshots_;
     float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;
@@ -98,6 +108,9 @@ private:
     std::unique_ptr<FontLine2d> fLine1;
     Scene scene;
     RenderQueue renderQueue;
+    // Declared last: it is destroyed, and its worker joined, before the state
+    // its step function uses.
+    std::unique_ptr<SimulationThread> simulation_;
 };
 
 #endif  // MAIN_H_INCLUDED

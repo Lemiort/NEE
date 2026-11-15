@@ -10,6 +10,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <ctime>
+#include <exception>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -41,6 +42,12 @@ constexpr int kGridExtentSteps = 50;
 constexpr float kGridStepsPerUnit = 10.0F;
 constexpr std::size_t kScreenshotFilenameCapacity = 80;
 constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
+// The demo animation originally advanced 0.021 rad per frame at ~60 FPS.
+constexpr double kAnimationRadiansPerSecond = 0.021 * 60.0;
+constexpr double kAnimationYawAmplitudeDegrees = 30.0;
+// The simulation deliberately runs slower than typical displays; rendering
+// interpolates between its steps.
+constexpr double kSimulationStepsPerSecond = 20.0;
 
 struct ShaderStageSource {
     std::filesystem::path path;
@@ -91,6 +98,16 @@ void ConfigureLogging(const std::filesystem::path& executablePath) {
     }
 }
 
+void LogSimulationFailure(const std::exception_ptr& failure) {
+    try {
+        std::rethrow_exception(failure);
+    } catch (const std::exception& error) {
+        spdlog::critical("Simulation step failed: {}", error.what());
+    } catch (...) {
+        spdlog::critical("Simulation step failed with an unknown exception");
+    }
+}
+
 }  // namespace
 
 void Application::CalcFPS() {
@@ -134,6 +151,16 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
         }
         if (key == GLFW_KEY_F5) {
             renderMode = GetNextRenderMode(renderMode);
+        }
+        if (key == GLFW_KEY_P && action == GLFW_PRESS) {
+            if (simulation_ != nullptr) {
+                simulation_->SetPaused(!simulation_->IsPaused());
+            }
+        }
+        if (key == GLFW_KEY_N) {
+            if (simulation_ != nullptr) {
+                simulation_->RequestSingleStep();
+            }
         }
         if (key == GLFW_KEY_F12) {
             const std::time_t rawTime = std::time(nullptr);
@@ -250,10 +277,41 @@ void Application::OnFrameBufferSize(int w, int h) {
     glViewport(0, 0, width, height);
 }
 
+void Application::StartSimulation() {
+    animationPhase_ = 0.0;
+    yawSnapshots_.Clear();
+    yawSnapshots_.Publish(0.0, 0.0F);
+    simulation_ = std::make_unique<SimulationThread>(
+        FixedStepClockSettings{.stepSeconds = 1.0 / kSimulationStepsPerSecond},
+        [this](const SimulationStep& step) { UpdateSimulation(step); });
+}
+
+void Application::UpdateSimulation(const SimulationStep& step) {
+    animationPhase_ += step.stepSeconds * kAnimationRadiansPerSecond;
+    const auto yaw = static_cast<float>(kAnimationYawAmplitudeDegrees *
+                                        std::sin(animationPhase_));
+    yawSnapshots_.Publish(step.EndSeconds(), yaw);
+}
+
+float Application::SampleAnimatedYaw() const {
+    if (simulation_ == nullptr) {
+        return 0.0F;
+    }
+    // Render one step behind the estimated simulation time so the frame
+    // always falls between two published steps.
+    const SimulationTiming timing = simulation_->GetTiming();
+    const auto sample =
+        yawSnapshots_.SampleAt(timing.estimatedSeconds - timing.stepSeconds);
+    if (!sample) {
+        return 0.0F;
+    }
+    return std::lerp(sample->previous->value, sample->current->value,
+                     static_cast<float>(sample->alpha));
+}
+
 void Application::RenderScene() {
-    animationTime_ += 0.021F;
     renderQueue.Clear();
-    scene.SetAnimatedYaw(30.0F * sinf(animationTime_));
+    scene.SetAnimatedYaw(SampleAnimatedYaw());
     scene.Submit(renderQueue);
     const SceneView sceneView = scene.CreateView(pGameCamera, renderQueue);
     switch (renderMode) {
@@ -330,13 +388,19 @@ void Application::InterfacePass() {
     fLine1->SetFontSize(36.0F);
     renderQueue.SubmitText(*fLine1);
 
+    if (simulation_ != nullptr && simulation_->IsPaused()) {
+        fLine1->SetText("Paused (P resume, N step)");
+        fLine1->SetPosition(-1.0F, 0.8F);
+        fLine1->SetFontSize(24.0F);
+        renderQueue.SubmitText(*fLine1);
+    }
+
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
 }
 void Application::PreInitScene(GLFWwindow& window) {
-    animationTime_ = 0.0F;
     lastTime = glfwGetTime();
     frameCount = 0;
 
@@ -603,11 +667,19 @@ int Application::Run(GLFWwindow& window) {
         if (InitScene(window) != 0) {
             result = EXIT_FAILURE;
         } else {
+            StartSimulation();
             while (glfwWindowShouldClose(&window) == 0) {
+                if (const std::exception_ptr failure =
+                        simulation_->GetFailure()) {
+                    LogSimulationFailure(failure);
+                    result = EXIT_FAILURE;
+                    break;
+                }
                 RenderScene();
                 glfwSwapBuffers(&window);
                 glfwPollEvents();
             }
+            simulation_.reset();
         }
     }
 
