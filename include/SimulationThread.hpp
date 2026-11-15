@@ -98,7 +98,7 @@ private:
     bool commandsPending_{false};
     // Published state, guarded by mutex_.
     SimulationTiming timing_;
-    SteadyClock::time_point timingTakenAt_{};
+    SteadyClock::time_point timingTakenAt_;
     std::exception_ptr failure_;
 
     // Declared last so it is joined before the members above are destroyed.
