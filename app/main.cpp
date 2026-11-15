@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <ctime>
+#include <expected>
 #include <exception>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
@@ -26,6 +26,7 @@
 
 #include "Camera.hpp"
 #include "Light.hpp"
+#include "Screenshot.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
@@ -34,14 +35,10 @@
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
-#define STB_IMAGE_WRITE_IMPLEMENTATION
-#include "stb_image_write.h"
 
 namespace {
 constexpr int kGridExtentSteps = 50;
 constexpr float kGridStepsPerUnit = 10.0F;
-constexpr std::size_t kScreenshotFilenameCapacity = 80;
-constexpr std::time_t kInvalidTime = static_cast<std::time_t>(-1);
 // The demo animation originally advanced 0.021 rad per frame at ~60 FPS.
 constexpr double kAnimationRadiansPerSecond = 0.021 * 60.0;
 constexpr double kAnimationYawAmplitudeDegrees = 30.0;
@@ -163,67 +160,14 @@ void Application::OnKey(GLFWwindow& window, int key, int action) {
             }
         }
         if (key == GLFW_KEY_F12) {
-            const std::time_t rawTime = std::time(nullptr);
-            if (rawTime == kInvalidTime) {
-                spdlog::error("Unable to get the current time for screenshot");
-                return;
-            }
-            std::tm timeInfo{};
-#ifdef _WIN32
-            if (localtime_s(&timeInfo, &rawTime) != 0) {
-#else
-            if (localtime_r(&rawTime, &timeInfo) == nullptr) {
-#endif
-                spdlog::error("Unable to format the screenshot timestamp");
-                return;
-            }
-            std::array<char, kScreenshotFilenameCapacity> buffer{};
-            if (std::strftime(buffer.data(), buffer.size(),
-                              "screenshots/Screenshot %Y-%m-%d %I.%M.%S.jpg",
-                              &timeInfo) == 0) {
-                spdlog::error("Screenshot filename is too long");
-                return;
-            }
-
-            int result = 0;
-
-            // allocate RAM for screen pixels (RGB)
-            int const channels = 3;
-            if (width <= 0 || height <= 0) {
-                spdlog::error(
-                    "Cannot capture a screenshot with empty dimensions");
-                return;
-            }
-            const std::size_t pixelCount = static_cast<std::size_t>(width) *
-                                           static_cast<std::size_t>(height) *
-                                           static_cast<std::size_t>(channels);
-            std::vector<uint8_t> pixels(pixelCount);
-
-            // Ensure pixel data is tightly packed to avoid row padding
-            glPixelStorei(GL_PACK_ALIGNMENT, 1);
-
-            // read pixels from current buffer into RAM
-            glReadPixels(0, 0, width, height, GL_RGB, GL_UNSIGNED_BYTE,
-                         pixels.data());
-
-            //  tell stb to flip y
-            stbi_flip_vertically_on_write(1);
-
-            // sae as tga
-            result = stbi_write_jpg(buffer.data(), width, height, channels,
-                                    pixels.data(), 100);
-
-            // stbi_write_tga returns 1 on success and 0 on error
-            if (result == 0) {
-                // Log STB write failure with spdlog
-                spdlog::error(
-                    "[STB Write Error] Could not save screenshot to: {}",
-                    buffer.data());
+            const auto path = TimestampedScreenshotPath("screenshots", ".jpg");
+            const auto saved = path ? SaveScreenshot(*path, width, height)
+                                    : std::expected<void, std::string>(
+                                          std::unexpected(path.error()));
+            if (saved) {
+                spdlog::info("Screenshot saved as {}", path->string());
             } else {
-                {
-                    // Inform about successful screenshot via spdlog
-                    spdlog::info("Screenshot saved as {}", buffer.data());
-                }
+                spdlog::error("Screenshot failed: {}", saved.error());
             }
         } else {
             {

@@ -23,12 +23,14 @@
 #include "MeshInstanceRenderer.hpp"
 #include "ModelLoader.hpp"
 #include "RandomTexture.hpp"
+#include "Screenshot.hpp"
 #include "Shader.hpp"
 #include "ShadowMapFBO.hpp"
 #include "Skybox.hpp"
 #include "TextRenderer.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
+#include "stb_image.h"
 
 namespace {
 constexpr int kSize = 128;
@@ -696,3 +698,55 @@ TEST_F(OpenGLRender, RenderersOwnTheirVertexInputInCoreProfile) {
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 }  // namespace
+
+TEST_F(OpenGLRender, SaveScreenshotWritesTopDownImages) {
+    // Top half red, bottom half blue, so a missing row flip is visible.
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, kSize / 2, kSize, kSize / 2);
+    glClearColor(1.0F, 0.0F, 0.0F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glScissor(0, 0, kSize, kSize / 2);
+    glClearColor(0.0F, 0.0F, 1.0F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_SCISSOR_TEST);
+    glReadBuffer(GL_BACK);
+
+    const std::filesystem::path directory =
+        std::filesystem::path(NEE_TEST_ARTIFACT_ROOT) / "screenshots";
+    std::filesystem::remove_all(directory);
+    const auto pngPath = directory / "nested" / "shot.png";
+    ASSERT_TRUE(SaveScreenshot(pngPath, kSize, kSize));
+    ASSERT_TRUE(SaveScreenshot(directory / "shot.JPG", kSize, kSize));
+    EXPECT_GT(std::filesystem::file_size(directory / "shot.JPG"), 0U);
+
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    const std::string pngName = pngPath.string();
+    stbi_set_flip_vertically_on_load(0);
+    unsigned char* image =
+        stbi_load(pngName.c_str(), &width, &height, &channels, 3);
+    ASSERT_NE(image, nullptr);
+    EXPECT_EQ(width, kSize);
+    EXPECT_EQ(height, kSize);
+    const auto pixel = [&](int x, int y) {
+        const unsigned char* p = image + ((y * width) + x) * 3;
+        return std::array<int, 3>{p[0], p[1], p[2]};
+    };
+    EXPECT_EQ(pixel(kSize / 2, 2), (std::array<int, 3>{255, 0, 0}));
+    EXPECT_EQ(pixel(kSize / 2, kSize - 3), (std::array<int, 3>{0, 0, 255}));
+    stbi_image_free(image);
+
+    GLint alignment = 0;
+    glGetIntegerv(GL_PACK_ALIGNMENT, &alignment);
+    EXPECT_EQ(alignment, 4);
+    EXPECT_FALSE(SaveScreenshot(directory / "shot.bmp", kSize, kSize));
+    EXPECT_FALSE(SaveScreenshot(directory / "empty.png", 0, kSize));
+
+    const auto stamped = TimestampedScreenshotPath("shots", ".png");
+    ASSERT_TRUE(stamped);
+    EXPECT_EQ(stamped->parent_path(), std::filesystem::path("shots"));
+    EXPECT_TRUE(stamped->filename().string().starts_with("Screenshot "));
+    EXPECT_EQ(stamped->extension(), ".png");
+}

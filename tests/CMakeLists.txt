@@ -35,7 +35,7 @@ target_compile_definitions(opengl_render_tests PRIVATE
     NEE_TEST_ASSET_ROOT="${PROJECT_SOURCE_DIR}"
     NEE_TEST_ARTIFACT_ROOT="${CMAKE_CURRENT_BINARY_DIR}/render-artifacts"
 )
-target_link_libraries(opengl_render_tests PRIVATE glfw)
+target_link_libraries(opengl_render_tests PRIVATE glfw stb::stb)
 # Discovery only lists tests. GLFW is initialized inside each test, under Xvfb
 # in CI. Run from the application build root, where runtime assets are copied.
 gtest_discover_tests(opengl_render_tests
