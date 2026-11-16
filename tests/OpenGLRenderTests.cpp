@@ -20,7 +20,7 @@
 #include "DebugRenderer.hpp"
 #include "GBuffer.hpp"
 #include "ImGuiOverlay.hpp"
-#include "ImGuiScopes.hpp"
+#include "imgui.h"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
@@ -773,9 +773,9 @@ TEST_F(OpenGLRender, ImGuiOverlayDrawsOnTopAndRestoresState) {
         overlay.BeginFrame();
         ImGui::SetNextWindowPos({8.0F, 8.0F});
         ImGui::SetNextWindowSize({112.0F, 112.0F});
-        if (const ui::Window window{"Overlay test"}) {
-            ImGui::TextUnformatted("hello");
-        }
+        ImGui::Begin("Overlay test");
+        ImGui::TextUnformatted("hello");
+        ImGui::End();
         overlay.Render();
     }
     ASSERT_EQ(glGetError(), GL_NO_ERROR);

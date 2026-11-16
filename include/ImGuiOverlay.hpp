@@ -20,8 +20,8 @@ struct ImGuiOverlaySettings {
 // previous ones, and restores them when the overlay is destroyed. Both
 // creation and destruction need the window's OpenGL context to be current.
 //
-// Each frame: BeginFrame(), then any ImGui calls (see ImGuiScopes.hpp), then
-// Render() after the scene so the UI is drawn on top.
+// Each frame: BeginFrame(), then any ImGui calls, then Render() after the
+// scene so the UI is drawn on top.
 class ImGuiOverlay {
 public:
     // Throws std::logic_error if another overlay exists (ImGui has one

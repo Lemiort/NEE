@@ -77,6 +77,7 @@ private:
     void RenderScene();
     void InterfacePass();
     void DrawDebugUi();
+    void DrawAnimationControls();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;

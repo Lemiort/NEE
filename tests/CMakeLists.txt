@@ -22,11 +22,6 @@ gtest_discover_tests(fixed_step_clock_tests)
 nee_add_test(simulation_thread_tests SimulationThreadTests.cpp)
 gtest_discover_tests(simulation_thread_tests PROPERTIES TIMEOUT 60)
 
-# Dear ImGui scope guards on the headless null backend.
-nee_add_test(imgui_scope_tests ImGuiScopeTests.cpp)
-target_link_libraries(imgui_scope_tests PRIVATE nee::imgui_backends)
-gtest_discover_tests(imgui_scope_tests)
-
 nee_add_test(material_texture_ownership_tests
     MaterialTextureOwnershipTests.cpp
     GpuResourceOwnershipTests.cpp

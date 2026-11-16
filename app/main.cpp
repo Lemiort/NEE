@@ -25,7 +25,7 @@
 #include <vector>
 
 #include "Camera.hpp"
-#include "ImGuiScopes.hpp"
+#include "imgui.h"
 #include "Light.hpp"
 #include "Screenshot.hpp"
 #include "Shader.hpp"
@@ -602,9 +602,10 @@ int Application::InitScene(GLFWwindow& window) {
 void Application::DrawDebugUi() {
     constexpr ImVec2 kPosition{16.0F, 150.0F};
     ImGui::SetNextWindowPos(kPosition, ImGuiCond_FirstUseEver);
-    const ui::Window window{"NEE demo", nullptr,
-                            ImGuiWindowFlags_AlwaysAutoResize};
-    if (!window) {
+    // End() is required even when Begin() reports the window collapsed.
+    if (!ImGui::Begin("NEE demo", nullptr,
+                      ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::End();
         return;
     }
     ImGui::Text("%.1f FPS", static_cast<double>(fps));
@@ -614,37 +615,38 @@ void Application::DrawDebugUi() {
                 static_cast<double>(position.z));
 
     const std::string current{GetRenderModeDescription(renderMode)};
-    if (const ui::Combo combo{"Render mode", current.c_str()}) {
+    if (ImGui::BeginCombo("Render mode", current.c_str())) {
         for (const RenderModeDescriptor& entry : kRenderModes) {
-            const ui::Id id{static_cast<int>(entry.mode)};
             const std::string label{entry.description};
             if (ImGui::Selectable(label.c_str(), entry.mode == renderMode)) {
                 renderMode = entry.mode;
             }
         }
+        ImGui::EndCombo();
     }
 
-    if (simulation_ == nullptr) {
-        return;
+    if (simulation_ != nullptr) {
+        DrawAnimationControls();
     }
+    ImGui::End();
+}
+
+void Application::DrawAnimationControls() {
     ImGui::SeparatorText("Animation");
     bool paused = simulation_->IsPaused();
     if (ImGui::Checkbox("Paused", &paused)) {
         simulation_->SetPaused(paused);
     }
     ImGui::SameLine();
-    {
-        const ui::Disabled disabled{!paused};
-        if (ImGui::Button("Step")) {
-            simulation_->RequestSingleStep();
-        }
+    ImGui::BeginDisabled(!paused);
+    if (ImGui::Button("Step")) {
+        simulation_->RequestSingleStep();
     }
+    ImGui::EndDisabled();
     if (ImGui::SliderFloat("Time scale", &timeScale_, 0.0F, 4.0F, "%.2fx")) {
         simulation_->SetTimeScale(timeScale_);
     }
-    if (const ui::ItemTooltip tooltip{}) {
-        ImGui::TextUnformatted("Simulation steps per real second, relative");
-    }
+    ImGui::SetItemTooltip("Simulation steps per real second, relative");
 }
 
 int Application::Run(GLFWwindow& window) {

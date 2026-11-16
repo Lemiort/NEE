@@ -76,18 +76,9 @@ each frame before any ImGui calls and `Render()` after the scene. While
 `WantsMouse()` or `WantsKeyboard()` is true, the cursor or keyboard belongs to
 the UI and the application should ignore that input.
 
-`ImGuiScopes.hpp` has scope guards for ImGui's paired calls (`ui::Window`,
-`ui::Table`, `ui::TreeNode`, `ui::Id`, `ui::StyleColor` and more). Each ends
-or pops in its destructor, and only when ImGui requires it, so early returns
-and exceptions keep ImGui's stacks balanced:
-
-```cpp
-if (const ui::Window window{"Inspector"}) {
-    if (const ui::Table table{"needs", 2}) {
-        // ...
-    }
-}
-```
+Between the two, use ImGui's own API directly (`ImGui::Begin`,
+`ImGui::BeginTable`, ...). `imgui.h` is available to anything that links
+`nee`.
 
 The demo shows a debug window with FPS, the render mode, and pause, step and
 time-scale controls for its animation.

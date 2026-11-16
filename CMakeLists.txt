@@ -34,8 +34,7 @@ find_package(Threads REQUIRED)
 find_package(imgui CONFIG REQUIRED)
 
 # Conan ships Dear ImGui's platform and renderer backends as sources; build
-# the ones the engine uses. The null backend runs ImGui without a window, for
-# tests.
+# the ones the engine uses.
 find_path(NEE_IMGUI_BACKEND_DIR imgui_impl_glfw.cpp
     PATHS
         "${imgui_PACKAGE_FOLDER_RELEASE}/res/bindings"
@@ -48,7 +47,6 @@ if(NOT NEE_IMGUI_BACKEND_DIR)
 endif()
 add_library(nee_imgui_backends STATIC
     "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp"
-    "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_null.cpp"
     "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp"
 )
 add_library(nee::imgui_backends ALIAS nee_imgui_backends)
@@ -92,7 +90,7 @@ PUBLIC
     glm::glm
     gsl-lite::gsl-lite
     Threads::Threads
-    # ImGuiScopes.hpp exposes the ImGui API.
+    # Applications draw their UI with ImGui calls directly.
     imgui::imgui
 PRIVATE
     nee_imgui_backends
