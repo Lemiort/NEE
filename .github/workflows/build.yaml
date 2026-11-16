@@ -2,9 +2,9 @@ name: CMake and Conan 2 CI
 
 on:
   push:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
   pull_request:
-    branches: [ "main", "master" ]
+    branches: ["main", "master"]
 
 jobs:
   build:
@@ -14,100 +14,99 @@ jobs:
       fail-fast: false
       matrix:
         # You can add "windows-latest" or "macos-latest" to test cross-platform
-        os: [ubuntu-latest] 
+        os: [ubuntu-latest]
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install System Dependencies (Linux Only)
-      if: runner.os == 'Linux'
-      run: |
-        sudo apt-get update
-        # GLFW3 on Linux requires X11/Wayland development headers
-        sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev build-essential xvfb xauth mesa-utils
-      
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-base-architecture: 'x64'
-        python-version: '3.x'
+      - name: Install System Dependencies (Linux Only)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          # GLFW3 on Linux requires X11/Wayland development headers
+          sudo apt-get install -y libx11-dev libxrandr-dev libxinerama-dev libxcursor-dev libxi-dev libgl1-mesa-dev build-essential xvfb xauth mesa-utils
 
-    - name: Install Conan 2
-      run: |
-        pip install conan
-        conan --version
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          architecture: "x64"
+          python-version: "3.x"
 
-    - name: Detect Conan Profile
-      run: |
-        # Creates a default profile based on the runner's compiler settings
-        conan profile detect --force
+      - name: Install Conan 2
+        run: |
+          pip install conan
+          conan --version
 
-    - name: Cache Conan Packages
-      uses: actions/cache@v4
-      with:
-        path: ~/.conan2/p
-        key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py') }}
-        restore-keys: |
-          ${{ runner.os }}-conan-
+      - name: Detect Conan Profile
+        run: |
+          # Creates a default profile based on the runner's compiler settings
+          conan profile detect --force
 
-    - name: Install Dependencies via Conan
-      run: |
-        conan install . \
-          --output-folder=build \
-          --build=missing \
-          -s build_type=Release \
-          -s compiler.cppstd=23 \
-          -c tools.system.package_manager:mode=install \
-          -c tools.system.package_manager:sudo=True
+      - name: Cache Conan Packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.conan2/p
+          key: ${{ runner.os }}-conan-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            ${{ runner.os }}-conan-
 
+      - name: Install Dependencies via Conan
+        run: |
+          conan install . \
+            --output-folder=build \
+            --build=missing \
+            -s build_type=Release \
+            -s compiler.cppstd=23 \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
 
-    - name: Configure CMake
-      run: |
-        TOOLCHAIN_PATH=$(find build -name "conan_toolchain.cmake" | head -n 1)
-        if [ -z "$TOOLCHAIN_PATH" ]; then
-          echo "Error: conan_toolchain.cmake doesn't exist. Check logs 'Install Dependencies via Conan' above!"
-          exit 1
-        fi
-        echo "Using toolchain: $TOOLCHAIN_PATH"
-        cmake -B build -S . \
-          -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_PATH" \
-          -DCMAKE_BUILD_TYPE=Release \
-          -DBUILD_TESTING=ON \
-          -DCMAKE_CXX_STANDARD=23 \
-          -DCMAKE_CXX_EXTENSIONS=OFF
+      - name: Configure CMake
+        run: |
+          TOOLCHAIN_PATH=$(find build -name "conan_toolchain.cmake" | head -n 1)
+          if [ -z "$TOOLCHAIN_PATH" ]; then
+            echo "Error: conan_toolchain.cmake doesn't exist. Check logs 'Install Dependencies via Conan' above!"
+            exit 1
+          fi
+          echo "Using toolchain: $TOOLCHAIN_PATH"
+          cmake -B build -S . \
+            -DCMAKE_TOOLCHAIN_FILE="$TOOLCHAIN_PATH" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_TESTING=ON \
+            -DCMAKE_CXX_STANDARD=23 \
+            -DCMAKE_CXX_EXTENSIONS=OFF
 
-    - name: Build Project
-      run: |
-        cmake --build build --config Release
+      - name: Build Project
+        run: |
+          cmake --build build --config Release
 
-    - name: Run CPU and ownership tests
-      run: ctest --test-dir build -C Release --output-on-failure --no-tests=error -LE opengl
+      - name: Run CPU and ownership tests
+        run: ctest --test-dir build -C Release --output-on-failure --no-tests=error -LE opengl
 
-    - name: Run headless OpenGL tests
-      env:
-        LIBGL_ALWAYS_SOFTWARE: '1'
-        # llvmpipe provides the DSA APIs used here, but some Mesa releases
-        # advertise 4.5. Exercise the 4.6 context/GLSL path in software CI.
-        MESA_GL_VERSION_OVERRIDE: '4.6'
-        MESA_GLSL_VERSION_OVERRIDE: '460'
-      run: xvfb-run -a -s "-screen 0 1280x720x24" ctest --test-dir build -C Release --output-on-failure --no-tests=error -L opengl
+      - name: Run headless OpenGL tests
+        env:
+          LIBGL_ALWAYS_SOFTWARE: "1"
+          # llvmpipe provides the DSA APIs used here, but some Mesa releases
+          # advertise 4.5. Exercise the 4.6 context/GLSL path in software CI.
+          MESA_GL_VERSION_OVERRIDE: "4.6"
+          MESA_GLSL_VERSION_OVERRIDE: "460"
+        run: xvfb-run -a -s "-screen 0 1280x720x24" ctest --test-dir build -C Release --output-on-failure --no-tests=error -L opengl
 
-    - name: Create the Conan package and build test_package against it
-      run: |
-        conan create . \
-          --build=missing \
-          -s build_type=Release \
-          -s compiler.cppstd=23 \
-          -c tools.system.package_manager:mode=install \
-          -c tools.system.package_manager:sudo=True
+      - name: Create the Conan package and build test_package against it
+        run: |
+          conan create . \
+            --build=missing \
+            -s build_type=Release \
+            -s compiler.cppstd=23 \
+            -c tools.system.package_manager:mode=install \
+            -c tools.system.package_manager:sudo=True
 
-    - name: Upload test diagnostics
-      if: failure()
-      uses: actions/upload-artifact@v4
-      with:
-        name: test-diagnostics-${{ runner.os }}
-        path: |
-          build/Testing/Temporary/
-          build/tests/render-artifacts/
-        if-no-files-found: ignore
+      - name: Upload test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-diagnostics-${{ runner.os }}
+          path: |
+            build/Testing/Temporary/
+            build/tests/render-artifacts/
+          if-no-files-found: ignore

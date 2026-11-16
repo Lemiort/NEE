@@ -1,4 +1,7 @@
+"""Conan recipe for NEE: dependencies for building it, and the nee package."""
+
 import os
+from typing import ClassVar
 
 from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeDeps, CMakeToolchain, cmake_layout
@@ -33,7 +36,7 @@ class NeeConan(ConanFile):
         "textures/*",
     )
     # GLAD is generated for the OpenGL version the engine renders with.
-    default_options = {
+    default_options: ClassVar[dict[str, str]] = {
         "glad/*:gl_version": "4.6",
         "glad/*:gl_profile": "core",
     }
@@ -42,6 +45,7 @@ class NeeConan(ConanFile):
     _asset_dirs = ("shaders", "fonts", "models", "textures")
 
     def requirements(self):
+        """Declare the engine's dependencies and which games can see."""
         # Types from these appear in NEE's headers, so games compile against
         # them too.
         self.requires("glm/1.0.3", transitive_headers=True)
@@ -58,9 +62,11 @@ class NeeConan(ConanFile):
         self.requires("glaze/8.4.0")
 
     def build_requirements(self):
+        """Declare what only NEE's own tests need."""
         self.test_requires("gtest/1.14.0")
 
     def layout(self):
+        """Lay out builds with CMake, and describe a checkout for editables."""
         cmake_layout(self)
         # In a checkout (editable mode) headers and assets come from the
         # source tree and libraries from the build tree.
@@ -70,10 +76,12 @@ class NeeConan(ConanFile):
         self.cpp.package.resdirs = ["res"]
 
     def generate(self):
+        """Write the CMake toolchain and find_package files."""
         CMakeDeps(self).generate()
         CMakeToolchain(self).generate()
 
     def build(self):
+        """Build the engine library."""
         cmake = CMake(self)
         # As a package only the library is needed; a checkout configured by
         # hand still builds the demo and tests.
@@ -81,20 +89,36 @@ class NeeConan(ConanFile):
         cmake.build(target="nee")
 
     def package(self):
-        copy(self, "*.hpp", os.path.join(self.source_folder, "include"),
-             os.path.join(self.package_folder, "include"))
+        """Copy headers, libraries and assets into the package."""
+        copy(
+            self,
+            "*.hpp",
+            os.path.join(self.source_folder, "include"),
+            os.path.join(self.package_folder, "include"),
+        )
         for pattern in ("*.a", "*.lib"):
-            copy(self, pattern, self.build_folder, os.path.join(self.package_folder, "lib"),
-                 keep_path=False)
+            copy(
+                self,
+                pattern,
+                self.build_folder,
+                os.path.join(self.package_folder, "lib"),
+                keep_path=False,
+            )
         for directory in self._asset_dirs:
-            copy(self, "*", os.path.join(self.source_folder, directory),
-                 os.path.join(self.package_folder, "res", directory))
+            copy(
+                self,
+                "*",
+                os.path.join(self.source_folder, directory),
+                os.path.join(self.package_folder, "res", directory),
+            )
 
     def package_info(self):
+        """Describe the nee::nee target for consumers."""
         self.cpp_info.set_property("cmake_file_name", "nee")
         self.cpp_info.set_property("cmake_target_name", "nee::nee")
         # The engine links its ImGui backends, so it comes first.
         self.cpp_info.libs = ["nee", "nee_imgui_backends"]
         self.cpp_info.defines = ["GLM_FORCE_CTOR_INIT", "GLFW_INCLUDE_NONE"]
-        if self.settings.os in ("Linux", "FreeBSD"):
+        # Conan turns `settings` into an object with these fields.
+        if self.settings.os in ("Linux", "FreeBSD"):  # pylint: disable=no-member
             self.cpp_info.system_libs = ["pthread", "dl"]

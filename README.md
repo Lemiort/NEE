@@ -130,7 +130,7 @@ target_link_libraries(my_game PRIVATE nee::nee)
 ```
 
 To work on the engine and a game together, register a NEE checkout (for
-example a git submodule) as an editable package, and let Conan build it in
+example a Git submodule) as an editable package, and let Conan build it in
 place:
 
 ```bash
