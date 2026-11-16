@@ -67,6 +67,31 @@ The demo animates its spheres on a 20 Hz simulation thread and interpolates
 the rendered rotation. P pauses or resumes the simulation and N advances it one
 step while paused.
 
+## Debug UI with Dear ImGui
+
+`ImGuiOverlay` draws [Dear ImGui](https://github.com/ocornut/imgui) on top of
+the engine's frames with ImGui's GLFW and OpenGL 3 backends. Create it after
+your own GLFW callbacks (ImGui forwards events to them), call `BeginFrame()`
+each frame before any ImGui calls and `Render()` after the scene. While
+`WantsMouse()` or `WantsKeyboard()` is true, the cursor or keyboard belongs to
+the UI and the application should ignore that input.
+
+`ImGuiScopes.hpp` has scope guards for ImGui's paired calls (`ui::Window`,
+`ui::Table`, `ui::TreeNode`, `ui::Id`, `ui::StyleColor` and more). Each ends
+or pops in its destructor, and only when ImGui requires it, so early returns
+and exceptions keep ImGui's stacks balanced:
+
+```cpp
+if (const ui::Window window{"Inspector"}) {
+    if (const ui::Table table{"needs", 2}) {
+        // ...
+    }
+}
+```
+
+The demo shows a debug window with FPS, the render mode, and pause, step and
+time-scale controls for its animation.
+
 ## Runtime diagnostics
 
 The application writes logs to `NEE.log` beside the executable and to standard

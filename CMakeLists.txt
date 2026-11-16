@@ -31,6 +31,34 @@ find_package(assimp CONFIG REQUIRED)
 find_package(gsl-lite CONFIG REQUIRED)
 find_package(glaze CONFIG REQUIRED)
 find_package(Threads REQUIRED)
+find_package(imgui CONFIG REQUIRED)
+
+# Conan ships Dear ImGui's platform and renderer backends as sources; build
+# the ones the engine uses. The null backend runs ImGui without a window, for
+# tests.
+find_path(NEE_IMGUI_BACKEND_DIR imgui_impl_glfw.cpp
+    PATHS
+        "${imgui_PACKAGE_FOLDER_RELEASE}/res/bindings"
+        "${imgui_PACKAGE_FOLDER_RELWITHDEBINFO}/res/bindings"
+        "${imgui_PACKAGE_FOLDER_DEBUG}/res/bindings"
+    NO_DEFAULT_PATH
+)
+if(NOT NEE_IMGUI_BACKEND_DIR)
+    message(FATAL_ERROR "Dear ImGui backend sources not found in the imgui package")
+endif()
+add_library(nee_imgui_backends STATIC
+    "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_glfw.cpp"
+    "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_null.cpp"
+    "${NEE_IMGUI_BACKEND_DIR}/imgui_impl_opengl3.cpp"
+)
+add_library(nee::imgui_backends ALIAS nee_imgui_backends)
+target_include_directories(nee_imgui_backends PUBLIC "${NEE_IMGUI_BACKEND_DIR}")
+target_link_libraries(nee_imgui_backends PUBLIC imgui::imgui glfw)
+set_target_properties(nee_imgui_backends PROPERTIES
+    CXX_STANDARD 23
+    CXX_STANDARD_REQUIRED YES
+    CXX_EXTENSIONS NO
+)
 
 
 include(CTest)
@@ -64,7 +92,10 @@ PUBLIC
     glm::glm
     gsl-lite::gsl-lite
     Threads::Threads
+    # ImGuiScopes.hpp exposes the ImGui API.
+    imgui::imgui
 PRIVATE
+    nee_imgui_backends
     glfw
     stb::stb
     spdlog::spdlog

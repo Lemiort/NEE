@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <stdexcept>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -18,6 +19,8 @@
 #include "CubemapTexture.hpp"
 #include "DebugRenderer.hpp"
 #include "GBuffer.hpp"
+#include "ImGuiOverlay.hpp"
+#include "ImGuiScopes.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
@@ -134,6 +137,8 @@ protected:
         if (window_ != nullptr) glfwDestroyWindow(window_);
         glfwTerminate();
     }
+
+    [[nodiscard]] GLFWwindow& Window() const { return *window_; }
 
 private:
     GLFWwindow* window_{};
@@ -749,4 +754,43 @@ TEST_F(OpenGLRender, SaveScreenshotWritesTopDownImages) {
     EXPECT_EQ(stamped->parent_path(), std::filesystem::path("shots"));
     EXPECT_TRUE(stamped->filename().string().starts_with("Screenshot "));
     EXPECT_EQ(stamped->extension(), ".png");
+}
+
+TEST_F(OpenGLRender, ImGuiOverlayDrawsOnTopAndRestoresState) {
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(1.0F, 0.0F, 0.0F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_BLEND);
+    glDisable(GL_SCISSOR_TEST);
+    GLint programBefore = -1;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &programBefore);
+
+    ImGuiOverlay overlay(Window());
+    EXPECT_THROW(ImGuiOverlay second(Window()), std::logic_error);
+    // The first frame builds the font atlas; draw on the second.
+    for (int frame = 0; frame < 2; ++frame) {
+        glClear(GL_COLOR_BUFFER_BIT);
+        overlay.BeginFrame();
+        ImGui::SetNextWindowPos({8.0F, 8.0F});
+        ImGui::SetNextWindowSize({112.0F, 112.0F});
+        if (const ui::Window window{"Overlay test"}) {
+            ImGui::TextUnformatted("hello");
+        }
+        overlay.Render();
+    }
+    ASSERT_EQ(glGetError(), GL_NO_ERROR);
+
+    // ImGui's dark window background now covers the middle of the red clear.
+    std::array<std::uint8_t, 4> pixel{};
+    glReadBuffer(GL_BACK);
+    glReadPixels(kSize / 2, kSize / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                 pixel.data());
+    EXPECT_LT(pixel[0], 128) << "window background not drawn";
+
+    EXPECT_FALSE(glIsEnabled(GL_BLEND));
+    EXPECT_FALSE(glIsEnabled(GL_SCISSOR_TEST));
+    GLint programAfter = -1;
+    glGetIntegerv(GL_CURRENT_PROGRAM, &programAfter);
+    EXPECT_EQ(programAfter, programBefore);
+    EXPECT_FALSE(overlay.WantsKeyboard());
 }

@@ -94,6 +94,11 @@ bool Camera::OnKeyboard(int key) {
     return Ret;
 }
 
+void Camera::SetMouseReference(int x, int y) {
+    m_mousePos.x = x;
+    m_mousePos.y = y;
+}
+
 void Camera::OnMouse(int x, int y) {
     const int DeltaX = x - m_mousePos.x;
     const int DeltaY = y - m_mousePos.y;
