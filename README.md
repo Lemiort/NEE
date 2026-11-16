@@ -104,8 +104,41 @@ cmake --build --preset conan-release
 ctest --test-dir build/build/Release -C Release --output-on-failure
 ```
 
-`conanfile.txt` explicitly generates GLAD for OpenGL 4.6 core. Re-run Conan
+`conanfile.py` explicitly generates GLAD for OpenGL 4.6 core. Re-run Conan
 when updating an existing checkout so the loader matches the renderer. Use
 `-pr:a mingw` with Conan when building with a configured LLVM-MinGW profile.
 Run the executable from the CMake binary directory so it can find the copied
 `shaders`, `textures`, `models`, `fonts`, and `config` directories.
+
+## Using NEE in a game
+
+NEE is a Conan package, `nee/0.1.0`. A game requires it and gets the
+engine library and headers plus the libraries the engine exposes: GLM, GLAD,
+gsl-lite and Dear ImGui (in NEE's own headers), GLFW for the window and
+spdlog for logging. Its other dependencies (assimp, stb, glaze) stay inside
+the engine. The engine's runtime assets (`shaders`, `fonts`, `models`,
+`textures`) are the package's resource directory.
+
+```python
+def requirements(self):
+    self.requires("nee/0.1.0")
+```
+
+```cmake
+find_package(nee REQUIRED CONFIG)
+target_link_libraries(my_game PRIVATE nee::nee)
+```
+
+To work on the engine and a game together, register a NEE checkout (for
+example a git submodule) as an editable package, and let Conan build it in
+place:
+
+```bash
+conan editable add path/to/NEE
+conan install . --build=missing --build=editable -pr:a mingw
+```
+
+Headers and assets then come straight from the checkout and the library from
+its build tree (`build/Release`); rebuild that tree after editing the engine.
+`conan create . -pr:a mingw` builds the package into the Conan cache and runs
+`test_package`, a small program that builds against it the way a game does.
