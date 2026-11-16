@@ -12,6 +12,7 @@
 #include "DeferredPipeline.hpp"
 #include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
+#include "ImGuiOverlay.hpp"
 #include "Light.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
@@ -75,6 +76,8 @@ private:
     [[nodiscard]] float SampleAnimatedYaw() const;
     void RenderScene();
     void InterfacePass();
+    void DrawDebugUi();
+    void DrawAnimationControls();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;
@@ -111,6 +114,8 @@ private:
     // Declared last: it is destroyed, and its worker joined, before the state
     // its step function uses.
     std::unique_ptr<SimulationThread> simulation_;
+    std::unique_ptr<ImGuiOverlay> overlay_;
+    float timeScale_ = 1.0F;
 };
 
 #endif  // MAIN_H_INCLUDED

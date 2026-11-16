@@ -17,6 +17,9 @@ public:
     bool OnKeyboard(int key);
 
     void OnMouse(int x, int y);
+    // Moves the reference point for mouse look without turning, for example
+    // while the cursor is over UI, so mouse look does not jump afterwards.
+    void SetMouseReference(int x, int y);
 
     void OnRender();
 

@@ -8,6 +8,7 @@ spdlog/1.17.0
 assimp/6.0.5
 gsl-lite/1.1.0
 glaze/8.4.0
+imgui/1.92.8
 
 [generators]
 CMakeDeps

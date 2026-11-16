@@ -25,6 +25,7 @@
 #include <vector>
 
 #include "Camera.hpp"
+#include "imgui.h"
 #include "Light.hpp"
 #include "Screenshot.hpp"
 #include "Shader.hpp"
@@ -130,6 +131,9 @@ void Application::KeyCallback(GLFWwindow* window, int key, int /*scancode*/,
 }
 
 void Application::OnKey(GLFWwindow& window, int key, int action) {
+    if (overlay_ != nullptr && overlay_->WantsKeyboard()) {
+        return;
+    }
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(&window, GL_TRUE);
     }
@@ -185,8 +189,14 @@ void Application::MousePosCallBack(GLFWwindow* window, double x, double y) {
 
 void Application::OnMousePos(double x, double y) {
     mouse.Update(x, y);
-    pGameCamera.OnMouse(static_cast<int>(mouse.posX),
-                        static_cast<int>(mouse.posY));
+    const auto cursorX = static_cast<int>(mouse.posX);
+    const auto cursorY = static_cast<int>(mouse.posY);
+    // Mouse look pauses while the cursor is over the UI.
+    if (overlay_ != nullptr && overlay_->WantsMouse()) {
+        pGameCamera.SetMouseReference(cursorX, cursorY);
+    } else {
+        pGameCamera.OnMouse(cursorX, cursorY);
+    }
 }
 
 void Application::MouseButtonCallback(GLFWwindow* window, int button,
@@ -340,6 +350,9 @@ void Application::InterfacePass() {
     }
 
     textRenderer->Render(renderQueue.GetText(), pGameCamera);
+    if (overlay_ != nullptr) {
+        overlay_->Render();
+    }
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
@@ -586,6 +599,56 @@ int Application::InitScene(GLFWwindow& window) {
     return 0;
 }
 
+void Application::DrawDebugUi() {
+    constexpr ImVec2 kPosition{16.0F, 150.0F};
+    ImGui::SetNextWindowPos(kPosition, ImGuiCond_FirstUseEver);
+    // End() is required even when Begin() reports the window collapsed.
+    if (!ImGui::Begin("NEE demo", nullptr,
+                      ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::End();
+        return;
+    }
+    ImGui::Text("%.1f FPS", static_cast<double>(fps));
+    const glm::vec3& position = pGameCamera.GetPos();
+    ImGui::Text("Camera %.2f, %.2f, %.2f", static_cast<double>(position.x),
+                static_cast<double>(position.y),
+                static_cast<double>(position.z));
+
+    const std::string current{GetRenderModeDescription(renderMode)};
+    if (ImGui::BeginCombo("Render mode", current.c_str())) {
+        for (const RenderModeDescriptor& entry : kRenderModes) {
+            const std::string label{entry.description};
+            if (ImGui::Selectable(label.c_str(), entry.mode == renderMode)) {
+                renderMode = entry.mode;
+            }
+        }
+        ImGui::EndCombo();
+    }
+
+    if (simulation_ != nullptr) {
+        DrawAnimationControls();
+    }
+    ImGui::End();
+}
+
+void Application::DrawAnimationControls() {
+    ImGui::SeparatorText("Animation");
+    bool paused = simulation_->IsPaused();
+    if (ImGui::Checkbox("Paused", &paused)) {
+        simulation_->SetPaused(paused);
+    }
+    ImGui::SameLine();
+    ImGui::BeginDisabled(!paused);
+    if (ImGui::Button("Step")) {
+        simulation_->RequestSingleStep();
+    }
+    ImGui::EndDisabled();
+    if (ImGui::SliderFloat("Time scale", &timeScale_, 0.0F, 4.0F, "%.2fx")) {
+        simulation_->SetTimeScale(timeScale_);
+    }
+    ImGui::SetItemTooltip("Simulation steps per real second, relative");
+}
+
 int Application::Run(GLFWwindow& window) {
     glfwSetWindowUserPointer(&window, this);
     glfwSetFramebufferSizeCallback(&window, &FrameBufferSizeCallback);
@@ -607,6 +670,8 @@ int Application::Run(GLFWwindow& window) {
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, width, height);
 
+        // After the demo's own callbacks, which ImGui forwards events to.
+        overlay_ = std::make_unique<ImGuiOverlay>(window);
         PreInitScene(window);
         if (InitScene(window) != 0) {
             result = EXIT_FAILURE;
@@ -619,12 +684,16 @@ int Application::Run(GLFWwindow& window) {
                     result = EXIT_FAILURE;
                     break;
                 }
+                overlay_->BeginFrame();
+                DrawDebugUi();
                 RenderScene();
                 glfwSwapBuffers(&window);
                 glfwPollEvents();
             }
             simulation_.reset();
         }
+        // Restores the demo's callbacks; the GL context is still current.
+        overlay_.reset();
     }
 
     glfwSetWindowUserPointer(&window, nullptr);
