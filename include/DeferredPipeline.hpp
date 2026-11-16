@@ -36,10 +36,12 @@ public:
 
 private:
     void GeometryPass(const SceneView& scene);
-    void StencilPass(const PointLight& light, const Camera& camera);
-    void StencilPass(const SpotLight& light, const Camera& camera);
-    void PointLightPass(const PointLight& light, const Camera& camera);
-    void SpotLightPass(const SpotLight& light, const Camera& camera);
+    void StencilPass(const Mesh& volume, const Transform& transform,
+                     const Camera& camera);
+    void PointLightPass(const PointLight& light, const Transform& volume,
+                        const Camera& camera);
+    void SpotLightPass(const SpotLight& light, const Transform& volume,
+                       const Camera& camera);
     void DirectionalLightPass(const DirectionalLight& light,
                               const Camera& camera);
     void BindGBufferTextures(Material& material);

@@ -95,6 +95,7 @@ TEST(FixedStepClock, DropsTimeBeyondTheStepLimit) {
 
 TEST(FixedStepClock, ClampsLongRealFramesBeforeStepping) {
     FixedStepClock clock = MakeQuarterClock(8, 0.5);
+    EXPECT_DOUBLE_EQ(clock.GetMaxFrameSeconds(), 0.5);
     const ClockAdvance advance = clock.Advance(30.0);
     EXPECT_EQ(advance.steps, 2U);
     EXPECT_FALSE(advance.droppedTime);

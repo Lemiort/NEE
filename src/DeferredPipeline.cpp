@@ -14,6 +14,12 @@
 #include "RenderQueue.hpp"
 
 namespace {
+// A light with zero color adds nothing to the light accumulation buffer, so
+// its stencil and light passes can be skipped without changing the image.
+bool EmitsLight(const Light& light) {
+    return light.GetColor() != glm::vec3(0.0F);
+}
+
 void SetLightColor(GLint location, const glm::vec3& color) {
     const glm::mat4 matrix = glm::scale(glm::mat4(1.0F), color);
     glUniformMatrix4fv(location, 1, GL_FALSE, glm::value_ptr(matrix));
@@ -69,18 +75,37 @@ void DeferredPipeline::Render(const SceneView& scene,
                               ForwardPipeline& transparentPipeline) {
     gBuffer_->StartFrame();
     GeometryPass(scene);
+    // The light materials only record texture names here; each draw binds
+    // them, so one update per frame covers every light of a type.
+    BindGBufferTextures(*pointLightMaterial_);
+    BindGBufferTextures(*spotLightMaterial_);
+    BindGBufferTextures(*directionalLightMaterial_);
     glEnable(GL_STENCIL_TEST);
     for (const PointLight& light : scene.pointLights) {
-        StencilPass(light, scene.camera);
-        PointLightPass(light, scene.camera);
+        if (!EmitsLight(light)) {
+            continue;
+        }
+        const Transform volume = PointLightVolumeTransform(light);
+        StencilPass(pointLightVolume_, volume, scene.camera);
+        PointLightPass(light, volume, scene.camera);
     }
     for (const SpotLight& light : scene.spotLights) {
-        StencilPass(light, scene.camera);
-        SpotLightPass(light, scene.camera);
+        if (!EmitsLight(light)) {
+            continue;
+        }
+        // A spot light without a direction has no cone to light.
+        const std::optional<Transform> volume = SpotLightVolumeTransform(light);
+        if (!volume) {
+            continue;
+        }
+        StencilPass(spotLightVolume_, *volume, scene.camera);
+        SpotLightPass(light, *volume, scene.camera);
     }
     glDisable(GL_STENCIL_TEST);
     for (const DirectionalLight& light : scene.directionalLights) {
-        DirectionalLightPass(light, scene.camera);
+        if (EmitsLight(light)) {
+            DirectionalLightPass(light, scene.camera);
+        }
     }
     gBuffer_->BindForLightPass();
     glEnable(GL_DEPTH_TEST);
@@ -116,7 +141,8 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glDisable(GL_DEPTH_TEST);
 }
 
-void DeferredPipeline::StencilPass(const PointLight& light,
+void DeferredPipeline::StencilPass(const Mesh& volume,
+                                   const Transform& transform,
                                    const Camera& camera) {
     stencilShader_->Use();
     GBuffer::BindForStencilPass();
@@ -130,28 +156,7 @@ void DeferredPipeline::StencilPass(const PointLight& light,
     const glm::mat4 matrix = camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
-    pointLightVolume_.Draw(PointLightVolumeTransform(light), *stencilMaterial_,
-                           stencilBindings_);
-}
-
-void DeferredPipeline::StencilPass(const SpotLight& light,
-                                   const Camera& camera) {
-    stencilShader_->Use();
-    GBuffer::BindForStencilPass();
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
-    glDisable(GL_CULL_FACE);
-    glClear(GL_STENCIL_BUFFER_BIT);
-    glStencilFunc(GL_ALWAYS, 0, 0);
-    glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR, GL_KEEP);
-    glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR, GL_KEEP);
-    const glm::mat4 matrix = camera.GetViewProjectionMatrix();
-    glUniformMatrix4fv(stencilShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
-                       glm::value_ptr(matrix));
-    const std::optional<Transform> transform = SpotLightVolumeTransform(light);
-    if (transform) {
-        spotLightVolume_.Draw(*transform, *stencilMaterial_, stencilBindings_);
-    }
+    volume.Draw(transform, *stencilMaterial_, stencilBindings_);
 }
 
 void DeferredPipeline::BindGBufferTextures(Material& material) {
@@ -161,6 +166,7 @@ void DeferredPipeline::BindGBufferTextures(Material& material) {
 }
 
 void DeferredPipeline::PointLightPass(const PointLight& light,
+                                      const Transform& volume,
                                       const Camera& camera) {
     gBuffer_->BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
@@ -176,7 +182,6 @@ void DeferredPipeline::PointLightPass(const PointLight& light,
                        GL_FALSE, glm::value_ptr(matrix));
     glUniform3f(pointLightShader_->GetUniformLocation("s_vCamPos"),
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
-    BindGBufferTextures(*pointLightMaterial_);
     SetLightColor(pointLightShader_->GetUniformLocation("pointLightColor"),
                   light.GetColor());
     const glm::vec3 position = light.GetPosition();
@@ -184,13 +189,13 @@ void DeferredPipeline::PointLightPass(const PointLight& light,
                 position.x, position.y, position.z);
     glUniform1f(pointLightShader_->GetUniformLocation("pointLightIntensity"),
                 light.GetPower());
-    pointLightVolume_.Draw(PointLightVolumeTransform(light),
-                           *pointLightMaterial_, pointLightBindings_);
+    pointLightVolume_.Draw(volume, *pointLightMaterial_, pointLightBindings_);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
 
 void DeferredPipeline::SpotLightPass(const SpotLight& light,
+                                     const Transform& volume,
                                      const Camera& camera) {
     gBuffer_->BindForLightPass();
     glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
@@ -206,7 +211,6 @@ void DeferredPipeline::SpotLightPass(const SpotLight& light,
                        glm::value_ptr(matrix));
     glUniform3f(spotLightShader_->GetUniformLocation("s_vCamPos"),
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);
-    BindGBufferTextures(*spotLightMaterial_);
     const glm::vec3 position = light.GetPosition();
     glUniform3f(spotLightShader_->GetUniformLocation("sLightPos"), position.x,
                 position.y, position.z);
@@ -217,11 +221,7 @@ void DeferredPipeline::SpotLightPass(const SpotLight& light,
                 direction.y, direction.z);
     glUniform1f(spotLightShader_->GetUniformLocation("sLightCutoff"),
                 glm::cos(glm::radians(light.GetCutoff())));
-    const std::optional<Transform> transform = SpotLightVolumeTransform(light);
-    if (transform) {
-        spotLightVolume_.Draw(*transform, *spotLightMaterial_,
-                              spotLightBindings_);
-    }
+    spotLightVolume_.Draw(volume, *spotLightMaterial_, spotLightBindings_);
     glCullFace(GL_BACK);
     glDisable(GL_BLEND);
 }
@@ -234,7 +234,6 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
     glEnable(GL_BLEND);
     glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
-    BindGBufferTextures(*directionalLightMaterial_);
     directionalLightMaterial_->Use();
     glUniform3f(directionalLightShader_->GetUniformLocation("s_vCamPos"),
                 camera.GetPos().x, camera.GetPos().y, camera.GetPos().z);

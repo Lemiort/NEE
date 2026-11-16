@@ -173,8 +173,13 @@ void SimulationThread::Run(const std::stop_token& stopToken) {
         if (clock_.IsPaused() || clock_.GetTimeScale() <= 0.0) {
             wake_.wait(lock, stopToken, hasCommands);
         } else {
+            // Wake at least every maxFrameSeconds: the clock clamps longer
+            // gaps as stalls, so one long sleep at a slow time scale would
+            // lose most of its time and run the simulation slower than asked.
             const double secondsUntilNextStep =
-                (1.0 - advance.alpha) * stepSeconds / clock_.GetTimeScale();
+                std::min((1.0 - advance.alpha) * stepSeconds /
+                             clock_.GetTimeScale(),
+                         clock_.GetMaxFrameSeconds());
             const auto deadline =
                 now + std::chrono::duration_cast<SteadyClock::duration>(
                           std::chrono::duration<double>(secondsUntilNextStep));
