@@ -176,6 +176,32 @@ TEST(SimulationThread, ResumingDoesNotCatchUpOnPausedTime) {
     EXPECT_LE(ran - before, 1U);
 }
 
+TEST(SimulationThread, LongStepsKeepTheScaledRateDespiteFrameClamp) {
+    // One step per 0.5 s of real time, far longer than the frame clamp. If
+    // the worker slept the whole half second, the clock would keep only
+    // 0.05 s of each sleep and three steps would take about 8 s.
+    constexpr double kStepSeconds = 2.0;
+    constexpr double kTimeScale = 4.0;
+    constexpr double kRealSecondsPerStep = kStepSeconds / kTimeScale;
+    constexpr std::uint64_t kSteps = 3;
+    std::atomic<std::uint64_t> ran{0};
+    const auto start = std::chrono::steady_clock::now();
+    SimulationThread simulation(
+        FixedStepClockSettings{.stepSeconds = kStepSeconds,
+                               .maxFrameSeconds = 0.05},
+        [&](const SimulationStep&) { ++ran; });
+    simulation.SetTimeScale(kTimeScale);
+    ASSERT_TRUE(WaitFor([&] { return ran >= kSteps; }));
+    const double elapsed =
+        std::chrono::duration<double>(std::chrono::steady_clock::now() - start)
+            .count();
+    const double expected = static_cast<double>(kSteps) * kRealSecondsPerStep;
+    // The clock only counts real time, so it can never run early; allow a
+    // generous margin for a loaded machine on the late side.
+    EXPECT_GE(elapsed, expected - 0.05);
+    EXPECT_LE(elapsed, expected + 0.75);
+}
+
 TEST(SimulationThread, ZeroTimeScaleFreezesSteps) {
     std::atomic<std::uint64_t> ran{0};
     SimulationThread simulation(FastSettings(),

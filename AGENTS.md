@@ -6,14 +6,21 @@ This file contains short, actionable instructions for AI coding agents working o
 
 ```bash
 # Resolve dependencies with Conan (build missing binaries)
-conan install . --output-folder=build --build=missing
+conan install . --output-folder=build --build=missing -s build_type=Release -s compiler.cppstd=23
 
-# Configure and build with CMake (Release configuration by default)
-cmake -S . -B build/build -DCMAKE_BUILD_TYPE=Release
-cmake --build build/build --config Release
+# Configure once with the Conan-generated preset (Ninja, Release)
+cmake --preset conan-release -DBUILD_TESTING=ON
+
+# Build (re-runs CMake by itself when CMakeLists change)
+cmake --build build/build/Release
 ```
 
-The executable will be at `build/build/Release/NEE.exe`.
+Conan's `cmake_layout` puts the CMake binary directory at `build/build/Release`;
+that is the build tree to configure, build and test in. `build/build` itself is
+not a build tree, so don't run `cmake --build build/build`.
+
+The executable will be at `build/build/Release/NEE.exe`; test executables are in
+`build/build/Release/tests/`.
 
 ## Test
 
@@ -21,13 +28,14 @@ The project uses **GoogleTest** for unit testing.
 
 ```bash
 # Run all tests via CTest
-ctest --test-dir build/build --output-on-failure
+ctest --test-dir build/build/Release --output-on-failure
 ```
 
 ## Common Pitfalls
 
 - **Missing Conan profile**: Ensure a default profile exists (`~/.conan2/profiles/default`).
 - **CMake cache**: Delete `build/` folder if you encounter stale configuration.
+- **Duplicate preset `conan-release`**: `CMakeUserPresets.json` (git-ignored, written by `conan install`) includes the presets of every Conan output folder, and they all use that name. Remove the extra `include` entry (e.g. `build/vulkan/...`) or skip presets and run `cmake --build build/build/Release` on an already configured tree.
 
 ## Useful Tools
 
@@ -41,7 +49,7 @@ ctest --test-dir build/build --output-on-failure
 - The project uses _clang‑tidy_; run:
 
 ```bash
-clang-tidy -p=build/build src/*.cpp
+clang-tidy -p=build/build/Release src/*.cpp
 ```
 
 - Configure `-Werror` to treat warnings as errors during CI.

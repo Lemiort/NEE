@@ -59,6 +59,9 @@ public:
     [[nodiscard]] double GetTimeScale() const noexcept;
 
     [[nodiscard]] double GetStepSeconds() const noexcept;
+    // Longest real frame time Advance accepts; callers that sleep between
+    // advances must wake at least this often or the excess is discarded.
+    [[nodiscard]] double GetMaxFrameSeconds() const noexcept;
     [[nodiscard]] std::uint64_t GetTickCount() const noexcept;
     // Simulation time at the latest tick, computed from the tick count so it
     // does not drift with accumulated floating-point error.

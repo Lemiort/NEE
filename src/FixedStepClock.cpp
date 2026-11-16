@@ -92,6 +92,10 @@ double FixedStepClock::GetStepSeconds() const noexcept {
     return settings_.stepSeconds;
 }
 
+double FixedStepClock::GetMaxFrameSeconds() const noexcept {
+    return settings_.maxFrameSeconds;
+}
+
 std::uint64_t FixedStepClock::GetTickCount() const noexcept { return ticks_; }
 
 double FixedStepClock::GetSimulationSeconds() const noexcept {
