@@ -25,6 +25,10 @@ void RenderQueue::SubmitBillboard(const Billboard& billboard,
     billboards_.push_back({.billboard = billboard, .position = position});
 }
 
+void RenderQueue::SubmitParticles(const ParticleSystem& particles) {
+    particles_.push_back({.particles = particles});
+}
+
 void RenderQueue::SubmitText(FontLine2d text) {
     text_.push_back({.text = std::move(text)});
 }
@@ -37,6 +41,7 @@ void RenderQueue::Clear() noexcept {
     opaqueMeshes_.clear();
     transparentMeshes_.clear();
     billboards_.clear();
+    particles_.clear();
     text_.clear();
     debugLines_.clear();
 }
@@ -58,6 +63,11 @@ std::span<const MeshRenderCommand> RenderQueue::GetTransparentMeshes()
 std::span<const BillboardRenderCommand> RenderQueue::GetBillboards()
     const noexcept {
     return billboards_;
+}
+
+std::span<const ParticleRenderCommand> RenderQueue::GetParticles()
+    const noexcept {
+    return particles_;
 }
 
 std::span<const TextRenderCommand> RenderQueue::GetText() const noexcept {

@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <glad/gl.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -264,6 +265,11 @@ float Application::SampleAnimatedYaw() const {
 
 void Application::RenderScene() {
     renderQueue.Clear();
+    const double now = glfwGetTime();
+    fountain_->Update(
+        static_cast<float>(std::min(now - lastParticleTime_, 0.1)));
+    lastParticleTime_ = now;
+    renderQueue.SubmitParticles(*fountain_);
     scene.SetAnimatedYaw(SampleAnimatedYaw());
     scene.Submit(renderQueue);
     const SceneView sceneView = scene.CreateView(pGameCamera, renderQueue);
@@ -591,6 +597,26 @@ int Application::InitScene(GLFWwindow& window) {
             mainMaterial, RenderLayer::Transparent, 0.45F, true);
         // fLine1->SetAspectRatio(width,height);
     }
+    fountain_ = std::make_unique<ParticleSystem>(
+        gsl_lite::not_null{CreateShader(
+            {{"shaders/particle_update.vsh", ShaderType::Vertex}})},
+        gsl_lite::not_null{
+            CreateShader({{"shaders/particle.vsh", ShaderType::Vertex},
+                          {"shaders/particle.gsh", ShaderType::Geometry},
+                          {"shaders/particle.fsh", ShaderType::Fragment}})},
+        3000);
+    fountain_->SetEmitter({.boxMin = {0.28F, -0.42F, -1.02F},
+                           .boxMax = {0.32F, -0.4F, -0.98F},
+                           .velocity = {0.0F, 2.0F, 0.0F},
+                           .velocityJitter = {0.4F, 0.4F, 0.4F},
+                           .acceleration = {0.0F, -9.81F, 0.0F},
+                           .lifetime = 0.6F});
+    fountain_->SetLook({.color = {2.0F, 1.1F, 0.3F},
+                        .opacity = 0.8F,
+                        .width = 0.006F,
+                        .stretch = 0.03F,
+                        .additive = true});
+    lastParticleTime_ = glfwGetTime();
     deferredPipeline =
         std::make_unique<DeferredPipeline>(DeferredPipelineResources{
             .gBuffer = gsl_lite::not_null{gBuffer1},

@@ -10,6 +10,7 @@
 #include <fstream>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/vector_relational.hpp>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -27,6 +28,7 @@
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
 #include "ModelLoader.hpp"
+#include "ParticleSystem.hpp"
 #include "RandomTexture.hpp"
 #include "Screenshot.hpp"
 #include "Shader.hpp"
@@ -239,6 +241,9 @@ TEST_F(OpenGLRender, ProductionShaderProgramsLinkWithoutGlErrors) {
         LoadShader("shaders/billboard.vsh", "shaders/billboard.fsh",
                    "shaders/billboard.gsh");
     const auto stencil = LoadShader("shaders/DSStencilPass.vsh", "");
+    const auto particleUpdate = LoadShader("shaders/particle_update.vsh", "");
+    const auto particles = LoadShader(
+        "shaders/particle.vsh", "shaders/particle.fsh", "shaders/particle.gsh");
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
@@ -875,6 +880,148 @@ TEST_F(OpenGLRender, BloomLevelsHalveDownToTwoTexels) {
               0U);
     EXPECT_EQ(bloom.GetLevelCount(), 0U);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+std::unique_ptr<ParticleSystem> MakeParticles(std::size_t count) {
+    return std::make_unique<ParticleSystem>(
+        gsl_lite::not_null{LoadShader("shaders/particle_update.vsh", "")},
+        gsl_lite::not_null{LoadShader("shaders/particle.vsh",
+                                      "shaders/particle.fsh",
+                                      "shaders/particle.gsh")},
+        count);
+}
+
+bool InBox(const glm::vec3& point, const glm::vec3& minimum,
+           const glm::vec3& maximum) {
+    return glm::all(glm::greaterThanEqual(point, minimum - 1e-5F)) &&
+           glm::all(glm::lessThanEqual(point, maximum + 1e-5F));
+}
+
+TEST_F(OpenGLRender, ParticlesAreBornInTheirBoxAndFall) {
+    auto system = MakeParticles(256);
+    const ParticleEmitter emitter{.boxMin = {-1.0F, 0.0F, -1.0F},
+                                  .boxMax = {1.0F, 2.0F, 1.0F},
+                                  .velocity = {0.0F, -2.0F, 0.0F},
+                                  .lifetime = 10.0F};
+    system->SetEmitter(emitter);
+    // The first update places every particle at a random age.
+    system->Update(0.0F);
+    const auto born = system->ReadParticles();
+    ASSERT_EQ(born.size(), 256U);
+    std::size_t distinctX = 0;
+    for (const auto& particle : born) {
+        EXPECT_TRUE(InBox(particle.position, emitter.boxMin, emitter.boxMax));
+        EXPECT_EQ(particle.velocity, emitter.velocity);
+        EXPECT_GE(particle.age, 0.0F);
+        EXPECT_LT(particle.age, emitter.lifetime);
+        EXPECT_EQ(particle.births, 1.0F);
+        if (particle.position.x != born.front().position.x) ++distinctX;
+    }
+    EXPECT_GT(distinctX, 200U) << "positions should be spread, not equal";
+
+    system->Update(0.1F);
+    const auto moved = system->ReadParticles();
+    for (std::size_t index = 0; index < moved.size(); ++index) {
+        if (moved[index].births != 1.0F) continue;  // reborn at its end
+        EXPECT_NEAR(moved[index].position.y, born[index].position.y - 0.2F,
+                    1e-5F);
+        EXPECT_EQ(moved[index].position.x, born[index].position.x);
+        EXPECT_NEAR(moved[index].age, born[index].age + 0.1F, 1e-5F);
+    }
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, ParticlesAreRebornAndFollowAcceleration) {
+    auto system = MakeParticles(128);
+    const ParticleEmitter emitter{.boxMin = glm::vec3(0.0F),
+                                  .boxMax = glm::vec3(1.0F),
+                                  .velocity = {1.0F, 0.0F, 0.0F},
+                                  .velocityJitter = {0.0F, 0.0F, 0.5F},
+                                  .acceleration = {0.0F, -10.0F, 0.0F},
+                                  .lifetime = 0.5F};
+    system->SetEmitter(emitter);
+    system->Update(0.0F);
+    system->Update(0.1F);
+    for (const auto& particle : system->ReadParticles()) {
+        if (particle.births == 1.0F) {
+            EXPECT_NEAR(particle.velocity.y, -1.0F, 1e-5F);
+        }
+    }
+    // A whole lifetime later every particle has been born again, in the box,
+    // with the emitter's velocity and some sideways jitter.
+    system->Update(0.5F);
+    std::size_t jittered = 0;
+    for (const auto& particle : system->ReadParticles()) {
+        EXPECT_GE(particle.births, 2.0F);
+        EXPECT_LT(particle.age, emitter.lifetime);
+        EXPECT_LE(std::abs(particle.velocity.z), 0.5F + 1e-5F);
+        if (particle.velocity.z != 0.0F) ++jittered;
+    }
+    EXPECT_GT(jittered, 100U);
+    // Reset seeds the particles again on the next update.
+    system->Reset();
+    system->Update(0.0F);
+    for (const auto& particle : system->ReadParticles()) {
+        EXPECT_EQ(particle.births, 1.0F);
+    }
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, ParticlesDrawAsQuadsOrStreaks) {
+    auto system = MakeParticles(4);
+    const Camera camera(kSize, kSize, 60.0F, 0.1F, 100.0F);
+    RenderTarget target;
+    ASSERT_EQ(glCheckFramebufferStatus(GL_FRAMEBUFFER),
+              GL_FRAMEBUFFER_COMPLETE);
+    const auto draw = [&] {
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        system->Render(camera);
+        glDisable(GL_BLEND);
+        glDepthMask(GL_TRUE);
+        return target.Read();
+    };
+    const auto red = [](const Image& image, int x, int y) {
+        return image.at(static_cast<std::size_t>((y * kSize + x) * 4));
+    };
+    // Nothing is drawn before the first update.
+    system->SetEmitter({.boxMin = {0.0F, 0.0F, -3.0F},
+                        .boxMax = {0.0F, 0.0F, -3.0F},
+                        .velocity = {1.0F, 0.0F, 0.0F},
+                        .lifetime = 100.0F});
+    system->SetLook({.color = {1.0F, 0.0F, 0.0F}, .width = 0.5F});
+    EXPECT_EQ(red(draw(), kSize / 2, kSize / 2), 0);
+
+    system->Update(0.0F);
+    const Image square = draw();
+    EXPECT_EQ(red(square, kSize / 2, kSize / 2), 255);
+    EXPECT_EQ(red(square, kSize / 2 - 20, kSize / 2), 0);
+    // Stretched, the quad trails back along the velocity (to the left).
+    system->SetLook(
+        {.color = {1.0F, 0.0F, 0.0F}, .width = 0.5F, .stretch = 1.0F});
+    const Image streak = draw();
+    EXPECT_EQ(red(streak, kSize / 2 - 20, kSize / 2), 255);
+    EXPECT_EQ(red(streak, kSize / 2 + 20, kSize / 2), 0);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, DeferredPipelineDrawsQueuedParticles) {
+    Pipelines pipelines = MakePipelines();
+    auto system = MakeParticles(4);
+    system->SetEmitter({.boxMin = {0.0F, 0.0F, -3.0F},
+                        .boxMax = {0.0F, 0.0F, -3.0F},
+                        .lifetime = 100.0F});
+    system->SetLook({.color = {0.0F, 2.0F, 0.0F}, .width = 0.4F});
+    system->Update(0.0F);
+    RenderQueue queue;
+    queue.SubmitParticles(*system);
+    ASSERT_EQ(queue.GetParticles().size(), 1U);
+    const auto center = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_EQ(center[0], 0);
+    EXPECT_EQ(center[1], 255);
+    EXPECT_EQ(RenderAndRead(pipelines, queue, 2, 2)[1], 0);
+    queue.Clear();
+    EXPECT_TRUE(queue.GetParticles().empty());
 }
 
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {

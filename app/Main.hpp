@@ -16,6 +16,7 @@
 #include "Light.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "ParticleSystem.hpp"
 #include "PerlinNoise.hpp"
 #include "RenderMode.hpp"
 #include "RenderQueue.hpp"
@@ -92,6 +93,9 @@ private:
     float fps = 0.0F;
     int frameCount = 0;
     double lastTime = 0.0;
+    // A fountain of sparks showing the GPU particle system.
+    std::unique_ptr<ParticleSystem> fountain_;
+    double lastParticleTime_ = 0.0;
     RenderMode renderMode = RenderMode::DeferredShading;
     bool initialized = false;
 

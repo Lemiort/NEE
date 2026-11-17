@@ -36,6 +36,10 @@ Context creation failures fail the tests rather than silently skipping them.
 - Bloom spills a bright cube's light onto nearby black pixels only when
   enabled, and not from a cube glowing below the threshold. Its levels
   halve down to two texels a side.
+- Particles are born at random places and ages inside their emitter box,
+  fall with their velocity, follow acceleration, are born again when their
+  lifetime ends, and draw as camera-facing squares or streaks, also through
+  the render queue in the deferred pipeline.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays
@@ -52,7 +56,7 @@ and UVs. It verifies geometry/instancing consistency, not equality of the full
 forward/deferred lighting implementations. Full lit-scene comparisons remain
 follow-up work for issue #41, alongside the lighting fixes in #22, #24, and #26.
 The asset test verifies loaders and repository assets, not the application's
-hardcoded asset path casing (#18). Particle rendering is not covered (#29).
+hardcoded asset path casing (#18).
 
 No GPU resource is constructed during GoogleTest discovery. Every OpenGL test
 creates a hidden OpenGL 4.6 core context, verifies the version/profile, and

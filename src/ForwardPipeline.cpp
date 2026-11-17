@@ -16,6 +16,7 @@
 #include "Billboard.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "ParticleSystem.hpp"
 
 namespace {
 void SetLightColor(GLint uniformLocation, const glm::vec3& color) {
@@ -186,6 +187,9 @@ void ForwardPipeline::RenderTransparentObjects(const SceneView& scene) {
                 }
             },
             command);
+    }
+    for (const ParticleRenderCommand& command : scene.queue.GetParticles()) {
+        command.particles.get().Render(scene.camera);
     }
     glDisable(GL_BLEND);
     glDepthMask(GL_TRUE);
