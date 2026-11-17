@@ -25,6 +25,10 @@ void RenderQueue::SubmitBillboard(const Billboard& billboard,
     billboards_.push_back({.billboard = billboard, .position = position});
 }
 
+void RenderQueue::SubmitOpaqueBatch(const MeshBatch& batch) {
+    opaqueBatches_.emplace_back(batch);
+}
+
 void RenderQueue::SubmitParticles(const ParticleSystem& particles) {
     particles_.push_back({.particles = particles});
 }
@@ -42,6 +46,7 @@ void RenderQueue::Clear() noexcept {
     transparentMeshes_.clear();
     billboards_.clear();
     particles_.clear();
+    opaqueBatches_.clear();
     text_.clear();
     debugLines_.clear();
 }
@@ -63,6 +68,11 @@ std::span<const MeshRenderCommand> RenderQueue::GetTransparentMeshes()
 std::span<const BillboardRenderCommand> RenderQueue::GetBillboards()
     const noexcept {
     return billboards_;
+}
+
+std::span<const std::reference_wrapper<const MeshBatch>>
+RenderQueue::GetOpaqueBatches() const noexcept {
+    return opaqueBatches_;
 }
 
 std::span<const ParticleRenderCommand> RenderQueue::GetParticles()

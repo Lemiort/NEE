@@ -28,6 +28,7 @@
 #include "Light.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
+#include "MeshBatch.hpp"
 #include "MeshInstanceRenderer.hpp"
 #include "ModelLoader.hpp"
 #include "ParticleSystem.hpp"
@@ -1111,6 +1112,94 @@ TEST_F(OpenGLRender, BloomIgnoresNonFiniteLight) {
     EXPECT_GT(*std::ranges::max_element(bloomed), 0.0F);
     glDeleteTextures(1, &source);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, MeshBoundsHoldTheModel) {
+    const auto shader =
+        LoadShader("shaders/DSGeometryPass.vsh", "shaders/DSGeometryPass.fsh");
+    auto material = std::make_shared<Material>(gsl_lite::not_null{shader});
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+    EXPECT_EQ(mesh.GetBounds().min, glm::vec3(-1.0F));
+    EXPECT_EQ(mesh.GetBounds().max, glm::vec3(1.0F));
+}
+
+TEST_F(OpenGLRender, MeshBatchDrawsLikeTheSameInstancesOneByOne) {
+    // Lit by an emissive color only, so only geometry decides the image.
+    Pipelines pipelines = MakePipelines();
+    const auto material =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    material->SetEmissiveColor({0.3F, 0.7F, 0.9F});
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+    const std::array transforms{
+        Transform{.position = {-0.8F, -0.2F, -3.0F},
+                  .rotationDegrees = {15.0F, 30.0F, 10.0F},
+                  .scale = {0.35F, 0.45F, 0.3F}},
+        Transform{.position = {0.8F, 0.3F, -4.0F},
+                  .rotationDegrees = {-10.0F, -20.0F, 15.0F},
+                  .scale = {0.4F, 0.3F, 0.45F}},
+        Transform{.position = {0.0F, -0.6F, -3.5F}, .scale = glm::vec3(0.25F)}};
+    const MeshBatch batch(mesh, material, transforms);
+    EXPECT_EQ(batch.GetCount(), transforms.size());
+    EXPECT_FALSE(batch.GetBounds().IsEmpty());
+
+    const auto image = [&](const RenderQueue& queue) {
+        std::vector<std::uint8_t> pixels;
+        for (int y = 0; y < kSize; y += 4)
+            for (int x = 0; x < kSize; x += 4)
+                pixels.push_back(RenderAndRead(pipelines, queue, x, y)[1]);
+        return pixels;
+    };
+    RenderQueue individual;
+    for (const Transform& transform : transforms)
+        individual.SubmitOpaqueMesh(mesh, transform, material);
+    RenderQueue batched;
+    batched.SubmitOpaqueBatch(batch);
+    const auto expected = image(individual);
+    const auto actual = image(batched);
+    ASSERT_EQ(expected.size(), actual.size());
+    std::size_t covered = 0;
+    for (std::size_t index = 0; index < expected.size(); ++index) {
+        EXPECT_NEAR(expected[index], actual[index], 1) << "sample " << index;
+        covered += actual[index] > 0 ? 1 : 0;
+    }
+    EXPECT_GT(covered, 10U);
+    EXPECT_EQ(pipelines.deferred->GetStatistics().batchesDrawn, 1U);
+    EXPECT_EQ(pipelines.deferred->GetStatistics().batchInstancesDrawn, 3U);
+    EXPECT_EQ(pipelines.deferred->GetStatistics().drawCalls, 1U);
+}
+
+TEST_F(OpenGLRender, DeferredPipelineSkipsWhatTheCameraCannotSee) {
+    Pipelines pipelines = MakePipelines();
+    const auto material =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    material->SetEmissiveColor(glm::vec3(1.0F));
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+    const std::array ahead{
+        Transform{.position = {0.0F, 0.0F, -3.0F}, .scale = glm::vec3(0.3F)}};
+    const std::array behind{
+        Transform{.position = {0.0F, 0.0F, 3.0F}, .scale = glm::vec3(0.3F)},
+        Transform{.position = {1.0F, 0.0F, 4.0F}, .scale = glm::vec3(0.3F)}};
+    const MeshBatch visible(mesh, material, ahead);
+    const MeshBatch hidden(mesh, material, behind);
+    RenderQueue queue;
+    queue.SubmitOpaqueBatch(visible);
+    queue.SubmitOpaqueBatch(hidden);
+    queue.SubmitOpaqueMesh(mesh, behind[0], material);
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {0.0F, 0.6F, -3.0F}, .scale = glm::vec3(0.2F)},
+        material);
+    const auto center = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_EQ(center[0], 255);
+    const RenderStatistics& statistics = pipelines.deferred->GetStatistics();
+    EXPECT_EQ(statistics.batchesDrawn, 1U);
+    EXPECT_EQ(statistics.batchesCulled, 1U);
+    EXPECT_EQ(statistics.batchInstancesDrawn, 1U);
+    EXPECT_EQ(statistics.meshesDrawn, 1U);
+    EXPECT_EQ(statistics.meshesCulled, 1U);
 }
 
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {

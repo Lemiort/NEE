@@ -55,7 +55,14 @@ void ForwardPipeline::Render(const SceneView& scene) {
     glDisable(GL_BLEND);
     glEnable(GL_DEPTH_TEST);
     glDepthMask(GL_TRUE);
-    instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), meshBindings_);
+    const Frustum frustum =
+        Frustum::FromViewProjection(scene.camera.GetViewProjectionMatrix());
+    statistics_ = {};
+    instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), meshBindings_,
+                             nullptr, &frustum, &statistics_);
+    MeshInstanceRenderer::RenderBatches(scene.queue.GetOpaqueBatches(),
+                                        meshBindings_, nullptr, &frustum,
+                                        &statistics_);
     RenderTransparentObjects(scene);
 }
 

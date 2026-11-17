@@ -18,6 +18,9 @@ gtest_discover_tests(math_migration_tests)
 nee_add_test(fixed_step_clock_tests FixedStepClockTests.cpp)
 gtest_discover_tests(fixed_step_clock_tests)
 
+nee_add_test(bounds_tests BoundsTests.cpp)
+gtest_discover_tests(bounds_tests)
+
 # Exercises a real worker thread and wall-clock pacing; waits are bounded.
 nee_add_test(simulation_thread_tests SimulationThreadTests.cpp)
 gtest_discover_tests(simulation_thread_tests PROPERTIES TIMEOUT 60)

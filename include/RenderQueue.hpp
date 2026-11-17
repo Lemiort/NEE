@@ -13,6 +13,7 @@
 class Billboard;
 class Material;
 class Mesh;
+class MeshBatch;
 class ParticleSystem;
 
 enum class RenderLayer { Opaque, Transparent, Overlay };
@@ -59,6 +60,8 @@ public:
                                std::shared_ptr<const Material> material,
                                float opacity);
     void SubmitBillboard(const Billboard& billboard, const glm::vec3& position);
+    // A batch of static instances, drawn opaque. The queue borrows it.
+    void SubmitOpaqueBatch(const MeshBatch& batch);
     void SubmitParticles(const ParticleSystem& particles);
     void SubmitText(FontLine2d text);
     void SubmitDebugLine(const DebugLineRenderCommand& line);
@@ -73,6 +76,8 @@ public:
         const noexcept;
     [[nodiscard]] std::span<const BillboardRenderCommand> GetBillboards()
         const noexcept;
+    [[nodiscard]] std::span<const std::reference_wrapper<const MeshBatch>>
+    GetOpaqueBatches() const noexcept;
     [[nodiscard]] std::span<const ParticleRenderCommand> GetParticles()
         const noexcept;
     [[nodiscard]] std::span<const TextRenderCommand> GetText() const noexcept;
@@ -84,6 +89,7 @@ private:
     std::vector<MeshRenderCommand> transparentMeshes_;
     std::vector<BillboardRenderCommand> billboards_;
     std::vector<ParticleRenderCommand> particles_;
+    std::vector<std::reference_wrapper<const MeshBatch>> opaqueBatches_;
     std::vector<TextRenderCommand> text_;
     std::vector<DebugLineRenderCommand> debugLines_;
 };

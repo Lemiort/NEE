@@ -139,8 +139,14 @@ void DeferredPipeline::GeometryPass(const SceneView& scene) {
     glUniformMatrix4fv(geometryShader_->GetUniformLocation("gVC"), 1, GL_FALSE,
                        glm::value_ptr(matrix));
 
+    // Only what the camera can see: per-frame meshes and static batches.
+    const Frustum frustum = Frustum::FromViewProjection(matrix);
+    statistics_ = {};
     instanceRenderer_.Render(scene.queue.GetOpaqueMeshes(), geometryBindings_,
-                             geometryShader_.get());
+                             geometryShader_.get(), &frustum, &statistics_);
+    MeshInstanceRenderer::RenderBatches(
+        scene.queue.GetOpaqueBatches(), geometryBindings_,
+        geometryShader_.get(), &frustum, &statistics_);
     glDepthMask(GL_FALSE);
     glDisable(GL_DEPTH_TEST);
 }

@@ -12,6 +12,7 @@
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
 #include "RenderQueue.hpp"
+#include "RenderStatistics.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
 #include "Skybox.hpp"
@@ -22,6 +23,10 @@ public:
         gsl_lite::not_null<std::shared_ptr<Shader>> meshShader);
     void Render(const SceneView& scene);
     void RenderTransparent(const SceneView& scene);
+    // What the last Render drew and culled of the opaque meshes and batches.
+    [[nodiscard]] const RenderStatistics& GetStatistics() const noexcept {
+        return statistics_;
+    }
 
 private:
     void PrepareLighting(const SceneView& scene);
@@ -32,6 +37,7 @@ private:
     gsl_lite::not_null<std::shared_ptr<Shader>> meshShader_;
     MeshShaderBindings meshBindings_;
     MeshInstanceRenderer instanceRenderer_;
+    RenderStatistics statistics_;
     GLint cameraViewProjectionUniform_{};
     GLint lightViewProjectionUniform_{};
     GLint cameraPositionUniform_{};

@@ -10,6 +10,7 @@
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
+#include "RenderStatistics.hpp"
 #include "SceneView.hpp"
 #include "Shader.hpp"
 
@@ -56,6 +57,10 @@ public:
     [[nodiscard]] const ToneMapping& GetToneMapping() const noexcept {
         return toneMapping_;
     }
+    // What the last frame's geometry pass drew and culled.
+    [[nodiscard]] const RenderStatistics& GetStatistics() const noexcept {
+        return statistics_;
+    }
     // Bloom is off (strength 0) until set.
     void SetBloom(const BloomSettings& bloom) { bloom_ = bloom; }
     [[nodiscard]] const BloomSettings& GetBloom() const noexcept {
@@ -97,6 +102,7 @@ private:
     Mesh spotLightVolume_;
     GBufferDebugPass debugPass_;
     MeshInstanceRenderer instanceRenderer_;
+    RenderStatistics statistics_;
     VertexArray fullscreenVertexArray_;
 };
 

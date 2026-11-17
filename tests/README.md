@@ -40,6 +40,11 @@ Context creation failures fail the tests rather than silently skipping them.
   fall with their velocity, follow acceleration, are born again when their
   lifetime ends, and draw as camera-facing squares or streaks, also through
   the render queue in the deferred pipeline.
+- A mesh batch draws the same image as its instances drawn one by one, in
+  one draw call. The deferred pipeline draws the batches and meshes in view
+  and skips those behind the camera, and reports both in its statistics.
+- `bounds_tests` checks boxes growing and moving, and the view frustum
+  keeping boxes ahead and dropping those behind, beside and too far.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays

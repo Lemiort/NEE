@@ -11,37 +11,52 @@ MeshInstanceRenderer::~MeshInstanceRenderer() {
 
 void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
                                   const MeshShaderBindings& bindings,
-                                  Shader* passShader) {
+                                  Shader* passShader, const Frustum* frustum,
+                                  RenderStatistics* statistics) {
     static_assert(sizeof(InstanceData) == 2 * sizeof(glm::mat4));
-    sorted_.clear();
+    RenderStatistics counts;
+    entries_.clear();
     for (const auto& command : commands) {
-        if (command.material != nullptr) sorted_.push_back(&command);
+        if (command.material == nullptr) continue;
+        const glm::mat4 world = command.transform.ModelMatrix();
+        if (frustum != nullptr &&
+            !frustum->Intersects(
+                command.mesh.get().GetBounds().Transformed(world))) {
+            ++counts.meshesCulled;
+            continue;
+        }
+        entries_.push_back({&command, world});
     }
-    std::ranges::stable_sort(sorted_, [&](const auto* a, const auto* b) {
-        if (&a->mesh.get() != &b->mesh.get())
-            return std::less<const Mesh*>{}(&a->mesh.get(), &b->mesh.get());
-        return std::less<const Material*>{}(a->material.get(),
-                                            b->material.get());
+    counts.meshesDrawn = entries_.size();
+    std::ranges::stable_sort(entries_, [&](const Entry& a, const Entry& b) {
+        const auto* meshA = &a.command->mesh.get();
+        const auto* meshB = &b.command->mesh.get();
+        if (meshA != meshB) return std::less<const Mesh*>{}(meshA, meshB);
+        return std::less<const Material*>{}(a.command->material.get(),
+                                            b.command->material.get());
     });
-    for (std::size_t begin = 0; begin < sorted_.size();) {
+    for (std::size_t begin = 0; begin < entries_.size();) {
         std::size_t end = begin + 1;
-        while (end < sorted_.size() &&
-               &sorted_[end]->mesh.get() == &sorted_[begin]->mesh.get() &&
-               sorted_[end]->material == sorted_[begin]->material)
+        const auto& first = *entries_[begin].command;
+        while (end < entries_.size() &&
+               &entries_[end].command->mesh.get() == &first.mesh.get() &&
+               entries_[end].command->material == first.material)
             ++end;
-        const auto& first = *sorted_[begin];
         const Material& material = *first.material;
         if (end - begin == 1 || bindings.instanceWorld < 0 ||
             bindings.instanceRotation < 0 || bindings.instanced < 0) {
-            for (std::size_t index = begin; index < end; ++index)
-                first.mesh.get().Draw(sorted_[index]->transform, material,
-                                      bindings, 1.0F, 0, 1, passShader);
+            for (std::size_t index = begin; index < end; ++index) {
+                first.mesh.get().Draw(entries_[index].command->transform,
+                                      material, bindings, 1.0F, 0, 1,
+                                      passShader);
+                ++counts.drawCalls;
+            }
         } else {
             instances_.clear();
             for (std::size_t index = begin; index < end; ++index) {
-                const auto& transform = sorted_[index]->transform;
                 instances_.push_back(
-                    {transform.ModelMatrix(), transform.NormalMatrix()});
+                    {entries_[index].world,
+                     entries_[index].command->transform.NormalMatrix()});
             }
             if (instances_.size() > static_cast<std::size_t>(
                                         std::numeric_limits<GLsizei>::max()) ||
@@ -64,7 +79,37 @@ void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
             first.mesh.get().Draw(
                 first.transform, material, bindings, 1.0F, buffer_,
                 static_cast<GLsizei>(instances_.size()), passShader);
+            ++counts.drawCalls;
         }
         begin = end;
+    }
+    if (statistics != nullptr) {
+        statistics->meshesDrawn += counts.meshesDrawn;
+        statistics->meshesCulled += counts.meshesCulled;
+        statistics->drawCalls += counts.drawCalls;
+    }
+}
+
+void MeshInstanceRenderer::RenderBatches(
+    std::span<const std::reference_wrapper<const MeshBatch>> batches,
+    const MeshShaderBindings& bindings, Shader* passShader,
+    const Frustum* frustum, RenderStatistics* statistics) {
+    RenderStatistics counts;
+    for (const MeshBatch& batch : batches) {
+        if (batch.GetCount() == 0) continue;
+        if (frustum != nullptr && !frustum->Intersects(batch.GetBounds())) {
+            ++counts.batchesCulled;
+            continue;
+        }
+        batch.Draw(bindings, passShader);
+        ++counts.batchesDrawn;
+        counts.batchInstancesDrawn += batch.GetCount();
+        ++counts.drawCalls;
+    }
+    if (statistics != nullptr) {
+        statistics->batchesDrawn += counts.batchesDrawn;
+        statistics->batchesCulled += counts.batchesCulled;
+        statistics->batchInstancesDrawn += counts.batchInstancesDrawn;
+        statistics->drawCalls += counts.drawCalls;
     }
 }
