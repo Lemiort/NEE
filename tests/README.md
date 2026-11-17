@@ -33,6 +33,9 @@ Context creation failures fail the tests rather than silently skipping them.
 - Light above 1 survives in the half-float light target until tone mapping:
   halving the exposure of an emissive 2 gives full brightness. Reinhard and
   ACES map light of 1 to 0.5 and about 0.8.
+- Bloom spills a bright cube's light onto nearby black pixels only when
+  enabled, and not from a cube glowing below the threshold. Its levels
+  halve down to two texels a side.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays

@@ -16,6 +16,7 @@
 #include <vector>
 
 #include "Billboard.hpp"
+#include "BloomPass.hpp"
 #include "CubemapTexture.hpp"
 #include "DebugRenderer.hpp"
 #include "DeferredPipeline.hpp"
@@ -222,7 +223,9 @@ TEST_F(OpenGLRender, ProductionShaderProgramsLinkWithoutGlErrors) {
         std::pair{"text2d.vsh", "text2d.fsh"},
         std::pair{"lightVS.vsh", "lightFS.fsh"},
         std::pair{"skybox.vsh", "skybox.fsh"},
-        std::pair{"tonemap.vsh", "tonemap.fsh"}};
+        std::pair{"tonemap.vsh", "tonemap.fsh"},
+        std::pair{"fullscreen.vsh", "bloom_downsample.fsh"},
+        std::pair{"fullscreen.vsh", "bloom_upsample.fsh"}};
     for (const auto& [vertex, fragment] : pairs) {
         SCOPED_TRACE(vertex);
         const auto shader = LoadShader(std::string("shaders/") + vertex,
@@ -653,6 +656,10 @@ Pipelines MakePipelines() {
             .directionalLightShader = gsl_lite::not_null{directional},
             .toneMapShader =
                 gsl_lite::not_null{shader("tonemap.vsh", "tonemap.fsh")},
+            .bloomDownsampleShader = gsl_lite::not_null{shader(
+                "fullscreen.vsh", "bloom_downsample.fsh")},
+            .bloomUpsampleShader = gsl_lite::not_null{shader(
+                "fullscreen.vsh", "bloom_upsample.fsh")},
             .stencilMaterial = material(stencil),
             .pointLightMaterial = material(point),
             .spotLightMaterial = material(spot),
@@ -804,6 +811,70 @@ TEST_F(OpenGLRender, ToneMappingOperatorsCompressLight) {
     // The background stays black whatever the operator.
     const auto background = RenderAndRead(pipelines, queue, 2, 2);
     EXPECT_EQ(background[0], 0);
+}
+
+TEST_F(OpenGLRender, BloomSpillsBrightLightOnlyWhenEnabled) {
+    // A small cube glowing at 4 lights black pixels around it only with
+    // bloom; a cube glowing below the threshold spills nothing.
+    Pipelines pipelines = MakePipelines();
+    const auto material = [&pipelines](float glow) {
+        auto result = std::make_shared<Material>(
+            gsl_lite::not_null{pipelines.meshShader});
+        result->SetEmissiveColor(glm::vec3(glow));
+        return result;
+    };
+    const auto bright = material(4.0F);
+    const auto dim = material(0.5F);
+    Mesh mesh(gsl_lite::not_null{bright},
+              Asset("models/cube2x2x2.obj").string());
+    const auto queueOf = [&mesh](const std::shared_ptr<Material>& glow) {
+        RenderQueue queue;
+        queue.SubmitOpaqueMesh(mesh,
+                               Transform{.position = {0.0F, 0.0F, -3.0F},
+                                         .scale = glm::vec3(0.08F)},
+                               glow);
+        return queue;
+    };
+    const RenderQueue brightQueue = queueOf(bright);
+    const RenderQueue dimQueue = queueOf(dim);
+    constexpr int kNear = (kSize / 2) + 12;
+
+    EXPECT_EQ(pipelines.deferred->GetBloom().strength, 0.0F);
+    EXPECT_EQ(RenderAndRead(pipelines, brightQueue, kNear, kSize / 2)[0], 0);
+    pipelines.deferred->SetBloom({.strength = 1.0F});
+    const auto near = RenderAndRead(pipelines, brightQueue, kNear, kSize / 2);
+    EXPECT_GT(near[0], 8);
+    // The cube itself stays saturated.
+    EXPECT_EQ(RenderAndRead(pipelines, brightQueue, kSize / 2, kSize / 2)[0],
+              255);
+    EXPECT_EQ(RenderAndRead(pipelines, dimQueue, kNear, kSize / 2)[0], 0);
+    // The smallest levels spread a trace of light over the whole frame, but
+    // far corners stay much darker than pixels near the cube.
+    EXPECT_LT(RenderAndRead(pipelines, brightQueue, 2, 2)[0] * 4, near[0]);
+}
+
+TEST_F(OpenGLRender, BloomLevelsHalveDownToTwoTexels) {
+    const auto shader = [](const char* fragment) {
+        return gsl_lite::not_null{LoadShader(
+            "shaders/fullscreen.vsh", std::string("shaders/") + fragment)};
+    };
+    BloomPass bloom(shader("bloom_downsample.fsh"),
+                    shader("bloom_upsample.fsh"));
+    const auto source = SolidTexture({255, 255, 255, 255});
+    // 128 gives 64, 32, 16, 8, 4 and 2.
+    EXPECT_NE(
+        bloom.Render(source->GetTextureID(), kSize, kSize, {.strength = 1.0F}),
+        0U);
+    EXPECT_EQ(bloom.GetLevelCount(), 6U);
+    // 40 x 12 stops at 5 x 3: one more halving would leave 1 texel.
+    EXPECT_NE(bloom.Render(source->GetTextureID(), 40, 12, {.strength = 1.0F}),
+              0U);
+    EXPECT_EQ(bloom.GetLevelCount(), 2U);
+    // Too small for any level.
+    EXPECT_EQ(bloom.Render(source->GetTextureID(), 3, 3, {.strength = 1.0F}),
+              0U);
+    EXPECT_EQ(bloom.GetLevelCount(), 0U);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {

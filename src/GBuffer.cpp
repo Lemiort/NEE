@@ -84,6 +84,8 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
                        windowHeight);
     glTextureParameteri(m_finalTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTextureParameteri(m_finalTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTextureParameteri(m_finalTexture, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTextureParameteri(m_finalTexture, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glNamedFramebufferTexture(
         m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()),
         m_finalTexture, 0);
