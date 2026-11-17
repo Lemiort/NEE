@@ -10,6 +10,17 @@
 #include "Texture.hpp"
 #include "spdlog/spdlog.h"
 
+namespace {
+// One color attachment per G-buffer texture, in enum order.
+std::array<GLenum, GBuffer::GBUFFER_NUM_TEXTURES> GeometryDrawBuffers() {
+    std::array<GLenum, GBuffer::GBUFFER_NUM_TEXTURES> buffers{};
+    for (std::size_t i = 0; i < buffers.size(); ++i) {
+        buffers.at(i) = GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(i);
+    }
+    return buffers;
+}
+}  // namespace
+
 GBuffer::GBuffer(GLsizei windowWidth, GLsizei windowHeight) {
     if (!Resize(windowWidth, windowHeight)) {
         glDeleteFramebuffers(1, &m_fbo);
@@ -47,6 +58,8 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
     m_depthTexture = 0;
     m_testTexture = 0;
     m_finalTexture = 0;
+    m_width = windowWidth;
+    m_height = windowHeight;
     glCreateFramebuffers(1, &m_fbo);
     glCreateTextures(GL_TEXTURE_2D, static_cast<GLsizei>(m_textures.size()),
                      m_textures.data());
@@ -74,9 +87,7 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
         m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()),
         m_finalTexture, 0);
 
-    const std::array<GLenum, 5> drawBuffers = {
-        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
-        GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
+    const auto drawBuffers = GeometryDrawBuffers();
 
     glNamedFramebufferDrawBuffers(
         m_fbo, static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
@@ -151,9 +162,7 @@ void GBuffer::StartFrame() {
 void GBuffer::BindForGeomPass() const {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);
 
-    const std::array<GLenum, 5> drawBuffers = {
-        GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2,
-        GL_COLOR_ATTACHMENT3, GL_COLOR_ATTACHMENT4};
+    const auto drawBuffers = GeometryDrawBuffers();
 
     glNamedFramebufferDrawBuffers(
         m_fbo, static_cast<GLsizei>(drawBuffers.size()), drawBuffers.data());
@@ -172,4 +181,13 @@ void GBuffer::BindForFinalPass() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, m_fbo);
     glReadBuffer(GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()));
+}
+
+void GBuffer::CopyEmissiveToLight() const {
+    glNamedFramebufferReadBuffer(
+        m_fbo, GL_COLOR_ATTACHMENT0 + GBUFFER_TEXTURE_TYPE_EMISSIVE);
+    glNamedFramebufferDrawBuffer(
+        m_fbo, GL_COLOR_ATTACHMENT0 + static_cast<GLenum>(m_textures.size()));
+    glBlitNamedFramebuffer(m_fbo, m_fbo, 0, 0, m_width, m_height, 0, 0, m_width,
+                           m_height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 }

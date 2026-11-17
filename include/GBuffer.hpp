@@ -13,6 +13,7 @@ public:
         GBUFFER_TEXTURE_TYPE_NORMAL,
         GBUFFER_TEXTURE_TYPE_TEXCOORD,
         GBUFFER_TEXTURE_TYPE_SPECULAR,
+        GBUFFER_TEXTURE_TYPE_EMISSIVE,
         GBUFFER_NUM_TEXTURES
     };
 
@@ -30,6 +31,9 @@ public:
     static void BindForStencilPass();
     void BindForLightPass();
     void BindForFinalPass();
+    // Starts the light accumulation target with the emissive color of the
+    // geometry pass, so lights then add on top of what surfaces give off.
+    void CopyEmissiveToLight() const;
 
     void BindForWriting() const;
     void BindForReading() const;
@@ -47,5 +51,7 @@ private:
     GLuint m_depthTexture{};
     GLuint m_testTexture{};
     GLuint m_finalTexture{};
+    GLsizei m_width{};
+    GLsizei m_height{};
 };
 #endif  // GBUFFER_H

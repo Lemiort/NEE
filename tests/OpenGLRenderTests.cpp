@@ -4,7 +4,6 @@
 
 #include <algorithm>
 #include <array>
-#include <stdexcept>
 #include <cmath>
 #include <cstdint>
 #include <filesystem>
@@ -12,15 +11,17 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <memory>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
 #include "Billboard.hpp"
 #include "CubemapTexture.hpp"
 #include "DebugRenderer.hpp"
+#include "DeferredPipeline.hpp"
+#include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
 #include "ImGuiOverlay.hpp"
-#include "imgui.h"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
@@ -33,6 +34,7 @@
 #include "TextRenderer.hpp"
 #include "Texture.hpp"
 #include "VertexArray.hpp"
+#include "imgui.h"
 #include "stb_image.h"
 
 namespace {
@@ -607,6 +609,102 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &height);
     EXPECT_EQ(width, 64);
     EXPECT_EQ(height, 64);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, DeferredPipelineAddsEmissiveLightWithoutLights) {
+    // With no lights, a surface shows only the light it gives off itself:
+    // the emissive cube keeps its color, the textured one shows its emissive
+    // texture times its color, and the plain one stays black.
+    const auto shader = [](const char* vertex, const char* fragment) {
+        return LoadShader(std::string("shaders/") + vertex,
+                          fragment[0] == '\0'
+                              ? std::string()
+                              : std::string("shaders/") + fragment);
+    };
+    const auto material = [](const std::shared_ptr<Shader>& program) {
+        return gsl_lite::not_null{
+            std::make_shared<Material>(gsl_lite::not_null{program})};
+    };
+    const auto meshShader = shader("vertexShader.vsh", "fragmentShader.fsh");
+    const auto geometry = shader("DSGeometryPass.vsh", "DSGeometryPass.fsh");
+    const auto stencil = shader("DSStencilPass.vsh", "");
+    const auto point = shader("DSPointLight.vsh", "DSPointLight.fsh");
+    const auto spot = shader("DSSpotLight.vsh", "DSSpotLight.fsh");
+    const auto directional =
+        shader("DSDirectionalLight.vsh", "DSDirectionalLight.fsh");
+    DeferredPipeline pipeline(DeferredPipelineResources{
+        .gBuffer = gsl_lite::not_null{std::make_shared<GBuffer>(kSize, kSize)},
+        .geometryShader = gsl_lite::not_null{geometry},
+        .stencilShader = gsl_lite::not_null{stencil},
+        .pointLightShader = gsl_lite::not_null{point},
+        .spotLightShader = gsl_lite::not_null{spot},
+        .directionalLightShader = gsl_lite::not_null{directional},
+        .stencilMaterial = material(stencil),
+        .pointLightMaterial = material(point),
+        .spotLightMaterial = material(spot),
+        .directionalLightMaterial = material(directional)});
+    ForwardPipeline forward(gsl_lite::not_null{meshShader});
+
+    const auto glowing =
+        std::make_shared<Material>(gsl_lite::not_null{meshShader});
+    glowing->SetEmissiveColor({0.2F, 0.6F, 1.0F});
+    EXPECT_EQ(glowing->GetEmissiveColor(), glm::vec3(0.2F, 0.6F, 1.0F));
+    const auto plain =
+        std::make_shared<Material>(gsl_lite::not_null{meshShader});
+    EXPECT_EQ(plain->GetEmissiveColor(), glm::vec3(0.0F));
+    const auto textured =
+        std::make_shared<Material>(gsl_lite::not_null{meshShader});
+    textured->SetEmissiveTexture(SolidTexture({255, 128, 0, 255}));
+    textured->SetEmissiveColor({1.0F, 0.5F, 1.0F});
+    Mesh mesh(gsl_lite::not_null{plain},
+              Asset("models/cube2x2x2.obj").string());
+    RenderQueue queue;
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {-0.8F, 0.0F, -3.0F}, .scale = glm::vec3(0.35F)},
+        glowing);
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {0.8F, 0.0F, -3.0F}, .scale = glm::vec3(0.35F)},
+        plain);
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {0.0F, 0.0F, -3.0F}, .scale = glm::vec3(0.35F)},
+        textured);
+
+    const Camera camera(kSize, kSize, 60.0F, 0.1F, 100.0F);
+    const SceneView view{.camera = camera, .queue = queue};
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    pipeline.Render(view, forward);
+    ASSERT_EQ(glGetError(), GL_NO_ERROR);
+
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glReadBuffer(GL_BACK);
+    const auto pixel = [](int x, int y) {
+        std::array<std::uint8_t, 4> rgba{};
+        glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+        return rgba;
+    };
+    // The cubes are centered in the middle and about 30 pixels either side.
+    const auto lit = pixel(34, kSize / 2);
+    EXPECT_NEAR(lit[0], 51, 1);
+    EXPECT_NEAR(lit[1], 153, 1);
+    EXPECT_NEAR(lit[2], 255, 1);
+    const auto masked = pixel(kSize / 2, kSize / 2);
+    EXPECT_NEAR(masked[0], 255, 1);
+    EXPECT_NEAR(masked[1], 64, 1);
+    EXPECT_EQ(masked[2], 0);
+    const auto dark = pixel(94, kSize / 2);
+    EXPECT_EQ(dark[0], 0);
+    EXPECT_EQ(dark[1], 0);
+    EXPECT_EQ(dark[2], 0);
+    const auto background = pixel(kSize / 2, kSize - 4);
+    EXPECT_EQ(background[0], 0);
+    EXPECT_EQ(background[1], 0);
+    EXPECT_EQ(background[2], 0);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 

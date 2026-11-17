@@ -27,6 +27,9 @@ Context creation failures fail the tests rather than silently skipping them.
   shader programs compile/link using the production Shader class.
 - The production G-buffer creates complete attachments and resizes without GL
   errors.
+- The deferred pipeline, with no lights, shows a material's emissive color,
+  multiplies an emissive texture by that color, and leaves surfaces without
+  one black. The emissive texture binds to the last texture unit.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays

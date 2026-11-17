@@ -11,6 +11,8 @@ in vec3 Tangent;
 uniform sampler2D colTexSampler;
 uniform sampler2D normTexSampler;
 uniform sampler2D specTexSampler;
+uniform sampler2D emissiveTexSampler;
+uniform vec3 emissiveColor;
 
 
 /*layout(location = 0) out	vec4 oWorldPos;
@@ -22,6 +24,7 @@ layout(location = 1) out vec4 fColor1;//diffuse
 layout(location = 2) out vec4 fColor2;//normal
 layout(location = 3) out vec4 fColor3;//texCoord
 layout(location = 4) out vec4 fColor4;//specular
+layout(location = 5) out vec4 fColor5;//emissive
 
 vec3 CalcBumpedNormal()
 {
@@ -64,4 +67,5 @@ void main()
 	fColor2 = vec4(Normal,1.0);
 	fColor3 = vec4(UV,0.0,1.0);
 	fColor4 = vec4(texture(specTexSampler, UV).xyz, 1.0);
+	fColor5 = vec4(texture(emissiveTexSampler, UV).rgb * emissiveColor, 1.0);
 }
