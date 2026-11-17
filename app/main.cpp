@@ -603,6 +603,12 @@ int Application::InitScene(GLFWwindow& window) {
             .toneMapShader = gsl_lite::not_null{CreateShader(
                 {{"shaders/tonemap.vsh", ShaderType::Vertex},
                  {"shaders/tonemap.fsh", ShaderType::Fragment}})},
+            .bloomDownsampleShader = gsl_lite::not_null{CreateShader(
+                {{"shaders/fullscreen.vsh", ShaderType::Vertex},
+                 {"shaders/bloom_downsample.fsh", ShaderType::Fragment}})},
+            .bloomUpsampleShader = gsl_lite::not_null{CreateShader(
+                {{"shaders/fullscreen.vsh", ShaderType::Vertex},
+                 {"shaders/bloom_upsample.fsh", ShaderType::Fragment}})},
             .stencilMaterial = gsl_lite::not_null{DSStencilPassMaterial},
             .pointLightMaterial = gsl_lite::not_null{DSPointLightMaterial},
             .spotLightMaterial = gsl_lite::not_null{DSSpotLightMaterial},
@@ -658,6 +664,16 @@ void Application::DrawToneMappingControls() {
     if (changed) {
         toneMapping.op = static_cast<ToneMapOperator>(selected);
         deferredPipeline->SetToneMapping(toneMapping);
+    }
+    BloomSettings bloom = deferredPipeline->GetBloom();
+    bool bloomChanged =
+        ImGui::SliderFloat("Bloom", &bloom.strength, 0.0F, 1.0F, "%.3f");
+    bloomChanged |= ImGui::SliderFloat("Bloom threshold", &bloom.threshold,
+                                       0.0F, 4.0F, "%.2f");
+    bloomChanged |=
+        ImGui::SliderFloat("Bloom radius", &bloom.radius, 0.5F, 3.0F, "%.2f");
+    if (bloomChanged) {
+        deferredPipeline->SetBloom(bloom);
     }
 }
 

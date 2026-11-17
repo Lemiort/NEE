@@ -4,6 +4,7 @@
 #include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 
+#include "BloomPass.hpp"
 #include "GBuffer.hpp"
 #include "GBufferDebugPass.hpp"
 #include "Material.hpp"
@@ -34,6 +35,10 @@ struct DeferredPipelineResources {
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader;
     // shaders/tonemap.vsh and shaders/tonemap.fsh.
     gsl_lite::not_null<std::shared_ptr<Shader>> toneMapShader;
+    // shaders/fullscreen.vsh with shaders/bloom_downsample.fsh, and with
+    // shaders/bloom_upsample.fsh.
+    gsl_lite::not_null<std::shared_ptr<Shader>> bloomDownsampleShader;
+    gsl_lite::not_null<std::shared_ptr<Shader>> bloomUpsampleShader;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial;
@@ -50,6 +55,11 @@ public:
     }
     [[nodiscard]] const ToneMapping& GetToneMapping() const noexcept {
         return toneMapping_;
+    }
+    // Bloom is off (strength 0) until set.
+    void SetBloom(const BloomSettings& bloom) { bloom_ = bloom; }
+    [[nodiscard]] const BloomSettings& GetBloom() const noexcept {
+        return bloom_;
     }
 
 private:
@@ -73,6 +83,8 @@ private:
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader_;
     gsl_lite::not_null<std::shared_ptr<Shader>> toneMapShader_;
     ToneMapping toneMapping_;
+    BloomSettings bloom_;
+    BloomPass bloomPass_;
     MeshShaderBindings geometryBindings_;
     MeshShaderBindings stencilBindings_;
     MeshShaderBindings pointLightBindings_;

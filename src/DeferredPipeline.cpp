@@ -59,6 +59,8 @@ DeferredPipeline::DeferredPipeline(DeferredPipelineResources resources)
       spotLightShader_(std::move(resources.spotLightShader)),
       directionalLightShader_(std::move(resources.directionalLightShader)),
       toneMapShader_(std::move(resources.toneMapShader)),
+      bloomPass_(std::move(resources.bloomDownsampleShader),
+                 std::move(resources.bloomUpsampleShader)),
       geometryBindings_(MeshShaderBindings::FromShader(*geometryShader_)),
       stencilBindings_(MeshShaderBindings::FromShader(*stencilShader_)),
       pointLightBindings_(MeshShaderBindings::FromShader(*pointLightShader_)),
@@ -252,6 +254,11 @@ void DeferredPipeline::DirectionalLightPass(const DirectionalLight& light,
 }
 
 void DeferredPipeline::FinalPass(const Camera& camera) {
+    const bool bloom = bloom_.strength > 0.0F;
+    const GLuint bloomTexture =
+        bloom ? bloomPass_.Render(gBuffer_->GetLightTexture(),
+                                  camera.GetWidth(), camera.GetHeight(), bloom_)
+              : 0;
     // Tone-map the light into the window's framebuffer, pixel for pixel.
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, camera.GetWidth(), camera.GetHeight());
@@ -261,6 +268,10 @@ void DeferredPipeline::FinalPass(const Camera& camera) {
     toneMapShader_->Use();
     glBindTextureUnit(0, gBuffer_->GetLightTexture());
     glUniform1i(toneMapShader_->GetUniformLocation("hdrSampler"), 0);
+    glBindTextureUnit(1, bloomTexture);
+    glUniform1i(toneMapShader_->GetUniformLocation("bloomSampler"), 1);
+    glUniform1f(toneMapShader_->GetUniformLocation("bloomStrength"),
+                bloomTexture != 0 ? bloom_.strength : 0.0F);
     glUniform1f(toneMapShader_->GetUniformLocation("exposure"),
                 toneMapping_.exposure);
     glUniform1i(toneMapShader_->GetUniformLocation("toneMapOperator"),
