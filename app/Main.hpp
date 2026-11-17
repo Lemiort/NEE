@@ -78,6 +78,7 @@ private:
     void InterfacePass();
     void DrawDebugUi();
     void DrawAnimationControls();
+    void DrawToneMappingControls();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;

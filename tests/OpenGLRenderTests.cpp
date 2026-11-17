@@ -221,7 +221,8 @@ TEST_F(OpenGLRender, ProductionShaderProgramsLinkWithoutGlErrors) {
         std::pair{"DSDirectionalLight.vsh", "DSDirectionalLight.fsh"},
         std::pair{"text2d.vsh", "text2d.fsh"},
         std::pair{"lightVS.vsh", "lightFS.fsh"},
-        std::pair{"skybox.vsh", "skybox.fsh"}};
+        std::pair{"skybox.vsh", "skybox.fsh"},
+        std::pair{"tonemap.vsh", "tonemap.fsh"}};
     for (const auto& [vertex, fragment] : pairs) {
         SCOPED_TRACE(vertex);
         const auto shader = LoadShader(std::string("shaders/") + vertex,
@@ -597,6 +598,9 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_INTERNAL_FORMAT,
                              &internalFormat);
     EXPECT_EQ(internalFormat, GL_DEPTH32F_STENCIL8);
+    glGetTextureLevelParameteriv(buffer.GetLightTexture(), 0,
+                                 GL_TEXTURE_INTERNAL_FORMAT, &internalFormat);
+    EXPECT_EQ(internalFormat, GL_RGBA16F);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
     ASSERT_TRUE(buffer.Resize(64, 64));
     buffer.BindForWriting();
@@ -612,10 +616,14 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
-TEST_F(OpenGLRender, DeferredPipelineAddsEmissiveLightWithoutLights) {
-    // With no lights, a surface shows only the light it gives off itself:
-    // the emissive cube keeps its color, the textured one shows its emissive
-    // texture times its color, and the plain one stays black.
+// The production deferred and forward pipelines at the test window's size.
+struct Pipelines {
+    std::shared_ptr<Shader> meshShader;
+    std::unique_ptr<DeferredPipeline> deferred;
+    std::unique_ptr<ForwardPipeline> forward;
+};
+
+Pipelines MakePipelines() {
     const auto shader = [](const char* vertex, const char* fragment) {
         return LoadShader(std::string("shaders/") + vertex,
                           fragment[0] == '\0'
@@ -626,25 +634,60 @@ TEST_F(OpenGLRender, DeferredPipelineAddsEmissiveLightWithoutLights) {
         return gsl_lite::not_null{
             std::make_shared<Material>(gsl_lite::not_null{program})};
     };
-    const auto meshShader = shader("vertexShader.vsh", "fragmentShader.fsh");
-    const auto geometry = shader("DSGeometryPass.vsh", "DSGeometryPass.fsh");
+    Pipelines pipelines;
+    pipelines.meshShader = shader("vertexShader.vsh", "fragmentShader.fsh");
     const auto stencil = shader("DSStencilPass.vsh", "");
     const auto point = shader("DSPointLight.vsh", "DSPointLight.fsh");
     const auto spot = shader("DSSpotLight.vsh", "DSSpotLight.fsh");
     const auto directional =
         shader("DSDirectionalLight.vsh", "DSDirectionalLight.fsh");
-    DeferredPipeline pipeline(DeferredPipelineResources{
-        .gBuffer = gsl_lite::not_null{std::make_shared<GBuffer>(kSize, kSize)},
-        .geometryShader = gsl_lite::not_null{geometry},
-        .stencilShader = gsl_lite::not_null{stencil},
-        .pointLightShader = gsl_lite::not_null{point},
-        .spotLightShader = gsl_lite::not_null{spot},
-        .directionalLightShader = gsl_lite::not_null{directional},
-        .stencilMaterial = material(stencil),
-        .pointLightMaterial = material(point),
-        .spotLightMaterial = material(spot),
-        .directionalLightMaterial = material(directional)});
-    ForwardPipeline forward(gsl_lite::not_null{meshShader});
+    pipelines.deferred =
+        std::make_unique<DeferredPipeline>(DeferredPipelineResources{
+            .gBuffer =
+                gsl_lite::not_null{std::make_shared<GBuffer>(kSize, kSize)},
+            .geometryShader = gsl_lite::not_null{shader("DSGeometryPass.vsh",
+                                                        "DSGeometryPass.fsh")},
+            .stencilShader = gsl_lite::not_null{stencil},
+            .pointLightShader = gsl_lite::not_null{point},
+            .spotLightShader = gsl_lite::not_null{spot},
+            .directionalLightShader = gsl_lite::not_null{directional},
+            .toneMapShader =
+                gsl_lite::not_null{shader("tonemap.vsh", "tonemap.fsh")},
+            .stencilMaterial = material(stencil),
+            .pointLightMaterial = material(point),
+            .spotLightMaterial = material(spot),
+            .directionalLightMaterial = material(directional)});
+    pipelines.forward = std::make_unique<ForwardPipeline>(
+        gsl_lite::not_null{pipelines.meshShader});
+    return pipelines;
+}
+
+// Renders one frame without lights and reads one window pixel back.
+std::array<std::uint8_t, 4> RenderAndRead(Pipelines& pipelines,
+                                          const RenderQueue& queue, int x,
+                                          int y) {
+    const Camera camera(kSize, kSize, 60.0F, 0.1F, 100.0F);
+    const SceneView view{.camera = camera, .queue = queue};
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.0F, 0.0F, 0.0F, 1.0F);
+    glClear(GL_COLOR_BUFFER_BIT);
+    pipelines.deferred->Render(view, *pipelines.forward);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+    glReadBuffer(GL_BACK);
+    std::array<std::uint8_t, 4> rgba{};
+    glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, rgba.data());
+    return rgba;
+}
+
+TEST_F(OpenGLRender, DeferredPipelineAddsEmissiveLightWithoutLights) {
+    // With no lights, a surface shows only the light it gives off itself:
+    // the emissive cube keeps its color, the textured one shows its emissive
+    // texture times its color, and the plain one stays black.
+    Pipelines pipelines = MakePipelines();
+    const auto& meshShader = pipelines.meshShader;
+    DeferredPipeline& pipeline = *pipelines.deferred;
+    ForwardPipeline& forward = *pipelines.forward;
 
     const auto glowing =
         std::make_shared<Material>(gsl_lite::not_null{meshShader});
@@ -706,6 +749,61 @@ TEST_F(OpenGLRender, DeferredPipelineAddsEmissiveLightWithoutLights) {
     EXPECT_EQ(background[1], 0);
     EXPECT_EQ(background[2], 0);
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
+}
+
+TEST_F(OpenGLRender, LightAboveOneSurvivesUntilToneMapping) {
+    // An emissive color of 2 is stored as 2. Halving the exposure brings it
+    // back to full brightness instead of the half a clamped target gives.
+    Pipelines pipelines = MakePipelines();
+    const auto bright =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    bright->SetEmissiveColor({2.0F, 1.0F, 0.0F});
+    Mesh mesh(gsl_lite::not_null{bright},
+              Asset("models/cube2x2x2.obj").string());
+    RenderQueue queue;
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {0.0F, 0.0F, -3.0F}, .scale = glm::vec3(0.35F)},
+        bright);
+
+    EXPECT_EQ(pipelines.deferred->GetToneMapping().op, ToneMapOperator::None);
+    EXPECT_EQ(pipelines.deferred->GetToneMapping().exposure, 1.0F);
+    const auto clamped = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_EQ(clamped[0], 255);
+    EXPECT_EQ(clamped[1], 255);
+    EXPECT_EQ(clamped[2], 0);
+
+    pipelines.deferred->SetToneMapping(
+        {.op = ToneMapOperator::None, .exposure = 0.5F});
+    const auto exposed = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_EQ(exposed[0], 255);
+    EXPECT_NEAR(exposed[1], 128, 1);
+    EXPECT_EQ(exposed[2], 0);
+}
+
+TEST_F(OpenGLRender, ToneMappingOperatorsCompressLight) {
+    // Light of 1: Reinhard gives 1 / (1 + 1), the ACES fit about 0.80.
+    Pipelines pipelines = MakePipelines();
+    const auto white =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    white->SetEmissiveColor(glm::vec3(1.0F));
+    Mesh mesh(gsl_lite::not_null{white},
+              Asset("models/cube2x2x2.obj").string());
+    RenderQueue queue;
+    queue.SubmitOpaqueMesh(
+        mesh,
+        Transform{.position = {0.0F, 0.0F, -3.0F}, .scale = glm::vec3(0.35F)},
+        white);
+
+    pipelines.deferred->SetToneMapping({.op = ToneMapOperator::Reinhard});
+    const auto reinhard = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_NEAR(reinhard[0], 128, 1);
+    pipelines.deferred->SetToneMapping({.op = ToneMapOperator::Aces});
+    const auto aces = RenderAndRead(pipelines, queue, kSize / 2, kSize / 2);
+    EXPECT_NEAR(aces[0], 205, 1);
+    // The background stays black whatever the operator.
+    const auto background = RenderAndRead(pipelines, queue, 2, 2);
+    EXPECT_EQ(background[0], 0);
 }
 
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {

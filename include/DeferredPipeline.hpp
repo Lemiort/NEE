@@ -15,6 +15,16 @@
 class Light;
 class ForwardPipeline;
 
+// How the HDR light of a frame becomes screen colors: multiplied by
+// `exposure`, then compressed by the operator. None only clamps to 1, which
+// with an exposure of 1 is how frames looked before HDR.
+enum class ToneMapOperator { None, Reinhard, Aces };
+
+struct ToneMapping {
+    ToneMapOperator op{ToneMapOperator::None};
+    float exposure{1.0F};
+};
+
 struct DeferredPipelineResources {
     gsl_lite::not_null<std::shared_ptr<GBuffer>> gBuffer;
     gsl_lite::not_null<std::shared_ptr<Shader>> geometryShader;
@@ -22,6 +32,8 @@ struct DeferredPipelineResources {
     gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader;
     gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader;
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader;
+    // shaders/tonemap.vsh and shaders/tonemap.fsh.
+    gsl_lite::not_null<std::shared_ptr<Shader>> toneMapShader;
     gsl_lite::not_null<std::shared_ptr<Material>> stencilMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> pointLightMaterial;
     gsl_lite::not_null<std::shared_ptr<Material>> spotLightMaterial;
@@ -33,6 +45,12 @@ public:
     explicit DeferredPipeline(DeferredPipelineResources resources);
     void Render(const SceneView& scene, ForwardPipeline& transparentPipeline);
     void RenderDebug(const SceneView& scene, GBufferDebugView view);
+    void SetToneMapping(const ToneMapping& toneMapping) {
+        toneMapping_ = toneMapping;
+    }
+    [[nodiscard]] const ToneMapping& GetToneMapping() const noexcept {
+        return toneMapping_;
+    }
 
 private:
     void GeometryPass(const SceneView& scene);
@@ -53,6 +71,8 @@ private:
     gsl_lite::not_null<std::shared_ptr<Shader>> pointLightShader_;
     gsl_lite::not_null<std::shared_ptr<Shader>> spotLightShader_;
     gsl_lite::not_null<std::shared_ptr<Shader>> directionalLightShader_;
+    gsl_lite::not_null<std::shared_ptr<Shader>> toneMapShader_;
+    ToneMapping toneMapping_;
     MeshShaderBindings geometryBindings_;
     MeshShaderBindings stencilBindings_;
     MeshShaderBindings pointLightBindings_;
