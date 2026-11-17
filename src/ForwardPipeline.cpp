@@ -64,15 +64,34 @@ void ForwardPipeline::RenderTransparent(const SceneView& scene) {
     RenderTransparentObjects(scene);
 }
 
+namespace {
+// The forward shader lights with one light of each kind. It takes the first
+// one that gives light: a black light, or one with no direction, lights
+// nothing, and normalizing a zero direction in the shader gives NaN.
+bool HasDirection(const glm::vec3& direction) {
+    return glm::dot(direction, direction) > 1e-12F;
+}
+
+template <typename Light, typename Lights, typename Predicate>
+const Light* FirstLit(const Lights& lights, Predicate lit) {
+    const auto found = std::ranges::find_if(lights, lit);
+    return found == lights.end() ? nullptr : &*found;
+}
+}  // namespace
+
 void ForwardPipeline::PrepareLighting(const SceneView& scene) {
     meshShader_->Use();
     const glm::mat4 viewProjection = scene.camera.GetViewProjectionMatrix();
     glUniformMatrix4fv(cameraViewProjectionUniform_, 1, GL_FALSE,
                        glm::value_ptr(viewProjection));
 
-    if (!scene.directionalLights.empty()) {
-        const DirectionalLight& directionalLight =
-            scene.directionalLights.front();
+    const auto* directional = FirstLit<DirectionalLight>(
+        scene.directionalLights, [](const DirectionalLight& light) {
+            return light.GetColor() != glm::vec3(0.0F) &&
+                   HasDirection(light.GetDirection());
+        });
+    if (directional != nullptr) {
+        const DirectionalLight& directionalLight = *directional;
         SetLightColor(directionalLightColorUniform_,
                       directionalLight.GetColor());
         const glm::vec3 direction = directionalLight.GetDirection();
@@ -83,19 +102,31 @@ void ForwardPipeline::PrepareLighting(const SceneView& scene) {
         SetLightColor(directionalLightColorUniform_, noLight);
     }
 
-    if (!scene.pointLights.empty()) {
-        const PointLight& pointLight = scene.pointLights.front();
+    const auto* point =
+        FirstLit<PointLight>(scene.pointLights, [](const PointLight& light) {
+            return light.GetColor() != glm::vec3(0.0F) &&
+                   light.GetPower() > 0.0F;
+        });
+    if (point != nullptr) {
+        const PointLight& pointLight = *point;
         SetLightColor(pointLightColorUniform_, pointLight.GetColor());
         const glm::vec3 pointPosition = pointLight.GetPosition();
         glUniform3f(pointLightPositionUniform_, pointPosition.x,
                     pointPosition.y, pointPosition.z);
         glUniform1f(pointLightIntensityUniform_, pointLight.GetPower());
     } else {
+        constexpr glm::vec3 noLight{0.0F};
+        SetLightColor(pointLightColorUniform_, noLight);
         glUniform1f(pointLightIntensityUniform_, 0.0F);
     }
 
-    if (!scene.spotLights.empty()) {
-        const SpotLight& spotLight = scene.spotLights.front();
+    const auto* spot =
+        FirstLit<SpotLight>(scene.spotLights, [](const SpotLight& light) {
+            return light.GetColor() != glm::vec3(0.0F) &&
+                   HasDirection(light.GetDirection());
+        });
+    if (spot != nullptr) {
+        const SpotLight& spotLight = *spot;
         const glm::vec3 spotDirection = spotLight.GetDirection();
         SetLightColor(spotLightColorUniform_, spotLight.GetColor());
         glUniform3f(spotLightDirectionUniform_, spotDirection.x,

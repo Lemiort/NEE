@@ -19,6 +19,10 @@ vec3 Aces(vec3 x)
 void main()
 {
     vec3 color = texelFetch(hdrSampler, ivec2(gl_FragCoord.xy), 0).rgb;
+    // A NaN or infinite pixel shows black rather than whatever the clamp
+    // makes of it.
+    if (any(isnan(color)) || any(isinf(color)))
+        color = vec3(0.0);
     if (bloomStrength > 0.0) {
         vec2 uv = gl_FragCoord.xy / vec2(textureSize(hdrSampler, 0));
         color += texture(bloomSampler, uv).rgb * bloomStrength;
