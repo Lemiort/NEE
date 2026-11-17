@@ -455,7 +455,11 @@ TEST_F(OpenGLRender, InstancedAndIndividualTransformsProduceMatchingImages) {
         const Image individual = target.Read();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         MeshInstanceRenderer renderer;
-        renderer.Render(queue.GetOpaqueMeshes(), bindings);
+        const RenderStatistics drawn =
+            renderer.Render(queue.GetOpaqueMeshes(), bindings,
+                            Frustum::FromViewProjection(projection));
+        EXPECT_EQ(drawn.meshesDrawn, 2U);
+        EXPECT_EQ(drawn.drawCalls, 1U);
         const Image instanced = target.Read();
         EXPECT_EQ(glGetError(), GL_NO_ERROR);
         std::size_t coveredLeft = 0, coveredRight = 0;
@@ -581,7 +585,7 @@ TEST_F(OpenGLRender, PassShaderPreservesPerInstanceSurfaceMaterials) {
     MeshInstanceRenderer renderer;
     renderer.Render(queue.GetOpaqueMeshes(),
                     MeshShaderBindings::FromShader(*passShader),
-                    passShader.get());
+                    Frustum::FromViewProjection(projection), passShader.get());
 
     const Image image = target.Read();
     const auto pixel = [&image](int x, int y, int channel) {

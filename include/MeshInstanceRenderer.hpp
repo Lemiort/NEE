@@ -19,19 +19,19 @@ public:
     MeshInstanceRenderer(const MeshInstanceRenderer&) = delete;
     MeshInstanceRenderer& operator=(const MeshInstanceRenderer&) = delete;
 
-    // A pass shader overrides shader selection while each command retains its
-    // surface material and textures. With a frustum, commands whose mesh
-    // bounds lie outside it are skipped. Counts go to `statistics`.
-    void Render(std::span<const MeshRenderCommand> commands,
-                const MeshShaderBindings& bindings,
-                Shader* passShader = nullptr, const Frustum* frustum = nullptr,
-                RenderStatistics* statistics = nullptr);
-    // Draws the batches inside the frustum, or all of them without one.
-    static void RenderBatches(
+    // Draws the commands whose mesh bounds lie inside `frustum` and returns
+    // what it drew and skipped. A pass shader overrides shader selection
+    // while each command retains its surface material and textures.
+    RenderStatistics Render(std::span<const MeshRenderCommand> commands,
+                            const MeshShaderBindings& bindings,
+                            const Frustum& frustum,
+                            Shader* passShader = nullptr);
+    // Draws the batches inside `frustum` and returns what it drew and
+    // skipped.
+    static RenderStatistics RenderBatches(
         std::span<const std::reference_wrapper<const MeshBatch>> batches,
-        const MeshShaderBindings& bindings, Shader* passShader = nullptr,
-        const Frustum* frustum = nullptr,
-        RenderStatistics* statistics = nullptr);
+        const MeshShaderBindings& bindings, const Frustum& frustum,
+        Shader* passShader = nullptr);
 
 private:
     struct InstanceData {

@@ -9,18 +9,17 @@ MeshInstanceRenderer::~MeshInstanceRenderer() {
     if (buffer_ != 0) glDeleteBuffers(1, &buffer_);
 }
 
-void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
-                                  const MeshShaderBindings& bindings,
-                                  Shader* passShader, const Frustum* frustum,
-                                  RenderStatistics* statistics) {
+RenderStatistics MeshInstanceRenderer::Render(
+    std::span<const MeshRenderCommand> commands,
+    const MeshShaderBindings& bindings, const Frustum& frustum,
+    Shader* passShader) {
     static_assert(sizeof(InstanceData) == 2 * sizeof(glm::mat4));
     RenderStatistics counts;
     entries_.clear();
     for (const auto& command : commands) {
         if (command.material == nullptr) continue;
         const glm::mat4 world = command.transform.ModelMatrix();
-        if (frustum != nullptr &&
-            !frustum->Intersects(
+        if (!frustum.Intersects(
                 command.mesh.get().GetBounds().Transformed(world))) {
             ++counts.meshesCulled;
             continue;
@@ -83,21 +82,17 @@ void MeshInstanceRenderer::Render(std::span<const MeshRenderCommand> commands,
         }
         begin = end;
     }
-    if (statistics != nullptr) {
-        statistics->meshesDrawn += counts.meshesDrawn;
-        statistics->meshesCulled += counts.meshesCulled;
-        statistics->drawCalls += counts.drawCalls;
-    }
+    return counts;
 }
 
-void MeshInstanceRenderer::RenderBatches(
+RenderStatistics MeshInstanceRenderer::RenderBatches(
     std::span<const std::reference_wrapper<const MeshBatch>> batches,
-    const MeshShaderBindings& bindings, Shader* passShader,
-    const Frustum* frustum, RenderStatistics* statistics) {
+    const MeshShaderBindings& bindings, const Frustum& frustum,
+    Shader* passShader) {
     RenderStatistics counts;
     for (const MeshBatch& batch : batches) {
         if (batch.GetCount() == 0) continue;
-        if (frustum != nullptr && !frustum->Intersects(batch.GetBounds())) {
+        if (!frustum.Intersects(batch.GetBounds())) {
             ++counts.batchesCulled;
             continue;
         }
@@ -106,10 +101,5 @@ void MeshInstanceRenderer::RenderBatches(
         counts.batchInstancesDrawn += batch.GetCount();
         ++counts.drawCalls;
     }
-    if (statistics != nullptr) {
-        statistics->batchesDrawn += counts.batchesDrawn;
-        statistics->batchesCulled += counts.batchesCulled;
-        statistics->batchInstancesDrawn += counts.batchInstancesDrawn;
-        statistics->drawCalls += counts.drawCalls;
-    }
+    return counts;
 }
