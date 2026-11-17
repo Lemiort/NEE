@@ -161,9 +161,15 @@ PRIVATE
     spdlog::spdlog
 )
 
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/config DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/fonts DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/models DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/screenshots DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/shaders DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
-file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/textures DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+# Runtime assets are copied when CMake runs. Editing one, such as a shader,
+# re-runs CMake so the build tree never runs a stale copy.
+foreach(dir config fonts models screenshots shaders textures)
+    if(NOT dir STREQUAL "screenshots")
+        file(GLOB_RECURSE asset_files CONFIGURE_DEPENDS
+            ${CMAKE_CURRENT_SOURCE_DIR}/${dir}/*)
+        set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
+            ${asset_files})
+    endif()
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/${dir}
+        DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+endforeach()
