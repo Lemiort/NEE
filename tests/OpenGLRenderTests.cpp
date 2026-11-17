@@ -1144,7 +1144,7 @@ TEST_F(OpenGLRender, MeshBatchDrawsLikeTheSameInstancesOneByOne) {
                   .rotationDegrees = {-10.0F, -20.0F, 15.0F},
                   .scale = {0.4F, 0.3F, 0.45F}},
         Transform{.position = {0.0F, -0.6F, -3.5F}, .scale = glm::vec3(0.25F)}};
-    const MeshBatch batch(mesh, material, transforms);
+    const MeshBatch batch(mesh, gsl_lite::not_null{material}, transforms);
     EXPECT_EQ(batch.GetCount(), transforms.size());
     EXPECT_FALSE(batch.GetBounds().IsEmpty());
 
@@ -1186,8 +1186,8 @@ TEST_F(OpenGLRender, DeferredPipelineSkipsWhatTheCameraCannotSee) {
     const std::array behind{
         Transform{.position = {0.0F, 0.0F, 3.0F}, .scale = glm::vec3(0.3F)},
         Transform{.position = {1.0F, 0.0F, 4.0F}, .scale = glm::vec3(0.3F)}};
-    const MeshBatch visible(mesh, material, ahead);
-    const MeshBatch hidden(mesh, material, behind);
+    const MeshBatch visible(mesh, gsl_lite::not_null{material}, ahead);
+    const MeshBatch hidden(mesh, gsl_lite::not_null{material}, behind);
     RenderQueue queue;
     queue.SubmitOpaqueBatch(visible);
     queue.SubmitOpaqueBatch(hidden);

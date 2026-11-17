@@ -5,6 +5,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <gsl-lite/gsl-lite.hpp>
 #include <memory>
 #include <span>
 
@@ -20,7 +21,8 @@
 // batch. Must be created and destroyed while the OpenGL context is current.
 class MeshBatch {
 public:
-    MeshBatch(const Mesh& mesh, std::shared_ptr<const Material> material,
+    MeshBatch(const Mesh& mesh,
+              gsl_lite::not_null<std::shared_ptr<const Material>> material,
               std::span<const Transform> transforms);
     ~MeshBatch();
     MeshBatch(const MeshBatch&) = delete;
@@ -43,7 +45,7 @@ public:
 
 private:
     std::reference_wrapper<const Mesh> mesh_;
-    std::shared_ptr<const Material> material_;
+    gsl_lite::not_null<std::shared_ptr<const Material>> material_;
     GLuint buffer_{};
     std::size_t count_{};
     Bounds bounds_;

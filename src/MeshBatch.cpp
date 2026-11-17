@@ -17,12 +17,11 @@ struct InstanceData {
 };
 }  // namespace
 
-MeshBatch::MeshBatch(const Mesh& mesh, std::shared_ptr<const Material> material,
-                     std::span<const Transform> transforms)
+MeshBatch::MeshBatch(
+    const Mesh& mesh,
+    gsl_lite::not_null<std::shared_ptr<const Material>> material,
+    std::span<const Transform> transforms)
     : mesh_(mesh), material_(std::move(material)), count_(transforms.size()) {
-    if (material_ == nullptr) {
-        throw std::invalid_argument("A mesh batch needs a material");
-    }
     if (count_ == 0) {
         return;
     }
@@ -58,7 +57,7 @@ MeshBatch::~MeshBatch() {
 
 MeshBatch::MeshBatch(MeshBatch&& other) noexcept
     : mesh_(other.mesh_),
-      material_(std::move(other.material_)),
+      material_(other.material_),
       buffer_(std::exchange(other.buffer_, 0)),
       count_(std::exchange(other.count_, 0)),
       bounds_(std::exchange(other.bounds_, Bounds{})) {}
@@ -69,7 +68,7 @@ MeshBatch& MeshBatch::operator=(MeshBatch&& other) noexcept {
             glDeleteBuffers(1, &buffer_);
         }
         mesh_ = other.mesh_;
-        material_ = std::move(other.material_);
+        material_ = other.material_;
         buffer_ = std::exchange(other.buffer_, 0);
         count_ = std::exchange(other.count_, 0);
         bounds_ = std::exchange(other.bounds_, Bounds{});
