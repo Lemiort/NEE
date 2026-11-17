@@ -11,6 +11,7 @@
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/vector_relational.hpp>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -24,6 +25,7 @@
 #include "ForwardPipeline.hpp"
 #include "GBuffer.hpp"
 #include "ImGuiOverlay.hpp"
+#include "Light.hpp"
 #include "Material.hpp"
 #include "Mesh.hpp"
 #include "MeshInstanceRenderer.hpp"
@@ -627,6 +629,7 @@ TEST_F(OpenGLRender, GBufferCreationAndResizeAreComplete) {
 // The production deferred and forward pipelines at the test window's size.
 struct Pipelines {
     std::shared_ptr<Shader> meshShader;
+    std::shared_ptr<GBuffer> gBuffer;
     std::unique_ptr<DeferredPipeline> deferred;
     std::unique_ptr<ForwardPipeline> forward;
 };
@@ -644,6 +647,7 @@ Pipelines MakePipelines() {
     };
     Pipelines pipelines;
     pipelines.meshShader = shader("vertexShader.vsh", "fragmentShader.fsh");
+    pipelines.gBuffer = std::make_shared<GBuffer>(kSize, kSize);
     const auto stencil = shader("DSStencilPass.vsh", "");
     const auto point = shader("DSPointLight.vsh", "DSPointLight.fsh");
     const auto spot = shader("DSSpotLight.vsh", "DSSpotLight.fsh");
@@ -651,8 +655,7 @@ Pipelines MakePipelines() {
         shader("DSDirectionalLight.vsh", "DSDirectionalLight.fsh");
     pipelines.deferred =
         std::make_unique<DeferredPipeline>(DeferredPipelineResources{
-            .gBuffer =
-                gsl_lite::not_null{std::make_shared<GBuffer>(kSize, kSize)},
+            .gBuffer = gsl_lite::not_null{pipelines.gBuffer},
             .geometryShader = gsl_lite::not_null{shader("DSGeometryPass.vsh",
                                                         "DSGeometryPass.fsh")},
             .stencilShader = gsl_lite::not_null{stencil},
@@ -1022,6 +1025,92 @@ TEST_F(OpenGLRender, DeferredPipelineDrawsQueuedParticles) {
     EXPECT_EQ(RenderAndRead(pipelines, queue, 2, 2)[1], 0);
     queue.Clear();
     EXPECT_TRUE(queue.GetParticles().empty());
+}
+
+// Reads an RGBA16F texture back as floats.
+std::vector<float> ReadFloatTexture(GLuint texture, int width, int height) {
+    std::vector<float> texels(static_cast<std::size_t>(width * height * 4));
+    glGetTextureImage(texture, 0, GL_RGBA, GL_FLOAT,
+                      static_cast<GLsizei>(texels.size() * sizeof(float)),
+                      texels.data());
+    return texels;
+}
+
+std::size_t CountNonFinite(const std::vector<float>& values) {
+    return static_cast<std::size_t>(std::ranges::count_if(
+        values, [](float value) { return !std::isfinite(value); }));
+}
+
+TEST_F(OpenGLRender, SwitchedOffLightsLeaveTransparentMeshesFinite) {
+    // A spot light switched off by pointing it at itself has no direction.
+    // The forward pass must pass over it to the next one that gives light,
+    // not normalize the zero direction into NaN.
+    Pipelines pipelines = MakePipelines();
+    const auto glass =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    Mesh mesh(gsl_lite::not_null{glass},
+              Asset("models/cube2x2x2.obj").string());
+    RenderQueue queue;
+    queue.SubmitTransparentMesh(
+        mesh,
+        Transform{.position = {0.0F, 0.0F, -3.0F}, .scale = glm::vec3(0.5F)},
+        glass, 0.5F);
+    std::array<SpotLight, 2> spots{SpotLight(0.0F, 2.0F, -3.0F, 0.0F, 0.0F,
+                                             0.0F, 0.0F, 2.0F, -3.0F, 30.0F),
+                                   SpotLight(0.0F, 0.0F, -3.0F, 1.0F, 1.0F,
+                                             1.0F, 0.0F, 2.0F, -3.0F, 30.0F)};
+    std::array<DirectionalLight, 2> directionals{
+        DirectionalLight(0.0F, 0.0F, 0.0F, 1.0F, 1.0F, 1.0F),
+        DirectionalLight(0.0F, -1.0F, -1.0F, 0.0F, 0.0F, 0.0F)};
+    const Camera camera(kSize, kSize, 60.0F, 0.1F, 100.0F);
+    const SceneView view{.camera = camera,
+                         .directionalLights = directionals,
+                         .spotLights = spots,
+                         .queue = queue};
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    pipelines.deferred->Render(view, *pipelines.forward);
+    ASSERT_EQ(glGetError(), GL_NO_ERROR);
+    const auto light =
+        ReadFloatTexture(pipelines.gBuffer->GetLightTexture(), kSize, kSize);
+    EXPECT_EQ(CountNonFinite(light), 0U);
+}
+
+TEST_F(OpenGLRender, BloomIgnoresNonFiniteLight) {
+    // One NaN and one infinite texel must not spread over the bloom levels.
+    constexpr int kSide = 64;
+    std::vector<float> texels(static_cast<std::size_t>(kSide * kSide * 4),
+                              0.0F);
+    const auto set = [&texels](int x, int y, float value) {
+        for (int channel = 0; channel < 3; ++channel) {
+            texels[static_cast<std::size_t>((y * kSide + x) * 4 + channel)] =
+                value;
+        }
+    };
+    set(10, 10, std::numeric_limits<float>::quiet_NaN());
+    set(40, 40, std::numeric_limits<float>::infinity());
+    set(20, 50, 8.0F);  // finite light, which should still bloom
+    GLuint source = 0;
+    glCreateTextures(GL_TEXTURE_2D, 1, &source);
+    glTextureStorage2D(source, 1, GL_RGBA16F, kSide, kSide);
+    glTextureSubImage2D(source, 0, 0, 0, kSide, kSide, GL_RGBA, GL_FLOAT,
+                        texels.data());
+    glTextureParameteri(source, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTextureParameteri(source, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    const auto shader = [](const char* fragment) {
+        return gsl_lite::not_null{LoadShader(
+            "shaders/fullscreen.vsh", std::string("shaders/") + fragment)};
+    };
+    BloomPass bloom(shader("bloom_downsample.fsh"),
+                    shader("bloom_upsample.fsh"));
+    const GLuint result =
+        bloom.Render(source, kSide, kSide, {.strength = 1.0F});
+    ASSERT_NE(result, 0U);
+    const auto bloomed = ReadFloatTexture(result, kSide / 2, kSide / 2);
+    EXPECT_EQ(CountNonFinite(bloomed), 0U);
+    EXPECT_GT(*std::ranges::max_element(bloomed), 0.0F);
+    glDeleteTextures(1, &source);
+    EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {

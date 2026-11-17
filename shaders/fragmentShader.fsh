@@ -27,12 +27,20 @@ uniform sampler2D emissiveTexSampler;
 uniform vec3 emissiveColor;
 
 out vec4 fColor;
+
+// normalize() of a zero vector is NaN; a zero direction lights nothing.
+vec3 SafeNormalize(vec3 v)
+{
+	float len = length(v);
+	return len > 1e-6 ? v / len : vec3(0.0);
+}
+
 vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
 {
 	vec3 N=(Normal);
-	vec3 L=normalize(dir);
-	vec3 E=normalize(-fE);
-	vec3 H=normalize(E+L);
+	vec3 L=SafeNormalize(dir);
+	vec3 E=SafeNormalize(-fE);
+	vec3 H=SafeNormalize(E+L);
 	float diffuse_intensity=max(dot(N,L),0.0);
 	float spec_intensity=pow(max(dot(N,H),0.0),300);
 	vec4 result=color*(diffuse_intensity*texture(colTexSampler, UV)+spec_intensity*texture(specTexSampler, UV));
@@ -42,11 +50,13 @@ vec4 CalcBaseLight(vec3 dir,vec3 Normal, mat4 color)
 
 vec4 CalcSpotLight(vec3 dir,vec3 Normal, mat4 color)
 {
+	if(length(dir) <= 1e-6 || length(sR) <= 1e-6)
+		return vec4(0.0);
 	vec3 N=(Normal);
 	vec3 R=normalize(sR);
 	vec3 L=-R;
-	vec3 E=normalize(-fE);
-	vec3 H=normalize(E+L);
+	vec3 E=SafeNormalize(-fE);
+	vec3 H=SafeNormalize(E+L);
 	float diffuse_intensity=max(dot(N,L),0.0);
 	float spec_intensity=pow(max(dot(N,H),0.0),300);
 	float SpotFactor=dot(R,normalize(dir));
