@@ -79,6 +79,10 @@ Mesh::Mesh(gsl_lite::not_null<std::shared_ptr<Material>> material,
     }
 
     vertexCount_ = static_cast<int>(vertexCount);
+    for (const ModelVertex& vertex : modelData.vertices) {
+        bounds_.Grow(glm::vec3(vertex.position[0], vertex.position[1],
+                               vertex.position[2]));
+    }
     faceCount_ = static_cast<int>(indexCount / kTriangleIndexCount);
 
     static_assert(std::is_standard_layout_v<ModelVertex>);

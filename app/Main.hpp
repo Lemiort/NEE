@@ -80,6 +80,7 @@ private:
     void DrawDebugUi();
     void DrawAnimationControls();
     void DrawToneMappingControls();
+    void DrawRenderStatistics();
 
     int width = WINDOW_WIDTH;
     int height = WINDOW_HEIGHT;

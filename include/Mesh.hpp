@@ -10,6 +10,7 @@
 #include <memory>
 #include <string>
 
+#include "Bounds.hpp"
 #include "Camera.hpp"
 #include "Material.hpp"
 #include "MaterialObject.hpp"
@@ -49,6 +50,8 @@ public:
     Mesh& operator=(Mesh&&) noexcept = default;
     [[nodiscard]] int GetNumFaces() const;
     [[nodiscard]] int GetNumVerts() const;
+    // The box around the model's vertices, in model space.
+    [[nodiscard]] const Bounds& GetBounds() const noexcept { return bounds_; }
     void SetMaterial(std::shared_ptr<Material> material) override;
     void Render(const Camera& cam) override;
     void Draw(const Transform& transform, const Material& material,
@@ -60,6 +63,7 @@ private:
     // Attribute locations can differ for custom pass shaders. Cache each layout
     // once, including separate layouts for individual and instanced draws.
     mutable std::map<std::array<GLint, 6>, VertexArray> vertexArrays_;
+    Bounds bounds_;
     int faceCount_{};
     int vertexCount_{};
 };
