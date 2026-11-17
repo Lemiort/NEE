@@ -80,7 +80,8 @@ bool GBuffer::Resize(GLsizei windowWidth, GLsizei windowHeight) {
                               m_depthTexture, 0);
 
     glCreateTextures(GL_TEXTURE_2D, 1, &m_finalTexture);
-    glTextureStorage2D(m_finalTexture, 1, GL_RGBA8, windowWidth, windowHeight);
+    glTextureStorage2D(m_finalTexture, 1, GL_RGBA16F, windowWidth,
+                       windowHeight);
     glTextureParameteri(m_finalTexture, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTextureParameteri(m_finalTexture, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glNamedFramebufferTexture(
@@ -152,6 +153,8 @@ void GBuffer::CheckTextures() {
 GLuint GBuffer::GetTexture(unsigned num) { return m_textures.at(num); }
 
 GLuint GBuffer::GetDepthTexture() const { return m_depthTexture; }
+
+GLuint GBuffer::GetLightTexture() const { return m_finalTexture; }
 
 void GBuffer::StartFrame() {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, m_fbo);

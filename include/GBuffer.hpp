@@ -44,6 +44,8 @@ public:
     GLuint GetTexture(unsigned num);
 
     [[nodiscard]] GLuint GetDepthTexture() const;
+    // The light accumulation target, in half floats so light can pass 1.
+    [[nodiscard]] GLuint GetLightTexture() const;
 
 private:
     GLuint m_fbo{};

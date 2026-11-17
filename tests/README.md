@@ -30,6 +30,9 @@ Context creation failures fail the tests rather than silently skipping them.
 - The deferred pipeline, with no lights, shows a material's emissive color,
   multiplies an emissive texture by that color, and leaves surfaces without
   one black. The emissive texture binds to the last texture unit.
+- Light above 1 survives in the half-float light target until tone mapping:
+  halving the exposure of an emissive 2 gives full brightness. Reinhard and
+  ACES map light of 1 to 0.5 and about 0.8.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays
