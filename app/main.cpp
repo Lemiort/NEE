@@ -670,11 +670,28 @@ void Application::DrawDebugUi() {
         ImGui::EndCombo();
     }
     DrawToneMappingControls();
+    DrawRenderStatistics();
 
     if (simulation_ != nullptr) {
         DrawAnimationControls();
     }
     ImGui::End();
+}
+
+void Application::DrawRenderStatistics() {
+    // The opaque meshes and batches of the last frame, from the pipeline
+    // that drew it.
+    ImGui::SeparatorText("Rendering");
+    const RenderStatistics& statistics =
+        renderMode == RenderMode::ForwardRendering
+            ? forwardPipeline->GetStatistics()
+            : deferredPipeline->GetStatistics();
+    ImGui::Text("Meshes: %zu drawn, %zu culled", statistics.meshesDrawn,
+                statistics.meshesCulled);
+    ImGui::Text("Batches: %zu drawn (%zu instances), %zu culled",
+                statistics.batchesDrawn, statistics.batchInstancesDrawn,
+                statistics.batchesCulled);
+    ImGui::Text("Draw calls: %zu", statistics.drawCalls);
 }
 
 void Application::DrawToneMappingControls() {
