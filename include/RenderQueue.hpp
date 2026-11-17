@@ -13,6 +13,7 @@
 class Billboard;
 class Material;
 class Mesh;
+class ParticleSystem;
 
 enum class RenderLayer { Opaque, Transparent, Overlay };
 
@@ -31,6 +32,11 @@ struct BillboardRenderCommand {
     std::reference_wrapper<const Billboard> billboard;
     glm::vec3 position{0.0F};
     RenderLayer layer{RenderLayer::Transparent};
+};
+
+// Particles are drawn with the transparent layer, after its meshes.
+struct ParticleRenderCommand {
+    std::reference_wrapper<const ParticleSystem> particles;
 };
 
 struct TextRenderCommand {
@@ -53,6 +59,7 @@ public:
                                std::shared_ptr<const Material> material,
                                float opacity);
     void SubmitBillboard(const Billboard& billboard, const glm::vec3& position);
+    void SubmitParticles(const ParticleSystem& particles);
     void SubmitText(FontLine2d text);
     void SubmitDebugLine(const DebugLineRenderCommand& line);
 
@@ -66,6 +73,8 @@ public:
         const noexcept;
     [[nodiscard]] std::span<const BillboardRenderCommand> GetBillboards()
         const noexcept;
+    [[nodiscard]] std::span<const ParticleRenderCommand> GetParticles()
+        const noexcept;
     [[nodiscard]] std::span<const TextRenderCommand> GetText() const noexcept;
     [[nodiscard]] std::span<const DebugLineRenderCommand> GetDebugLines()
         const noexcept;
@@ -74,6 +83,7 @@ private:
     std::vector<MeshRenderCommand> opaqueMeshes_;
     std::vector<MeshRenderCommand> transparentMeshes_;
     std::vector<BillboardRenderCommand> billboards_;
+    std::vector<ParticleRenderCommand> particles_;
     std::vector<TextRenderCommand> text_;
     std::vector<DebugLineRenderCommand> debugLines_;
 };

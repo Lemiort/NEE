@@ -1,108 +1,47 @@
-
 #version 460 core
 
+// Turns each particle into a quad facing the camera: a square `width` wide,
+// or, with `stretch`, a streak from the particle back along its velocity
+// for `stretch` seconds of travel, like a falling raindrop.
 layout(points) in;
-layout(points) out;
-layout(max_vertices = 30) out;
+layout(triangle_strip, max_vertices = 4) out;
 
-in float Type0[];
-in vec3 Position0[];
-in vec3 Velocity0[];
-in float Age0[];
+in vec3 vPosition[];
+in vec3 vVelocity[];
 
-out float Type1;
-out vec3 Position1;
-out vec3 Velocity1;
-out float Age1;
+uniform mat4 viewProjection;
+uniform vec3 cameraPosition;
+uniform float width;
+uniform float stretch;
 
-uniform float gDeltaTimeMillis;
-uniform float gTime;
-uniform sampler1D gRandomTexture;
-uniform float gLauncherLifetime;
-uniform float gShellLifetime;
-uniform float gSecondaryShellLifetime;
-
-#define PARTICLE_TYPE_LAUNCHER 0.0f
-#define PARTICLE_TYPE_SHELL 1.0f
-#define PARTICLE_TYPE_SECONDARY_SHELL 2.0f
-
-vec3 GetRandomDir(float TexCoord)
+void Emit(vec3 position)
 {
-    vec3 Dir = texture(gRandomTexture, TexCoord).xyz;
-    Dir -= vec3(0.5, 0.5, 0.5);
-    return Dir;
+    gl_Position = viewProjection * vec4(position, 1.0);
+    EmitVertex();
 }
 
 void main()
 {
-    float Age = Age0[0] + gDeltaTimeMillis;
-
-    if (Type0[0] == PARTICLE_TYPE_LAUNCHER)
-        {
-            if (Age >= gLauncherLifetime)
-                {
-                    Type1 = PARTICLE_TYPE_SHELL;
-                    Position1 = Position0[0];
-                    vec3 Dir = GetRandomDir(gTime/1000.0);
-                    Dir.y = max(Dir.y, 0.5);
-                    Velocity1 = normalize(Dir) / 20.0;
-                    Age1 = 0.0;
-                    EmitVertex();
-                    EndPrimitive();
-                    Age = 0.0;
-                }
-
-            Type1 = PARTICLE_TYPE_LAUNCHER;
-            Position1 = Position0[0];
-            Velocity1 = Velocity0[0];
-            Age1 = Age;
-            EmitVertex();
-            EndPrimitive();
-        }
-    else
-        {
-            float DeltaTimeSecs = gDeltaTimeMillis / 1000.0f;
-            float t1 = Age0[0] / 1000.0;
-            float t2 = Age / 1000.0;
-            vec3 DeltaP = DeltaTimeSecs * Velocity0[0];
-            vec3 DeltaV = vec3(DeltaTimeSecs) * (0.0, -9.81, 0.0);
-
-            if (Type0[0] == PARTICLE_TYPE_SHELL)
-                {
-                    if (Age < gShellLifetime)
-                        {
-                            Type1 = PARTICLE_TYPE_SHELL;
-                            Position1 = Position0[0] + DeltaP;
-                            Velocity1 = Velocity0[0] + DeltaV;
-                            Age1 = Age;
-                            EmitVertex();
-                            EndPrimitive();
-                        }
-                    else
-                        {
-                            for (int i = 0 ; i < 10 ; i++)
-                                {
-                                    Type1 = PARTICLE_TYPE_SECONDARY_SHELL;
-                                    Position1 = Position0[0];
-                                    vec3 Dir = GetRandomDir((gTime + i)/1000.0);
-                                    Velocity1 = normalize(Dir) / 20.0;
-                                    Age1 = 0.0f;
-                                    EmitVertex();
-                                    EndPrimitive();
-                                }
-                        }
-                }
-            else
-                {
-                    if (Age < gSecondaryShellLifetime)
-                        {
-                            Type1 = PARTICLE_TYPE_SECONDARY_SHELL;
-                            Position1 = Position0[0] + DeltaP;
-                            Velocity1 = Velocity0[0] + DeltaV;
-                            Age1 = Age;
-                            EmitVertex();
-                            EndPrimitive();
-                        }
-                }
-        }
+    vec3 head = vPosition[0];
+    vec3 toCamera = normalize(cameraPosition - head);
+    vec3 trail = vVelocity[0] * stretch;
+    vec3 side = cross(trail, toCamera);
+    if (length(side) > 1e-6) {
+        side = normalize(side) * (width * 0.5);
+        vec3 tail = head - trail;
+        Emit(head - side);
+        Emit(head + side);
+        Emit(tail - side);
+        Emit(tail + side);
+    } else {
+        vec3 up = abs(toCamera.y) > 0.99 ? vec3(1.0, 0.0, 0.0)
+                                         : vec3(0.0, 1.0, 0.0);
+        vec3 right = normalize(cross(up, toCamera)) * (width * 0.5);
+        vec3 top = normalize(cross(toCamera, right)) * (width * 0.5);
+        Emit(head - right - top);
+        Emit(head + right - top);
+        Emit(head - right + top);
+        Emit(head + right + top);
+    }
+    EndPrimitive();
 }
