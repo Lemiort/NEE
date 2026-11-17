@@ -9,8 +9,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
-#include <expected>
 #include <exception>
+#include <expected>
 #include <filesystem>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <glm/ext/matrix_float4x4.hpp>
@@ -25,17 +25,16 @@
 #include <vector>
 
 #include "Camera.hpp"
-#include "imgui.h"
 #include "Light.hpp"
 #include "Screenshot.hpp"
 #include "Shader.hpp"
 #include "Texture.hpp"
 #include "Util.hpp"
 #include "Version.hpp"
+#include "imgui.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
-
 
 namespace {
 constexpr int kGridExtentSteps = 50;
@@ -286,6 +285,8 @@ void Application::RenderScene() {
                         return GBufferDebugView::Normal;
                     case RenderMode::TextureCoordinateBuffer:
                         return GBufferDebugView::TextureCoordinates;
+                    case RenderMode::EmissiveBuffer:
+                        return GBufferDebugView::Emissive;
                     default:
                         return GBufferDebugView::Position;
                 }
@@ -556,6 +557,15 @@ int Application::InitScene(GLFWwindow& window) {
                       .rotationDegrees = glm::vec3(0.0F),
                       .scale = glm::vec3(30.0F)},
             mainMaterial);
+        // Every seventh sphere glows cyan in a checker pattern, for the
+        // emissive buffer to show.
+        auto glowMaterial =
+            std::make_shared<Material>(gsl_lite::not_null{meshShader});
+        auto glowTexture = std::make_shared<Texture2D>();
+        if (glowTexture->Load("textures/checker.tga")) {
+            glowMaterial->SetEmissiveTexture(glowTexture);
+        }
+        glowMaterial->SetEmissiveColor({0.2F, 0.8F, 1.0F});
         const PerlinNoise noise(1, 10.3, 0.5, 2, 42);
         for (int row = -kGridExtentSteps; row < kGridExtentSteps; ++row) {
             const float i = static_cast<float>(row) / kGridStepsPerUnit;
@@ -569,7 +579,8 @@ int Application::InitScene(GLFWwindow& window) {
                             i, static_cast<float>(noise.GetHeight(i, j)), j),
                         .rotationDegrees = glm::vec3(0.0F),
                         .scale = glm::vec3(0.05F)},
-                    mainMaterial, RenderLayer::Opaque, 1.0F, true);
+                    (row + column) % 7 == 0 ? glowMaterial : mainMaterial,
+                    RenderLayer::Opaque, 1.0F, true);
             }
         }
         scene.AddMeshInstance(
@@ -603,8 +614,7 @@ void Application::DrawDebugUi() {
     constexpr ImVec2 kPosition{16.0F, 150.0F};
     ImGui::SetNextWindowPos(kPosition, ImGuiCond_FirstUseEver);
     // End() is required even when Begin() reports the window collapsed.
-    if (!ImGui::Begin("NEE demo", nullptr,
-                      ImGuiWindowFlags_AlwaysAutoResize)) {
+    if (!ImGui::Begin("NEE demo", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
         ImGui::End();
         return;
     }

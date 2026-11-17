@@ -75,6 +75,7 @@ void DeferredPipeline::Render(const SceneView& scene,
                               ForwardPipeline& transparentPipeline) {
     gBuffer_->StartFrame();
     GeometryPass(scene);
+    gBuffer_->CopyEmissiveToLight();
     // The light materials only record texture names here; each draw binds
     // them, so one update per frame covers every light of a type.
     BindGBufferTextures(*pointLightMaterial_);
@@ -160,7 +161,7 @@ void DeferredPipeline::StencilPass(const Mesh& volume,
 }
 
 void DeferredPipeline::BindGBufferTextures(Material& material) {
-    for (unsigned index = 0; index < 5; ++index) {
+    for (unsigned index = 0; index < GBuffer::GBUFFER_NUM_TEXTURES; ++index) {
         material.SetTexture(gBuffer_->GetTexture(index), index + 4);
     }
 }

@@ -4,7 +4,13 @@
 class Camera;
 class GBuffer;
 
-enum class GBufferDebugView { Position, Diffuse, Normal, TextureCoordinates };
+enum class GBufferDebugView {
+    Position,
+    Diffuse,
+    Normal,
+    TextureCoordinates,
+    Emissive
+};
 
 class GBufferDebugPass {
 public:

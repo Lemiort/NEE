@@ -20,6 +20,8 @@ void GBufferDebugPass::Render(GBuffer& gBuffer, const Camera& camera,
                 return GBuffer::GBUFFER_TEXTURE_TYPE_NORMAL;
             case GBufferDebugView::TextureCoordinates:
                 return GBuffer::GBUFFER_TEXTURE_TYPE_TEXCOORD;
+            case GBufferDebugView::Emissive:
+                return GBuffer::GBUFFER_TEXTURE_TYPE_EMISSIVE;
         }
         return GBuffer::GBUFFER_TEXTURE_TYPE_POSITION;
     }();

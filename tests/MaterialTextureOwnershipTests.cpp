@@ -52,6 +52,8 @@ protected:
         };
         glad_glProgramUniform1i = [](GLuint, GLint, GLint) {};
         glad_glProgramUniform1f = [](GLuint, GLint, GLfloat) {};
+        glad_glProgramUniform3f = [](GLuint, GLint, GLfloat, GLfloat, GLfloat) {
+        };
         glad_glCreateTextures = [](GLenum, GLsizei count, GLuint* textures) {
             for (GLsizei i = 0; i < count; ++i) textures[i] = nextTexture++;
         };
@@ -102,6 +104,26 @@ TEST_F(MaterialTextureOwnership, RebindingPreservesOldAndNewAttachments) {
     }
     EXPECT_FALSE(WasDeleted(oldTexture));
     EXPECT_FALSE(WasDeleted(newTexture));
+}
+
+TEST_F(MaterialTextureOwnership, EmissiveTextureTakesTheLastUnit) {
+    // The mock reports 16 texture units, so the emissive map binds to unit 15
+    // and custom textures may no longer use it.
+    constexpr GLuint emissiveTexture = 10001;
+    constexpr GLuint customTexture = 10002;
+    Material material(gsl_lite::not_null{std::make_shared<Shader>()});
+    EXPECT_EQ(material.GetEmissiveTextureUnit(), 15U);
+    material.SetEmissiveTexture(std::make_shared<Texture2D>(emissiveTexture));
+    material.SetTexture(customTexture, 15);
+    material.Use();
+    EXPECT_NE(std::ranges::find(
+                  textureBindings,
+                  std::pair<GLenum, GLuint>{GL_TEXTURE15, emissiveTexture}),
+              textureBindings.end());
+    EXPECT_EQ(std::ranges::find(
+                  textureBindings,
+                  std::pair<GLenum, GLuint>{GL_TEXTURE15, customTexture}),
+              textureBindings.end());
 }
 
 TEST_F(MaterialTextureOwnership, BorrowedSharedTextureRemainsOwnedByCaller) {

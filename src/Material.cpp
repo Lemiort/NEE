@@ -32,6 +32,7 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     normalMap = LoadRequiredTexture("textures/normal_map.tga");
     specularMap = LoadRequiredTexture("textures/specular.tga");
     shadowMap = LoadRequiredTexture("textures/white.png");
+    emissiveMap = shadowMap;
 
     shaderProgram->Link();
     glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &max_texture_units);
@@ -47,7 +48,11 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     glProgramUniform1i(program, specSamplerID, 2);
     glProgramUniform1i(program, shadowSamplerID, 3);
     opacityID = shaderProgram->GetUniformLocation("opacity");
-    for (GLint unit = 4; unit < max_texture_units; ++unit) {
+    emissiveID = shaderProgram->GetUniformLocation("emissiveColor");
+    emissiveSamplerID = shaderProgram->GetUniformLocation("emissiveTexSampler");
+    glProgramUniform1i(program, emissiveSamplerID,
+                       static_cast<GLint>(GetEmissiveTextureUnit()));
+    for (GLint unit = 4; unit < max_texture_units - 1; ++unit) {
         auto& location = abstractSamplersID.at(static_cast<std::size_t>(unit));
         location = shaderProgram->GetUniformLocation("gSampler" +
                                                      ConvertToString(unit));
@@ -62,15 +67,21 @@ void Material::BindTextures() const {
         colorMap->GetTextureID(), normalMap->GetTextureID(),
         specularMap->GetTextureID(), shadowMap->GetTextureID()};
     glBindTextures(0, static_cast<GLsizei>(textures.size()), textures.data());
-    if (max_texture_units > 4)
-        glBindTextures(4, max_texture_units - 4, texturesID.data() + 4);
+    const GLuint emissiveUnit = GetEmissiveTextureUnit();
+    if (emissiveUnit > 4)
+        glBindTextures(4, static_cast<GLsizei>(emissiveUnit - 4),
+                       texturesID.data() + 4);
+    const GLuint emissive = emissiveMap->GetTextureID();
+    glBindTextures(emissiveUnit, 1, &emissive);
 }
 
 void Material::Use(float drawOpacity) const {
     shaderProgram->Use();
     BindTextures();
-    glProgramUniform1f(shaderProgram->GetShaderProgramId(), opacityID,
-                       drawOpacity);
+    const GLuint program = shaderProgram->GetShaderProgramId();
+    glProgramUniform1f(program, opacityID, drawOpacity);
+    glProgramUniform3f(program, emissiveID, emissiveColor_.r, emissiveColor_.g,
+                       emissiveColor_.b);
 }
 
 void Material::UseWithShader(Shader& shader, float drawOpacity) const {
@@ -84,7 +95,11 @@ void Material::UseWithShader(Shader& shader, float drawOpacity) const {
                        3);
     glProgramUniform1f(program, shader.GetUniformLocation("opacity"),
                        drawOpacity);
-    for (GLint unit = 4; unit < max_texture_units; ++unit) {
+    glProgramUniform3f(program, shader.GetUniformLocation("emissiveColor"),
+                       emissiveColor_.r, emissiveColor_.g, emissiveColor_.b);
+    glProgramUniform1i(program, shader.GetUniformLocation("emissiveTexSampler"),
+                       static_cast<GLint>(GetEmissiveTextureUnit()));
+    for (GLint unit = 4; unit < max_texture_units - 1; ++unit) {
         if (texturesID.at(static_cast<std::size_t>(unit)) == 0) continue;
         glProgramUniform1i(
             program,
@@ -109,8 +124,12 @@ void Material::SetShadowTexture(std::shared_ptr<Texture2D> _shadowMap) {
     shadowMap = std::move(_shadowMap);
 }
 
+void Material::SetEmissiveTexture(std::shared_ptr<Texture2D> _emissiveMap) {
+    emissiveMap = std::move(_emissiveMap);
+}
+
 void Material::SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num) {
-    if (num <= 3 || num >= texturesID.size()) {
+    if (num <= 3 || num >= GetEmissiveTextureUnit()) {
         spdlog::error("Texture unit {} is outside the available range", num);
         return;
     }
@@ -118,7 +137,7 @@ void Material::SetTexture(const std::shared_ptr<Texture2D>& _map, GLuint num) {
 }
 
 void Material::SetTexture(GLuint _map, GLuint num) {
-    if (num <= 3 || num >= texturesID.size()) {
+    if (num <= 3 || num >= GetEmissiveTextureUnit()) {
         spdlog::error("Texture unit {} is outside the available range", num);
         return;
     }

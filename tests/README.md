@@ -27,6 +27,9 @@ Context creation failures fail the tests rather than silently skipping them.
   shader programs compile/link using the production Shader class.
 - The production G-buffer creates complete attachments and resizes without GL
   errors.
+- The deferred pipeline, with no lights, shows a material's emissive color,
+  multiplies an emissive texture by that color, and leaves surfaces without
+  one black. The emissive texture binds to the last texture unit.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays
@@ -43,7 +46,7 @@ and UVs. It verifies geometry/instancing consistency, not equality of the full
 forward/deferred lighting implementations. Full lit-scene comparisons remain
 follow-up work for issue #41, alongside the lighting fixes in #22, #24, and #26.
 The asset test verifies loaders and repository assets, not the application's
-hard-coded asset path casing (#18). Particle rendering is not covered (#29).
+hardcoded asset path casing (#18). Particle rendering is not covered (#29).
 
 No GPU resource is constructed during GoogleTest discovery. Every OpenGL test
 creates a hidden OpenGL 4.6 core context, verifies the version/profile, and

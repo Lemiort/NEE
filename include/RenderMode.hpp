@@ -11,6 +11,7 @@ enum class RenderMode {
     DiffuseBuffer,
     NormalBuffer,
     TextureCoordinateBuffer,
+    EmissiveBuffer,
     ForwardRendering
 };
 
@@ -26,6 +27,7 @@ inline constexpr std::array kRenderModes{
     RenderModeDescriptor{RenderMode::NormalBuffer, "Normal buffer"},
     RenderModeDescriptor{RenderMode::TextureCoordinateBuffer,
                          "Texture-coordinate buffer"},
+    RenderModeDescriptor{RenderMode::EmissiveBuffer, "Emissive buffer"},
     RenderModeDescriptor{RenderMode::ForwardRendering, "Forward rendering"},
 };
 
