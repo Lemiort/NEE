@@ -34,7 +34,8 @@ uniform float pLightInt;
  out vec3 Bitangent;
  out vec3 fT;
  out vec3 fB;
- out float power;   
+ out float power;
+ out vec3 worldPos;   
                                                                                                       
 void main()                                                                   
 {                                                                             
@@ -46,6 +47,7 @@ void main()
 	fL=-dLightDir;
 	fE=worldPosition-s_vCamPos;
 	UV=s_vUV;
+	worldPos=worldPosition;
 
 	//длина вектора от света до точки
 	float temp=max(length(pLightPos-worldPosition), 0.001);

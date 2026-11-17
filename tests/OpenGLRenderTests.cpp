@@ -1113,6 +1113,56 @@ TEST_F(OpenGLRender, BloomIgnoresNonFiniteLight) {
     EXPECT_EQ(glGetError(), GL_NO_ERROR);
 }
 
+TEST_F(OpenGLRender, WorldTextureScaleAnchorsTexturesToTheWorld) {
+    // A 2x1 emissive texture, red then green, tiled once every 2 world units
+    // along x. On the front face of a cube 1 unit wide at x = 0, world x from
+    // -0.5 to 0 falls in the green half of a tile and 0 to 0.5 in the red
+    // half. Moved 1 unit right, half a tile, the colors swap: the pattern
+    // stays where it is in the world while the cube moves through it.
+    Pipelines pipelines = MakePipelines();
+    GLuint texture = 0;
+    glCreateTextures(GL_TEXTURE_2D, 1, &texture);
+    glTextureStorage2D(texture, 1, GL_RGBA8, 2, 1);
+    constexpr std::array<std::uint8_t, 8> kTexels{255, 0,   0, 255,
+                                                  0,   255, 0, 255};
+    glTextureSubImage2D(texture, 0, 0, 0, 2, 1, GL_RGBA, GL_UNSIGNED_BYTE,
+                        kTexels.data());
+    glTextureParameteri(texture, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTextureParameteri(texture, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTextureParameteri(texture, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    const auto material =
+        std::make_shared<Material>(gsl_lite::not_null{pipelines.meshShader});
+    material->SetEmissiveTexture(std::make_shared<Texture2D>(texture));
+    material->SetEmissiveColor(glm::vec3(1.0F));
+    EXPECT_EQ(material->GetWorldTextureScale(), glm::vec2(0.0F));
+    material->SetWorldTextureScale(glm::vec2(0.5F));
+    Mesh mesh(gsl_lite::not_null{material},
+              Asset("models/cube2x2x2.obj").string());
+    const auto render = [&](float x, int column) {
+        RenderQueue queue;
+        queue.SubmitOpaqueMesh(
+            mesh,
+            Transform{.position = {x, 0.0F, -3.0F}, .scale = glm::vec3(0.5F)},
+            material);
+        return RenderAndRead(pipelines, queue, column, kSize / 2);
+    };
+    // The front face is 2.5 units away: a quarter unit is about 11 pixels.
+    const auto centeredLeft = render(0.0F, (kSize / 2) - 11);
+    const auto centeredRight = render(0.0F, (kSize / 2) + 11);
+    EXPECT_EQ(centeredLeft[0], 0);
+    EXPECT_EQ(centeredLeft[1], 255);
+    EXPECT_EQ(centeredRight[0], 255);
+    EXPECT_EQ(centeredRight[1], 0);
+    // Moved 1 unit right, the face is centered about 44 pixels right.
+    const auto movedLeft = render(1.0F, (kSize / 2) + 44 - 11);
+    const auto movedRight = render(1.0F, (kSize / 2) + 44 + 11);
+    EXPECT_EQ(movedLeft[0], 255);
+    EXPECT_EQ(movedLeft[1], 0);
+    EXPECT_EQ(movedRight[0], 0);
+    EXPECT_EQ(movedRight[1], 255);
+}
+
 TEST_F(OpenGLRender, NamedResourceSetupPreservesExistingBindings) {
     const auto sentinel = SolidTexture({255, 0, 0, 255});
     glActiveTexture(GL_TEXTURE3);

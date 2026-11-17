@@ -52,6 +52,7 @@ protected:
         };
         glad_glProgramUniform1i = [](GLuint, GLint, GLint) {};
         glad_glProgramUniform1f = [](GLuint, GLint, GLfloat) {};
+        glad_glProgramUniform2f = [](GLuint, GLint, GLfloat, GLfloat) {};
         glad_glProgramUniform3f = [](GLuint, GLint, GLfloat, GLfloat, GLfloat) {
         };
         glad_glCreateTextures = [](GLenum, GLsizei count, GLuint* textures) {

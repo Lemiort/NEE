@@ -2,6 +2,7 @@
 #define MATERIAL_H
 #include <glad/gl.h>
 
+#include <glm/ext/vector_float2.hpp>
 #include <glm/ext/vector_float3.hpp>
 #include <gsl-lite/gsl-lite.hpp>
 #include <memory>
@@ -33,6 +34,18 @@ public:
         return emissiveColor_;
     }
     void SetEmissiveTexture(std::shared_ptr<Texture2D> _emissiveMap);
+    // Texture coordinates from the world position instead of the mesh,
+    // `scale` tiles per world unit: walls facing x use (z, y), walls facing
+    // z use (x, y), floors and roofs (x, z). A texture then keeps its size
+    // on every face whatever the mesh's scale, like windows on buildings of
+    // any height. (0, 0), the default, uses the mesh's coordinates. Normal
+    // maps still follow the mesh's tangents.
+    void SetWorldTextureScale(const glm::vec2& scale) {
+        worldTextureScale_ = scale;
+    }
+    [[nodiscard]] const glm::vec2& GetWorldTextureScale() const noexcept {
+        return worldTextureScale_;
+    }
     // The emissive texture takes the last texture unit, so custom units
     // (SetTexture) run from 4 up to, but not including, this one.
     [[nodiscard]] GLuint GetEmissiveTextureUnit() const noexcept {
@@ -58,6 +71,8 @@ protected:
     GLint emissiveID{-1};
     GLint emissiveSamplerID{-1};
     glm::vec3 emissiveColor_{0.0F};
+    GLint worldTextureScaleID{-1};
+    glm::vec2 worldTextureScale_{0.0F};
     GLint max_texture_units{};
     std::vector<GLuint> texturesID;
 };

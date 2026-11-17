@@ -40,6 +40,8 @@ Context creation failures fail the tests rather than silently skipping them.
   fall with their velocity, follow acceleration, are born again when their
   lifetime ends, and draw as camera-facing squares or streaks, also through
   the render queue in the deferred pipeline.
+- A material with a world texture scale takes its texture coordinates from
+  the world: moving a cube by half a tile swaps the colors on its face.
 - DSA texture uploads, queries, random textures, and framebuffer resizing preserve
   existing bindings. Uploaded textures have immutable storage and mip levels.
 - Text, debug lines, billboards, and skyboxes draw with their own vertex arrays

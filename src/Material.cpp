@@ -49,6 +49,8 @@ Material::Material(gsl_lite::not_null<std::shared_ptr<Shader>> shader)
     glProgramUniform1i(program, shadowSamplerID, 3);
     opacityID = shaderProgram->GetUniformLocation("opacity");
     emissiveID = shaderProgram->GetUniformLocation("emissiveColor");
+    worldTextureScaleID =
+        shaderProgram->GetUniformLocation("worldTextureScale");
     emissiveSamplerID = shaderProgram->GetUniformLocation("emissiveTexSampler");
     glProgramUniform1i(program, emissiveSamplerID,
                        static_cast<GLint>(GetEmissiveTextureUnit()));
@@ -82,6 +84,8 @@ void Material::Use(float drawOpacity) const {
     glProgramUniform1f(program, opacityID, drawOpacity);
     glProgramUniform3f(program, emissiveID, emissiveColor_.r, emissiveColor_.g,
                        emissiveColor_.b);
+    glProgramUniform2f(program, worldTextureScaleID, worldTextureScale_.x,
+                       worldTextureScale_.y);
 }
 
 void Material::UseWithShader(Shader& shader, float drawOpacity) const {
@@ -97,6 +101,8 @@ void Material::UseWithShader(Shader& shader, float drawOpacity) const {
                        drawOpacity);
     glProgramUniform3f(program, shader.GetUniformLocation("emissiveColor"),
                        emissiveColor_.r, emissiveColor_.g, emissiveColor_.b);
+    glProgramUniform2f(program, shader.GetUniformLocation("worldTextureScale"),
+                       worldTextureScale_.x, worldTextureScale_.y);
     glProgramUniform1i(program, shader.GetUniformLocation("emissiveTexSampler"),
                        static_cast<GLint>(GetEmissiveTextureUnit()));
     for (GLint unit = 4; unit < max_texture_units - 1; ++unit) {
