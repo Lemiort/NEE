@@ -46,7 +46,7 @@ and UVs. It verifies geometry/instancing consistency, not equality of the full
 forward/deferred lighting implementations. Full lit-scene comparisons remain
 follow-up work for issue #41, alongside the lighting fixes in #22, #24, and #26.
 The asset test verifies loaders and repository assets, not the application's
-hard-coded asset path casing (#18). Particle rendering is not covered (#29).
+hardcoded asset path casing (#18). Particle rendering is not covered (#29).
 
 No GPU resource is constructed during GoogleTest discovery. Every OpenGL test
 creates a hidden OpenGL 4.6 core context, verifies the version/profile, and
